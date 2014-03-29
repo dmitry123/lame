@@ -89,6 +89,8 @@ inline Buffer ParseStringValue(StringC string) {
 
 static StringC allowedTokens = "'!~*/%+-&^|=\"\n\r\t ;,.:-{}()[]";
 static StringC compareTokens = "<>=!";
+static StringC unaryTokens = "+-";
+static StringC logicTokens = "&|^";
 static StringC separateTokens = ";{},";
 
 KeyWord& KeyWord::Parse(Uint32 line, StringC word) {
@@ -128,6 +130,11 @@ KeyWord& KeyWord::Parse(Uint32 line, StringC word) {
 		goto __Return;
 	} else if ((this->priority.Parse(word)) != kPriorityDefault) {
 		this->key = kKeyWordPriority;
+		if (this->priority == kPriorityAnd) {
+			this->priority = kPriorityBitAnd;
+		} else if (this->priority == kPriorityOr) {
+			this->priority = kPriorityBitOr;
+		}
 		goto __Return;
 	} else {
 		this->key = kKeyWordPriority;
@@ -159,6 +166,7 @@ ScriptParser& ScriptParser::Parse(StringC script) {
 	Uint32 line = 1;
 	Sint8 token = 0;
 	Uint32 save = 0;
+	Uint32 prevSaved = 0;
 	Buffer word;
 	StringC last = script;
 
@@ -224,6 +232,24 @@ ScriptParser& ScriptParser::Parse(StringC script) {
 				save = 2;
 			}
 			goto __SaveNonSpaceToken;
+		} else if (strchr(logicTokens, token)) {
+			switch (*(script + 1)) {
+				case '=':
+				case '&':
+					save = 2; break;
+				default:
+					save = 1; break;
+			}
+			goto __SaveNonSpaceToken;
+		} else if (strchr(unaryTokens, token)) {
+			switch (*(script + 1)) {
+				case '+':
+				case '-':
+					save = 2; break;
+				default:
+					save = 1; break;
+			}
+			goto __SaveNonSpaceToken;
 		} else if (!strchr(allowedTokens, token)) {
 			if (token != ' ') {
 				goto __Skip;
@@ -239,6 +265,13 @@ ScriptParser& ScriptParser::Parse(StringC script) {
 			if (script - last > 0) {
 				isParseToken = 1;
 				isToken = 0;
+				if (save > 1) {
+					prevSaved = save;
+				}
+				if (!save) {
+					save = 1;
+				}
+				save = 1;
 			}
 		}
 
@@ -275,6 +308,11 @@ ScriptParser& ScriptParser::Parse(StringC script) {
 		if (isParseToken) {
 			isParseToken = 0;
 			isToken = 1;
+			save = prevSaved;
+			prevSaved = 0;
+			if (!save) {
+				save = 1;
+			}
 			goto __ParseToken;
 		}
 
@@ -340,7 +378,11 @@ ScriptParser& ScriptParser::Sort(Void) {
 	KeyWordPtr back = 0;
     
 	for (KeyWord& kw : this->keyQueue) {
-        
+
+		if (kw.priority == kPriorityDeclare) {
+			continue;
+		}
+
 		if (kw.key == kKeyWordInt ||
 			kw.key == kKeyWordFloat ||
 			kw.key == kKeyWordDefault ||

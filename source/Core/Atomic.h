@@ -4,7 +4,11 @@
 #include "define.h"
 #include "types.h"
 
-#define LAME_CLASS(_name) C##_name
+#if !defined(LAME_CPP)
+typedef volatile Uint16 Atomic16, *Atomic16P;
+typedef volatile Uint32 Atomic32, *Atomic32P;
+typedef volatile Uint64 Atomic64, *Atomic64P;
+#endif
 
 #define __LAME_ATOMIC_CONSTRUCT(_bits) \
 	public: Atomic##_bits(Uint##_bits counter = 0) { \

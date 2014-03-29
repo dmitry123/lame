@@ -20,7 +20,14 @@ Void ScriptVariable::Add(const ScriptVariable& value) {
         case kScriptTypeBool: this->boolValue += value.boolValue; break;
         case kScriptTypeFloat: this->floatValue += value.floatValue; break;
         case kScriptTypeInt: this->intValue += value.intValue; break;
-        case kScriptTypeString: this->stringValue += value.stringValue; break;
+        case kScriptTypeString:
+#if 0
+			this->stringValue += value.stringValue;
+#else
+			this->stringValue.resize(this->stringValue.length() + value.stringValue.length());
+			strcat(String(this->stringValue.data()), value.stringValue.data());
+#endif
+			break;
         default: goto __Error;
     }
     return;
@@ -130,6 +137,34 @@ __Error:
     PostSyntaxError(this->line, "Unable to apply >> operation to this type", this->type.String());
 }
 
+Void ScriptVariable::And(const ScriptVariable& value) {
+	switch (this->type) {
+		case kScriptTypeBool: this->boolValue = this->boolValue && value.boolValue; break;
+		case kScriptTypeFloat: this->boolValue = this->floatValue && value.floatValue; break;
+		case kScriptTypeInt: this->boolValue = this->intValue && value.intValue; break;
+		case kScriptTypeString: this->boolValue = this->stringValue.length() && value.stringValue.length(); break;
+		default: goto __Error;
+	}
+	this->type = kScriptTypeBool;
+	return;
+__Error:
+	PostSyntaxError(this->line, "Unable to apply > operation to this type", this->type.String());
+}
+
+Void ScriptVariable::Or(const ScriptVariable& value) {
+	switch (this->type) {
+		case kScriptTypeBool: this->boolValue = this->boolValue || value.boolValue; break;
+		case kScriptTypeFloat: this->boolValue = this->floatValue || value.floatValue; break;
+		case kScriptTypeInt: this->boolValue = this->intValue || value.intValue; break;
+		case kScriptTypeString: this->boolValue = this->stringValue.length() || value.stringValue.length(); break;
+		default: goto __Error;
+	}
+	this->type = kScriptTypeBool;
+	return;
+__Error:
+	PostSyntaxError(this->line, "Unable to apply > operation to this type", this->type.String());
+}
+
 Void ScriptVariable::Above(const ScriptVariable& value) {
     switch (this->type) {
         case kScriptTypeBool: this->boolValue = this->boolValue > value.boolValue; break;
@@ -191,7 +226,7 @@ Void ScriptVariable::Equal(const ScriptVariable& value) {
         case kScriptTypeBool: this->boolValue = this->boolValue == value.boolValue; break;
         case kScriptTypeFloat: this->boolValue = this->floatValue == value.floatValue; break;
         case kScriptTypeInt: this->boolValue = this->intValue == value.intValue; break;
-        case kScriptTypeString: this->boolValue = this->stringValue == value.stringValue; break;
+		case kScriptTypeString: this->boolValue = !strcmp(this->stringValue.data(), value.stringValue.data()); break;
         default: goto __Error;
     }
     this->type = kScriptTypeBool;
@@ -246,7 +281,6 @@ Void ScriptVariable::Inc() {
         case kScriptTypeInt: ++this->intValue; break;
         default: goto __Error;
     }
-    this->type = kScriptTypeBool;
     return;
 __Error:
     PostSyntaxError(this->line, "Unable to apply ++ operation to this type", this->type.String());
@@ -259,7 +293,6 @@ Void ScriptVariable::Dec() {
         case kScriptTypeInt: --this->intValue; break;
         default: goto __Error;
     }
-    this->type = kScriptTypeBool;
     return;
 __Error:
     PostSyntaxError(this->line, "Unable to apply -- operation to this type", this->type.String());

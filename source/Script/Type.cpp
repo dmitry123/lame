@@ -11,7 +11,7 @@ StringC ScriptType::String() {
 
 ScriptType& ScriptType::Parse(StringC word) {
 	for (Uint32 i = 0; i < kScriptTypeAmount; i++) {
-		if (!strncmp(internal::__typeStrings[i], word, strlen(internal::__typeStrings[i]))) {
+		if (!strcmp(internal::__typeStrings[i], word)) {
 			this->type_ = ScriptTypes(i); return *this;
 		}
 	}

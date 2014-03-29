@@ -96,20 +96,41 @@ ScriptPerformer& ScriptPerformer::FixBraces(ScriptParser& parser) {
 
 ScriptPerformer& ScriptPerformer::ComputeJumps(ScriptParser& parser) {
 
-	Vector<KeyWordPtr> stack;
+	typedef struct {
+		KeyWordPtr kw;
+		Uint32 distance;
+	} JumpKeyWord;
+
+	Vector<JumpKeyWord> stack;
 	Uint32 jumpPosition = 0;
+	KeyWordPtr lastLang = 0;
+	Uint32 distance = 0;
 
 	for (KeyWordPtr self : parser.yardQueue) {
 		if (self->key == kKeyWordSeparator) {
 			if (self->word[0] == '{') {
 				self->jump = jumpPosition;
-				stack.push_back(self);
+				if (lastLang) {
+					self->language = lastLang->language;
+				}
+				stack.push_back({ self, distance });
 			} else if (self->word[0] == '}') {
-				KeyWordPtr back = stack.back();
-				back->jump = jumpPosition - back->jump + 1;
-				self->jump = -back->jump;
+				JumpKeyWord back = stack.back();
+				back.kw->jump = jumpPosition - back.kw->jump + 1;
+				self->jump = -back.kw->jump - back.distance + 3;
+				if (lastLang) {
+					self->language = lastLang->language;
+				}
 				stack.pop_back();
+				distance = 0;
+			} else if (self->word[0] == ';') {
+				distance = 1;
 			}
+		} else if (self->priority == kPriorityLanguage) {
+			lastLang = self;
+		}
+		if (distance) {
+			++distance;
 		}
 		++jumpPosition;
 	}
@@ -119,38 +140,39 @@ ScriptPerformer& ScriptPerformer::ComputeJumps(ScriptParser& parser) {
 
 ScriptPerformer& ScriptPerformer::EvaluateDouble(KeyWordPtr& left, KeyWordPtr right, KeyWordPtr key) {
     
+	StringC savedName = LAME_NULL;
+
 	if (left->key == kKeyWordPriority && left->priority == kPriorityVariable) {
 		if (!left->registered) {
+			savedName = left->word.data();
 			left = (KeyWordPtr)this->FindVariable(left->word.data());
             if (!left) {
-                PostSyntaxError(left->line, "Undeclared variable (%s)", left->word.data());
+				PostSyntaxError(key->line, "Undeclared variable (%s)", savedName);
             }
 		}
 	}
     
 	if (right->key == kKeyWordPriority && right->priority == kPriorityVariable) {
 		if (!right->registered) {
+			savedName = right->word.data();
 			right = (KeyWordPtr)this->FindVariable(right->word.data());
             if (!right) {
-                PostSyntaxError(right->line, "Undeclared variable (%s)", right->word.data());
+				PostSyntaxError(key->line, "Undeclared variable (%s)", savedName);
             }
 		}
 	}
 
 	if (key->priority.IsRightAssociated()) {
-		if (right == &this->temporary) {
-			std::swap(left, right);
-		}
-		else {
-			if (this->temporary.type != left->type) {
-				this->temporary = *left;
-			}
-			left = &this->temporary;
-			left->word = "TEMP";
-		}
+		this->tempList.push_back(*left);
+		left = &this->tempList.back();
+		left->word = "${temp}";
 	}
     
     switch (key->priority) {
+		case kPriorityAnd:
+			left->BitAnd(*right); break;
+		case kPriorityOr:
+			left->BitOr(*right); break;
         case kPriorityAbove:
             left->Above(*right); break;
         case kPriorityAboveEqual:
@@ -218,17 +240,30 @@ __Return:
 
 ScriptPerformer& ScriptPerformer::EvaluateSingle(KeyWordPtr& left, KeyWordPtr key) {
 
+	StringC savedName = LAME_NULL;
 	KeyWord local;
-    
-	if (key->priority.IsRightAssociated()) {
-		if (this->temporary.type != left->type) {
-			this->temporary = *left;
+
+	if (left->key == kKeyWordPriority && left->priority == kPriorityVariable) {
+		if (!left->registered) {
+			savedName = left->word.data();
+			left = (KeyWordPtr)this->FindVariable(left->word.data());
+			if (!left) {
+				PostSyntaxError(key->line, "Undeclared variable (%s)", savedName);
+			}
 		}
-		left = &this->temporary;
-		left->word = "TEMP";
+	}
+
+	if (key->priority.IsRightAssociated()) {
+		this->tempList.push_back(*left);
+		left = &this->tempList.back();
+		left->word = "${temp}";
 	}
 
 	switch (key->priority) {
+		case kPriorityIncrement:
+			left->Inc(); break;
+		case kPriorityDecrement:
+			left->Dec(); break;
         case kPriorityType:
             local = *left; local.type = key->type;
             left->Convert(*left, local);
@@ -254,6 +289,8 @@ ScriptPerformer& ScriptPerformer::EvaluateScript(ScriptParser& parser) {
 	KeyWordPtr right;
     Uint32 count;
     KeyWordPtr kw;
+	Uint32 backJump = 0;
+	Uint32 removedNodes = 0;
 
     count = 0;
     
@@ -292,6 +329,10 @@ ScriptPerformer& ScriptPerformer::EvaluateScript(ScriptParser& parser) {
         }
 #endif
         
+		if (kw->key == kKeyWordDefault) {
+			continue;
+		}
+
 		if (kw->key == kKeyWordPriority) {
 			if (kw->priority == kPriorityVariable) {
 				goto __PushEvaluatable;
@@ -323,7 +364,15 @@ ScriptPerformer& ScriptPerformer::EvaluateScript(ScriptParser& parser) {
                 }
             }
 		} else if (kw->key == kKeyWordSeparator) {
-            if (kw->word[0] == '{' && this->isJump) {
+			while (this->tempList.size()) {
+				this->tempList.pop_back();
+			}
+			if (kw->language == kScriptLanguageWhile) {
+				if (kw->word[0] == '}') {
+					this->isJump = LAME_TRUE;
+				}
+			}
+			if ((kw->word[0] == '{' || kw->word[0] == '}') && this->isJump) {
 				if (this->isJumpPrev) {
 					this->isJumpPrev = !this->isJump;
 					this->isJump = LAME_TRUE;
@@ -332,26 +381,13 @@ ScriptPerformer& ScriptPerformer::EvaluateScript(ScriptParser& parser) {
 					this->isJump = LAME_FALSE;
 				}
                 i += kw->jump - 1;
-                if (i + 1 == parser.yardQueue.end()) {
-                    break;
-                }
-            }
-            while (--count) {
-				i = parser.yardQueue.erase(i) - 1;
-            }
-			if (stack.size()) {
-				stack.pop_back();
-			}
-            while (stack.size()) {
-				if (*i != stack.back()) {
-					i = parser.yardQueue.insert(i, stack.back());
+				if (i + 1 == parser.yardQueue.end()) {
+					break;
 				}
-				stack.pop_back();
-            }
-			if (i == parser.yardQueue.end()) {
-				break;
+				if (kw->language == kScriptLanguageWhile) {
+					continue;
+				}
 			}
-			this->temporary.Reset();
             count = 0;
         } else {
 		__PushEvaluatable:
@@ -421,11 +457,13 @@ ScriptPerformer& ScriptPerformer::EvaluateConstruction(List <KeyWordPtr>* stack,
                     }
                 }
             }
+
+			this->tempList.push_back(*argument);
+			argument = &this->tempList.back();
+			argument->ToBool();
+			argument->language = kScriptLanguageIf;
             
-            this->temporary = *argument;
-            this->temporary.ToBool();
-            
-            if (this->temporary.boolValue) {
+			if (argument->boolValue) {
                 this->isJump = LAME_FALSE;
             } else {
                 this->isJump = LAME_TRUE;
@@ -433,9 +471,37 @@ ScriptPerformer& ScriptPerformer::EvaluateConstruction(List <KeyWordPtr>* stack,
             
             break;
         case kScriptLanguageElse:
+
             this->isJump = !this->isJumpPrev;
             this->isJumpPrev = this->isJump;
+
             break;
+		case kScriptLanguageWhile:
+
+			argument = stack->back();
+			stack->pop_back();
+
+			if (argument->key == kKeyWordPriority && argument->priority == kPriorityVariable) {
+				if (!argument->registered) {
+					argument = (KeyWordPtr)this->FindVariable(argument->word.data());
+					if (!argument) {
+						PostSyntaxError(argument->line, "Undeclared variable (%s)", argument->word.data());
+					}
+				}
+			}
+
+			this->tempList.push_back(*argument);
+			argument = &this->tempList.back();
+			argument->ToBool();
+			argument->language = kScriptLanguageWhile;
+
+			if (!argument->boolValue) {
+				this->isJump = LAME_TRUE;
+			} else {
+				this->isJump = LAME_FALSE;
+			}
+
+			break;
         default:
             PostSyntaxError(kw->line, "Unsupported syntax construction (%s)", kw->word.data());
             break;
@@ -452,13 +518,13 @@ ScriptPerformer& ScriptPerformer::Trace(Void) {
 		switch (i->second->type) {
             case kScriptTypeBool:
                 printf("%2d", i->second->intValue); break;
-//                i->second->boolValue ? printf("TRUE") : printf("FALSE"); break;
+                //i->second->boolValue ? printf("TRUE") : printf("FALSE"); break;
             case kScriptTypeFloat:
                 printf("%.2f", i->second->floatValue); break;
             case kScriptTypeInt:
                 printf("%2d", i->second->intValue); break;
             case kScriptTypeString:
-                printf("%s", i->second->stringValue.data()); break;
+                printf("\"%s\"", i->second->stringValue.data()); break;
             default: break;
 		}
 		printf("\n");

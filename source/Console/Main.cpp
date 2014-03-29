@@ -1,16 +1,23 @@
 #include "Main.h"
 
-int main() {
+int main(int argc, char** argv) {
 
 	lame::ScriptParser parser;
 	lame::ScriptPerformer performer;
 	lame::Clock time;
+	lame::StringC fileName;
 
 	time = lame::Time::GetTime();
+
+	if (argc > 1) {
+		fileName = argv[1];
+	} else {
+		fileName = "main.ls";
+	}
     
 	try {
 		parser
-			.Load("main.ls")
+			.Load(fileName)
             .Sort();
 		performer
             .RegisterVariables(parser)

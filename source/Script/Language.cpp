@@ -11,7 +11,7 @@ StringC ScriptLanguage::String() {
 
 ScriptLanguage& ScriptLanguage::Parse(StringC word) {
 	for (Uint32 i = 0; i < kScriptLanguageAmount; i++) {
-		if (!strncmp(internal::__languageStrings[i], word, strlen(internal::__languageStrings[i]))) {
+		if (!strcmp(internal::__languageStrings[i], word)) {
 			this->type_ = ScriptLanguages(i); return *this;
 		}
 	}

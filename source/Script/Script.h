@@ -127,13 +127,15 @@ typedef enum {
 	kScriptLanguageDefault = -1,
 	kScriptLanguageIf,
 	kScriptLanguageElse,
+	kScriptLanguageWhile,
 	kScriptLanguageAmount
 } ScriptLanguages;
 
 namespace internal {
 	static StringC __languageStrings[kScriptLanguageAmount] = {
 		"if",
-		"else"
+		"else",
+		"while"
 	};
 }
 
@@ -149,11 +151,11 @@ typedef enum {
 
 namespace internal {
 	static StringC __typeStrings[kScriptTypeAmount] = {
-		"int",
-		"float",
-		"bool",
-		"string",
-		"void"
+		"Int",
+		"Float",
+		"Bool",
+		"String",
+		"Void"
 	};
 }
 
@@ -181,15 +183,14 @@ public:
 	}
 public:
 	inline Uint32 Priority() {
-		if (this->priority_ >= kPriorityMul/* && this->priority_ <= kPrioritySet*/) {
+		if ((this->priority_ >= kPriorityMul && this->priority_ <= kPriorityBitOrSet) ||
+			this->priority_ == kPriorityIncrement ||
+			this->priority_ == kPriorityDecrement
+		) {
 			return this->priority_;
+		} else {
+			return kPriorityAmount - (Sint32)this->priority_;
 		}
-		return kPriorityAmount - (Sint32)this->priority_;
-        //if (this->IsBinary()) {
-        //    return this->priority_;
-        //} else {
-        //    return kPriorityAmount - (Sint32)this->priority_;
-        //}
 	}
 	inline Uint32 Arguments() {
 		if (this->IsUnary() ||
@@ -238,7 +239,7 @@ public:
 	ScriptLanguage& Parse(StringC word);
 public:
 	inline operator ScriptLanguages () const { return this->type_; }
-	inline ScriptLanguage operator = (const ScriptLanguages& type) { return ScriptLanguages(type); }
+	inline ScriptLanguage operator = (const ScriptLanguages& type) { this->type_ = type; return *this; }
 public:
 	ScriptLanguage() {
 		this->type_ = kScriptLanguageDefault;
@@ -293,6 +294,8 @@ public:
 	Void BitShiftR(const ScriptVariable& value);
 	Void BitShiftL(const ScriptVariable& value);
 public:
+	Void And(const ScriptVariable& value);
+	Void Or(const ScriptVariable& value);
 	Void Above(const ScriptVariable& value);
 	Void Bellow(const ScriptVariable& value);
 	Void AboveEqual(const ScriptVariable& value);
@@ -318,6 +321,8 @@ public:
 public:
 	Void Reset() {
 		this->type = kScriptTypeDefault;
+		this->priority = kPriorityDefault;
+		this->language = kScriptLanguageDefault;
 		this->line = 0;
 		this->jump = 0;
 		this->registered = 0;
@@ -342,6 +347,8 @@ public:
 	ScriptType type;
 	Uint32 line;
 	Sint32 jump;
+	ScriptPriority priority;
+	ScriptLanguage language;
 };
 
 class LAME_API KeyWord : public ScriptVariable {
@@ -352,8 +359,6 @@ public:
 		return this->Parse(line, word.data());
 	}
 public:
-	ScriptPriority priority;
-	ScriptLanguage language;
 	KeyWords key;
 };
 
@@ -387,14 +392,15 @@ public:
 	ScriptPerformer& Trace(Void);
 public:
 	ScriptPerformer() {
-		this->temporary.Reset();
+		//this->temporary.Reset();
 	}
 private:
 	Void RegisterVariable(KeyWordPtr kw);
 	ScriptVariablePtr FindVariable(StringC name);
 private:
+	List<KeyWord> tempList;
 	Map<Buffer, ScriptVariablePtr> varMap;
-    KeyWord temporary;
+    //KeyWord temporary;
     Bool isJump = 0;
     Bool isJumpPrev = 0;
 };

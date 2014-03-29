@@ -7,7 +7,7 @@ ScriptPriority& ScriptPriority::Parse(StringC word) {
 		if (!languagePriority[i]) {
 			break;
 		}
-		if (!strncmp(word, languagePriority[i], strlen(languagePriority[i]))) {
+		if (!strcmp(word, languagePriority[i])) {
 			this->priority_ = (ScriptPriorityEnum)i;
 			return *this;
 		}
