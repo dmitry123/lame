@@ -67,7 +67,11 @@ Bool Thread::Wait(Void) {
 		return 0;
 	}
 
-	do {} while (this->condition_.TimedWait(1000) != ETIMEDOUT);
+	do {
+		if (!this->IsAlive()) {
+			break;
+		}
+	} while (this->condition_.TimedWait(1000) != ETIMEDOUT);
 
 	return result == 0;
 }

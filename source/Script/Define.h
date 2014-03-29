@@ -65,7 +65,7 @@ protected:
 #define PostSyntaxWarning(_line, _message, ...) \
 	static Bool __warningExceptionLock = 0; \
 	if (!__warningExceptionLock) { \
-		SyntaxException(1, _line, _message, __VA_ARGS__).Debug(); \
+		SyntaxException(1, _line, _message, __VA_ARGS__); \
 	} __warningExceptionLock = 1;
 
 LAME_END

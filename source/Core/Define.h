@@ -42,7 +42,7 @@
 #endif
 
 #if !defined(LAME_NULL)
-#  define LAME_NULL (LAME_NAMESPACE::Uint8)0
+#  define LAME_NULL 0
 #endif
 
 #if !defined(LAME_TRUE)
@@ -50,7 +50,7 @@
 #endif
 
 #if !defined(LAME_FALSE)
-#  define LAME_FALSE 0
+#  define LAME_FALSE (LAME_NAMESPACE::Uint8)0
 #endif
 
 #if defined(_DEBUG) || defined(DEBUG) || defined(NDEBUG)

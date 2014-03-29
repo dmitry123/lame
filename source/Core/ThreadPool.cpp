@@ -1,10 +1,8 @@
-#include "dkThreadPool.h"
-#include "dkException.h"
-#include "dkMutexLock.h"
+#include "Thread.h"
 
-DKJS_BEGIN
+LAME_BEGIN
 
-Thread CThreadPool::GetCurrent(Void) {
+Thread ThreadPool::GetCurrent(Void) {
 
 	Uint64 handle = CThread::GetCurrent();
 	ThreadPool manager;
@@ -22,7 +20,7 @@ Thread CThreadPool::GetCurrent(Void) {
     return manager->threads_.back();
 }
 
-Thread CThreadPool::AttachThread(Void) {
+Thread ThreadPool::AttachThread(Void) {
 
 	CriticalSectionLock(this->lock_);
 
@@ -34,7 +32,7 @@ Thread CThreadPool::AttachThread(Void) {
 	return thread;
 }
 
-Void CThreadPool::DetachThread(Thread thread) {
+Void ThreadPool::DetachThread(Thread thread) {
 
 	CriticalSectionLock(this->lock_);
 
@@ -55,7 +53,7 @@ Void CThreadPool::DetachThread(Thread thread) {
 	this->threads_.erase(i);
 }
 
-Void CThreadPool::DetachAndWaitThread(Thread thread) {
+Void ThreadPool::DetachAndWaitThread(Thread thread) {
 
 	CriticalSectionLock(this->lock_);
 
@@ -76,13 +74,13 @@ Void CThreadPool::DetachAndWaitThread(Thread thread) {
 	this->threads_.erase(i);
 }
 
-Uint32 CThreadPool::GetCountOfThreads(Void) {
+Uint32 ThreadPool::GetCountOfThreads(Void) {
 
 	return
 		count_;
 }
 
-Void CThreadPool::TerminateEveryThread(Void) {
+Void ThreadPool::TerminateEveryThread(Void) {
 
 	CriticalSectionLock(this->lock_);
 
@@ -93,7 +91,7 @@ Void CThreadPool::TerminateEveryThread(Void) {
 	this->threads_.clear();
 }
 
-Uint32 CThreadPool::WaitEveryThread(Void) {
+Uint32 ThreadPool::WaitEveryThread(Void) {
 
 	Uint32 count = 0;
 	List list;
@@ -111,4 +109,4 @@ Uint32 CThreadPool::WaitEveryThread(Void) {
 	return count;
 }
 
-DKJS_END
+LAME_END

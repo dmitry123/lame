@@ -1,110 +1,285 @@
-#include "Variable.h"
+#include "Script.h"
 
 LAME_BEGIN
 
-#define StringType(_type) \
-	ScriptType(_type).String()
-
-#define __APPLY_ADD_2(_operator) \
-	Void ScriptVariable::operator _operator (const ScriptVariable& value) { \
-		Check(*this, value); Convert(*this, value); \
-		switch (this->type) { \
-			case kScriptTypeBool: this->boolValue _operator= value.boolValue; break; \
-			case kScriptTypeFloat: this->floatValue _operator= value.floatValue; break; \
-			case kScriptTypeInt: this->intValue _operator= value.intValue; break; \
-			case kScriptTypeString: this->stringValue _operator= value.stringValue; break; \
-		} \
-	}
-
-#define __APPLY_MATH_2(_operator) \
-	Void ScriptVariable::operator _operator (const ScriptVariable& value) { \
-		Check(*this, value); Convert(*this, value); \
-		switch (this->type) { \
-			case kScriptTypeBool: this->boolValue _operator= value.boolValue; break; \
-			case kScriptTypeFloat: this->floatValue _operator= value.floatValue; break; \
-			case kScriptTypeInt: this->intValue _operator= value.intValue; break; \
-		} \
-	}
-
-#define __APPLY_MATH_1(_operator) \
-	Void ScriptVariable::operator _operator (Void) { \
-		switch (this->type) { \
-			case kScriptTypeBool: this->boolValue =_operator this->boolValue; break; \
-			case kScriptTypeFloat: this->floatValue =_operator this->floatValue; break; \
-			case kScriptTypeInt: this->intValue =_operator this->intValue; break; \
-			default: PostSyntaxError(this->line, "Unable to evaluate (%s) with (%s) type", #_operator, StringType(this->type)); \
-		} \
-	}
-
-#define __APPLY_LOGIC_1(_operator) \
-	Void ScriptVariable::operator _operator (Void) { \
-		switch (this->type) { \
-			case kScriptTypeBool: this->boolValue =_operator this->boolValue; break; \
-			case kScriptTypeInt: this->intValue =_operator this->intValue; break; \
-			default: PostSyntaxError(this->line, "Unable to evaluate (%s) with (%s) type", #_operator, StringType(this->type)); \
-		} \
-	}
-
-#define __APPLY_LOGIC_2(_operator) \
-	Void ScriptVariable::operator _operator (const ScriptVariable& value) { \
-		Check(*this, value); Convert(*this, value); \
-		switch (this->type) { \
-			case kScriptTypeBool: this->boolValue _operator= value.boolValue; break; \
-			case kScriptTypeInt: this->intValue _operator= value.intValue; break; \
-			case kScriptTypeFloat: \
-			case kScriptTypeString: \
-				PostSyntaxError(this->line, "Unable to evaluate (%s) with (%s) and (%s) types", #_operator, \
-					StringType(this->type), \
-					StringType(value.type)); \
-				break; \
-		} \
-	}
-
-#define __APPLY_COMPARE_2(_operator) \
-	Void ScriptVariable::operator _operator (const ScriptVariable& value) { \
-		Check(*this, value); Convert(*this, value); \
-		switch (this->type) { \
-			case kScriptTypeBool: this->boolValue = this->boolValue _operator value.boolValue; break; \
-			case kScriptTypeFloat: this->boolValue = this->floatValue _operator value.floatValue; break; \
-			case kScriptTypeInt: this->boolValue = this->intValue _operator value.intValue; break; \
-			case kScriptTypeString: this->boolValue = this->stringValue _operator value.stringValue; break; \
-		} \
-		this->type = kScriptTypeBool; \
-	}
-
-inline Void ScriptVariable::operator = (const ScriptVariable& value) {
-	Check(*this, value); Convert(*this, value);
+Void ScriptVariable::Set(const ScriptVariable& value) {
+    switch (this->type) {
+        case kScriptTypeBool: this->boolValue = value.boolValue; break;
+        case kScriptTypeFloat: this->floatValue = value.floatValue; break;
+        case kScriptTypeInt: this->intValue = value.intValue; break;
+        case kScriptTypeString: this->stringValue = value.stringValue; break;
+        default: goto __Error;
+    }
+    return;
+__Error:
+    PostSyntaxError(this->line, "Unable to apply = operation to this type", this->type.String());
 }
 
-// Operator '+' for Bool/Int/Float/String
-__APPLY_ADD_2(+);
+Void ScriptVariable::Add(const ScriptVariable& value) {
+    switch (this->type) {
+        case kScriptTypeBool: this->boolValue += value.boolValue; break;
+        case kScriptTypeFloat: this->floatValue += value.floatValue; break;
+        case kScriptTypeInt: this->intValue += value.intValue; break;
+        case kScriptTypeString: this->stringValue += value.stringValue; break;
+        default: goto __Error;
+    }
+    return;
+__Error:
+    PostSyntaxError(this->line, "Unable to apply + operation to this type", this->type.String());
+}
 
-// Basic Math Operators for Bool/Int/Float
-__APPLY_MATH_2(-);
-__APPLY_MATH_2(*);
-__APPLY_MATH_2(/);
+Void ScriptVariable::Sub(const ScriptVariable& value) {
+    switch (this->type) {
+        case kScriptTypeBool: this->boolValue -= value.boolValue; break;
+        case kScriptTypeFloat: this->floatValue -= value.floatValue; break;
+        case kScriptTypeInt: this->intValue -= value.intValue; break;
+        default: goto __Error;
+    }
+    return;
+__Error:
+    PostSyntaxError(this->line, "Unable to apply - operation to this type", this->type.String());
+}
 
-// Operator '!' for Bool/Int/Float
-__APPLY_MATH_1(!);
+Void ScriptVariable::Mul(const ScriptVariable& value) {
+    switch (this->type) {
+        case kScriptTypeBool: this->boolValue *= value.boolValue; break;
+        case kScriptTypeFloat: this->floatValue *= value.floatValue; break;
+        case kScriptTypeInt: this->intValue *= value.intValue; break;
+        default: goto __Error;
+    }
+    return;
+__Error:
+    PostSyntaxError(this->line, "Unable to apply * operation to this type", this->type.String());
+}
 
-// Operator '~' for Bool/Int
-__APPLY_LOGIC_1(~);
+Void ScriptVariable::Div(const ScriptVariable& value) {
+    switch (this->type) {
+        case kScriptTypeBool: this->boolValue /= value.boolValue; break;
+        case kScriptTypeFloat: this->floatValue /= value.floatValue; break;
+        case kScriptTypeInt: this->intValue /= value.intValue; break;
+        default: goto __Error;
+    }
+    return;
+__Error:
+    PostSyntaxError(this->line, "Unable to apply / operation to this type", this->type.String());
+}
 
-// Basic Logic Operators for Bool/Int
-__APPLY_LOGIC_2(%);
-__APPLY_LOGIC_2(&);
-__APPLY_LOGIC_2(|);
-__APPLY_LOGIC_2(^);
-__APPLY_LOGIC_2(<<);
-__APPLY_LOGIC_2(>>);
+Void ScriptVariable::Mod(const ScriptVariable& value) {
+    switch (this->type) {
+        case kScriptTypeBool: this->boolValue %= value.boolValue; break;
+        case kScriptTypeInt: this->intValue %= value.intValue; break;
+        default: goto __Error;
+    }
+    return;
+__Error:
+    PostSyntaxError(this->line, "Unable to apply % operation to this type", this->type.String());
+}
 
-// Basic Compare Operators for Bool/Int/Float/String
-__APPLY_COMPARE_2(<);
-__APPLY_COMPARE_2(>);
-__APPLY_COMPARE_2(<=);
-__APPLY_COMPARE_2(>=);
-__APPLY_COMPARE_2(==);
-__APPLY_COMPARE_2(!=);
+Void ScriptVariable::BitAnd(const ScriptVariable& value) {
+    switch (this->type) {
+        case kScriptTypeBool: this->boolValue &= value.boolValue; break;
+        case kScriptTypeInt: this->intValue &= value.intValue; break;
+        default: goto __Error;
+    }
+    return;
+__Error:
+    PostSyntaxError(this->line, "Unable to apply & operation to this type", this->type.String());
+}
+
+Void ScriptVariable::BitOr(const ScriptVariable& value) {
+    switch (this->type) {
+        case kScriptTypeBool: this->boolValue |= value.boolValue; break;
+        case kScriptTypeInt: this->intValue |= value.intValue; break;
+        default: goto __Error;
+    }
+    return;
+__Error:
+    PostSyntaxError(this->line, "Unable to apply | operation to this type", this->type.String());
+}
+
+Void ScriptVariable::BitXor(const ScriptVariable& value) {
+    switch (this->type) {
+        case kScriptTypeBool: this->boolValue ^= value.boolValue; break;
+        case kScriptTypeInt: this->intValue ^= value.intValue; break;
+        default: goto __Error;
+    }
+    return;
+__Error:
+    PostSyntaxError(this->line, "Unable to apply ^ operation to this type", this->type.String());
+}
+
+Void ScriptVariable::BitShiftL(const ScriptVariable& value) {
+    switch (this->type) {
+        case kScriptTypeBool: this->boolValue <<= value.boolValue; break;
+        case kScriptTypeInt: this->intValue <<= value.intValue; break;
+        default: goto __Error;
+    }
+    return;
+__Error:
+    PostSyntaxError(this->line, "Unable to apply << operation for (%s) type", this->type.String());
+}
+
+Void ScriptVariable::BitShiftR(const ScriptVariable& value) {
+    switch (this->type) {
+        case kScriptTypeBool: this->boolValue >>= value.boolValue; break;
+        case kScriptTypeInt: this->intValue >>= value.intValue; break;
+        default: goto __Error;
+    }
+    return;
+__Error:
+    PostSyntaxError(this->line, "Unable to apply >> operation to this type", this->type.String());
+}
+
+Void ScriptVariable::Above(const ScriptVariable& value) {
+    switch (this->type) {
+        case kScriptTypeBool: this->boolValue = this->boolValue > value.boolValue; break;
+        case kScriptTypeFloat: this->boolValue = this->floatValue > value.floatValue; break;
+        case kScriptTypeInt: this->boolValue = this->intValue > value.intValue; break;
+        case kScriptTypeString: this->boolValue = this->stringValue > value.stringValue; break;
+        default: goto __Error;
+    }
+    this->type = kScriptTypeBool;
+    return;
+__Error:
+    PostSyntaxError(this->line, "Unable to apply > operation to this type", this->type.String());
+}
+
+Void ScriptVariable::Bellow(const ScriptVariable& value) {
+    switch (this->type) {
+        case kScriptTypeBool: this->boolValue = this->boolValue < value.boolValue; break;
+        case kScriptTypeFloat: this->boolValue = this->floatValue < value.floatValue; break;
+        case kScriptTypeInt: this->boolValue = this->intValue < value.intValue; break;
+        case kScriptTypeString: this->boolValue = this->stringValue < value.stringValue; break;
+        default: goto __Error;
+    }
+    this->type = kScriptTypeBool;
+    return;
+__Error:
+    PostSyntaxError(this->line, "Unable to apply < operation to this type", this->type.String());
+}
+
+Void ScriptVariable::AboveEqual(const ScriptVariable& value) {
+    switch (this->type) {
+        case kScriptTypeBool: this->boolValue = this->boolValue >= value.boolValue; break;
+        case kScriptTypeFloat: this->boolValue = this->floatValue >= value.floatValue; break;
+        case kScriptTypeInt: this->boolValue = this->intValue >= value.intValue; break;
+        case kScriptTypeString: this->boolValue = this->stringValue >= value.stringValue; break;
+        default: goto __Error;
+    }
+    this->type = kScriptTypeBool;
+    return;
+__Error:
+    PostSyntaxError(this->line, "Unable to apply >= operation to this type", this->type.String());
+}
+
+Void ScriptVariable::BellowEqual(const ScriptVariable& value) {
+    switch (this->type) {
+        case kScriptTypeBool: this->boolValue = this->boolValue <= value.boolValue; break;
+        case kScriptTypeFloat: this->boolValue = this->floatValue <= value.floatValue; break;
+        case kScriptTypeInt: this->boolValue = this->intValue <= value.intValue; break;
+        case kScriptTypeString: this->boolValue = this->stringValue <= value.stringValue; break;
+        default: goto __Error;
+    }
+    this->type = kScriptTypeBool;
+    return;
+__Error:
+    PostSyntaxError(this->line, "Unable to apply <= operation to this type", this->type.String());
+}
+
+Void ScriptVariable::Equal(const ScriptVariable& value) {
+    switch (this->type) {
+        case kScriptTypeBool: this->boolValue = this->boolValue == value.boolValue; break;
+        case kScriptTypeFloat: this->boolValue = this->floatValue == value.floatValue; break;
+        case kScriptTypeInt: this->boolValue = this->intValue == value.intValue; break;
+        case kScriptTypeString: this->boolValue = this->stringValue == value.stringValue; break;
+        default: goto __Error;
+    }
+    this->type = kScriptTypeBool;
+    return;
+__Error:
+    PostSyntaxError(this->line, "Unable to apply == operation to this type", this->type.String());
+}
+
+Void ScriptVariable::NotEqual(const ScriptVariable& value) {
+    switch (this->type) {
+        case kScriptTypeBool: this->boolValue = this->boolValue != value.boolValue; break;
+        case kScriptTypeFloat: this->boolValue = this->floatValue != value.floatValue; break;
+        case kScriptTypeInt: this->boolValue = this->intValue != value.intValue; break;
+        case kScriptTypeString: this->boolValue = this->stringValue != value.stringValue; break;
+        default: goto __Error;
+    }
+    this->type = kScriptTypeBool;
+    return;
+__Error:
+    PostSyntaxError(this->line, "Unable to apply != operation to this type", this->type.String());
+}
+
+Void ScriptVariable::BitNot() {
+    switch (this->type) {
+        case kScriptTypeBool: this->boolValue = ~this->boolValue; break;
+        case kScriptTypeInt: this->intValue = ~this->intValue; break;
+        default: goto __Error;
+    }
+    this->type = kScriptTypeBool;
+    return;
+__Error:
+    PostSyntaxError(this->line, "Unable to apply ~ operation to this type", this->type.String());
+}
+
+Void ScriptVariable::Not() {
+    switch (this->type) {
+        case kScriptTypeBool: this->boolValue = !this->boolValue; break;
+        case kScriptTypeFloat: this->floatValue = !this->floatValue; break;
+        case kScriptTypeInt: this->intValue = !this->intValue; break;
+        default: goto __Error;
+    }
+    this->type = kScriptTypeBool;
+    return;
+__Error:
+    PostSyntaxError(this->line, "Unable to apply ! operation to this type", this->type.String());
+}
+
+Void ScriptVariable::Inc() {
+    switch (this->type) {
+        case kScriptTypeBool: ++this->boolValue; break;
+        case kScriptTypeFloat: ++this->floatValue; break;
+        case kScriptTypeInt: ++this->intValue; break;
+        default: goto __Error;
+    }
+    this->type = kScriptTypeBool;
+    return;
+__Error:
+    PostSyntaxError(this->line, "Unable to apply ++ operation to this type", this->type.String());
+}
+
+Void ScriptVariable::Dec() {
+    switch (this->type) {
+        case kScriptTypeBool: --this->boolValue; break;
+        case kScriptTypeFloat: --this->floatValue; break;
+        case kScriptTypeInt: --this->intValue; break;
+        default: goto __Error;
+    }
+    this->type = kScriptTypeBool;
+    return;
+__Error:
+    PostSyntaxError(this->line, "Unable to apply -- operation to this type", this->type.String());
+}
+
+Void ScriptVariable::ToBool() {
+    
+    switch (this->type) {
+        case kScriptTypeBool:
+            break;
+        case kScriptTypeFloat:
+            this->boolValue = this->floatValue != 0; break;
+        case kScriptTypeInt:
+            this->boolValue = this->intValue != 0; break;
+        case kScriptTypeString:
+            this->boolValue = this->stringValue.length() != 0; break;
+        default:
+            this->boolValue = 0; break;
+    }
+}
 
 Bool ScriptVariable::Check(
 	const ScriptVariable& left,
@@ -172,29 +347,30 @@ Void ScriptVariable::Convert(
 		left.stringValue = right.stringValue;
 		left.type = right.type;
 	}
-	switch (left.type) {
+	switch (right.type) {
 		case kScriptTypeBool:
-			switch (right.type) {
+			switch (left.type) {
 				case kScriptTypeFloat:
 					left.boolValue = (ScriptNativeBool)right.floatValue; break;
 				case kScriptTypeInt:
 					left.boolValue = (ScriptNativeBool)right.intValue; break;
 			} break;
 		case kScriptTypeFloat:
-			switch (right.type) {
+			switch (left.type) {
 				case kScriptTypeBool:
 					left.floatValue = (ScriptNativeFloat)right.boolValue; break;
 				case kScriptTypeInt:
 					left.floatValue = (ScriptNativeFloat)right.intValue; break;
 			} break;
 		case kScriptTypeInt:
-			switch (right.type) {
+			switch (left.type) {
 				case kScriptTypeBool:
 					left.intValue = (ScriptNativeInt)right.boolValue; break;
 				case kScriptTypeFloat:
 					left.intValue = (ScriptNativeInt)right.floatValue; break;
 			} break;
 	}
+	left.type = right.type;
 }
 
 LAME_END

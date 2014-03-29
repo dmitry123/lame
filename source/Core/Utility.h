@@ -18,6 +18,8 @@
 #  include <malloc.h>
 #endif
 
+#include <string>
+
 LAME_BEGIN
 
 inline VoidP Malloc(Uint32 size) {
@@ -122,7 +124,7 @@ Void SharedPtr <T>::__Create(TypeP reference) {
 template <class T>
 Void SharedPtr <T>::__Destroy() {
     
-	if (!this || this->weaks_ && *this->weaks_ != 0) {
+	if (!this || (this->weaks_ && *this->weaks_ != 0)) {
 		return;
 	}
     
@@ -251,7 +253,7 @@ private:
 	}
 };
 
-class Buffer : public std::string {
+class LAME_API Buffer : public std::string {
 public:
 	Buffer() {
 		// nothing
@@ -383,7 +385,7 @@ public:
 		return this->instance_;
 	}
 	inline WeakPtr<T> GetWeakPtr() {
-		return dkjs::WeakPtr<T>(instance_);
+		return WeakPtr<T>(instance_);
 	}
 public:
 	inline TypeRef operator * () {
