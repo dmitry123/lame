@@ -110,7 +110,7 @@ public:
 		inline operator StringC () { return this->path_; }
 	private:
 		FilePathBuffer path_;
-	} FilePathController;
+	} FPC;
 public:
 	typedef List <FPC> Stack;
 public:
@@ -192,6 +192,7 @@ Bool LAME_API RemoveDirectoryTree(StringC name);
 Bool LAME_API RenameDirectoryTree(StringC name, StringC result);
 Bool LAME_API MoveDirectoryTree(StringC name, StringC result);
 Bool LAME_API CopyDirectoryTree(StringC name, StringC result);
+
 List <Buffer> LAME_API GetContentAtPath(StringC path);
 List <Buffer> LAME_API GetDirectoriesAtPath(StringC path);
 List <Buffer> LAME_API GetFilesAtPath(StringC path, StringC extensions = LAME_NULL);

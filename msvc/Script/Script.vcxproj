@@ -77,14 +77,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\source\Script\Language.cpp" />
-    <ClCompile Include="..\..\source\Script\Parser.cpp" />
-    <ClCompile Include="..\..\source\Script\Performer.cpp" />
-    <ClCompile Include="..\..\source\Script\Priority.cpp" />
-    <ClCompile Include="..\..\source\Script\Type.cpp" />
-    <ClCompile Include="..\..\source\Script\Variable.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">
       <Project>{8e51e80f-eda6-41cb-8d0f-5a722293b445}</Project>
     </ProjectReference>
@@ -92,6 +84,14 @@
   <ItemGroup>
     <ClInclude Include="..\..\source\Script\Define.h" />
     <ClInclude Include="..\..\source\Script\Script.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\source\Script\Node.cpp" />
+    <ClCompile Include="..\..\source\Script\Object.cpp" />
+    <ClCompile Include="..\..\source\Script\Parser.cpp" />
+    <ClCompile Include="..\..\source\Script\Performer.cpp" />
+    <ClCompile Include="..\..\source\Script\Type.cpp" />
+    <ClCompile Include="..\..\source\Script\Variable.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

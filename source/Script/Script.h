@@ -5,265 +5,165 @@
 
 LAME_BEGIN
 
-typedef class ScriptPriority ScriptPriority, *ScriptPriorityPtr;
-typedef class ScriptLanguage ScriptLanguage, *ScriptLanguagePtr;
-typedef class ScriptType ScriptType, *ScriptTypePtr;
-typedef class ScriptVariable ScriptVariable, *ScriptVariablePtr;
-typedef class KeyWord KeyWord, *KeyWordPtr;
-typedef class ScriptParser ScriptParser, *ScriptParserPtr;
-
 typedef Sint32 ScriptNativeInt;
 typedef Float32 ScriptNativeFloat;
 typedef Bool ScriptNativeBool;
 typedef Buffer ScriptNativeString;
 
-typedef enum {
-	kPriorityDefault = -1,
-	kPriorityBracketL,
-	kPriorityBracketR,
-	kPriorityParenthesesL,
-	kPriorityParenthesesR,
-	kPriorityDot,
-    kPriorityArrow,
-	kPriorityDeclare,
-	kPriorityIncrement,
-	kPriorityDecrement,
-	kPrioritySizeof,
-	kPriorityBitNot,
-	kPriorityNot,
-	/*kPriorityUnaryMinus,
-	kPriorityUnaryPlus,
-	kPriorityOffset,
-	kPriorityClaim,*/
-	kPriorityType,
-	kPriorityMul,
-	kPriorityDiv,
-	kPriorityMod,
-	kPriorityAdd,
-	kPrioritySub,
-	kPriorityShiftL,
-	kPriorityShiftR,
-	kPriorityBellowEqual,
-	kPriorityAboveEqual,
-	kPriorityBellow,
-	kPriorityAbove,
-	kPriorityEqual,
-	kPriorityNotEqual,
-	kPriorityBitAnd,
-	kPriorityBitXor,
-	kPriorityBitOr,
-	kPriorityAnd,
-	kPriorityOr,
-	kPrioritySet,
-	kPriorityAddSet,
-	kPrioritySubSet,
-	kPriorityMulSet,
-	kPriorityDivSet,
-	kPriorityModSet,
-	kPriorityShiftSetL,
-	kPriorityShiftSetR,
-	kPriorityBitAndSet,
-	kPriorityBitXorSet,
-	kPriorityBitOrSet,
-	kPriorityComa,
-	kPriorityVariable,
-	kPriorityLanguage,
-	kPriorityAmount
-} ScriptPriorityEnum;
-
-static StringC languagePriority[kPriorityAmount] = {
-	"[", // postfix
-	"]",
-	"(",
-	")",
-	".",
-	"->",
-	"${type}",
-	"++",
-	"--",
-	"sizeof", // unary
-	"~",
-    "!",
-	/*"-",
-	"+",
-	"&",
-	"*",*/
-	"${type}",
-	"*", // binary
-	"/",
-	"%",
-	"+",
-	"-",
-	"<<",
-	">>",
-	"<=",
-	">=",
-	"<",
-	">",
-	"==",
-	"!=",
-	"&",
-	"^",
-	"|",
-	"&&",
-	"||",
-	"=",
-	"+=",
-	"-=",
-	"*=",
-	"/=",
-	"%=",
-	"<<=",
-	">>=",
-	"&=",
-	"^=",
-	"|=",
-	",",
-	"${language}",
-	"${variable}",
-};
+typedef class ScriptType ScriptType, *ScriptTypePtr;
+typedef class ScriptTypeManager ScriptTypeManager, *ScriptTypeManagerPtr;
+typedef class ScriptObject ScriptObject, *ScriptObjectPtr;
+typedef class ScriptVariable ScriptVariable, *ScriptVariablePtr;
+typedef class ScriptVariableManager ScriptVariableManager, *ScriptVariableManagerPtr;
+typedef class ScriptNode ScriptNode, *ScriptNodePtr;
+typedef class ScriptSorter ScriptSorter, *ScriptSorterPtr;
+typedef class ScriptPerformer ScriptPerformer, *ScriptPerformerPtr;
+typedef class ScriptParser ScriptParser, *ScriptParserPtr;
 
 typedef enum {
-	kScriptLanguageDefault = -1,
-	kScriptLanguageIf,
-	kScriptLanguageElse,
-	kScriptLanguageWhile,
-	kScriptLanguageAmount
-} ScriptLanguages;
+	kScriptDefault = -1,
+	/* FIRST */
+	kScriptVariable,
+	kScriptInt,
+	kScriptFloat,
+	kScriptString,
+	/* POSTFIX */
+	kScriptBracketL,
+	kScriptBracketR,
+	kScriptParentheseL,
+	kScriptParentheseR,
+	kScriptDirectSelection,
+	kScriptMediatedSelection,
+	kScriptDeclare,
+	kScriptIncrement,
+	kScriptDecrement,
+	/* UNARY */
+	kScriptSizeof,
+	kScriptBitNot,
+	kScriptNot,
+	kScriptUnaryMinus,
+	kScriptUnaryPlus,
+	kScriptOffset,
+	kScriptClaim,
+	kScriptType,
+	kScriptIf,
+	kScriptElse,
+	kScriptWhile,
+	kScriptDo,
+	kScriptFor,
+	/* BINARY */
+	kScriptMul,
+	kScriptDiv,
+	kScriptMod,
+	kScriptAdd,
+	kScriptSub,
+	kScriptBitShiftL,
+	kScriptBitShiftR,
+	kScriptBellow,
+	kScriptAbove,
+	kScriptBellowEqual,
+	kScriptAboveEqual,
+	kScriptEqual,
+	kScriptNotEqual,
+	kScriptBitAnd,
+	kScriptBitXor,
+	kScriptBitOr,
+	kScriptAnd,
+	kScriptOr,
+	kScriptSet,
+	kScriptAddSet,
+	kScriptSubSet,
+	kScriptMulSet,
+	kScriptDivSet,
+	kScriptModSet,
+	kScriptBitShiftSetL,
+	kScriptBitShiftSetR,
+	kScriptBitAndSet,
+	kScriptBitXorSet,
+	kScriptBitOrSet,
+	kScriptComa,
+	/* OTHER */
+	kScriptCommentL,
+	kScriptCommentR,
+	kScriptCommentLine,
+	kScriptQuote,
+	kScriptApostrophe,
+	kScriptSemicolon,
+	kScriptBraceL,
+	kScriptBraceR,
+	kScriptAmount
+} ScriptFlag;
 
-namespace internal {
-	static StringC __languageStrings[kScriptLanguageAmount] = {
-		"if",
-		"else",
-		"while"
-	};
-}
+typedef enum {
+	kScriptArgDefault = -1,
+	kScriptArgPostfix,
+	kScriptArgUnary,
+	kScriptArgBinary
+} ScriptArg;
+
+typedef enum {
+	kScriptAssociativityDefault = -1,
+	kScriptAssociativityLeft,
+	kScriptAssociativityRight
+} ScriptAssociativity;
 
 typedef enum {
 	kScriptTypeDefault = -1,
+	kScriptTypeVoid,
 	kScriptTypeInt,
 	kScriptTypeFloat,
 	kScriptTypeBool,
 	kScriptTypeString,
-	kScriptTypeVoid,
+	kScriptTypeFunction,
+	kScriptTypeObject,
 	kScriptTypeAmount
-} ScriptTypes;
+} ScriptTypeEnum;
 
-namespace internal {
-	static StringC __typeStrings[kScriptTypeAmount] = {
-		"Int",
-		"Float",
-		"Bool",
-		"String",
-		"Void"
-	};
-}
-
-typedef enum {
-	kKeyWordDefault = -1,
-	kKeyWordPriority,
-	kKeyWordSeparator,
-	kKeyWordType,
-	kKeyWordLanguage,
-	kKeyWordInt,
-	kKeyWordFloat,
-	kKeyWordString,
-	kKeyWordAmount
-} KeyWords;
-
-class LAME_API ScriptPriority {
+class LAME_API ScriptType {
 public:
-	ScriptPriority& Parse(StringC word);
+	Buffer word;
+	ScriptTypeEnum type;
+	ScriptVariablePtr var;
 public:
-	inline ScriptPriority& Parse(BufferRefC word) {
-		return this->Parse(word.data());
-	}
-	inline StringC String() {
-		return languagePriority[this->priority_];
-	}
+	inline Void operator = (const ScriptTypeEnum& type) { this->type = type; }
+	inline operator ScriptTypeEnum (Void) const { return this->type; };
 public:
-	inline Uint32 Priority() {
-		if ((this->priority_ >= kPriorityMul && this->priority_ <= kPriorityBitOrSet) ||
-			this->priority_ == kPriorityIncrement ||
-			this->priority_ == kPriorityDecrement
-		) {
-			return this->priority_;
-		} else {
-			return kPriorityAmount - (Sint32)this->priority_;
-		}
-	}
-	inline Uint32 Arguments() {
-		if (this->IsUnary() ||
-			this->IsPostfix()) {
-			return 1;
-		} else if (this->IsBinary()) {
-			return 2;
-		} else {
-			return 0;
-		}
-	}
-public:
-	inline Bool IsLeftAssociated() {
-        return
-            (this->priority_ >= kPrioritySet &&
-             this->priority_ <= kPriorityBitOrSet) ||
-             this->priority_ == kPriorityIncrement ||
-             this->priority_ == kPriorityDecrement;
-	}
-	inline Bool IsRightAssociated() {
-        return !this->IsLeftAssociated();
-	}
-public:
-	inline operator ScriptPriorityEnum () const { return this->priority_; }
-	inline ScriptPriority operator = (ScriptPriorityEnum p) { this->priority_ = p; return *this; }
-public:
-	inline Bool IsPostfix() {
-		return this->priority_ >= kPriorityBracketL && this->priority_ <= kPriorityDecrement;
-	}
-	inline Bool IsUnary() {
-		return this->priority_ >= kPrioritySizeof && this->priority_ <= kPriorityType;
-	}
-	inline Bool IsBinary() {
-		return this->priority_ >= kPriorityMul && this->priority_ <= kPriorityComa;
-	}
-	inline Bool IsType() {
-		return this->priority_ == kPriorityType;
-	}
-private:
-	ScriptPriorityEnum priority_;
+	ScriptType& Parse(StringC* word);
+	StringC GetString(Void) const;
 };
 
-class ScriptLanguage {
+class LAME_API ScriptTypeManager {
+	typedef Buffer* BufferPtr;
 public:
-	StringC String();
-	ScriptLanguage& Parse(StringC word);
+	Bool Declare(const ScriptVariable& type);
+	ScriptTypePtr Find(StringC name);
 public:
-	inline operator ScriptLanguages () const { return this->type_; }
-	inline ScriptLanguage operator = (const ScriptLanguages& type) { this->type_ = type; return *this; }
-public:
-	ScriptLanguage() {
-		this->type_ = kScriptLanguageDefault;
-	}
-	ScriptLanguage(const ScriptLanguages& type) {
-		this->type_ = type;
-	}
-private:
-	ScriptLanguages type_;
+	Map<Buffer, ScriptType> typeMap;
 };
 
-class ScriptType {
+class LAME_API ScriptObject {
 public:
-	StringC String();
-	ScriptType& Parse(StringC word);
+	Buffer word;
+	Uint32 priority;
+	ScriptFlag flag;
+	ScriptArg args;
+	ScriptAssociativity associativity;
+	Uint32 line;
+    ScriptVariablePtr var;
 public:
-	inline operator ScriptTypes () const { return this->type_; }
-	inline ScriptType operator = (const ScriptTypes& type) { this->type_ = type; return *this; }
+	ScriptObject& Parse(StringC* word);
+	StringC GetString(Void) const;
 public:
-	ScriptType() {
-		this->type_ = kScriptTypeDefault;
-	}
-private:
-	ScriptTypes type_;
+	inline Bool IsLeftAssociated() const { return this->associativity == kScriptAssociativityLeft; }
+	inline Bool IsRightAssociated() const { return this->associativity == kScriptAssociativityRight; }
+	inline Bool IsPostfix() const { return this->args == kScriptArgPostfix; }
+	inline Bool IsUnary() const { return this->args == kScriptArgUnary; }
+	inline Bool IsBinary() const { return this->args == kScriptArgBinary; }
+    inline Bool IsCondition() const { return this->flag >= kScriptIf && this->flag <= kScriptFor; }
+	inline Bool IsArgsBegin() const { return this->flag == kScriptParentheseL; }
+	inline Bool IsArgsEnd() const { return this->flag == kScriptParentheseR; }
+	inline Bool IsBlockBegin() const { return this->flag == kScriptBraceL; }
+	inline Bool IsBlockEnd() const { return this->flag == kScriptBraceR; }
 };
 
 class LAME_API ScriptVariable {
@@ -281,128 +181,104 @@ public:
 		this->stringValue = value; this->type = kScriptTypeString;
 	}
 public:
-	Void Set(const ScriptVariable& value);
-	Void Add(const ScriptVariable& value);
-	Void Sub(const ScriptVariable& value);
-	Void Mul(const ScriptVariable& value);
-	Void Div(const ScriptVariable& value);
-	Void Mod(const ScriptVariable& value);
-public:
-	Void BitAnd(const ScriptVariable& value);
-	Void BitOr(const ScriptVariable& value);
-	Void BitXor(const ScriptVariable& value);
-	Void BitShiftR(const ScriptVariable& value);
-	Void BitShiftL(const ScriptVariable& value);
-public:
-	Void And(const ScriptVariable& value);
-	Void Or(const ScriptVariable& value);
-	Void Above(const ScriptVariable& value);
-	Void Bellow(const ScriptVariable& value);
-	Void AboveEqual(const ScriptVariable& value);
-	Void BellowEqual(const ScriptVariable& value);
-	Void Equal(const ScriptVariable& value);
-	Void NotEqual(const ScriptVariable& value);
-public:
-	Void BitNot();
-	Void Not();
-public:
-	Void Inc();
-	Void Dec();
-public:
-    Void ToBool();
-public:
-	static Bool Check(
-        const ScriptVariable& left,
-        const ScriptVariable& right);
-public:
 	static Void Convert(
-              ScriptVariable& left,
-        const ScriptVariable& right);
+		      ScriptVariable& left,
+		const ScriptVariable& right);
 public:
-	Void Reset() {
-		this->type = kScriptTypeDefault;
-		this->priority = kPriorityDefault;
-		this->language = kScriptLanguageDefault;
-		this->line = 0;
-		this->jump = 0;
-		this->registered = 0;
-		this->boolValue = 0;
-		this->floatValue = 0;
-		this->intValue = 0;
-		this->stringValue.clear();
-		this->word.clear();
-	}
+    ScriptVariable& Reset(Void);
 public:
-	ScriptNativeBool boolValue;
-	ScriptNativeFloat floatValue;
 	ScriptNativeInt intValue;
+	ScriptNativeFloat floatValue;
+	ScriptNativeBool boolValue;
 	ScriptNativeString stringValue;
 public:
-	ScriptVariable() {
-		this->Reset();
-	}
-public:
-	Bool registered;
-	Buffer word;
 	ScriptType type;
-	Uint32 line;
-	Sint32 jump;
-	ScriptPriority priority;
-	ScriptLanguage language;
+	ScriptObjectPtr object = 0;
 };
 
-class LAME_API KeyWord : public ScriptVariable {
+class LAME_API ScriptVariableManager {
 public:
-	KeyWord& Parse(Uint32 line, StringC word);
+	Bool Declare(ScriptVariable variable);
+	ScriptVariablePtr Find(StringC name);
 public:
-	inline KeyWord& Parse(Uint32 line, const Buffer& word) {
-		return this->Parse(line, word.data());
-	}
-public:
-	KeyWords key;
+	Map<Buffer, ScriptVariable> varMap;
 };
 
-class LAME_API ScriptParser {
-	friend class ScriptPerformer;
+class LAME_API ScriptNode {
 public:
-    ScriptParser& Load(StringC filename);
-	ScriptParser& Parse(StringC script);
-	ScriptParser& Trace(Bool flag = 0);
-	ScriptParser& Sort(Void);
+    Void Order(Void);
+    Void Evaluate(ScriptPerformerPtr performer);
 public:
-	inline Void Parse(const Buffer& script) {
-		this->Parse(script.data());
-	}
+	ScriptObjectPtr object = 0;
+	ScriptNodePtr parent = 0;
+	Bool result = 0;
+public:
+    Vector<ScriptNodePtr> condition;
+	Vector<ScriptNodePtr> block;
 private:
-	List <KeyWord> keyQueue;
-	Vector <KeyWordPtr> yardQueue;
+	Void Order(Vector<ScriptNodePtr>* list);
 };
 
 class LAME_API ScriptPerformer {
+	friend class ScriptParser;
 public:
-	ScriptPerformer& EvaluateConstants(ScriptParser& parser);
-	ScriptPerformer& FixBraces(ScriptParser& parser);
-	ScriptPerformer& ComputeJumps(ScriptParser& parser);
-	ScriptPerformer& EvaluateDouble(KeyWordPtr& left, KeyWordPtr right, KeyWordPtr key);
-	ScriptPerformer& EvaluateSingle(KeyWordPtr& left, KeyWordPtr key);
-	ScriptPerformer& EvaluateScript(ScriptParser& parser);
-    ScriptPerformer& RegisterVariables(ScriptParser& parser);
-    ScriptPerformer& EvaluateConstruction(List <KeyWordPtr>* stack, KeyWordPtr kw);
+	Void Set(ScriptVariable& left, const ScriptVariable& right);
+	Void Add(ScriptVariable& left, const ScriptVariable& right);
+	Void Sub(ScriptVariable& left, const ScriptVariable& right);
+	Void Mul(ScriptVariable& left, const ScriptVariable& right);
+	Void Div(ScriptVariable& left, const ScriptVariable& right);
+	Void Mod(ScriptVariable& left, const ScriptVariable& right);
+	Void BitAnd(ScriptVariable& left, const ScriptVariable& right);
+	Void BitOr(ScriptVariable& left, const ScriptVariable& right);
+	Void BitXor(ScriptVariable& left, const ScriptVariable& right);
+	Void BitShiftR(ScriptVariable& left, const ScriptVariable& right);
+	Void BitShiftL(ScriptVariable& left, const ScriptVariable& right);
+	Void And(ScriptVariable& left, const ScriptVariable& right);
+	Void Or(ScriptVariable& left, const ScriptVariable& right);
+	Void Above(ScriptVariable& left, const ScriptVariable& right);
+	Void Bellow(ScriptVariable& left, const ScriptVariable& right);
+	Void AboveEqual(ScriptVariable& left, const ScriptVariable& right);
+	Void BellowEqual(ScriptVariable& left, const ScriptVariable& right);
+	Void Equal(ScriptVariable& left, const ScriptVariable& right);
+	Void NotEqual(ScriptVariable& left, const ScriptVariable& right);
+	Void BitNot(ScriptVariable& left);
+	Void Not(ScriptVariable& left);
+	Void Inc(ScriptVariable& left);
+	Void Dec(ScriptVariable& left);
+	Void AsBool(ScriptVariable& left);
 public:
-	ScriptPerformer& Trace(Void);
+	ScriptPerformer& Evaluate(Void);
 public:
-	ScriptPerformer() {
-		//this->temporary.Reset();
-	}
+	Void Evaluate(
+		Vector<ScriptNodePtr>* list,
+		Vector<ScriptNodePtr>* result);
 private:
-	Void RegisterVariable(KeyWordPtr kw);
-	ScriptVariablePtr FindVariable(StringC name);
+	Void EvaluateSingleExpression(
+		ScriptNodePtr left,
+		ScriptNodePtr token);
+	Void EvaluateDoubleExpression(
+		ScriptNodePtr left,
+		ScriptNodePtr right,
+		ScriptNodePtr token);
 private:
-	List<KeyWord> tempList;
-	Map<Buffer, ScriptVariablePtr> varMap;
-    //KeyWord temporary;
-    Bool isJump = 0;
-    Bool isJumpPrev = 0;
+	Vector<ScriptNodePtr> nodeTree;
+	ScriptVariableManager varManager;
+	ScriptTypeManager typeManager;
+};
+
+class LAME_API ScriptParser {
+public:
+	ScriptParser& Parse(StringC script);
+	ScriptParser& Build(ScriptPerformerPtr performer);
+	ScriptParser& Load(StringC file);
+private:
+	Void RegisterVariable(Void);
+	Void RegisterType(Void);
+    Void RegisterConstants(Void);
+private:
+	List<ScriptObject> keyList;
+    List<ScriptVariable> varList;
+	List<ScriptNode> nodeList;
 };
 
 LAME_END

@@ -2,466 +2,342 @@
 
 LAME_BEGIN
 
-inline Bool IsDigit(Sint8 symbol) {
-	return symbol >= '0' && symbol <= '9';
-}
-
-inline Bool IsLetter(Sint8 symbol) {
+static inline Bool IsDigit(Sint8 symbol) {
+    
 	return
-		(symbol >= 'a' && symbol <= 'z') ||
-		(symbol >= 'A' && symbol <= 'Z');
+        symbol >= '0' &&
+        symbol <= '9';
 }
 
-inline Bool IsIntValue(StringC string) {
-
-	Uint32 length = strlen(string);
-
-	for (Uint32 i = 0; i < length; i++) {
-		if (!IsDigit(string[i])) {
-			return LAME_FALSE;
-		}
-	}
-	return LAME_TRUE;
-}
-
-inline Bool IsStringValue(StringC string) {
-
-	Uint32 length = strlen(string);
-
+static inline Bool IsLetter(Sint8 symbol) {
+    
 	return
-		(string[0] == '\"' && string[length - 1] == '\"') ||
-		(string[0] == '\'' && string[length - 1] == '\'');
+        (symbol >= 'a' && symbol <= 'z') ||
+        (symbol >= 'A' && symbol <= 'Z');
 }
 
-inline Bool IsIntValue(BufferRefC string) {
+static inline Bool IsIntValue(StringC string) {
+    
+	String result;
 
-	for (char s : string) {
-		if (!IsDigit(s)) {
-			return LAME_FALSE;
-		}
-	}
-	return LAME_TRUE;
-}
+	strtol(string, &result, 10);
 
-inline Bool IsFloatValue(StringC string) {
-
-	Sint8P finish;
-
-	if (!string) {
-		return LAME_FALSE;
-	}
-
-	strtof(string, &finish);
-
-	if ((*finish == 'f' && *(finish + 1) == '\0') || !*finish) {
+	if (string != result) {
 		return LAME_TRUE;
 	}
 
 	return LAME_FALSE;
 }
 
-inline Bool IsFloatValue(BufferRefC string) {
+static inline Bool IsStringValue(StringC string) {
+    
+	Uint32 length = (Uint32)strlen(string);
+    
+	if (length <= 1) {
+		return LAME_FALSE;
+	}
+    
+	return
+        (string[0] == '\"' && string[length - 1] == '\"') ||
+        (string[0] == '\'' && string[length - 1] == '\'');
+}
 
+static inline Bool IsIntValue(const Buffer& string) {
+    
+	return IsIntValue(string.data());
+}
+
+static inline Bool IsFloatValue(StringC string) {
+    
+	Sint8P finish;
+    
+	if (!string) {
+		return LAME_FALSE;
+	}
+    
+	strtof(string, &finish);
+    
+	if (finish != string && (*finish == 'f' || !*finish)) {
+		return LAME_TRUE;
+	}
+    
+	return LAME_FALSE;
+}
+
+static inline Bool IsFloatValue(const Buffer& string) {
+    
 	if (!string.length()) {
 		return LAME_FALSE;
-	} else {
+	}
+	else {
 		return IsFloatValue(string.data());
 	}
 }
 
-inline Bool IsValue(BufferRefC string) {
-	return IsIntValue(string) || IsFloatValue(string);
+static inline Bool IsValue(const Buffer& string) {
+    
+	return
+        IsIntValue(string) ||
+        IsFloatValue(string);
 }
 
-inline Sint32 ParseIntValue(BufferRefC string) {
+static inline Sint32 ParseIntValue(const Buffer& string) {
+    
 	return atoi(string.data());
 }
 
-inline Float32 ParseFloatValue(BufferRefC string) {
+static inline Float32 ParseFloatValue(StringC string) {
+    
+	return strtof(string, NULL);
+}
+
+static inline Float32 ParseFloatValue(const Buffer& string) {
+    
 	return strtof(string.data(), NULL);
 }
 
-inline Buffer ParseStringValue(StringC string) {
+static inline Buffer ParseStringValue(StringC string) {
+    
 	Buffer result = string + 1;
 	result[result.length() - 1] = '\0';
 	return result;
 }
 
-static StringC allowedTokens = "'!~*/%+-&^|=\"\n\r\t ;,.:-{}()[]";
-static StringC compareTokens = "<>=!";
-static StringC unaryTokens = "+-";
-static StringC logicTokens = "&|^";
-static StringC separateTokens = ";{},";
-
-KeyWord& KeyWord::Parse(Uint32 line, StringC word) {
-
-	this->line = line;
-	this->word = word;
-
-	if (strchr(separateTokens, *word)) {
-		this->key = kKeyWordSeparator;
-        this->priority.Parse(word);
-		goto __Return;
-	} else if (IsIntValue(word)) {
-		this->key = kKeyWordInt;
-		this->priority = kPriorityVariable;
-		this->type = kScriptTypeInt;
-		this->intValue = ParseIntValue(word);
-		goto __Return;
-	} else if (IsFloatValue(word)) {
-		this->key = kKeyWordFloat;
-		this->priority = kPriorityVariable;
-		this->type = kScriptTypeFloat;
-		this->floatValue = ParseFloatValue(word);
-		goto __Return;
-	} else if (IsStringValue(word)) {
-		this->key = kKeyWordString;
-		this->priority = kPriorityVariable;
-		this->type = kScriptTypeString;
-		this->stringValue = ParseStringValue(word);
-		goto __Return;
-	} else if ((this->language.Parse(word) != kScriptLanguageDefault)) {
-		this->key = kKeyWordPriority;
-		this->priority = kPriorityLanguage;
-		goto __Return;
-	} else if (this->type.Parse(word) != kScriptTypeDefault) {
-		this->key = kKeyWordPriority;
-		this->priority = kPriorityType;
-		goto __Return;
-	} else if ((this->priority.Parse(word)) != kPriorityDefault) {
-		this->key = kKeyWordPriority;
-		if (this->priority == kPriorityAnd) {
-			this->priority = kPriorityBitAnd;
-		} else if (this->priority == kPriorityOr) {
-			this->priority = kPriorityBitOr;
-		}
-		goto __Return;
-	} else {
-		this->key = kKeyWordPriority;
-		this->priority = kPriorityVariable;
-		goto __Return;
-	}
-
-__Return:
-	return *this;
-}
-
-ScriptParser& ScriptParser::Load(StringC filename) {
-
-    File f;
-    Buffer s;
-    
-    f.Open(filename, "rt");
-    s.resize(f.GetSize());
-    f.Read((String)s.data(), f.GetSize());
-    f.Close();
-    
-    this->Parse(s);
-    
-    return *this;
-}
-
 ScriptParser& ScriptParser::Parse(StringC script) {
-
-	Uint32 line = 1;
-	Sint8 token = 0;
-	Uint32 save = 0;
-	Uint32 prevSaved = 0;
-	Buffer word;
-	StringC last = script;
-
-	Bool isToken = 0;
-	Bool isParseToken = 0;
-	Bool isQuoteLock = 0;
-	Bool isApostropheLock = 0;
-	Bool isCommentLock = 0;
     
-    KeyWordPtr previous = 0;
-
-#ifdef LAME_DEBUG
-	printf("%s", script);
-#endif
+	Bool isCommentLock = 0;
+	Buffer constString;
+	Uint32 line = 1;
 
 	while (*script) {
 
-		token = *script;
+		ScriptObject key = ScriptObject().Parse(&script);
 
-		isToken = 0;
-		isParseToken = 0;
-		save = 1;
-        
-		if (*(script + 1)) {
-			if (!isCommentLock) {
-				if (*script == '/' && *(script + 1) == '*') {
-					isCommentLock = 1; ++script;  goto __Continue;
-				}
-			} else {
-				if (*script == '*' && *(script + 1) == '/') {
-					isCommentLock = 0; ++script;  goto __Continue;
-				}
+		while (
+			*(script) == ' ' ||
+			*(script) == '\t' ||
+			*(script) == '\r' ||
+			*(script) == '\n'
+		) {
+			if (!*script) {
+				goto __ExitLoop;
 			}
+			if (*script == '\n' || *script == '\r') {
+				++line;
+			}
+			script++;
 		}
 
-		if (token == '\"') {
-			if (!isApostropheLock) {
-				isQuoteLock = !isQuoteLock; goto __Skip;
-			}
-		} else if (token == '\'') {
-			if (!isQuoteLock) {
-				isApostropheLock = !isApostropheLock; goto __Skip;
-			}
-		} else {
-			if (isQuoteLock || isApostropheLock || isCommentLock) {
-				goto __Skip;
-			}
+		key.line = line;
+
+		if (key.flag == kScriptQuote || key.flag == kScriptApostrophe) {
+			constString.clear();
+			while (*script && *script != *key.GetString()) {
+				constString.append(1, *script++);
+			} ++script;
+			key.flag = kScriptString;
+			key.word = constString;
+            key.associativity = kScriptAssociativityRight;
 		}
 
-		if (token == '\n' || token == '\r') {
-			if (token == '\n') {
-				line++;
-			}
-			token = ' ';
-		} else if (token == '\t') {
-			token = ' ';
+		if (key.flag == kScriptCommentL) {
+			isCommentLock = LAME_TRUE; continue;
+		} else if (key.flag == kScriptCommentR) {
+			isCommentLock = LAME_FALSE; continue;
 		}
 
-		if (strchr(compareTokens, token)) {
-			if (token == '<' && token == '>') {
-				save = 1;
-			} else if (*(script + 1) == '=') {
-				save = 2;
+		if (key.flag == kScriptCommentLine) {
+			while (*script && *script != '\n') {
+				++script;
 			}
-			goto __SaveNonSpaceToken;
-		} else if (strchr(logicTokens, token)) {
-			switch (*(script + 1)) {
-				case '=':
-				case '&':
-					save = 2; break;
-				default:
-					save = 1; break;
-			}
-			goto __SaveNonSpaceToken;
-		} else if (strchr(unaryTokens, token)) {
-			switch (*(script + 1)) {
-				case '+':
-				case '-':
-					save = 2; break;
-				default:
-					save = 1; break;
-			}
-			goto __SaveNonSpaceToken;
-		} else if (!strchr(allowedTokens, token)) {
-			if (token != ' ') {
-				goto __Skip;
-			}
-		} else {
-		__SaveNonSpaceToken:
-			if (token != ' ') {
-				isToken = 1;
-			}
-		}
-
-		if (isToken) {
-			if (script - last > 0) {
-				isParseToken = 1;
-				isToken = 0;
-				if (save > 1) {
-					prevSaved = save;
-				}
-				if (!save) {
-					save = 1;
-				}
-				save = 1;
-			}
-		}
-
-		if (isToken || script - last > 0) {
-		__ParseToken:
-			word.clear();
-			if (isToken) {
-				word.append(last, script - last, save);
-			} else {
-				word.append(last, script - last);
-			}
-			this->keyQueue.push_back(
-				KeyWord().Parse(line, word)
-			);
-            if (this->keyQueue.back().priority == kPriorityType) {
-                if (!previous || previous->priority != kPriorityParenthesesL) {
-                    this->keyQueue.back().priority = kPriorityDeclare;
-                }
-            }
-			if (this->keyQueue.back().priority == kPriorityLanguage) {
-				if (this->keyQueue.back().language == kScriptLanguageElse) {
-					this->keyQueue.push_back(
-						KeyWord().Parse(line, "(")
-					);
-					this->keyQueue.push_back(
-						KeyWord().Parse(line, ")")
-					);
-				}
-			}
-            previous = &this->keyQueue.back();
-			script += save - 1;
-		}
-
-		if (isParseToken) {
-			isParseToken = 0;
-			isToken = 1;
-			save = prevSaved;
-			prevSaved = 0;
-			if (!save) {
-				save = 1;
-			}
-			goto __ParseToken;
-		}
-
-	__Continue:
-		last = script + 1;
-	__Skip:
-		++script;
-	}
-
-	return *this;
-}
-
-ScriptParser& ScriptParser::Trace(Bool flag) {
-
-	if (this->yardQueue.size()) {
-		puts("\n------------------------");
-	}
-	Uint32 position = 0;
-	for (auto k : this->yardQueue) {
-		if (flag) {
-			printf("%d: ", position);
-		}
-        if (!k->word.length()) {
-            continue;
-        }
-		if (k->key == kKeyWordPriority) {
-			printf("%s ", k->word.data());
-		} else if (k->jump != 0) {
-			printf("[%d] ", k->jump);
-		} else if (k->key == kKeyWordSeparator) {
-			printf("# ");
-		} else {
-			switch (k->type) {
-			case kScriptTypeInt:
-				printf("%d ", k->intValue);
-				break;
-			case kScriptTypeFloat:
-				printf("%.2f ", k->floatValue);
-				break;
-			case kScriptTypeString:
-				printf("\"%s\" ", k->stringValue.data());
-				break;
-			default:
-				printf("%s ", k->word.data());
-				break;
-			}
-		}
-		if (flag) {
-			puts("");
-		}
-		++position;
-	}
-
-	return *this;
-}
-
-ScriptParser& ScriptParser::Sort(Void) {
-
-	List <KeyWordPtr> stack;
-	List <KeyWordPtr> result;
-
-	Bool found = 0;
-	KeyWordPtr back = 0;
-    
-	for (KeyWord& kw : this->keyQueue) {
-
-		if (kw.priority == kPriorityDeclare) {
 			continue;
 		}
 
-		if (kw.key == kKeyWordInt ||
-			kw.key == kKeyWordFloat ||
-			kw.key == kKeyWordDefault ||
-			kw.key == kKeyWordString
-		) {
-			result.push_back(&kw);
-		} else if (kw.key == kKeyWordPriority) {
-			if (kw.priority == kPriorityVariable) {
-				result.push_back(&kw);
-			} else if (kw.priority == kPriorityParenthesesL) {
-				stack.push_back(&kw);
-			} else if (kw.priority == kPriorityParenthesesR) {
-				found = 0;
-				while (stack.size()) {
-					back = stack.back();
-					if (back->priority == kPriorityParenthesesL) {
-						found = 1; break;
-					} else {
-						result.push_back(back);
-						stack.pop_back();
-					}
-				}
-				if (!found) {
-					PostSyntaxError(kw.line, "Parentheses mismatched", 1);
-				} else {
-					stack.pop_back();
-					if (stack.size()) {
-						back = stack.back();
-						if (back->priority == kPriorityLanguage ||
-							back->priority == kPriorityVariable
-						) {
-							result.push_back(back);
-							stack.pop_back();
-						}
-					}
-				}
-			} else {
-				while (stack.size()) {
-					back = stack.back();
-					if (back->key == kKeyWordPriority) {
-						if (((kw.priority.IsLeftAssociated() && kw.priority.Priority() >= back->priority.Priority())) ||
-							(!kw.priority.IsLeftAssociated() && kw.priority.Priority() > back->priority.Priority()))
-						{
-							result.push_back(back);
-							stack.pop_back();
-						} else {
-							break;
-						}
-					}
-				}
-				stack.push_back(&kw);
+		if (isCommentLock) {
+			continue;
+		}
+
+		if (key.word.length()) {
+			this->keyList.push_back(key);
+		}
+	}
+__ExitLoop:
+
+    this->RegisterConstants();
+
+	return *this;
+}
+
+ScriptParser& ScriptParser::Build(ScriptPerformerPtr performer) {
+
+	List<ScriptNodePtr> nodeStack;
+	Vector<ScriptNodePtr>* lastStack = 0;
+	ScriptNodePtr prevNode = 0;
+	ScriptNodePtr lastNode = 0;
+	ScriptNodePtr lastParent = 0;
+	ScriptNode node;
+	Uint32 extraParentheses = 0;
+	Bool isSingleCmdCondition = 0;
+
+	for (ScriptObject& key : this->keyList) {
+
+		node.object = &key;
+		node.parent = lastNode;
+
+		if (node.object->var) {
+			node.object->var->object = &key;
+		}
+
+		this->nodeList.push_back(node);
+
+		if (key.IsArgsBegin()) {
+			if (!prevNode) {
+				PostSyntaxError(key.line, "Empty block in unknown place without parent", 1);
 			}
-		} else if (kw.key == kKeyWordSeparator) {
-			while (stack.size()) {
-				back = stack.back();
-				if (back->key == kKeyWordPriority) {
-					if (back->priority == kPriorityParenthesesL ||
-						back->priority == kPriorityParenthesesR
-					) {
-						PostSyntaxError(back->line, "Parentheses mismatched", 1);
-					} else {
-						result.push_back(back);
-						stack.pop_back();
-					}
+			if (!prevNode->object->IsCondition()) {
+				if (!lastNode) {
+					PostSyntaxError(key.line, "Empty block in unknown place without parent", 1);
 				}
 			}
-			while (result.size()) {
-				this->yardQueue.insert(this->yardQueue.end(), result.front());
-				result.pop_front();
+			if (lastNode != prevNode) {
+				++extraParentheses; goto __SaveAsNode;
 			}
-			this->yardQueue.push_back(&kw);
+		}
+		else if (key.IsBlockBegin()) {
+		__BeginBlock:
+			if (extraParentheses) {
+				PostSyntaxError(key.line, "Parentheses mismatched", 1);
+			}
+			if (!prevNode) {
+				PostSyntaxError(key.line, "Empty block in unknown place without parent", 1);
+			}
+			if (!prevNode->object->IsCondition()) {
+				if (!lastNode) {
+					PostSyntaxError(key.line, "Empty block in unknown place without parent", 1);
+				}
+			}
+			lastStack = &lastNode->block;
+		}
+		else if (key.IsArgsEnd()) {
+			if (!lastStack) {
+				PostSyntaxError(key.line, "Parentheses mismatched", 1);
+			}
+			if (!extraParentheses) {
+				if (lastStack->size()) {
+					lastStack = LAME_NULL;
+				}
+			}
+			else {
+				if (extraParentheses) {
+					extraParentheses--;
+					goto __SaveAsNode;
+				}
+			}
+		}
+		else if (key.IsBlockEnd()) {
+		__EndBlock:
+			if (extraParentheses) {
+				PostSyntaxError(key.line, "Parentheses mismatched", 1);
+			}
+			if (!lastStack || !nodeStack.size()) {
+				PostSyntaxError(key.line, "Braces mismatched", 1);
+			}
+			if (lastStack->size()) {
+				lastStack = LAME_NULL;
+			}
+			lastNode->Order();
+			lastParent = nodeStack.back();
+			nodeStack.pop_back();
+			if (nodeStack.size()) {
+				lastNode = nodeStack.back();
+				lastStack = &lastNode->block;
+			}
+			else {
+				lastNode = LAME_NULL;
+				lastStack = LAME_NULL;
+			}
+		}
+		else {
+		__SaveAsNode:
+
+			if (!lastStack && lastNode) {
+				isSingleCmdCondition = LAME_TRUE;
+				lastNode->block.push_back(&this->nodeList.back());
+				goto __BeginBlock;
+			}
+
+			if (node.object->flag == kScriptSemicolon) {
+				if (isSingleCmdCondition) {
+					isSingleCmdCondition = LAME_FALSE;
+					goto __EndBlock;
+				}
+			}
+
+			if (lastStack) {
+				lastStack->push_back(&this->nodeList.back());
+			}
+			else {
+				performer->nodeTree.push_back(&this->nodeList.back());
+			}
+		}
+
+		prevNode = &this->nodeList.back();
+
+		if (prevNode->object->IsCondition()) {
+			lastNode = prevNode;
+			lastNode->parent = lastParent;
+			nodeStack.push_back(lastNode);
+			lastStack = &lastNode->condition;
 		}
 	}
 
-	if (stack.size() || result.size()) {
-		PostSyntaxError(stack.back()->line, "Semicolon missed", 1);
-	}
+	return *this;
+}
+
+ScriptParser& ScriptParser::Load(StringC file) {
+
+	File handle;
+	Buffer script;
+
+	handle.Open(file, "rt");
+	script.resize(handle.GetSize());
+	handle.Read((String)script.data(), handle.GetSize());
+	handle.Close();
+
+	this->Parse(script.data());
 
 	return *this;
+}
+
+Void ScriptParser::RegisterConstants(Void) {
+    
+    ScriptVariable var;
+    
+    for (ScriptObject& key : this->keyList) {
+        
+        var.Reset();
+        
+        switch (key.flag) {
+            case kScriptInt:
+                var.intValue = ParseIntValue(key.word);
+                var.type = kScriptTypeInt;
+                break;
+            case kScriptFloat:
+                var.floatValue = ParseFloatValue(key.word);
+                var.type = kScriptTypeFloat;
+                break;
+            case kScriptString:
+                var.stringValue = key.word;
+                var.type = kScriptTypeString;
+                break;
+            default:
+                continue;
+        }
+        
+        this->varList.push_back(var);
+        key.var = &this->varList.back();
+        key.var->object = &key;
+    }
 }
 
 LAME_END

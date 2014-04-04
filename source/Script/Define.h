@@ -19,9 +19,6 @@
 
 LAME_BEGIN
 
-typedef       Buffer& BufferRef;
-typedef const Buffer& BufferRefC;
-
 class SyntaxException : public Exception {
 public:
 	SyntaxException(Uint32 line, StringC message, ...) {

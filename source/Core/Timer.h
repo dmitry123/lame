@@ -11,7 +11,7 @@ LAME_BEGIN
 #if defined(_TIME_T_DEFINED)
 typedef time_t Clock;
 #else
-#  if defined(DK_X64)
+#  if defined(LAME_X64)
 typedef long Clock;
 #  else
 typedef long long Clock;

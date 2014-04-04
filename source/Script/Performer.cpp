@@ -2,558 +2,572 @@
 
 LAME_BEGIN
 
-ScriptPerformer& ScriptPerformer::EvaluateConstants(ScriptParser& parser) {
+#define __EvalError(_operation) \
+	PostSyntaxError(left.object->line, "Unable to apply %s operation to this type", #_operation, left.type.GetString());
 
-	typedef List<KeyWordPtr>::iterator Iterator;
-
-	List <KeyWordPtr> stack;
-	Uint32 arguments;
-	KeyWordPtr left;
-	KeyWordPtr right;
-
-	for (KeyWordPtr kw: parser.yardQueue) {
-
-		if (kw->key == kKeyWordPriority) {
-			if (kw->priority == kPriorityVariable) {
-				goto __PushEvaluatable;
-			}
-
-			arguments = kw->priority.Arguments();
-
-			if (stack.size() < arguments) {
-				PostSyntaxError(kw->line, "Invalid parameters, (%s) needs (%d) arguments", kw->word.data(), arguments);
-			}
-
-			if (arguments == 1) {
-				goto __PushEvaluatable;
-			} else if (arguments == 2) {
-
-				right = stack.back();
-				stack.pop_back();
-				left = stack.back();
-				stack.pop_back();
-
-				if ((left->key == kKeyWordPriority && left->priority == kPriorityVariable) ||
-					(right->key == kKeyWordPriority && right->priority == kPriorityVariable)
-				) {
-					stack.push_back(left);
-					stack.push_back(right);
-					goto __PushEvaluatable;
-				} else {
-					this->EvaluateDouble(left, right, kw);
-					stack.push_back(left);
-				}
-			}
-		}
-		else {
-		__PushEvaluatable:
-			stack.push_back(kw);
-		}
+Void ScriptPerformer::Set(ScriptVariable& left, const ScriptVariable& right) {
+	switch (left.type) {
+		case kScriptTypeBool:
+			left.boolValue = right.boolValue;
+			break;
+		case kScriptTypeFloat:
+			left.floatValue = right.floatValue;
+			break;
+		case kScriptTypeInt:
+			left.intValue = right.intValue;
+			break;
+		case kScriptTypeString:
+			left.stringValue = right.stringValue;
+			break;
+		default:
+			__EvalError(=);
 	}
-
-	parser.yardQueue.clear();
-
-	while (stack.size()) {
-		parser.yardQueue.push_front(stack.back()); stack.pop_back();
-	}
-
-	return *this;
 }
 
-ScriptPerformer& ScriptPerformer::FixBraces(ScriptParser& parser) {
-
-	typedef Vector<KeyWordPtr>::iterator Iterator;
-
-	KeyWordPtr self;
-	KeyWordPtr next = 0;
-
-	Sint32 rightBraces = 0;
-
-	for (Iterator i = parser.yardQueue.begin(); i != parser.yardQueue.end(); i++) {
-
-		self = *i;
-        
-		if (i != parser.yardQueue.end() - 1) { next = *(i + 1); }
-
-		if (self->key == kKeyWordPriority && self->priority == kPriorityLanguage) {
-			if (next && next->word[0] != '{') {
-				parser.keyQueue.push_back(KeyWord().Parse(self->line, "{"));
-				i = parser.yardQueue.insert(i + 1, &parser.keyQueue.back());
-				++rightBraces;
-			}
-		}
-
-		if (self->key == kKeyWordSeparator && self->word[0] != '{') {
-			while (rightBraces && rightBraces--) {
-				parser.keyQueue.push_back(KeyWord().Parse(self->line, "}"));
-				i = parser.yardQueue.insert(i + 1, &parser.keyQueue.back());
-			}
-		}
+Void ScriptPerformer::Add(ScriptVariable& left, const ScriptVariable& right) {
+	switch (left.type) {
+	case kScriptTypeBool:
+		left.boolValue += right.boolValue;
+		break;
+	case kScriptTypeFloat:
+		left.floatValue += right.floatValue;
+		break;
+	case kScriptTypeInt:
+		left.intValue += right.intValue;
+		break;
+	case kScriptTypeString:
+		left.stringValue += right.stringValue;
+		break;
+	default:
+		__EvalError(+);
 	}
-
-	return *this;
 }
 
-ScriptPerformer& ScriptPerformer::ComputeJumps(ScriptParser& parser) {
-
-	typedef struct {
-		KeyWordPtr kw;
-		Uint32 distance;
-	} JumpKeyWord;
-
-	Vector<JumpKeyWord> stack;
-	Uint32 jumpPosition = 0;
-	KeyWordPtr lastLang = 0;
-	Uint32 distance = 0;
-
-	for (KeyWordPtr self : parser.yardQueue) {
-		if (self->key == kKeyWordSeparator) {
-			if (self->word[0] == '{') {
-				self->jump = jumpPosition;
-				if (lastLang) {
-					self->language = lastLang->language;
-				}
-				stack.push_back({ self, distance });
-			} else if (self->word[0] == '}') {
-				JumpKeyWord back = stack.back();
-				back.kw->jump = jumpPosition - back.kw->jump + 1;
-				self->jump = -back.kw->jump - back.distance + 3;
-				if (lastLang) {
-					self->language = lastLang->language;
-				}
-				stack.pop_back();
-				distance = 0;
-			} else if (self->word[0] == ';') {
-				distance = 1;
-			}
-		} else if (self->priority == kPriorityLanguage) {
-			lastLang = self;
-		}
-		if (distance) {
-			++distance;
-		}
-		++jumpPosition;
+Void ScriptPerformer::Sub(ScriptVariable& left, const ScriptVariable& right) {
+	switch (left.type) {
+	case kScriptTypeBool:
+		left.boolValue -= right.boolValue;
+		break;
+	case kScriptTypeFloat:
+		left.floatValue -= right.floatValue;
+		break;
+	case kScriptTypeInt:
+		left.intValue -= right.intValue;
+		break;
+	default:
+		__EvalError(-);
 	}
-
-	return *this;
 }
 
-ScriptPerformer& ScriptPerformer::EvaluateDouble(KeyWordPtr& left, KeyWordPtr right, KeyWordPtr key) {
-    
-	StringC savedName = LAME_NULL;
-
-	if (left->key == kKeyWordPriority && left->priority == kPriorityVariable) {
-		if (!left->registered) {
-			savedName = left->word.data();
-			left = (KeyWordPtr)this->FindVariable(left->word.data());
-            if (!left) {
-				PostSyntaxError(key->line, "Undeclared variable (%s)", savedName);
-            }
-		}
+Void ScriptPerformer::Mul(ScriptVariable& left, const ScriptVariable& right) {
+	switch (left.type) {
+	case kScriptTypeBool:
+		left.boolValue *= right.boolValue;
+		break;
+	case kScriptTypeFloat:
+		left.floatValue *= right.floatValue;
+		break;
+	case kScriptTypeInt:
+		left.intValue *= right.intValue;
+		break;
+	default:
+		__EvalError(*);
 	}
-    
-	if (right->key == kKeyWordPriority && right->priority == kPriorityVariable) {
-		if (!right->registered) {
-			savedName = right->word.data();
-			right = (KeyWordPtr)this->FindVariable(right->word.data());
-            if (!right) {
-				PostSyntaxError(key->line, "Undeclared variable (%s)", savedName);
-            }
-		}
-	}
-
-	if (key->priority.IsRightAssociated()) {
-		this->tempList.push_back(*left);
-		left = &this->tempList.back();
-		left->word = "${temp}";
-	}
-    
-    switch (key->priority) {
-		case kPriorityAnd:
-			left->BitAnd(*right); break;
-		case kPriorityOr:
-			left->BitOr(*right); break;
-        case kPriorityAbove:
-            left->Above(*right); break;
-        case kPriorityAboveEqual:
-            left->AboveEqual(*right); break;
-        case kPriorityBellow:
-            left->Bellow(*right); break;
-        case kPriorityBellowEqual:
-            left->BellowEqual(*right); break;
-        case kPriorityEqual:
-            left->Equal(*right); break;
-        case kPriorityNotEqual:
-            left->NotEqual(*right); break;
-        default:
-            goto __NotCompare;
-    }
-    
-    left->type = kScriptTypeBool;
-    goto __Return;
-    
-__NotCompare:
-    if (ScriptVariable::Check(*left, *right)) {
-        ScriptVariable::Convert(*left, *right);
-    }
-
-	switch (key->priority) {
-        case kPrioritySet:
-            left->Set(*right); break;
-        case kPriorityMul:
-        case kPriorityMulSet:
-            left->Mul(*right); break;
-        case kPriorityDiv:
-        case kPriorityDivSet:
-            left->Div(*right); break;
-        case kPriorityMod:
-        case kPriorityModSet:
-            left->Mod(*right); break;
-        case kPriorityAdd:
-        case kPriorityAddSet:
-            left->Add(*right); break;
-        case kPrioritySub:
-        case kPrioritySubSet:
-            left->Sub(*right); break;
-        case kPriorityShiftL:
-        case kPriorityShiftSetL:
-            left->BitShiftL(*right); break;
-        case kPriorityShiftR:
-        case kPriorityShiftSetR:
-            left->BitShiftR(*right); break;
-        case kPriorityBitAnd:
-        case kPriorityBitAndSet:
-            left->BitAnd(*right); break;
-        case kPriorityBitXor:
-        case kPriorityBitXorSet:
-            left->BitXor(*right); break;
-        case kPriorityBitOr:
-        case kPriorityBitOrSet:
-            left->BitOr(*right); break;
-        default:
-            goto __Return;
-	}
-    
-__Return:
-	return *this;
 }
 
-ScriptPerformer& ScriptPerformer::EvaluateSingle(KeyWordPtr& left, KeyWordPtr key) {
-
-	StringC savedName = LAME_NULL;
-	KeyWord local;
-
-	if (left->key == kKeyWordPriority && left->priority == kPriorityVariable) {
-		if (!left->registered) {
-			savedName = left->word.data();
-			left = (KeyWordPtr)this->FindVariable(left->word.data());
-			if (!left) {
-				PostSyntaxError(key->line, "Undeclared variable (%s)", savedName);
-			}
-		}
+Void ScriptPerformer::Div(ScriptVariable& left, const ScriptVariable& right) {
+	switch (left.type) {
+	case kScriptTypeBool:
+		left.boolValue /= right.boolValue;
+		break;
+	case kScriptTypeFloat:
+		left.floatValue /= right.floatValue;
+		break;
+	case kScriptTypeInt:
+		left.intValue /= right.intValue;
+		break;
+	default:
+		__EvalError(/);
 	}
+}
 
-	if (key->priority.IsRightAssociated()) {
-		this->tempList.push_back(*left);
-		left = &this->tempList.back();
-		left->word = "${temp}";
+Void ScriptPerformer::Mod(ScriptVariable& left, const ScriptVariable& right) {
+	switch (left.type) {
+	case kScriptTypeBool:
+		left.boolValue %= right.boolValue;
+		break;
+	case kScriptTypeInt:
+		left.intValue %= right.intValue;
+		break;
+	default:
+		__EvalError(%);
 	}
+}
 
-	switch (key->priority) {
-		case kPriorityIncrement:
-			left->Inc(); break;
-		case kPriorityDecrement:
-			left->Dec(); break;
-        case kPriorityType:
-            local = *left; local.type = key->type;
-            left->Convert(*left, local);
+Void ScriptPerformer::BitAnd(ScriptVariable& left, const ScriptVariable& right) {
+	switch (left.type) {
+	case kScriptTypeBool:
+		left.boolValue &= right.boolValue;
+		break;
+	case kScriptTypeInt:
+		left.intValue &= right.intValue;
+		break;
+	default:
+		__EvalError(&);
+	}
+}
+
+Void ScriptPerformer::BitOr(ScriptVariable& left, const ScriptVariable& right) {
+	switch (left.type) {
+	case kScriptTypeBool:
+		left.boolValue |= right.boolValue;
+		break;
+	case kScriptTypeInt:
+		left.intValue |= right.intValue;
+		break;
+	default:
+		__EvalError(|);
+	}
+}
+
+Void ScriptPerformer::BitXor(ScriptVariable& left, const ScriptVariable& right) {
+	switch (left.type) {
+	case kScriptTypeBool:
+		left.boolValue ^= right.boolValue;
+		break;
+	case kScriptTypeInt:
+		left.intValue ^= right.intValue;
+		break;
+	default:
+		__EvalError(^);
+	}
+}
+
+Void ScriptPerformer::BitShiftR(ScriptVariable& left, const ScriptVariable& right) {
+	switch (left.type) {
+	case kScriptTypeBool:
+		left.boolValue >>= right.boolValue;
+		break;
+	case kScriptTypeInt:
+		left.intValue >>= right.intValue;
+		break;
+	default:
+		__EvalError(>>);
+	}
+}
+
+Void ScriptPerformer::BitShiftL(ScriptVariable& left, const ScriptVariable& right) {
+	switch (left.type) {
+	case kScriptTypeBool:
+		left.boolValue <<= right.boolValue;
+		break;
+	case kScriptTypeInt:
+		left.intValue <<= right.intValue;
+		break;
+	default:
+		__EvalError(<<);
+	}
+}
+
+Void ScriptPerformer::And(ScriptVariable& left, const ScriptVariable& right) {
+	switch (left.type) {
+	case kScriptTypeBool:
+		left.boolValue = left.boolValue && right.boolValue;
+		break;
+	case kScriptTypeFloat:
+		left.boolValue = left.floatValue && right.floatValue;
+		break;
+	case kScriptTypeInt:
+		left.boolValue = left.intValue && right.intValue;
+		break;
+	case kScriptTypeString:
+		left.boolValue = left.stringValue.length() && right.stringValue.length();
+		break;
+	default:
+		__EvalError(&&);
+	}
+}
+
+Void ScriptPerformer::Or(ScriptVariable& left, const ScriptVariable& right) {
+	switch (left.type) {
+	case kScriptTypeBool:
+		left.boolValue = left.boolValue || right.boolValue;
+		break;
+	case kScriptTypeFloat:
+		left.boolValue = left.floatValue || right.floatValue;
+		break;
+	case kScriptTypeInt:
+		left.boolValue = left.intValue || right.intValue;
+		break;
+	case kScriptTypeString:
+		left.boolValue = left.stringValue.length() || right.stringValue.length();
+		break;
+	default:
+		__EvalError(||);
+	}
+}
+
+Void ScriptPerformer::Above(ScriptVariable& left, const ScriptVariable& right) {
+	switch (left.type) {
+	case kScriptTypeBool:
+		left.boolValue = left.boolValue > right.boolValue;
+		break;
+	case kScriptTypeFloat:
+		left.boolValue = left.floatValue > right.floatValue;
+		break;
+	case kScriptTypeInt:
+		left.boolValue = left.intValue > right.intValue;
+		break;
+	case kScriptTypeString:
+		left.boolValue = left.stringValue > right.stringValue;
+		break;
+	default:
+		__EvalError(>);
+	}
+}
+
+Void ScriptPerformer::Bellow(ScriptVariable& left, const ScriptVariable& right) {
+	switch (left.type) {
+	case kScriptTypeBool:
+		left.boolValue = left.boolValue < right.boolValue;
+		break;
+	case kScriptTypeFloat:
+		left.boolValue = left.floatValue < right.floatValue;
+		break;
+	case kScriptTypeInt:
+		left.boolValue = left.intValue < right.intValue;
+		break;
+	case kScriptTypeString:
+		left.boolValue = left.stringValue < right.stringValue;
+		break;
+	default:
+		__EvalError(<);
+	}
+}
+
+Void ScriptPerformer::AboveEqual(ScriptVariable& left, const ScriptVariable& right) {
+	switch (left.type) {
+	case kScriptTypeBool:
+		left.boolValue = left.boolValue >= right.boolValue;
+		break;
+	case kScriptTypeFloat:
+		left.boolValue = left.floatValue >= right.floatValue;
+		break;
+	case kScriptTypeInt:
+		left.boolValue = left.intValue >= right.intValue;
+		break;
+	case kScriptTypeString:
+		left.boolValue = left.stringValue >= right.stringValue;
+		break;
+	default:
+		__EvalError(>=);
+	}
+}
+
+Void ScriptPerformer::BellowEqual(ScriptVariable& left, const ScriptVariable& right) {
+	switch (left.type) {
+	case kScriptTypeBool:
+		left.boolValue = left.boolValue <= right.boolValue;
+		break;
+	case kScriptTypeFloat:
+		left.boolValue = left.floatValue <= right.floatValue;
+		break;
+	case kScriptTypeInt:
+		left.boolValue = left.intValue <= right.intValue;
+		break;
+	case kScriptTypeString:
+		left.boolValue = left.stringValue <= right.stringValue;
+		break;
+	default:
+		__EvalError(<=);
+	}
+}
+
+Void ScriptPerformer::Equal(ScriptVariable& left, const ScriptVariable& right) {
+	switch (left.type) {
+	case kScriptTypeBool:
+		left.boolValue = left.boolValue == right.boolValue;
+		break;
+	case kScriptTypeFloat:
+		left.boolValue = left.floatValue == right.floatValue;
+		break;
+	case kScriptTypeInt:
+		left.boolValue = left.intValue == right.intValue;
+		break;
+	case kScriptTypeString:
+		left.boolValue = left.stringValue == right.stringValue;
+		break;
+	default:
+		__EvalError(==);
+	}
+}
+
+Void ScriptPerformer::NotEqual(ScriptVariable& left, const ScriptVariable& right) {
+	switch (left.type) {
+	case kScriptTypeBool:
+		left.boolValue = left.boolValue != right.boolValue;
+		break;
+	case kScriptTypeFloat:
+		left.boolValue = left.floatValue != right.floatValue;
+		break;
+	case kScriptTypeInt:
+		left.boolValue = left.intValue != right.intValue;
+		break;
+	case kScriptTypeString:
+		left.boolValue = left.stringValue != right.stringValue;
+		break;
+	default:
+		__EvalError(!=);
+	}
+}
+
+Void ScriptPerformer::BitNot(ScriptVariable& left) {
+	switch (left.type) {
+	case kScriptTypeBool:
+		left.boolValue = ~left.boolValue;
+		break;
+	case kScriptTypeInt:
+		left.intValue = ~left.intValue;
+		break;
+	default:
+		__EvalError(~);
+	}
+}
+
+Void ScriptPerformer::Not(ScriptVariable& left) {
+	switch (left.type) {
+	case kScriptTypeBool:
+		left.boolValue = !left.boolValue;
+		break;
+	case kScriptTypeInt:
+		left.intValue = !left.intValue;
+		break;
+	default:
+		__EvalError(!);
+	}
+}
+
+Void ScriptPerformer::Inc(ScriptVariable& left) {
+	switch (left.type) {
+	case kScriptTypeBool:
+		++left.boolValue;
+		break;
+	case kScriptTypeInt:
+		++left.intValue;
+		break;
+	default:
+		__EvalError(++);
+	}
+}
+
+Void ScriptPerformer::Dec(ScriptVariable& left) {
+	switch (left.type) {
+	case kScriptTypeBool:
+		--left.boolValue;
+		break;
+	case kScriptTypeInt:
+		--left.intValue;
+		break;
+	default:
+		__EvalError(--);
+	}
+}
+
+Void ScriptPerformer::AsBool(ScriptVariable& left) {
+	switch (left.type) {
+        case kScriptTypeBool:
             break;
-        case kPriorityLanguage:
-            break;
-        case kPriorityDeclare:
-            break;
-        default:
-            break;
-	}
-
-	return *this;
-}
-
-ScriptPerformer& ScriptPerformer::EvaluateScript(ScriptParser& parser) {
-
-    typedef Vector<KeyWordPtr>::iterator Iterator;
-    
-	List <KeyWordPtr> stack;
-	Uint32 arguments;
-	KeyWordPtr left;
-	KeyWordPtr right;
-    Uint32 count;
-    KeyWordPtr kw;
-	Uint32 backJump = 0;
-	Uint32 removedNodes = 0;
-
-    count = 0;
-    
-#ifdef LAME_DEBUG
-    puts("\n------------------------");
-#endif
-    
-    for (Iterator i = parser.yardQueue.begin(); i != parser.yardQueue.end(); i++) {
-        
-        kw = *i; ++count;
-        
-#ifdef LAME_DEBUG
-        if (kw->word.length()) {
-            if (kw->key == kKeyWordPriority) {
-                printf("%s ", kw->word.data());
-            } else if (kw->jump != 0) {
-                printf("[%d] ", kw->jump);
-            } else if (kw->key == kKeyWordSeparator) {
-                printf("# ");
-            } else {
-                switch (kw->type) {
-                    case kScriptTypeInt:
-                        printf("%d ", kw->intValue);
-                        break;
-                    case kScriptTypeFloat:
-                        printf("%.2f ", kw->floatValue);
-                        break;
-                    case kScriptTypeString:
-                        printf("\"%s\" ", kw->stringValue.data());
-                        break;
-                    default:
-                        printf("%s ", kw->word.data());
-                        break;
-                }
-            }
-        }
-#endif
-        
-		if (kw->key == kKeyWordDefault) {
-			continue;
-		}
-
-		if (kw->key == kKeyWordPriority) {
-			if (kw->priority == kPriorityVariable) {
-				goto __PushEvaluatable;
-			} else if (kw->priority == kPriorityLanguage) {
-                this->EvaluateConstruction(&stack, kw);
-            } else {
-                arguments = kw->priority.Arguments();
-                
-                if (stack.size() < arguments) {
-                    PostSyntaxError(kw->line, "Invalid parameters, (%s) needs (%d) arguments", kw->word.data(), arguments);
-                }
-                
-                if (arguments == 1) {
-                    
-                    left = stack.back();
-                    stack.pop_back();
-                    this->EvaluateSingle(left, kw);
-                }
-                else if (arguments == 2) {
-                    
-                    right = stack.back();
-                    stack.pop_back();
-                    left = stack.back();
-                    stack.pop_back();
-                    this->EvaluateDouble(left, right, kw);
-                }
-                if (arguments > 0) {
-					stack.push_back(left);
-                }
-            }
-		} else if (kw->key == kKeyWordSeparator) {
-			while (this->tempList.size()) {
-				this->tempList.pop_back();
-			}
-			if (kw->language == kScriptLanguageWhile) {
-				if (kw->word[0] == '}') {
-					this->isJump = LAME_TRUE;
-				}
-			}
-			if ((kw->word[0] == '{' || kw->word[0] == '}') && this->isJump) {
-				if (this->isJumpPrev) {
-					this->isJumpPrev = !this->isJump;
-					this->isJump = LAME_TRUE;
-				} else {
-					this->isJumpPrev = this->isJump;
-					this->isJump = LAME_FALSE;
-				}
-                i += kw->jump - 1;
-				if (i + 1 == parser.yardQueue.end()) {
-					break;
-				}
-				if (kw->language == kScriptLanguageWhile) {
-					continue;
-				}
-			}
-            count = 0;
-        } else {
-		__PushEvaluatable:
-			stack.push_back(kw);
-		}
-	}
-    
-    if (stack.size() > 0) {
-        while (count--) {
-            parser.yardQueue.pop_front();
-        }
-        while (stack.size()) {
-            parser.yardQueue.push_front(stack.back()); stack.pop_back();
-        }
-    }
-
-	return *this;
-}
-
-ScriptPerformer& ScriptPerformer::RegisterVariables(ScriptParser& parser) {
-    
-    KeyWordPtr prevKey = LAME_NULL;
-    Bool isWaitingComa = LAME_FALSE;
-    
-    for (KeyWord& kw : parser.keyQueue) {
-        if (prevKey && kw.priority == kPriorityVariable && kw.key == kKeyWordPriority) {
-            if (isWaitingComa) {
-                continue;
-            } else {
-                this->RegisterVariable(&kw);
-                kw.type = prevKey->type;
-                prevKey->priority = kPriorityType;
-            }
-            isWaitingComa = LAME_TRUE;
-        } else if (kw.priority == kPriorityDeclare) {
-            prevKey = &kw;
-        } else if (kw.priority == kPriorityComa) {
-            isWaitingComa = LAME_FALSE;
-        } else if (kw.key == kKeyWordSeparator && kw.word[0] != ',') {
-            if (prevKey) {
-                prevKey->Reset();
-                prevKey->key = kKeyWordDefault;
-            }
-            isWaitingComa = LAME_FALSE;
-            prevKey = LAME_NULL;
-        }
-    }
-    
-    return *this;
-}
-
-ScriptPerformer& ScriptPerformer::EvaluateConstruction(List <KeyWordPtr>* stack, KeyWordPtr kw) {
-    
-    KeyWordPtr argument = 0;
-
-    switch (kw->language) {
-        case kScriptLanguageIf:
-            
-            argument = stack->back();
-            stack->pop_back();
-            
-            if (argument->key == kKeyWordPriority && argument->priority == kPriorityVariable) {
-                if (!argument->registered) {
-                    argument = (KeyWordPtr)this->FindVariable(argument->word.data());
-                    if (!argument) {
-                        PostSyntaxError(argument->line, "Undeclared variable (%s)", argument->word.data());
-                    }
-                }
-            }
-
-			this->tempList.push_back(*argument);
-			argument = &this->tempList.back();
-			argument->ToBool();
-			argument->language = kScriptLanguageIf;
-            
-			if (argument->boolValue) {
-                this->isJump = LAME_FALSE;
-            } else {
-                this->isJump = LAME_TRUE;
-            }
-            
-            break;
-        case kScriptLanguageElse:
-
-            this->isJump = !this->isJumpPrev;
-            this->isJumpPrev = this->isJump;
-
-            break;
-		case kScriptLanguageWhile:
-
-			argument = stack->back();
-			stack->pop_back();
-
-			if (argument->key == kKeyWordPriority && argument->priority == kPriorityVariable) {
-				if (!argument->registered) {
-					argument = (KeyWordPtr)this->FindVariable(argument->word.data());
-					if (!argument) {
-						PostSyntaxError(argument->line, "Undeclared variable (%s)", argument->word.data());
-					}
-				}
-			}
-
-			this->tempList.push_back(*argument);
-			argument = &this->tempList.back();
-			argument->ToBool();
-			argument->language = kScriptLanguageWhile;
-
-			if (!argument->boolValue) {
-				this->isJump = LAME_TRUE;
-			} else {
-				this->isJump = LAME_FALSE;
-			}
-
+        case kScriptTypeFloat:
+			left.boolValue = left.floatValue != 0;
+			break;
+        case kScriptTypeInt:
+			left.boolValue = left.intValue != 0;
+			break;
+        case kScriptTypeString:
+			left.boolValue = left.stringValue.length() != 0;
 			break;
         default:
-            PostSyntaxError(kw->line, "Unsupported syntax construction (%s)", kw->word.data());
-            break;
+			left.boolValue = 0;
+			break;
     }
-    
-    return *this;
 }
 
-ScriptPerformer& ScriptPerformer::Trace(Void) {
+ScriptPerformer& ScriptPerformer::Evaluate(Void) {
 
-	puts("\n------------------------");
-	for (auto i = this->varMap.begin(); i != this->varMap.end(); i++) {
-		printf("[%s, %s] : ", i->first.data(), i->second->type.String());
-		switch (i->second->type) {
-            case kScriptTypeBool:
-                printf("%2d", i->second->intValue); break;
-                //i->second->boolValue ? printf("TRUE") : printf("FALSE"); break;
-            case kScriptTypeFloat:
-                printf("%.2f", i->second->floatValue); break;
-            case kScriptTypeInt:
-                printf("%2d", i->second->intValue); break;
-            case kScriptTypeString:
-                printf("\"%s\"", i->second->stringValue.data()); break;
-            default: break;
-		}
-		printf("\n");
+	for (ScriptNodePtr node : this->nodeTree) {
+		node->Evaluate(this);
 	}
 
 	return *this;
 }
 
-Void ScriptPerformer::RegisterVariable(KeyWordPtr kw) {
+Void ScriptPerformer::EvaluateSingleExpression(
+	ScriptNodePtr left,
+	ScriptNodePtr token
+) {
 
-	Map<Buffer, ScriptVariablePtr>::iterator where = this->varMap.find(kw->word);
-
-	if (where != this->varMap.end()) {
-		PostSyntaxError(kw->line, "Variable redeclaration (%s)", kw->word.data());
-	}
-	kw->registered = LAME_TRUE;
-
-	this->varMap[kw->word] = kw;
 }
 
-ScriptVariablePtr ScriptPerformer::FindVariable(StringC name) {
-
-	Map<Buffer, ScriptVariablePtr>::iterator where = this->varMap.find(name);
-
-	if (where == this->varMap.end()) {
-		return LAME_NULL;
+Void ScriptPerformer::EvaluateDoubleExpression(
+	ScriptNodePtr left,
+	ScriptNodePtr right,
+	ScriptNodePtr token
+) {
+	if (!left->object->var) {
+		if (!this->varManager.Find(left->object->word.data())) {
+			PostSyntaxError(left->object->line, "Undeclared variable (%s)", left->object->word.data());
+		}
+		if (!this->varManager.Find(right->object->word.data())) {
+			PostSyntaxError(right->object->line, "Undeclared variable (%s)", right->object->word.data());
+		}
 	}
 
-	return where->second;
+	switch (token->object->flag) {
+	case kScriptAnd:
+		this->And(*left->object->var, *right->object->var);
+		break;
+	case kScriptOr:
+		this->Or(*left->object->var, *right->object->var);
+		break;
+	case kScriptAbove:
+		this->Above(*left->object->var, *right->object->var);
+		break;
+	case kScriptAboveEqual:
+		this->AboveEqual(*left->object->var, *right->object->var);
+		break;
+	case kScriptBellow:
+		this->Bellow(*left->object->var, *right->object->var);
+		break;
+	case kScriptBellowEqual:
+		this->BellowEqual(*left->object->var, *right->object->var);
+		break;
+	case kScriptEqual:
+		this->Equal(*left->object->var, *right->object->var);
+		break;
+	case kScriptNotEqual:
+		this->NotEqual(*left->object->var, *right->object->var);
+		break;
+	default:
+		goto __EvaluateMathExpression;
+	}
+	left->object->var->type = kScriptTypeBool;
+	goto __Return;
+
+__EvaluateMathExpression:
+	switch (token->object->flag) {
+	case kScriptSet:
+		this->Set(*left->object->var, *right->object->var);
+		break;
+	case kScriptMul:
+	case kScriptMulSet:
+		this->Mul(*left->object->var, *right->object->var);
+		break;
+	case kScriptDiv:
+	case kScriptDivSet:
+		this->Div(*left->object->var, *right->object->var);
+		break;
+	case kScriptMod:
+	case kScriptModSet:
+		this->Mod(*left->object->var, *right->object->var);
+		break;
+	case kScriptAdd:
+	case kScriptAddSet:
+		this->Add(*left->object->var, *right->object->var);
+		break;
+	case kScriptSub:
+	case kScriptSubSet:
+		this->Sub(*left->object->var, *right->object->var);
+		break;
+	case kScriptBitShiftL:
+	case kScriptBitShiftSetL:
+		this->BitShiftL(*left->object->var, *right->object->var);
+		break;
+	case kScriptBitShiftR:
+	case kScriptBitShiftSetR:
+		this->BitShiftR(*left->object->var, *right->object->var);
+		break;
+	case kScriptBitAnd:
+	case kScriptBitAndSet:
+		this->BitAnd(*left->object->var, *right->object->var);
+		break;
+	case kScriptBitXor:
+	case kScriptBitXorSet:
+		this->BitXor(*left->object->var, *right->object->var);
+		break;
+	case kScriptBitOr:
+	case kScriptBitOrSet:
+		this->BitOr(*left->object->var, *right->object->var);
+		break;
+	default:
+		break;
+	}
+
+__Return:
+	return;
+}
+
+Void ScriptPerformer::Evaluate(
+	Vector<ScriptNodePtr>* list,
+	Vector<ScriptNodePtr>* result
+) {
+	typedef Vector<ScriptNodePtr>::iterator Iterator;
+
+	Uint32 arguments = 0;
+	ScriptNodePtr left = 0;
+	ScriptNodePtr right = 0;
+	ScriptNodePtr kw = 0;
+
+	result->clear();
+
+	for (Iterator i = list->begin(); i != list->end(); i++) {
+
+		kw = *i;
+
+		if (kw->object->flag == kScriptDefault) {
+			this->typeManager.Find(kw->object->word.data());
+			kw->object->flag = kScriptType;
+		}
+
+		if (kw->object->flag == kScriptInt ||
+			kw->object->flag == kScriptFloat ||
+			kw->object->flag == kScriptString ||
+			kw->object->flag == kScriptDefault
+		) {
+			result->push_back(kw);
+		}
+		else if (kw->object->flag == kScriptSemicolon) {
+			result->push_back(kw);
+		}
+		else if (kw->object->flag == kScriptComa) {
+			continue;
+		}
+		else {
+			arguments = kw->object->args;
+
+			if (result->size() < arguments) {
+				PostSyntaxError(kw->object->line, "Invalid parameters, (%s) needs (%d) arguments", kw->object->word.data(), arguments);
+			}
+
+			if (kw->object->IsUnary()) {
+				left = result->back();
+				result->pop_back();
+				this->EvaluateSingleExpression(left, kw);
+			}
+			else if (kw->object->IsBinary()) {
+				right = result->back();
+				result->pop_back();
+				left = result->back();
+				result->pop_back();
+				this->EvaluateDoubleExpression(left, right, kw);
+			}
+
+			if (arguments) {
+				result->push_back(left);
+			}
+		}
+	}
+
+
 }
 
 LAME_END

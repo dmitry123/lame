@@ -1,6 +1,3 @@
-Int a = 10;
-Int c = 0;
-
-while (--a) {
-	c++;
+if (1) {
+	int value = 123;
 }

@@ -2,8 +2,6 @@
 
 int main(int argc, char** argv) {
 
-	lame::ScriptParser parser;
-	lame::ScriptPerformer performer;
 	lame::Clock time;
 	lame::StringC fileName;
 
@@ -14,28 +12,23 @@ int main(int argc, char** argv) {
 	} else {
 		fileName = "main.ls";
 	}
-    
+
+	lame::ScriptParser parser;
+	lame::ScriptPerformer performer;
+
 	try {
 		parser
 			.Load(fileName)
-            .Sort();
+            .Build(&performer);
 		performer
-            .RegisterVariables(parser)
-			.FixBraces(parser)
-			.ComputeJumps(parser);
-		parser
-			.Trace();
-		performer
-			.EvaluateScript(parser)
-			.Trace();
+			.Evaluate();
 	}
-	catch (lame::SyntaxException e) {
+	catch (lame::SyntaxException& e) {
 		puts("\n------------------------");
 		e.Debug();
 		puts("");
 	}
-	catch (lame::Exception e) {
-		puts("\n------------------------");
+	catch (lame::Exception& e) {
 		e.Debug();
 	}
 
