@@ -5,7 +5,7 @@
 
 LAME_BEGIN
 
-typedef Sint32 ScriptNativeInt;
+typedef Sint64 ScriptNativeInt;
 typedef Float32 ScriptNativeFloat;
 typedef Bool ScriptNativeBool;
 typedef Buffer ScriptNativeString;
@@ -41,16 +41,17 @@ typedef enum {
 	kScriptSizeof,
 	kScriptBitNot,
 	kScriptNot,
-	kScriptUnaryMinus,
-	kScriptUnaryPlus,
-	kScriptOffset,
-	kScriptClaim,
+//	kScriptUnaryMinus,
+//	kScriptUnaryPlus,
+//	kScriptOffset,
+//	kScriptClaim,
 	kScriptType,
 	kScriptIf,
 	kScriptElse,
 	kScriptWhile,
 	kScriptDo,
 	kScriptFor,
+	kScriptFunction,
 	/* BINARY */
 	kScriptMul,
 	kScriptDiv,
@@ -123,7 +124,7 @@ class LAME_API ScriptType {
 public:
 	Buffer word;
 	ScriptTypeEnum type;
-	ScriptVariablePtr var;
+	ScriptObjectPtr object;
 public:
 	inline Void operator = (const ScriptTypeEnum& type) { this->type = type; }
 	inline operator ScriptTypeEnum (Void) const { return this->type; };
@@ -150,20 +151,24 @@ public:
 	ScriptAssociativity associativity;
 	Uint32 line;
     ScriptVariablePtr var;
+	ScriptTypePtr type;
 public:
 	ScriptObject& Parse(StringC* word);
 	StringC GetString(Void) const;
+	Void Reset(Void);
 public:
 	inline Bool IsLeftAssociated() const { return this->associativity == kScriptAssociativityLeft; }
 	inline Bool IsRightAssociated() const { return this->associativity == kScriptAssociativityRight; }
 	inline Bool IsPostfix() const { return this->args == kScriptArgPostfix; }
 	inline Bool IsUnary() const { return this->args == kScriptArgUnary; }
 	inline Bool IsBinary() const { return this->args == kScriptArgBinary; }
-    inline Bool IsCondition() const { return this->flag >= kScriptIf && this->flag <= kScriptFor; }
+    inline Bool IsCondition() const { return this->flag >= kScriptIf && this->flag <= kScriptFunction; }
 	inline Bool IsArgsBegin() const { return this->flag == kScriptParentheseL; }
 	inline Bool IsArgsEnd() const { return this->flag == kScriptParentheseR; }
 	inline Bool IsBlockBegin() const { return this->flag == kScriptBraceL; }
 	inline Bool IsBlockEnd() const { return this->flag == kScriptBraceR; }
+public:
+	static ScriptObjectPtr FindScriptObjectByFlag(ScriptFlag flag);
 };
 
 class LAME_API ScriptVariable {
@@ -198,15 +203,15 @@ public:
 
 class LAME_API ScriptVariableManager {
 public:
-	Bool Declare(ScriptVariable variable);
-	ScriptVariablePtr Find(StringC name);
+	Bool Declare(ScriptObjectPtr object);
+	ScriptObjectPtr Find(StringC name);
 public:
-	Map<Buffer, ScriptVariable> varMap;
+	Map<Buffer, ScriptObjectPtr> varMap;
 };
 
 class LAME_API ScriptNode {
 public:
-    Void Order(Void);
+	Void Order(ScriptPerformerPtr performer);
     Void Evaluate(ScriptPerformerPtr performer);
 public:
 	ScriptObjectPtr object = 0;
@@ -216,11 +221,12 @@ public:
     Vector<ScriptNodePtr> condition;
 	Vector<ScriptNodePtr> block;
 private:
-	Void Order(Vector<ScriptNodePtr>* list);
+	Void Order(ScriptPerformerPtr performer, Vector<ScriptNodePtr>* list);
 };
 
 class LAME_API ScriptPerformer {
 	friend class ScriptParser;
+	friend class ScriptNode;
 public:
 	Void Set(ScriptVariable& left, const ScriptVariable& right);
 	Void Add(ScriptVariable& left, const ScriptVariable& right);
@@ -248,6 +254,7 @@ public:
 	Void AsBool(ScriptVariable& left);
 public:
 	ScriptPerformer& Evaluate(Void);
+	ScriptPerformer& Trace(Void);
 public:
 	Void Evaluate(
 		Vector<ScriptNodePtr>* list,
@@ -262,6 +269,7 @@ private:
 		ScriptNodePtr token);
 private:
 	Vector<ScriptNodePtr> nodeTree;
+	List<ScriptVariable> tempList;
 	ScriptVariableManager varManager;
 	ScriptTypeManager typeManager;
 };

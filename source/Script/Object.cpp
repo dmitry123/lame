@@ -1,90 +1,19 @@
 #include "Script.h"
+#include "Internal.h"
 
 #include <algorithm>
 
 LAME_BEGIN
 
-static inline Bool IsDigit(Sint8 symbol) {
-
-	return
-		symbol >= '0' &&
-		symbol <= '9';
-}
-
-static inline Bool IsLetter(Sint8 symbol) {
-
-	return
-		(symbol >= 'a' && symbol <= 'z') ||
-		(symbol >= 'A' && symbol <= 'Z');
-}
-
-static inline Bool IsIntValue(StringC string) {
-
-	String result;
-
-	strtol(string, &result, 10);
-
-	if (string != result && isdigit(*string)) {
-		return LAME_TRUE;
-	}
-
-	return LAME_FALSE;
-}
-
-static inline Bool IsStringValue(StringC string) {
-
-	Uint32 length = (Uint32)strlen(string);
-
-	if (length <= 1) {
-		return LAME_FALSE;
-	}
-
-	return
-		(string[0] == '\"' && string[length - 1] == '\"') ||
-		(string[0] == '\'' && string[length - 1] == '\'');
-}
-
-static inline Bool IsIntValue(const Buffer& string) {
-
-	return IsIntValue(string.data());
-}
-
-static inline Bool IsFloatValue(StringC string) {
-
-	Sint8P finish;
-
-	if (!string) {
-		return LAME_FALSE;
-	}
-
-	strtof(string, &finish);
-
-	if (finish != string && (*finish == 'f' || !*finish)) {
-		return LAME_TRUE;
-	}
-
-	return LAME_FALSE;
-}
-
-static inline Bool IsFloatValue(const Buffer& string) {
-
-	if (!string.length()) {
-		return LAME_FALSE;
-	}
-	else {
-		return IsFloatValue(string.data());
-	}
-}
-
-#define P(_p) 16-_p
+#define P(_p) Uint32(16-_p)
 
 namespace internal {
 	static const ScriptObject scriptObjects[kScriptAmount] = {
 		/* FIRST */
-		{ "${name}", P(0), kScriptVariable, kScriptArgDefault, kScriptAssociativityDefault },
-		{ "${int}", P(0), kScriptInt, kScriptArgDefault, kScriptAssociativityDefault },
-		{ "${float}", P(0), kScriptFloat, kScriptArgDefault, kScriptAssociativityDefault },
-		{ "${string}", P(0), kScriptString, kScriptArgDefault, kScriptAssociativityDefault },
+		{ "${name}", P(15), kScriptVariable, kScriptArgUnary, kScriptAssociativityDefault },
+		{ "${int}", P(14), kScriptInt, kScriptArgUnary, kScriptAssociativityDefault },
+		{ "${float}", P(14), kScriptFloat, kScriptArgUnary, kScriptAssociativityDefault },
+		{ "${string}", P(14), kScriptString, kScriptArgUnary, kScriptAssociativityDefault },
 		/* POSTFIX */
 		{ "[", P(16), kScriptBracketL, kScriptArgPostfix, kScriptAssociativityRight },
 		{ "]", P(16), kScriptBracketR, kScriptArgPostfix, kScriptAssociativityRight },
@@ -92,23 +21,24 @@ namespace internal {
 		{ ")", P(17), kScriptParentheseR, kScriptArgPostfix, kScriptAssociativityRight },
 		{ ".", P(16), kScriptDirectSelection, kScriptArgPostfix, kScriptAssociativityRight },
 		{ "->", P(16), kScriptMediatedSelection, kScriptArgPostfix, kScriptAssociativityRight },
-		{ "${declare}", P(15), kScriptDeclare, kScriptArgPostfix, kScriptAssociativityLeft },
-		{ "++", P(15), kScriptIncrement, kScriptArgPostfix, kScriptAssociativityLeft },
-		{ "--", P(15), kScriptDecrement, kScriptArgPostfix, kScriptAssociativityLeft },
+		{ "${declare}", P(15), kScriptDeclare, kScriptArgUnary, kScriptAssociativityLeft },
+		{ "++", P(15), kScriptIncrement, kScriptArgUnary, kScriptAssociativityLeft },
+		{ "--", P(15), kScriptDecrement, kScriptArgUnary, kScriptAssociativityLeft },
 		/* UNARY */
-		{ "sizeof", P(15), kScriptSizeof, kScriptArgUnary, kScriptAssociativityLeft },
-		{ "~", P(15), kScriptBitNot, kScriptArgUnary, kScriptAssociativityLeft },
-		{ "!", P(15), kScriptNot, kScriptArgUnary, kScriptAssociativityLeft },
-		{ "-", P(15), kScriptUnaryMinus, kScriptArgUnary, kScriptAssociativityLeft },
-		{ "+", P(15), kScriptUnaryPlus, kScriptArgUnary, kScriptAssociativityLeft },
-		{ "&", P(15), kScriptOffset, kScriptArgUnary, kScriptAssociativityLeft },
-		{ "*", P(15), kScriptClaim, kScriptArgUnary, kScriptAssociativityLeft },
-		{ "${type}", P(15), kScriptType, kScriptArgUnary, kScriptAssociativityLeft },
+		{ "sizeof", P(15), kScriptSizeof, kScriptArgUnary, kScriptAssociativityRight },
+		{ "~", P(15), kScriptBitNot, kScriptArgUnary, kScriptAssociativityRight },
+		{ "!", P(15), kScriptNot, kScriptArgUnary, kScriptAssociativityRight },
+//		{ "-", P(15), kScriptUnaryMinus, kScriptArgUnary, kScriptAssociativityRight },
+//		{ "+", P(15), kScriptUnaryPlus, kScriptArgUnary, kScriptAssociativityRight },
+//		{ "&", P(15), kScriptOffset, kScriptArgUnary, kScriptAssociativityRight },
+//		{ "*", P(15), kScriptClaim, kScriptArgUnary, kScriptAssociativityRight },
+		{ "${type}", P(15), kScriptType, kScriptArgUnary, kScriptAssociativityRight },
 		{ "if", P(14), kScriptIf, kScriptArgUnary, kScriptAssociativityRight },
 		{ "else", P(14), kScriptElse, kScriptArgDefault, kScriptAssociativityRight },
 		{ "while", P(14), kScriptWhile, kScriptArgUnary, kScriptAssociativityRight },
 		{ "do", P(14), kScriptDo, kScriptArgDefault, kScriptAssociativityRight },
 		{ "for", P(14), kScriptFor, kScriptArgUnary, kScriptAssociativityRight },
+		{ "function", P(14), kScriptFunction, kScriptArgUnary, kScriptAssociativityRight },
 		/* BINARY */
 		{ "*", P(13), kScriptMul, kScriptArgBinary, kScriptAssociativityRight },
 		{ "/", P(13), kScriptDiv, kScriptArgBinary, kScriptAssociativityRight },
@@ -158,7 +88,7 @@ ScriptObject& ScriptObject::Parse(StringC* word) {
 	static Bool isSorted = LAME_FALSE;
 
 	if (!isSorted) {
-		std::qsort((VoidP)internal::scriptObjects, kScriptAmount, sizeof(ScriptObject), [](
+		qsort((VoidP)internal::scriptObjects, kScriptAmount, sizeof(ScriptObject), [](
 			const void* left,
 			const void* right
 		) -> int {
@@ -175,6 +105,7 @@ ScriptObject& ScriptObject::Parse(StringC* word) {
 	this->priority = 0;
     this->var = 0;
     this->line = 0;
+	this->type = 0;
 
 	if (IsFloatValue(*word)) {
 		this->flag = kScriptFloat;
@@ -182,6 +113,11 @@ ScriptObject& ScriptObject::Parse(StringC* word) {
 		if (**word == 'f') {
 			++(*word);
 		}
+		goto __SaveWord;
+	}
+	else if (IsHexValue(*word)) {
+		this->flag = kScriptInt;
+		strtol(*(word) + 2, (String*)word, 16);
 		goto __SaveWord;
 	}
 	else if (IsIntValue(*word)) {
@@ -223,5 +159,25 @@ StringC ScriptObject::GetString(Void) const {
 	return internal::scriptObjects[this->flag].word.data();
 }
 
+Void ScriptObject::Reset(Void) {
+
+	this->priority = 0;
+	this->line = 0;
+	this->var = 0;
+	this->type = 0;
+	this->flag = kScriptDefault;
+	this->args = kScriptArgDefault;
+	this->associativity = kScriptAssociativityDefault;
+}
+
+ScriptObjectPtr ScriptObject::FindScriptObjectByFlag(ScriptFlag flag) {
+
+	for (Uint32 i = 0; i < kScriptAmount; i++) {
+		if (internal::scriptObjects[i].flag == flag) {
+			return (ScriptObjectPtr)&internal::scriptObjects[i];
+		}
+	}
+	return LAME_NULL;
+}
 
 LAME_END

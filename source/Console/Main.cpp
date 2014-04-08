@@ -21,7 +21,8 @@ int main(int argc, char** argv) {
 			.Load(fileName)
             .Build(&performer);
 		performer
-			.Evaluate();
+			.Evaluate()
+			.Trace();
 	}
 	catch (lame::SyntaxException& e) {
 		puts("\n------------------------");
@@ -37,7 +38,9 @@ int main(int argc, char** argv) {
 	puts("\n------------------------");
 
 #ifdef LAME_WINDOWS
-	system("pause");
+	if (argc == 1) {
+		system("pause");
+	}
 #endif
 
     return 0;

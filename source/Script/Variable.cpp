@@ -1,4 +1,5 @@
 #include "Script.h"
+#include "Internal.h"
 
 LAME_BEGIN
 
@@ -6,6 +7,9 @@ Void ScriptVariable::Convert(
 	      ScriptVariable& left,
 	const ScriptVariable& right
 ) {
+	if (left.type == right.type) {
+		return;
+	}
 	if (left.type == kScriptTypeVoid ||
 		left.type == kScriptTypeFunction ||
 		left.type == kScriptTypeObject ||
@@ -15,66 +19,66 @@ Void ScriptVariable::Convert(
 	) {
 		goto __Error;
 	}
-	switch (left.type) {
+	switch (right.type) {
 		case kScriptTypeInt:
-			switch (right.type) {
+			switch (left.type) {
 				case kScriptTypeInt:
-					left.intValue = right.intValue;
+					left.intValue = left.intValue;
 					goto __Exit;
 				case kScriptTypeFloat:
-					left.intValue = (ScriptNativeInt)right.floatValue;
+					left.intValue = (ScriptNativeInt)left.floatValue;
 					goto __Warning;
 				case kScriptTypeBool:
-					left.intValue = (ScriptNativeInt)right.boolValue;
+					left.intValue = (ScriptNativeInt)left.boolValue;
 					goto __Warning;
 				case kScriptTypeString:
-					left.intValue = (ScriptNativeInt)strtol(right.stringValue.data(), NULL, 10);
+					left.intValue = ParseIntValue(left.stringValue.data());
 					goto __Exit;
                 default:
                     break;
 			} break;
 		case kScriptTypeFloat:
-			switch (right.type) {
+			switch (left.type) {
 				case kScriptTypeInt:
-					left.floatValue = (ScriptNativeFloat)right.intValue;
+					left.floatValue = (ScriptNativeFloat)left.intValue;
 					goto __Warning;
 				case kScriptTypeFloat:
 					goto __Exit;
 				case kScriptTypeBool:
-					left.floatValue = (ScriptNativeFloat)right.boolValue;
+					left.floatValue = (ScriptNativeFloat)left.boolValue;
 					goto __Warning;
 				case kScriptTypeString:
-					left.floatValue = (ScriptNativeFloat)strtof(right.stringValue.data(), NULL);
+					left.floatValue = (ScriptNativeFloat)strtof(left.stringValue.data(), NULL);
 					goto __Exit;
                 default:
                     break;
 			} break;
 		case kScriptTypeBool:
-			switch (right.type) {
+			switch (left.type) {
 				case kScriptTypeInt:
-					left.boolValue = (ScriptNativeBool)right.intValue;
+					left.boolValue = (ScriptNativeBool)left.intValue;
 					goto __Warning;
 				case kScriptTypeFloat:
-					left.boolValue = (ScriptNativeBool)right.floatValue;
+					left.boolValue = (ScriptNativeBool)left.floatValue;
 					goto __Warning;
 				case kScriptTypeBool:
 					goto __Exit;
 				case kScriptTypeString:
-					left.boolValue = (ScriptNativeBool)strtol(right.stringValue.data(), NULL, 10);
+					left.boolValue = (ScriptNativeBool)strtol(left.stringValue.data(), NULL, 10);
 					goto __Exit;
                 default:
                     break;
 			} break;
 		case kScriptTypeString:
-			switch (right.type) {
+			switch (left.type) {
 				case kScriptTypeInt:
-					left.stringValue.Format("%d", right.intValue);
+					left.stringValue.Format("%d", left.intValue);
 					goto __Exit;
 				case kScriptTypeFloat:
-					left.stringValue.Format("%.2f", right.floatValue);
+					left.stringValue.Format("%.2f", left.floatValue);
 					goto __Exit;
 				case kScriptTypeBool:
-					left.stringValue.Format("%s", right.boolValue ? "TRUE" : "FALSE");
+					left.stringValue.Format("%s", left.boolValue ? "TRUE" : "FALSE");
 					goto __Exit;
 				case kScriptTypeString:
 					goto __Exit;
@@ -109,24 +113,27 @@ ScriptVariable& ScriptVariable::Reset() {
     return *this;
 }
 
-Bool ScriptVariableManager::Declare(ScriptVariable variable) {
+Bool ScriptVariableManager::Declare(ScriptObjectPtr variable) {
 
-	if (!this->varMap.count(variable.object->word)) {
+	if (this->varMap.count(variable->word)) {
 		return LAME_FALSE;
 	}
 
-	this->varMap[variable.object->word] = variable;
+	variable->var = new ScriptVariable();
+	variable->var->Reset();
+
+	this->varMap[variable->word] = variable;
 
 	return LAME_TRUE;
 }
 
-ScriptVariablePtr ScriptVariableManager::Find(StringC name) {
+ScriptObjectPtr ScriptVariableManager::Find(StringC name) {
 
 	if (!this->varMap.count(name)) {
 		return LAME_NULL;
 	}
 
-	return &this->varMap[name];
+	return this->varMap[name];
 }
 
 LAME_END

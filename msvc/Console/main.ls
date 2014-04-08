@@ -1,3 +1,3 @@
-if (1) {
-	int value = 123;
+function main() {
+	int result = 0x7b;
 }

@@ -49,26 +49,33 @@ Bool ScriptTypeManager::Declare(const ScriptVariable& var) {
 	}
 
 	ScriptType& t = this->typeMap[var.object->word];
-
-	t.var = (ScriptVariablePtr)&var;
-	t.var->type = t;
+	t.object = var.object;
 
 	return LAME_TRUE;
 }
 
 ScriptTypePtr ScriptTypeManager::Find(StringC name) {
 
+	ScriptTypePtr type = LAME_NULL;
+
 	for (Uint32 i = 0; i < kScriptTypeAmount; i++) {
 		if (!strcmp(internal::scriptTypes[i].word.data(), name)) {
-			return (ScriptTypePtr)&internal::scriptTypes[i];
+			type = (ScriptTypePtr)&internal::scriptTypes[i]; break;
 		}
 	}
 
-	if (!this->typeMap.count(name)) {
-		return LAME_NULL;
+	if (!type) {
+		if (!this->typeMap.count(name)) {
+			return LAME_NULL;
+		}
+		type = &this->typeMap[name];
 	}
 
-	return &this->typeMap[name];
+	if (!type->object) {
+		type->object = type->object->FindScriptObjectByFlag(kScriptType);
+	}
+
+	return type;
 }
 
 LAME_END

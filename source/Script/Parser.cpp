@@ -1,107 +1,7 @@
 #include "Script.h"
+#include "Internal.h"
 
 LAME_BEGIN
-
-static inline Bool IsDigit(Sint8 symbol) {
-    
-	return
-        symbol >= '0' &&
-        symbol <= '9';
-}
-
-static inline Bool IsLetter(Sint8 symbol) {
-    
-	return
-        (symbol >= 'a' && symbol <= 'z') ||
-        (symbol >= 'A' && symbol <= 'Z');
-}
-
-static inline Bool IsIntValue(StringC string) {
-    
-	String result;
-
-	strtol(string, &result, 10);
-
-	if (string != result) {
-		return LAME_TRUE;
-	}
-
-	return LAME_FALSE;
-}
-
-static inline Bool IsStringValue(StringC string) {
-    
-	Uint32 length = (Uint32)strlen(string);
-    
-	if (length <= 1) {
-		return LAME_FALSE;
-	}
-    
-	return
-        (string[0] == '\"' && string[length - 1] == '\"') ||
-        (string[0] == '\'' && string[length - 1] == '\'');
-}
-
-static inline Bool IsIntValue(const Buffer& string) {
-    
-	return IsIntValue(string.data());
-}
-
-static inline Bool IsFloatValue(StringC string) {
-    
-	Sint8P finish;
-    
-	if (!string) {
-		return LAME_FALSE;
-	}
-    
-	strtof(string, &finish);
-    
-	if (finish != string && (*finish == 'f' || !*finish)) {
-		return LAME_TRUE;
-	}
-    
-	return LAME_FALSE;
-}
-
-static inline Bool IsFloatValue(const Buffer& string) {
-    
-	if (!string.length()) {
-		return LAME_FALSE;
-	}
-	else {
-		return IsFloatValue(string.data());
-	}
-}
-
-static inline Bool IsValue(const Buffer& string) {
-    
-	return
-        IsIntValue(string) ||
-        IsFloatValue(string);
-}
-
-static inline Sint32 ParseIntValue(const Buffer& string) {
-    
-	return atoi(string.data());
-}
-
-static inline Float32 ParseFloatValue(StringC string) {
-    
-	return strtof(string, NULL);
-}
-
-static inline Float32 ParseFloatValue(const Buffer& string) {
-    
-	return strtof(string.data(), NULL);
-}
-
-static inline Buffer ParseStringValue(StringC string) {
-    
-	Buffer result = string + 1;
-	result[result.length() - 1] = '\0';
-	return result;
-}
 
 ScriptParser& ScriptParser::Parse(StringC script) {
     
@@ -177,7 +77,6 @@ ScriptParser& ScriptParser::Build(ScriptPerformerPtr performer) {
 	ScriptNodePtr lastParent = 0;
 	ScriptNode node;
 	Uint32 extraParentheses = 0;
-	Bool isSingleCmdCondition = 0;
 
 	for (ScriptObject& key : this->keyList) {
 
@@ -190,7 +89,10 @@ ScriptParser& ScriptParser::Build(ScriptPerformerPtr performer) {
 
 		this->nodeList.push_back(node);
 
-		if (key.IsArgsBegin()) {
+		if (prevNode && prevNode->object->flag == kScriptFunction) {
+			prevNode->condition.push_back(&this->nodeList.back());
+		}
+		else if (key.IsArgsBegin()) {
 			if (!prevNode) {
 				PostSyntaxError(key.line, "Empty block in unknown place without parent", 1);
 			}
@@ -217,6 +119,9 @@ ScriptParser& ScriptParser::Build(ScriptPerformerPtr performer) {
 				}
 			}
 			lastStack = &lastNode->block;
+			if (node.object->flag == kScriptSemicolon) {
+                goto __EndBlock;
+			}
 		}
 		else if (key.IsArgsEnd()) {
 			if (!lastStack) {
@@ -245,7 +150,7 @@ ScriptParser& ScriptParser::Build(ScriptPerformerPtr performer) {
 			if (lastStack->size()) {
 				lastStack = LAME_NULL;
 			}
-			lastNode->Order();
+			lastNode->Order(performer);
 			lastParent = nodeStack.back();
 			nodeStack.pop_back();
 			if (nodeStack.size()) {
@@ -261,16 +166,8 @@ ScriptParser& ScriptParser::Build(ScriptPerformerPtr performer) {
 		__SaveAsNode:
 
 			if (!lastStack && lastNode) {
-				isSingleCmdCondition = LAME_TRUE;
 				lastNode->block.push_back(&this->nodeList.back());
 				goto __BeginBlock;
-			}
-
-			if (node.object->flag == kScriptSemicolon) {
-				if (isSingleCmdCondition) {
-					isSingleCmdCondition = LAME_FALSE;
-					goto __EndBlock;
-				}
 			}
 
 			if (lastStack) {

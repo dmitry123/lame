@@ -83,6 +83,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\Script\Define.h" />
+    <ClInclude Include="..\..\source\Script\Internal.h" />
     <ClInclude Include="..\..\source\Script\Script.h" />
   </ItemGroup>
   <ItemGroup>

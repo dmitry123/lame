@@ -43,7 +43,7 @@ public:
 	}
 	inline Void Debug() {
 		if (this->warning_) {
-			printf("Syntax Warning (%d) : %s", this->line_, this->buffer_);
+			printf("Syntax Warning (%d) : %s\n", this->line_, this->buffer_);
 		} else {
 			printf("Syntax Error (%d) : %s", this->line_, this->buffer_);
 		}
@@ -62,7 +62,7 @@ protected:
 #define PostSyntaxWarning(_line, _message, ...) \
 	static Bool __warningExceptionLock = 0; \
 	if (!__warningExceptionLock) { \
-		SyntaxException(1, _line, _message, __VA_ARGS__); \
+		SyntaxException(1, _line, _message, __VA_ARGS__).Debug(); \
 	} __warningExceptionLock = 1;
 
 LAME_END

@@ -397,6 +397,51 @@ ScriptPerformer& ScriptPerformer::Evaluate(Void) {
 	for (ScriptNodePtr node : this->nodeTree) {
 		node->Evaluate(this);
 	}
+	return *this;
+}
+
+ScriptPerformer& ScriptPerformer::Trace(Void) {
+
+	puts("------------------------");
+	for (Map<Buffer, ScriptType>::iterator
+			i = this->typeManager.typeMap.begin();
+			i != this->typeManager.typeMap.end();
+			i++
+	) {
+		printf("%s %s", i->first.data(), i->second.GetString());
+	}
+
+	if (this->typeManager.typeMap.size()) {
+		puts("\n------------------------");
+	}
+
+	for (Map<Buffer, ScriptObjectPtr>::iterator
+			i = this->varManager.varMap.begin();
+			i != this->varManager.varMap.end();
+			i++
+	) {
+		printf("%s %s = ", i->second->var->type.GetString(), i->first.data());
+		switch (i->second->var->type) {
+			case kScriptTypeBool:
+				printf("%s", i->second->var->boolValue ? "TRUE" : "FALSE");
+				break;
+			case kScriptTypeFloat:
+				printf("%.2f", i->second->var->floatValue);
+				break;
+			case kScriptTypeFunction:
+				printf("FUNCTION");
+				break;
+			case kScriptTypeInt:
+				printf("%lld", i->second->var->intValue);
+				break;
+			case kScriptTypeString:
+				printf("\"%s\"", i->second->var->stringValue.data());
+				break;
+			default:
+				break;
+		}
+		puts("");
+	}
 
 	return *this;
 }
@@ -405,7 +450,41 @@ Void ScriptPerformer::EvaluateSingleExpression(
 	ScriptNodePtr left,
 	ScriptNodePtr token
 ) {
-
+	if (!left->object->var && token->object->flag != kScriptType) {
+		ScriptObjectPtr left_ = this->varManager.Find(left->object->word.data());
+		if (!this->varManager.Find(left->object->word.data())) {
+			PostSyntaxError(left->object->line, "Undeclared variable (%s)", left->object->word.data());
+		}
+		if (token->object->IsRightAssociated()) {
+			this->tempList.push_back(*left_->var);
+			left->object->var = &this->tempList.back();
+		}
+		else {
+			left->object = left_;
+		}
+	}
+	switch (token->object->flag) {
+        case kScriptType:
+            if (!this->varManager.Declare(left->object)) {
+                PostSyntaxError(left->object->line, "Variable redeclaration (%s)", left->object->word.data());
+            }
+            left->object->var->type = *token->object->type;
+            break;
+        case kScriptIncrement:
+            this->Inc(*left->object->var);
+            break;
+        case kScriptDecrement:
+            this->Dec(*left->object->var);
+            break;
+        case kScriptNot:
+            this->Not(*left->object->var);
+            break;
+        case kScriptBitNot:
+            this->BitNot(*left->object->var);
+            break;
+        default:
+            break;
+	}
 }
 
 Void ScriptPerformer::EvaluateDoubleExpression(
@@ -413,13 +492,49 @@ Void ScriptPerformer::EvaluateDoubleExpression(
 	ScriptNodePtr right,
 	ScriptNodePtr token
 ) {
+	Bool isUseVar = LAME_FALSE;
+
+    if (token->object->IsRightAssociated()) {
+        if (left->object->flag == kScriptVariable) {
+            left->object->var = LAME_NULL;
+        }
+    }
+    
 	if (!left->object->var) {
-		if (!this->varManager.Find(left->object->word.data())) {
+		ScriptObjectPtr left_ = this->varManager.Find(left->object->word.data());
+		if (!left_) {
 			PostSyntaxError(left->object->line, "Undeclared variable (%s)", left->object->word.data());
 		}
-		if (!this->varManager.Find(right->object->word.data())) {
+		if (token->object->IsRightAssociated()) {
+			this->tempList.push_back(*left_->var);
+			left->object->var = &this->tempList.back();
+		}
+		else {
+			left->object = left_;
+		}
+		isUseVar = LAME_TRUE;
+	}
+	if (!right->object->var) {
+		ScriptObjectPtr right_ = this->varManager.Find(right->object->word.data());
+		if (!right_) {
 			PostSyntaxError(right->object->line, "Undeclared variable (%s)", right->object->word.data());
 		}
+		this->tempList.push_back(*right_->var);
+		right->object->var = &this->tempList.back();
+	}
+
+	if (!left->object->var->object) {
+		left->object->var->object = left->object;
+	}
+	if (!right->object->var->object) {
+		right->object->var->object = right->object;
+	}
+
+	if (!left->object->type) {
+		left->object->type = &left->object->var->type;
+	}
+	if (!right->object->type) {
+		right->object->type = &right->object->var->type;
 	}
 
 	switch (token->object->flag) {
@@ -451,9 +566,13 @@ Void ScriptPerformer::EvaluateDoubleExpression(
 		goto __EvaluateMathExpression;
 	}
 	left->object->var->type = kScriptTypeBool;
-	goto __Return;
+	isUseVar = LAME_FALSE;
 
+	goto __Return;
 __EvaluateMathExpression:
+
+	ScriptVariable::Convert(*right->object->var, *left->object->var);
+
 	switch (token->object->flag) {
 	case kScriptSet:
 		this->Set(*left->object->var, *right->object->var);
@@ -517,21 +636,16 @@ Void ScriptPerformer::Evaluate(
 	ScriptNodePtr right = 0;
 	ScriptNodePtr kw = 0;
 
-	result->clear();
-
+    this->tempList.clear();
 	for (Iterator i = list->begin(); i != list->end(); i++) {
 
 		kw = *i;
 
-		if (kw->object->flag == kScriptDefault) {
-			this->typeManager.Find(kw->object->word.data());
-			kw->object->flag = kScriptType;
-		}
-
 		if (kw->object->flag == kScriptInt ||
 			kw->object->flag == kScriptFloat ||
 			kw->object->flag == kScriptString ||
-			kw->object->flag == kScriptDefault
+			kw->object->flag == kScriptDefault ||
+			kw->object->flag == kScriptVariable
 		) {
 			result->push_back(kw);
 		}
@@ -541,8 +655,15 @@ Void ScriptPerformer::Evaluate(
 		else if (kw->object->flag == kScriptComa) {
 			continue;
 		}
+		else if (kw->object->IsCondition()) {
+			kw->Evaluate(this);
+		}
 		else {
 			arguments = kw->object->args;
+
+			if (arguments == -1) {
+				continue;
+			}
 
 			if (result->size() < arguments) {
 				PostSyntaxError(kw->object->line, "Invalid parameters, (%s) needs (%d) arguments", kw->object->word.data(), arguments);
@@ -567,7 +688,21 @@ Void ScriptPerformer::Evaluate(
 		}
 	}
 
-
+	for (ScriptNodePtr node : *result) {
+		if (node->object->flag == kScriptVariable) {
+			if (!node->object->var) {
+				ScriptObjectPtr right_ = this->varManager.Find(node->object->word.data());
+				if (!right_) {
+					PostSyntaxError(node->object->line, "Undeclared variable (%s)", node->object->word.data());
+				}
+				node->object = right_;
+			}
+			if (node->object->var->type == kScriptTypeDefault) {
+				StringC ptr = node->object->var->type.word.data();
+				node->object->var->type.Parse(&ptr);
+			}
+		}
+	}
 }
 
 LAME_END
