@@ -115,10 +115,9 @@
 #endif
 
 #if defined(LAME_MSVC)
-#  pragma warning(disable: 4150) // undeclared type destruction
-#  pragma warning(disable: 4996) // the posix name for this item is deprecated
-#  pragma warning(disable: 4251) // dll-import
-#  pragma warning(disable: 4275) // dll-import
+#  pragma warning(disable: 4150)
+#  pragma warning(disable: 4996)
+#  pragma warning(disable: 4251)
 #endif
 
 #define LAME_INFINITE 0xffffffff

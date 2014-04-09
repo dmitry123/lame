@@ -1,5 +1,7 @@
 #include "Main.h"
 
+#include <memory>
+
 int main(int argc, char** argv) {
 
 	lame::Clock time;
@@ -15,25 +17,32 @@ int main(int argc, char** argv) {
 
 	lame::ScriptParser parser;
 	lame::ScriptPerformer performer;
+	lame::ScriptBuilder builder;
+	lame::ScriptVirtualMachine machine;
 
 	try {
 		parser
-			.Load(fileName)
-            .Build(&performer);
+			.Load(fileName);
+		builder
+			.Analyze(&parser, &performer);
+		machine
+			.Execute(&performer);
+		
+		lame::Vector<lame::ScriptNodePtr> result; performer.Evaluate(&performer.root->next->block[1]->block, &result);
+
 		performer
-			.Evaluate()
 			.Trace();
 	}
 	catch (lame::SyntaxException& e) {
 		puts("\n------------------------");
 		e.Debug();
-		puts("");
+		puts("\n------------------------");
 	}
 	catch (lame::Exception& e) {
 		e.Debug();
+		puts("\n------------------------");
 	}
 
-	puts("------------------------");
 	printf("Elapsed Time : %d ms", lame::Uint32(lame::Time::GetTime() - time));
 	puts("\n------------------------");
 

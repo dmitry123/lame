@@ -18,12 +18,12 @@ Void ScriptNode::Evaluate(ScriptPerformerPtr performer) {
 
 	if (this->object->IsCondition()) {
 
-		if (!this->condition.size() && this->object->IsBinary()) {
+		if (!this->condition.size() && this->object->arguments == 2) {
 			PostSyntaxError(this->object->line, "Condition block hasn't expression", 1);
 		}
 
-		switch (this->object->flag) {
-			case kScriptIf:
+		switch (this->object->object) {
+			case kScriptObjectIf:
                 
                 if (!this->block.size()) {
                     break;
@@ -35,9 +35,9 @@ Void ScriptNode::Evaluate(ScriptPerformerPtr performer) {
 					PostSyntaxError(this->object->line,
 						"Invalid condition expression, the result of condition isn't 1 argument", 1);
 				}
-				performer->AsBool(*result.back()->object->var);
+				performer->AsBool(*result.back()->var);
 
-				this->result = result.back()->object->var->boolValue;
+				this->result = result.back()->var->boolValue;
 				result.clear();
 
 				if (this->result) {
@@ -48,7 +48,7 @@ Void ScriptNode::Evaluate(ScriptPerformerPtr performer) {
 				goto __ExitExpression;
 
 				break;
-			case kScriptElse:
+			case kScriptObjectElse:
                 
 				if (!this->parent) {
 					PostSyntaxError(this->object->line, "Else construction must have 'if' node", 1);
@@ -66,7 +66,7 @@ Void ScriptNode::Evaluate(ScriptPerformerPtr performer) {
 				goto __ExitExpression;
 
 				break;
-			case kScriptWhile:
+			case kScriptObjectWhile:
 
 				performer->Evaluate(&this->condition, &result);
 
@@ -74,12 +74,12 @@ Void ScriptNode::Evaluate(ScriptPerformerPtr performer) {
 					PostSyntaxError(this->object->line,
 						"Invalid condition expression, the result of condition isn't 1 argument", 1);
 				}
-				performer->AsBool(*result.back()->object->var);
+				performer->AsBool(*result.back()->var);
 
-				this->result = result.back()->object->var->boolValue;
+				this->result = result.back()->var->boolValue;
 				result.clear();
                 
-                if (this->parent->object->flag == kScriptDo) {
+				if (this->parent->object->object == kScriptObjectDo) {
                     if (this->parent->block.size()) {
                         performer->Evaluate(&this->parent->block, &result);
                         result.clear();
@@ -90,7 +90,7 @@ Void ScriptNode::Evaluate(ScriptPerformerPtr performer) {
 					goto __ExitExpression;
 				}
 
-				if (this->parent && this->parent->object->flag == kScriptDo) {
+				if (this->parent && this->parent->object->object == kScriptObjectDo) {
                     if (!this->parent->block.size()) {
                         break;
                     }
@@ -100,8 +100,8 @@ Void ScriptNode::Evaluate(ScriptPerformerPtr performer) {
 							performer->Evaluate(&this->parent->block, &result);
 						}
 						performer->Evaluate(&this->condition, &result);
-						performer->AsBool(*result.back()->object->var);
-						this->result = result.back()->object->var->boolValue;
+						performer->AsBool(*result.back()->var);
+						this->result = result.back()->var->boolValue;
 					} while (this->result);
 				}
 				else {
@@ -110,8 +110,8 @@ Void ScriptNode::Evaluate(ScriptPerformerPtr performer) {
                     }
 					while (this->result) {
 						performer->Evaluate(&this->condition, &result);
-						performer->AsBool(*result.back()->object->var);
-						this->result = result.back()->object->var->boolValue;
+						performer->AsBool(*result.back()->var);
+						this->result = result.back()->var->boolValue;
 						if (this->block.size()) {
 							performer->Evaluate(&this->block, &result);
 						}
@@ -121,9 +121,9 @@ Void ScriptNode::Evaluate(ScriptPerformerPtr performer) {
 				goto __ExitExpression;
 
 				break;
-			case kScriptDo:
+			case kScriptObjectDo:
 				goto __ExitExpression;
-			case kScriptFor: {
+			case kScriptObjectFor: {
                 
                 if (!this->block.size()) {
                     break;
@@ -139,7 +139,7 @@ Void ScriptNode::Evaluate(ScriptPerformerPtr performer) {
                     goto __ForArgError;
                 }
                 
-                while ((*i)->object->flag != kScriptSemicolon) {
+                while ((*i)->object->object != kScriptObjectSemicolon) {
                     if (i == this->condition.end()) {
                         goto __ForArgError;
                     }
@@ -148,7 +148,7 @@ Void ScriptNode::Evaluate(ScriptPerformerPtr performer) {
                 if (i == this->condition.end()) {
                     goto __ForArgError;
                 } ++i;
-                while ((*i)->object->flag != kScriptSemicolon) {
+				while ((*i)->object->object != kScriptObjectSemicolon) {
                     if (i == this->condition.end()) {
                         goto __ForArgError;
                     }
@@ -157,7 +157,7 @@ Void ScriptNode::Evaluate(ScriptPerformerPtr performer) {
                 if (i == this->condition.end()) {
                     goto __ForArgError;
                 } ++i;
-                while (i != this->condition.end() && (*i)->object->flag != kScriptSemicolon) {
+				while (i != this->condition.end() && (*i)->object->object != kScriptObjectSemicolon) {
                     if (i == this->condition.end()) {
                         goto __ForArgError;
                     }
@@ -182,8 +182,8 @@ Void ScriptNode::Evaluate(ScriptPerformerPtr performer) {
                         if (result.size() > 1) {
                             PostSyntaxError(this->object->line, "Invalid condition expression in 'for' construction", 1);
                         }
-						performer->AsBool(*result.back()->object->var);
-						this->result = result.back()->object->var->boolValue;
+						performer->AsBool(*result.back()->var);
+						this->result = result.back()->var->boolValue;
                         result.clear();
                         
                         if (!this->result) {
@@ -202,18 +202,6 @@ Void ScriptNode::Evaluate(ScriptPerformerPtr performer) {
                     result.clear();
                 }
             } break;
-		case kScriptFunction: {
-
-			if (!this->condition.size()) {
-				PostSyntaxError(this->object->line, "Invalid function's arguments", 1);
-			}
-
-			const Buffer& functionName = this->condition.back()->object->word;
-			this->condition.pop_back();
-
-			performer->varManager.Declare(this->object);
-
-			} break;
 		default:
 			break;
 		}
@@ -230,7 +218,7 @@ Void ScriptNode::Order(ScriptPerformerPtr performer, Vector<ScriptNodePtr>* list
 
 	Bool found = 0;
 	ScriptNodePtr back = 0;
-	ScriptTypePtr type = 0;
+	ScriptNodePtr type = 0;
 	ScriptObjectPtr object = 0;
 
 	for (ScriptNodePtr node : *list) {
@@ -239,47 +227,44 @@ Void ScriptNode::Order(ScriptPerformerPtr performer, Vector<ScriptNodePtr>* list
 			continue;
 		}
 
-		if (node->object->flag == kScriptDefault) {
-			type = performer->typeManager.Find(node->object->word.data());
+		if (node->object->object == kScriptObjectDefault) {
+			type = performer->FindType(node->object->word.data());
 			if (type) {
-				node->object->args = type->object->args;
+				node->object->arguments = type->object->arguments;
 				node->object->associativity = type->object->associativity;
-				node->object->flag = type->object->flag;
+				node->object->object = type->object->object;
 				node->object->priority = type->object->priority;
-				node->object->type = type;
+				node->object->type = type->object->type;
 			}
 			else {
-				object = object->FindScriptObjectByFlag(kScriptVariable);
-				node->object->args = object->args;
+				object = object->FindScriptObjectByFlag(kScriptObjectVariable);
+				node->object->arguments = object->arguments;
 				node->object->associativity = object->associativity;
-				node->object->flag = object->flag;
+				node->object->object = object->object;
 				node->object->priority = object->priority;
 				node->object->type = object->type;
 			}
 		}
 
-		if (node->object->flag == kScriptDeclare) {
-			continue;
-		}
-
 		if ( // If object constant or variable
-			node->object->flag == kScriptInt  ||
-			node->object->flag == kScriptFloat ||
-			node->object->flag == kScriptString ||
-			node->object->flag == kScriptDefault ||
+			node->object->object == kScriptObjectInt ||
+			node->object->object == kScriptObjectFloat ||
+			node->object->object == kScriptObjectString ||
+			node->object->object == kScriptObjectDefault ||
+			node->object->object == kScriptObjectVariable ||
 			// If object condition
 			node->object->IsCondition()
 		) {
 			result.push_back(node);
 		}
-		else if (node->object->flag == kScriptParentheseL) {
+		else if (node->object->object == kScriptObjectParentheseL) {
 			stack.push_back(node);
 		}
-		else if (node->object->flag == kScriptParentheseR) {
+		else if (node->object->object == kScriptObjectParentheseR) {
 			found = 0;
 			while (stack.size()) {
 				back = stack.back();
-				if (back->object->flag == kScriptParentheseL) {
+				if (back->object->object == kScriptObjectParentheseL) {
 					found = 1; break;
 				}
 				else {
@@ -295,7 +280,7 @@ Void ScriptNode::Order(ScriptPerformerPtr performer, Vector<ScriptNodePtr>* list
 				if (stack.size()) {
 					back = stack.back();
 					if (back->object->IsCondition() ||
-						back->object->flag == kScriptDefault
+						back->object->object == kScriptObjectDefault
 					) {
 						result.push_back(back);
 						stack.pop_back();
@@ -303,11 +288,11 @@ Void ScriptNode::Order(ScriptPerformerPtr performer, Vector<ScriptNodePtr>* list
 				}
 			}
 		}
-		else if (node->object->flag == kScriptSemicolon) {
+		else if (node->object->object == kScriptObjectSemicolon) {
 			while (stack.size()) {
 				back = stack.back();
-				if (back->object->flag == kScriptParentheseL ||
-					back->object->flag == kScriptParentheseR
+				if (back->object->object == kScriptObjectParentheseL ||
+					back->object->object == kScriptObjectParentheseR
 				) {
 					PostSyntaxError(back->object->line, "Parentheses mismatched", 1);
 				}
@@ -337,8 +322,8 @@ Void ScriptNode::Order(ScriptPerformerPtr performer, Vector<ScriptNodePtr>* list
 
 	while (stack.size()) {
 		back = stack.back();
-		if (back->object->flag == kScriptParentheseL ||
-			back->object->flag == kScriptParentheseR
+		if (back->object->object == kScriptObjectParentheseL ||
+			back->object->object == kScriptObjectParentheseR
 		) {
 			PostSyntaxError(back->object->line, "Parentheses mismatched", 1);
 		}

@@ -15,7 +15,7 @@
     <ClInclude Include="..\..\source\Script\Script.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\source\Script\Internal.h">
+    <ClInclude Include="..\..\source\Script\Exception.h">
       <Filter>Заголовочные файлы</Filter>
     </ClInclude>
   </ItemGroup>
@@ -32,10 +32,16 @@
     <ClCompile Include="..\..\source\Script\Type.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\Script\Node.cpp">
+    <ClCompile Include="..\..\source\Script\Performer.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\Script\Performer.cpp">
+    <ClCompile Include="..\..\source\Script\VirtualMachine.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Script\Builder.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Script\Node.cpp">
       <Filter>Файлы исходного кода</Filter>
     </ClCompile>
   </ItemGroup>

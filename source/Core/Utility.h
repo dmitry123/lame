@@ -370,40 +370,42 @@ public:
 	}
 };
 
-template <class T> class __AnySingleton {
-public:
-	typedef T Type, *TypePtr, &TypeRef;
-public:
-	inline Bool operator == (const __AnySingleton<T>& base) const {
-		return this->instance_.reference_ == base.instance_.reference_;
-	}
-	inline Bool operator != (const __AnySingleton<T>& base) const {
-		return this->instance_.reference_ != base.instance_.reference_;
-	}
-public:
-	inline SharedPtr<T> GetSharedPtr() {
-		return this->instance_;
-	}
-	inline WeakPtr<T> GetWeakPtr() {
-		return WeakPtr<T>(instance_);
-	}
-public:
-	inline TypeRef operator * () {
-		return *this->instance_.reference_;
-	}
-	inline TypePtr operator -> () {
-		return this->instance_.reference_;
-	}
-public:
-	inline operator Bool () const {
-		return this->instance_.reference_ != 0;
-	}
-public:
-	SharedPtr<T> instance_;
-};
+namespace internal {
+	template <class T> class __AnySingleton {
+	public:
+		typedef T Type, *TypePtr, &TypeRef;
+	public:
+		inline Bool operator == (const __AnySingleton<T>& base) const {
+			return this->instance_.reference_ == base.instance_.reference_;
+		}
+		inline Bool operator != (const __AnySingleton<T>& base) const {
+			return this->instance_.reference_ != base.instance_.reference_;
+		}
+	public:
+		inline SharedPtr<T> GetSharedPtr() {
+			return this->instance_;
+		}
+		inline WeakPtr<T> GetWeakPtr() {
+			return WeakPtr<T>(instance_);
+		}
+	public:
+		inline TypeRef operator * () {
+			return *this->instance_.reference_;
+		}
+		inline TypePtr operator -> () {
+			return this->instance_.reference_;
+		}
+	public:
+		inline operator Bool () const {
+			return this->instance_.reference_ != 0;
+		}
+	public:
+		SharedPtr<T> instance_;
+	};
+}
 
-template <class T> class Any : public __AnySingleton<T> {
-	friend class __AnySingleton<T>;
+template <class T> class Any : public internal::__AnySingleton<T> {
+	friend class internal::__AnySingleton<T>;
 public:
 	explicit Any(Bool construct = LAME_FALSE) {
 		if (construct && !this->instance_) {

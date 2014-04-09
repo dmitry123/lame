@@ -5,7 +5,7 @@
 #elif defined(LAME_APPLE)
 #  include <libkern/OSAtomic.h>
 #else
-#  error "i'll add atomic operations for linux later!";
+#  error "I'll add atomic operations for linux later!";
 #endif
 
 LAME_BEGIN

@@ -2,231 +2,256 @@
 #define __LAME_SCRIPT__
 
 #include "Define.h"
+#include "Exception.h"
 
 LAME_BEGIN
 
-typedef Sint64 ScriptNativeInt;
-typedef Float32 ScriptNativeFloat;
-typedef Bool ScriptNativeBool;
-typedef Buffer ScriptNativeString;
-
-typedef class ScriptType ScriptType, *ScriptTypePtr;
-typedef class ScriptTypeManager ScriptTypeManager, *ScriptTypeManagerPtr;
-typedef class ScriptObject ScriptObject, *ScriptObjectPtr;
-typedef class ScriptVariable ScriptVariable, *ScriptVariablePtr;
-typedef class ScriptVariableManager ScriptVariableManager, *ScriptVariableManagerPtr;
-typedef class ScriptNode ScriptNode, *ScriptNodePtr;
-typedef class ScriptSorter ScriptSorter, *ScriptSorterPtr;
-typedef class ScriptPerformer ScriptPerformer, *ScriptPerformerPtr;
-typedef class ScriptParser ScriptParser, *ScriptParserPtr;
-
 typedef enum {
-	kScriptDefault = -1,
-	/* FIRST */
-	kScriptVariable,
-	kScriptInt,
-	kScriptFloat,
-	kScriptString,
-	/* POSTFIX */
-	kScriptBracketL,
-	kScriptBracketR,
-	kScriptParentheseL,
-	kScriptParentheseR,
-	kScriptDirectSelection,
-	kScriptMediatedSelection,
-	kScriptDeclare,
-	kScriptIncrement,
-	kScriptDecrement,
-	/* UNARY */
-	kScriptSizeof,
-	kScriptBitNot,
-	kScriptNot,
-//	kScriptUnaryMinus,
-//	kScriptUnaryPlus,
-//	kScriptOffset,
-//	kScriptClaim,
-	kScriptType,
-	kScriptIf,
-	kScriptElse,
-	kScriptWhile,
-	kScriptDo,
-	kScriptFor,
-	kScriptFunction,
-	/* BINARY */
-	kScriptMul,
-	kScriptDiv,
-	kScriptMod,
-	kScriptAdd,
-	kScriptSub,
-	kScriptBitShiftL,
-	kScriptBitShiftR,
-	kScriptBellow,
-	kScriptAbove,
-	kScriptBellowEqual,
-	kScriptAboveEqual,
-	kScriptEqual,
-	kScriptNotEqual,
-	kScriptBitAnd,
-	kScriptBitXor,
-	kScriptBitOr,
-	kScriptAnd,
-	kScriptOr,
-	kScriptSet,
-	kScriptAddSet,
-	kScriptSubSet,
-	kScriptMulSet,
-	kScriptDivSet,
-	kScriptModSet,
-	kScriptBitShiftSetL,
-	kScriptBitShiftSetR,
-	kScriptBitAndSet,
-	kScriptBitXorSet,
-	kScriptBitOrSet,
-	kScriptComa,
-	/* OTHER */
-	kScriptCommentL,
-	kScriptCommentR,
-	kScriptCommentLine,
-	kScriptQuote,
-	kScriptApostrophe,
-	kScriptSemicolon,
-	kScriptBraceL,
-	kScriptBraceR,
-	kScriptAmount
-} ScriptFlag;
-
-typedef enum {
-	kScriptArgDefault = -1,
-	kScriptArgPostfix,
-	kScriptArgUnary,
-	kScriptArgBinary
-} ScriptArg;
+	kScriptObjectDefault = -1,
+	kScriptObjectVariable,
+	kScriptObjectInt,
+	kScriptObjectFloat,
+	kScriptObjectString,
+	kScriptObjectBool,
+	kScriptObjectBracketL,
+	kScriptObjectBracketR,
+	kScriptObjectParentheseL,
+	kScriptObjectParentheseR,
+	kScriptObjectDirect,
+	kScriptObjectMediated,
+	kScriptObjectIncrement,
+	kScriptObjectDecrement,
+	kScriptObjectSizeof,
+	kScriptObjectBitNot,
+	kScriptObjectNot,
+	kScriptObjectUnaryMinus,
+	kScriptObjectUnaryPlus,
+	kScriptObjectType,
+	kScriptObjectIf,
+	kScriptObjectElse,
+	kScriptObjectWhile,
+	kScriptObjectDo,
+	kScriptObjectFor,
+	kScriptObjectFunction,
+	kScriptObjectMul,
+	kScriptObjectDiv,
+	kScriptObjectMod,
+	kScriptObjectAdd,
+	kScriptObjectSub,
+	kScriptObjectBitShiftL,
+	kScriptObjectBitShiftR,
+	kScriptObjectBellow,
+	kScriptObjectAbove,
+	kScriptObjectBellowEqual,
+	kScriptObjectAboveEqual,
+	kScriptObjectEqual,
+	kScriptObjectNotEqual,
+	kScriptObjectBitAnd,
+	kScriptObjectBitXor,
+	kScriptObjectBitOr,
+	kScriptObjectAnd,
+	kScriptObjectOr,
+	kScriptObjectSet,
+	kScriptObjectAddSet,
+	kScriptObjectSubSet,
+	kScriptObjectMulSet,
+	kScriptObjectDivSet,
+	kScriptObjectModSet,
+	kScriptObjectBitShiftSetL,
+	kScriptObjectBitShiftSetR,
+	kScriptObjectBitAndSet,
+	kScriptObjectBitXorSet,
+	kScriptObjectBitOrSet,
+	kScriptObjectComa,
+	kScriptObjectCommentL,
+	kScriptObjectCommentR,
+	kScriptObjectLineComment,
+	kScriptObjectQuote,
+	kScriptObjectApostrophe,
+	kScriptObjectSemicolon,
+	kScriptObjectBraceL,
+	kScriptObjectBraceR,
+	kScriptObjectClass,
+	kScriptObjectImplements,
+	kScriptObjectExtends,
+	kScriptObjectPublic,
+	kScriptObjectPrivate,
+	kScriptObjectProtected,
+	kScriptObjectFinal,
+	kScriptObjectOverride,
+	kScriptObjectAbstract,
+	kScriptObjectStatic,
+	kScriptObjectBreak,
+	kScriptObjectContinue,
+	kScriptObjectTry,
+	kScriptObjectCatch,
+	kScriptObjectThrow,
+	kScriptObjectAmount
+} EScriptObject;
 
 typedef enum {
 	kScriptAssociativityDefault = -1,
 	kScriptAssociativityLeft,
-	kScriptAssociativityRight
-} ScriptAssociativity;
+	kScriptAssociativityRight,
+	kScriptAssociativityAmount
+} EScriptAssociativity;
 
 typedef enum {
-	kScriptTypeDefault = -1,
+	kScriptTypeDefault,
 	kScriptTypeVoid,
 	kScriptTypeInt,
 	kScriptTypeFloat,
 	kScriptTypeBool,
 	kScriptTypeString,
 	kScriptTypeFunction,
-	kScriptTypeObject,
+	kScriptTypeClass,
 	kScriptTypeAmount
-} ScriptTypeEnum;
+} EScriptType;
+
+typedef enum {
+	kScriptModificatorDefault = 0x0000,
+	kScriptModificatorAbstract = 0x0001,
+	kScriptModificatorFinal = 0x0002,
+	kScriptModificatorOverride = 0x0004,
+	kScriptModificatorPublic = 0x0008,
+	kScriptModificatorPrivate = 0x0010,
+	kScriptModificatorProtected = 0x0020,
+	kScriptModificatorStatic = 0x0040
+} EScriptModificator;
+
+typedef enum {
+	kScriptNodeDefault = -1,
+	kScriptNodeCondition,
+	kScriptNodeClass,
+	kScriptNodeFunction,
+	kScriptNodeExpression,
+	kScriptNodeAmount
+} EScriptNode;
+
+typedef class ScriptType ScriptType, *ScriptTypePtr;
+typedef class ScriptObject ScriptObject, *ScriptObjectPtr;
+typedef class ScriptParser ScriptParser, *ScriptParserPtr;
+typedef class ScriptVariable ScriptVariable, *ScriptVariablePtr;
+typedef class ScriptNode ScriptNode, *ScriptNodePtr;
+typedef class ScriptPerformer ScriptPerformer, *ScriptPerformerPtr;
+typedef class ScriptBuilder ScriptBuilder, *ScriptBuilderPtr;
+typedef class ScriptVirtualMachine ScriptVirtualMachine, *ScriptVirtualMachinePtr;
 
 class LAME_API ScriptType {
 public:
-	Buffer word;
-	ScriptTypeEnum type;
-	ScriptObjectPtr object;
+	inline operator EScriptType () const { return this->type; }
+	inline Void operator = (EScriptType type) { this->type = type; }
 public:
-	inline Void operator = (const ScriptTypeEnum& type) { this->type = type; }
-	inline operator ScriptTypeEnum (Void) const { return this->type; };
-public:
-	ScriptType& Parse(StringC* word);
+	Void Parse(StringC* word);
 	StringC GetString(Void) const;
-};
-
-class LAME_API ScriptTypeManager {
-	typedef Buffer* BufferPtr;
+	Void Reset(Void);
 public:
-	Bool Declare(const ScriptVariable& type);
-	ScriptTypePtr Find(StringC name);
-public:
-	Map<Buffer, ScriptType> typeMap;
+	Buffer name;
+	EScriptType type;
 };
 
 class LAME_API ScriptObject {
 public:
-	Buffer word;
-	Uint32 priority;
-	ScriptFlag flag;
-	ScriptArg args;
-	ScriptAssociativity associativity;
-	Uint32 line;
-    ScriptVariablePtr var;
-	ScriptTypePtr type;
+	inline Bool IsLeftAssociated() const { return this->associativity == kScriptAssociativityLeft; }
+	inline Bool IsRightAssociated() const { return this->associativity == kScriptAssociativityRight; }
+	inline Bool IsString() const { return this->type == kScriptTypeString; };
+	inline Bool IsVoid() const { return this->type == kScriptTypeVoid; }
+	inline Bool IsInt() const { return this->type == kScriptTypeInt; }
+	inline Bool IsFloat() const { return this->type == kScriptTypeFloat; }
+	inline Bool IsFunction() const { return this->type == kScriptTypeFunction; }
+	inline Bool IsClass() const { return this->type == kScriptTypeClass; }
+	inline Bool IsCondition() const { return this->object >= kScriptObjectIf && this->object <= kScriptObjectFor; }
+	inline Bool IsModificator() const { return this->object >= kScriptObjectPublic && this->object <= kScriptObjectStatic; }
 public:
-	ScriptObject& Parse(StringC* word);
+	Void Parse(StringC* word);
 	StringC GetString(Void) const;
 	Void Reset(Void);
 public:
-	inline Bool IsLeftAssociated() const { return this->associativity == kScriptAssociativityLeft; }
-	inline Bool IsRightAssociated() const { return this->associativity == kScriptAssociativityRight; }
-	inline Bool IsPostfix() const { return this->args == kScriptArgPostfix; }
-	inline Bool IsUnary() const { return this->args == kScriptArgUnary; }
-	inline Bool IsBinary() const { return this->args == kScriptArgBinary; }
-    inline Bool IsCondition() const { return this->flag >= kScriptIf && this->flag <= kScriptFunction; }
-	inline Bool IsArgsBegin() const { return this->flag == kScriptParentheseL; }
-	inline Bool IsArgsEnd() const { return this->flag == kScriptParentheseR; }
-	inline Bool IsBlockBegin() const { return this->flag == kScriptBraceL; }
-	inline Bool IsBlockEnd() const { return this->flag == kScriptBraceR; }
+	Buffer word;
+	Uint32 priority;
+	EScriptObject object;
+	Uint32 arguments;
+	EScriptAssociativity associativity;
+	Uint32 line;
+	ScriptType type;
 public:
-	static ScriptObjectPtr FindScriptObjectByFlag(ScriptFlag flag);
+	static Bool IsDigit(Sint8 symbol);
+	static Bool IsLetter(Sint8 symbol);
+	static Bool IsIntValue(StringC string);
+	static Bool IsHexValue(StringC string);
+	static Bool IsStringValue(StringC string);
+	static Bool IsIntValue(const Buffer& string);
+	static Bool IsFloatValue(StringC string);
+	static Bool IsFloatValue(const Buffer& string);
+public:
+	static ScriptNativeInt ParseIntValue(StringC string);
+	static ScriptNativeFloat ParseFloatValue(StringC string);
+	static ScriptNativeString ParseStringValue(StringC string);
+public:
+	inline static ScriptNativeInt ParseIntValue(const Buffer& string) {
+		return ParseIntValue(string.data());
+	}
+	inline static ScriptNativeFloat ParseFloatValue(const Buffer& string) {
+		return ParseFloatValue(string.data());
+	}
+	inline static ScriptNativeString ParseStringValue(const Buffer& string) {
+		return ParseStringValue(string.data());
+	}
+public:
+	static ScriptObjectPtr FindScriptObjectByFlag(EScriptObject object);
+};
+
+class LAME_API ScriptParser {
+public:
+	ScriptParser& Parse(StringC script);
+	ScriptParser& Load(StringC filename);
+public:
+	Vector<ScriptObjectPtr> objectList;
 };
 
 class LAME_API ScriptVariable {
 public:
-	inline Void operator = (const ScriptNativeInt& value) {
-		this->intValue = value; this->type = kScriptTypeInt;
-	}
-	inline Void operator = (const ScriptNativeFloat& value) {
-		this->floatValue = value; this->type = kScriptTypeFloat;
-	}
-	inline Void operator = (const ScriptNativeBool& value) {
-		this->boolValue = value; this->type = kScriptTypeBool;
-	}
-	inline Void operator = (const ScriptNativeString& value) {
-		this->stringValue = value; this->type = kScriptTypeString;
+	ScriptVariable(ScriptObjectPtr object) : object(object) {
+		this->Reset();
 	}
 public:
-	static Void Convert(
+	ScriptNativeBool boolValue;
+	ScriptNativeInt intValue;
+	ScriptNativeFloat floatValue;
+	ScriptNativeString stringValue;
+public:
+	ScriptVariablePtr next;
+	ScriptObjectPtr object;
+	Uint32 modificators;
+public:
+	static Void ScriptVariable::Convert(
 		      ScriptVariable& left,
 		const ScriptVariable& right);
 public:
-    ScriptVariable& Reset(Void);
-public:
-	ScriptNativeInt intValue;
-	ScriptNativeFloat floatValue;
-	ScriptNativeBool boolValue;
-	ScriptNativeString stringValue;
-public:
-	ScriptType type;
-	ScriptObjectPtr object = 0;
-};
-
-class LAME_API ScriptVariableManager {
-public:
-	Bool Declare(ScriptObjectPtr object);
-	ScriptObjectPtr Find(StringC name);
-public:
-	Map<Buffer, ScriptObjectPtr> varMap;
+	Void Reset(Void);
 };
 
 class LAME_API ScriptNode {
 public:
 	Void Order(ScriptPerformerPtr performer);
-    Void Evaluate(ScriptPerformerPtr performer);
+	Void Evaluate(ScriptPerformerPtr performer);
 public:
 	ScriptObjectPtr object = 0;
 	ScriptNodePtr parent = 0;
+	ScriptNodePtr next = 0;
 	Bool result = 0;
+	ScriptVariablePtr var = 0;
+	EScriptNode type = kScriptNodeExpression;
 public:
-    Vector<ScriptNodePtr> condition;
+	Vector<ScriptNodePtr> condition;
 	Vector<ScriptNodePtr> block;
 private:
-	Void Order(ScriptPerformerPtr performer, Vector<ScriptNodePtr>* list);
+	Void Order(
+		ScriptPerformerPtr performer,
+		Vector<ScriptNodePtr>* list);
 };
 
 class LAME_API ScriptPerformer {
-	friend class ScriptParser;
-	friend class ScriptNode;
 public:
 	Void Set(ScriptVariable& left, const ScriptVariable& right);
 	Void Add(ScriptVariable& left, const ScriptVariable& right);
@@ -253,12 +278,15 @@ public:
 	Void Dec(ScriptVariable& left);
 	Void AsBool(ScriptVariable& left);
 public:
-	ScriptPerformer& Evaluate(Void);
-	ScriptPerformer& Trace(Void);
+	Bool RegisterType(ScriptNodePtr node);
+	Bool RegisterVar(ScriptNodePtr node);
+	ScriptNodePtr FindType(StringC name);
+	ScriptNodePtr FindVar(StringC name);
 public:
 	Void Evaluate(
 		Vector<ScriptNodePtr>* list,
 		Vector<ScriptNodePtr>* result);
+	Void Trace(Void);
 private:
 	Void EvaluateSingleExpression(
 		ScriptNodePtr left,
@@ -267,26 +295,39 @@ private:
 		ScriptNodePtr left,
 		ScriptNodePtr right,
 		ScriptNodePtr token);
-private:
-	Vector<ScriptNodePtr> nodeTree;
+public:
+	ScriptNodePtr root = 0;
+public:
+	Vector<ScriptNodePtr> typeList;
+	Vector<ScriptNodePtr> varList;
+public:
 	List<ScriptVariable> tempList;
-	ScriptVariableManager varManager;
-	ScriptTypeManager typeManager;
 };
 
-class LAME_API ScriptParser {
+class LAME_API ScriptBuilder {
+	typedef Vector<ScriptObjectPtr>::iterator Iterator;
 public:
-	ScriptParser& Parse(StringC script);
-	ScriptParser& Build(ScriptPerformerPtr performer);
-	ScriptParser& Load(StringC file);
+	ScriptBuilder& Analyze(
+		ScriptParserPtr parser,
+		ScriptPerformerPtr performer);
 private:
-	Void RegisterVariable(Void);
-	Void RegisterType(Void);
-    Void RegisterConstants(Void);
-private:
-	List<ScriptObject> keyList;
-    List<ScriptVariable> varList;
-	List<ScriptNode> nodeList;
+	Void AnalizeConstruction(
+		ScriptNodePtr node,
+		Iterator& i);
+	Void BuildConstruction(
+		ScriptNodePtr node,
+		Iterator& i);
+	Void BuildCondition(
+		ScriptNodePtr node,
+		Iterator& i);
+public:
+	ScriptParserPtr parser = 0;
+	ScriptPerformerPtr performer = 0;
+};
+
+class LAME_API ScriptVirtualMachine {
+public:
+	ScriptVirtualMachine& Execute(ScriptPerformerPtr performer);
 };
 
 LAME_END

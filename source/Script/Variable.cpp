@@ -7,21 +7,21 @@ Void ScriptVariable::Convert(
 	      ScriptVariable& left,
 	const ScriptVariable& right
 ) {
-	if (left.type == right.type) {
+	if (left.object->type == right.object->type) {
 		return;
 	}
-	if (left.type == kScriptTypeVoid ||
-		left.type == kScriptTypeFunction ||
-		left.type == kScriptTypeObject ||
-		right.type == kScriptTypeVoid ||
-		right.type == kScriptTypeFunction ||
-		right.type == kScriptTypeObject
+	if (left.object->type == kScriptTypeVoid ||
+		left.object->type == kScriptTypeFunction ||
+		left.object->type == kScriptTypeClass ||
+		right.object->type == kScriptTypeVoid ||
+		right.object->type == kScriptTypeFunction ||
+		right.object->type == kScriptTypeClass
 	) {
 		goto __Error;
 	}
-	switch (right.type) {
+	switch (right.object->type) {
 		case kScriptTypeInt:
-			switch (left.type) {
+			switch (left.object->type) {
 				case kScriptTypeInt:
 					left.intValue = left.intValue;
 					goto __Exit;
@@ -38,7 +38,7 @@ Void ScriptVariable::Convert(
                     break;
 			} break;
 		case kScriptTypeFloat:
-			switch (left.type) {
+			switch (left.object->type) {
 				case kScriptTypeInt:
 					left.floatValue = (ScriptNativeFloat)left.intValue;
 					goto __Warning;
@@ -54,7 +54,7 @@ Void ScriptVariable::Convert(
                     break;
 			} break;
 		case kScriptTypeBool:
-			switch (left.type) {
+			switch (left.object->type) {
 				case kScriptTypeInt:
 					left.boolValue = (ScriptNativeBool)left.intValue;
 					goto __Warning;
@@ -70,7 +70,7 @@ Void ScriptVariable::Convert(
                     break;
 			} break;
 		case kScriptTypeString:
-			switch (left.type) {
+			switch (left.object->type) {
 				case kScriptTypeInt:
 					left.stringValue.Format("%d", left.intValue);
 					goto __Exit;
@@ -88,52 +88,29 @@ Void ScriptVariable::Convert(
         default:
             break;
 	}
-	PostSyntaxError(left.object->line, "Invalid conversion from unknown type (%s)", left.type.GetString());
+	PostSyntaxError(left.object->line, "Invalid conversion from unknown type (%s)",
+		left.object->type.GetString());
 __Warning:
 	PostSyntaxWarning(left.object->line, "Unsafe type conversion from (%s) to (%s)",
-		left.type.GetString(),
-		right.type.GetString());
+		left.object->type.GetString(),
+		right.object->type.GetString());
 	goto __Exit;
 __Error:
 	PostSyntaxError(left.object->line, "Invalid type conversion from (%s) to (%s)",
-		left.type.GetString(),
-		right.type.GetString());
+		left.object->type.GetString(),
+		right.object->type.GetString());
 	goto __Exit;
 __Exit:;
-	left.type = right.type;
+	left.object->type = right.object->type;
 }
 
-ScriptVariable& ScriptVariable::Reset() {
-    
-    this->intValue = 0;
-    this->floatValue = 0.0f;
-    this->boolValue = 0;
-    this->stringValue.clear();
-    
-    return *this;
-}
-
-Bool ScriptVariableManager::Declare(ScriptObjectPtr variable) {
-
-	if (this->varMap.count(variable->word)) {
-		return LAME_FALSE;
-	}
-
-	variable->var = new ScriptVariable();
-	variable->var->Reset();
-
-	this->varMap[variable->word] = variable;
-
-	return LAME_TRUE;
-}
-
-ScriptObjectPtr ScriptVariableManager::Find(StringC name) {
-
-	if (!this->varMap.count(name)) {
-		return LAME_NULL;
-	}
-
-	return this->varMap[name];
+Void ScriptVariable::Reset() {
+	this->boolValue = 0;
+	this->intValue = 0;
+	this->floatValue = 0;
+	this->next = 0;
+	this->modificators = 0;
+	this->stringValue.clear();
 }
 
 LAME_END

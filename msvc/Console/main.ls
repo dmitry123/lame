@@ -1,3 +1,7 @@
-function main() {
-	int result = 0x7b;
+class Main {
+	public void onObjectCreate() {
+		int intValue = 0x7b;
+	}
+	public void onObjectDestroy() {
+	}
 }
