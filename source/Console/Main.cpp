@@ -15,22 +15,13 @@ int main(int argc, char** argv) {
 		fileName = "main.ls";
 	}
 
-	lame::ScriptParser parser;
-	lame::ScriptPerformer performer;
-	lame::ScriptBuilder builder;
-	lame::ScriptVirtualMachine machine;
+	lame::ScriptController script;
 
 	try {
-		parser
-			.Load(fileName);
-		builder
-			.Analyze(&parser, &performer);
-		machine
-			.Execute(&performer);
-		
-		lame::Vector<lame::ScriptNodePtr> result; performer.Evaluate(&performer.root->next->block[1]->block, &result);
-
-		performer
+		script
+			.Load(fileName)
+			.Build()
+			.Execute()
 			.Trace();
 	}
 	catch (lame::SyntaxException& e) {

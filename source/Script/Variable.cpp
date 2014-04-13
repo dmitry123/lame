@@ -1,86 +1,76 @@
 #include "Script.h"
-#include "Internal.h"
 
 LAME_BEGIN
 
-Void ScriptVariable::Convert(
-	      ScriptVariable& left,
-	const ScriptVariable& right
-) {
-	if (left.object->type == right.object->type) {
-		return;
+Void ScriptVariable::Convert(ScriptType& type) {
+	if (type == this->object->type) {
+        return;
 	}
-	if (left.object->type == kScriptTypeVoid ||
-		left.object->type == kScriptTypeFunction ||
-		left.object->type == kScriptTypeClass ||
-		right.object->type == kScriptTypeVoid ||
-		right.object->type == kScriptTypeFunction ||
-		right.object->type == kScriptTypeClass
+	if (type == kScriptTypeVoid ||
+		type == kScriptTypeFunction ||
+		type == kScriptTypeClass ||
+		this->object->type == kScriptTypeVoid ||
+		this->object->type == kScriptTypeFunction ||
+		this->object->type == kScriptTypeClass
 	) {
 		goto __Error;
 	}
-	switch (right.object->type) {
+    if (type == kScriptTypeVar) {
+        type = this->object->type; return;
+    }
+	switch (type) {
 		case kScriptTypeInt:
-			switch (left.object->type) {
-				case kScriptTypeInt:
-					left.intValue = left.intValue;
-					goto __Exit;
+			switch (this->object->type) {
 				case kScriptTypeFloat:
-					left.intValue = (ScriptNativeInt)left.floatValue;
+					this->intValue = (ScriptNativeInt)this->floatValue;
 					goto __Warning;
 				case kScriptTypeBool:
-					left.intValue = (ScriptNativeInt)left.boolValue;
+					this->intValue = (ScriptNativeInt)this->boolValue;
 					goto __Warning;
 				case kScriptTypeString:
-					left.intValue = ParseIntValue(left.stringValue.data());
+					this->intValue = ScriptObject::ParseIntValue(this->stringValue.data());
 					goto __Exit;
                 default:
                     break;
 			} break;
 		case kScriptTypeFloat:
-			switch (left.object->type) {
+			switch (this->object->type) {
 				case kScriptTypeInt:
-					left.floatValue = (ScriptNativeFloat)left.intValue;
+					this->floatValue = (ScriptNativeFloat)this->intValue;
 					goto __Warning;
-				case kScriptTypeFloat:
-					goto __Exit;
 				case kScriptTypeBool:
-					left.floatValue = (ScriptNativeFloat)left.boolValue;
+					this->floatValue = (ScriptNativeFloat)this->boolValue;
 					goto __Warning;
 				case kScriptTypeString:
-					left.floatValue = (ScriptNativeFloat)strtof(left.stringValue.data(), NULL);
+					this->floatValue = (ScriptNativeFloat)strtof(this->stringValue.data(), NULL);
 					goto __Exit;
                 default:
                     break;
 			} break;
 		case kScriptTypeBool:
-			switch (left.object->type) {
+			switch (this->object->type) {
 				case kScriptTypeInt:
-					left.boolValue = (ScriptNativeBool)left.intValue;
+					this->boolValue = (ScriptNativeBool)this->intValue;
 					goto __Warning;
 				case kScriptTypeFloat:
-					left.boolValue = (ScriptNativeBool)left.floatValue;
+					this->boolValue = (ScriptNativeBool)this->floatValue;
 					goto __Warning;
-				case kScriptTypeBool:
-					goto __Exit;
 				case kScriptTypeString:
-					left.boolValue = (ScriptNativeBool)strtol(left.stringValue.data(), NULL, 10);
+					this->boolValue = (ScriptNativeBool)strtol(this->stringValue.data(), NULL, 10);
 					goto __Exit;
                 default:
                     break;
 			} break;
 		case kScriptTypeString:
-			switch (left.object->type) {
+			switch (this->object->type) {
 				case kScriptTypeInt:
-					left.stringValue.Format("%d", left.intValue);
+					this->stringValue.Format("%d", this->intValue);
 					goto __Exit;
 				case kScriptTypeFloat:
-					left.stringValue.Format("%.2f", left.floatValue);
+					this->stringValue.Format("%.2f", this->floatValue);
 					goto __Exit;
 				case kScriptTypeBool:
-					left.stringValue.Format("%s", left.boolValue ? "TRUE" : "FALSE");
-					goto __Exit;
-				case kScriptTypeString:
+					this->stringValue.Format("%s", this->boolValue ? "TRUE" : "FALSE");
 					goto __Exit;
                 default:
                     break;
@@ -88,29 +78,28 @@ Void ScriptVariable::Convert(
         default:
             break;
 	}
-	PostSyntaxError(left.object->line, "Invalid conversion from unknown type (%s)",
-		left.object->type.GetString());
+	PostSyntaxError(this->object->line, "Invalid conversion from unknown type (%s)",
+		this->object->type.GetString());
 __Warning:
-	PostSyntaxWarning(left.object->line, "Unsafe type conversion from (%s) to (%s)",
-		left.object->type.GetString(),
-		right.object->type.GetString());
+	PostSyntaxWarning(this->object->line, "Unsafe type conversion from (%s) to (%s)",
+		this->object->type.GetString(),
+		type.GetString());
 	goto __Exit;
 __Error:
-	PostSyntaxError(left.object->line, "Invalid type conversion from (%s) to (%s)",
-		left.object->type.GetString(),
-		right.object->type.GetString());
+	PostSyntaxError(this->object->line, "Invalid type conversion from (%s) to (%s)",
+		this->object->type.GetString(),
+		type.GetString());
 	goto __Exit;
 __Exit:;
-	left.object->type = right.object->type;
 }
 
 Void ScriptVariable::Reset() {
 	this->boolValue = 0;
 	this->intValue = 0;
 	this->floatValue = 0;
-	this->next = 0;
 	this->modificators = 0;
 	this->stringValue.clear();
+	this->declared = 0;
 }
 
 LAME_END

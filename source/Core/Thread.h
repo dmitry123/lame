@@ -106,6 +106,9 @@ public:
 	inline Handle GetHandle() {
 		return this->handle_;
 	}
+	inline ConditionPtr GetCondition() {
+		return &this->condition_;
+	}
 public:
 	static Handle GetCurrentHandle(Void);
 	static ThreadPtr GetCurrentThread(Void);

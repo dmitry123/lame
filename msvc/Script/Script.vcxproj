@@ -92,9 +92,11 @@
     <ClCompile Include="..\..\source\Script\Object.cpp" />
     <ClCompile Include="..\..\source\Script\Parser.cpp" />
     <ClCompile Include="..\..\source\Script\Performer.cpp" />
+    <ClCompile Include="..\..\source\Script\Thread.cpp" />
     <ClCompile Include="..\..\source\Script\Type.cpp" />
+    <ClCompile Include="..\..\source\Script\Manager.cpp" />
     <ClCompile Include="..\..\source\Script\Variable.cpp" />
-    <ClCompile Include="..\..\source\Script\VirtualMachine.cpp" />
+    <ClCompile Include="..\..\source\Script\Machine.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

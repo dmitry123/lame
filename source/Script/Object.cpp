@@ -2,7 +2,7 @@
 
 LAME_BEGIN
 
-#define P(_p) Uint32(17-_p)
+#define P(_p) Uint32(20-_p)
 
 #define DA kScriptAssociativityDefault
 #define LA kScriptAssociativityLeft
@@ -11,17 +11,17 @@ LAME_BEGIN
 namespace internal {
 	static const ScriptObject scriptObjects[kScriptObjectAmount] =
 	{
-		{ "${name}", P(15), kScriptObjectVariable, 1, DA },
-		{ "${int}", P(14), kScriptObjectInt, 1, DA },
-		{ "${float}", P(14), kScriptObjectFloat, 1, DA },
-		{ "${string}", P(14), kScriptObjectString, 1, DA },
-		{ "${bool}", P(14), kScriptObjectBool, 1, DA },
-		{ "[", P(16), kScriptObjectBracketL, 1, RA },
-		{ "]", P(16), kScriptObjectBracketR, 1, RA },
-		{ "(", P(18), kScriptObjectParentheseL, 1, RA },
-		{ ")", P(18), kScriptObjectParentheseR, 1, RA },
-		{ ".", P(16), kScriptObjectDirect, 1, RA },
-		{ "->", P(16), kScriptObjectMediated, 1, RA },
+		{ "${name}", P(16), kScriptObjectVariable, 1, LA },
+		{ "${int}", P(16), kScriptObjectInt, 1, RA },
+		{ "${float}", P(16), kScriptObjectFloat, 1, RA },
+		{ "${string}", P(16), kScriptObjectString, 1, RA },
+		{ "${bool}", P(16), kScriptObjectBool, 1, RA },
+		{ "[", P(16), kScriptObjectBracketL, 1, DA },
+		{ "]", P(16), kScriptObjectBracketR, 1, DA },
+		{ "(", P(0), kScriptObjectParentheseL, 1, DA },
+		{ ")", P(0), kScriptObjectParentheseR, 1, DA },
+		{ ".", P(16), kScriptObjectDirect, 1, DA },
+		{ "->", P(16), kScriptObjectMediated, 1, DA },
 		{ "++", P(15), kScriptObjectIncrement, 1, LA },
 		{ "--", P(15), kScriptObjectDecrement, 1, LA },
 		{ "sizeof", P(15), kScriptObjectSizeof, 1, RA },
@@ -88,7 +88,8 @@ namespace internal {
 		{ "continue", P(1), kScriptObjectContinue, 0, DA },
 		{ "try", P(1), kScriptObjectTry, 0, DA },
 		{ "catch", P(1), kScriptObjectCatch, 0, DA },
-		{ "throw", P(1), kScriptObjectThrow, 0, DA }
+		{ "throw", P(1), kScriptObjectThrow, 0, DA },
+		{ "thread", P(1), kScriptObjectThread, 0, DA }
 	};
 }
 
@@ -303,10 +304,7 @@ ScriptNativeFloat ScriptObject::ParseFloatValue(StringC string) {
 }
 
 ScriptNativeString ScriptObject::ParseStringValue(StringC string) {
-	// removing quotes from string
-	Buffer result = string + 1;
-	result[result.length() - 1] = '\0';
-	return result;
+    return string;
 }
 
 ScriptObjectPtr ScriptObject::FindScriptObjectByFlag(EScriptObject object) {

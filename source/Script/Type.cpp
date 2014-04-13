@@ -4,11 +4,12 @@ LAME_BEGIN
 
 namespace internal {
 	static const ScriptType scriptTypes[kScriptTypeAmount] = {
-		{ "void", kScriptTypeVoid },
-		{ "int", kScriptTypeInt },
-		{ "float", kScriptTypeFloat },
-		{ "bool", kScriptTypeBool },
-		{ "string", kScriptTypeString },
+		{ "Void", kScriptTypeVoid },
+		{ "Int", kScriptTypeInt },
+		{ "Float", kScriptTypeFloat },
+		{ "Bool", kScriptTypeBool },
+		{ "String", kScriptTypeString },
+		{ "Var", kScriptTypeVar },
 		{ "${function}", kScriptTypeFunction },
 		{ "${class}", kScriptTypeClass }
 	};
@@ -39,6 +40,10 @@ StringC ScriptType::GetString(Void) const {
 		}
 	}
 	PostSyntaxError(0, "Unknown script type (%d)", this->type);
+}
+
+ScriptTypePtr ScriptType::GetList(Void) {
+	return (ScriptTypePtr)&internal::scriptTypes[0];
 }
 
 LAME_END

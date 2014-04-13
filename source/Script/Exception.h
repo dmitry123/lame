@@ -7,17 +7,19 @@ LAME_BEGIN
 
 class SyntaxException : public Exception {
 public:
-	SyntaxException(Uint32 line, StringC message, ...) {
+	SyntaxException(Uint32 line, Uint32 where, StringC message, ...) {
 		this->warning_ = 0;
 		this->line_ = line;
+        this->where_ = where;
 		VaList list;
 		va_start(list, message);
 		vsprintf(this->buffer_, message, list);
 		va_end(list);
 	}
-	SyntaxException(Bool, Uint32 line, StringC message, ...) {
+	SyntaxException(Bool, Uint32 line, Uint32 where, StringC message, ...) {
 		this->warning_ = 1;
 		this->line_ = line;
+        this->where_ = where;
 		VaList list;
 		va_start(list, message);
 		vsprintf(this->buffer_, message, list);
@@ -29,10 +31,10 @@ public:
 	}
 	inline Void Debug() {
 		if (this->warning_) {
-			printf("Syntax Warning (%d) : %s\n", this->line_, this->buffer_);
+			printf("Syntax Warning (%d, %d) : %s\n", this->line_, this->where_, this->buffer_);
 		}
 		else {
-			printf("Syntax Error (%d) : %s", this->line_, this->buffer_);
+			printf("Syntax Error (%d, %d) : %s", this->line_, this->where_, this->buffer_);
 		}
 	}
 	inline Bool IsWarning() {
@@ -41,16 +43,17 @@ public:
 protected:
 	Bool warning_;
 	Uint32 line_;
+    Uint32 where_;
 };
 
 #define PostSyntaxError(_line, _message, ...) \
-	throw SyntaxException(_line, _message, __VA_ARGS__)
+	throw SyntaxException(_line, __LINE__, _message, __VA_ARGS__)
 
 #define PostSyntaxWarning(_line, _message, ...) \
 	static Bool __warningExceptionLock = 0; \
 	if (!__warningExceptionLock) { \
-		SyntaxException(1, _line, _message, __VA_ARGS__).Debug(); \
-		} __warningExceptionLock = 1;
+		SyntaxException(1, _line, __LINE__, _message, __VA_ARGS__).Debug(); \
+	} __warningExceptionLock = 1;
 
 LAME_END
 

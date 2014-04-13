@@ -1,370 +1,401 @@
 #include "Script.h"
 
+#define __Inc(_i) \
+	if (++i == this->parser->objectList.end()) {\
+		PostSyntaxError((*(i-1))->line, "Not finished expression", 1); \
+		}
+#define __Dec(_i) \
+	--i
+
 LAME_BEGIN
 
-ScriptBuilder& ScriptBuilder::Analyze(ScriptParserPtr parser, ScriptPerformerPtr performer) {
+ScriptBuilder& ScriptBuilder::Build(ScriptParserPtr parser, ScriptPerformerPtr performer) {
 
 	this->parser = parser;
 	this->performer = performer;
 
-	if (!performer->root) {
-		performer->root = new ScriptNode();
+	Iterator first = this->parser->objectList.begin();
+
+	while (first != this->parser->objectList.end()) {
+		if ((*first)->object == kScriptObjectThread) {
+			break;
+		}
+		++first;
 	}
 
-	this->AnalizeConstruction(performer->root, this->parser->objectList.begin());
+	if (first == this->parser->objectList.end()) {
+		PostSyntaxError(this->parser->objectList.back()->line, "Unable to find 'Main' thread as entry point", 1);
+	}
+
+	if (!performer->root) {
+		performer->root = this->_AppendNode(*first);
+	}
+
+	try {
+		this->_BuildThread(performer->root, first);
+	}
+	catch (SyntaxException& e) {
+		if (first != this->parser->objectList.end()) {
+			throw e;
+		}
+	}
+
+	ScriptNodePtr node = performer->root;
+
+	while (node) {
+		node->Order(this->performer); node = node->next;
+	}
 
 	return *this;
 }
 
-Void ScriptBuilder::AnalizeConstruction(ScriptNodePtr node, Iterator& i) {
-
-	ScriptNodePtr prevNode = 0;
-
+Void ScriptBuilder::_Build(ScriptNodePtr node, IteratorRef i) {
 	while (i != this->parser->objectList.end()) {
-
-		ScriptNodePtr next = new ScriptNode();
-
-		if (!prevNode) {
-			node->next = next;
-		}
-		else {
-			prevNode->next = next;
-		}
-
-		next->parent = node;
-		next->object = *i;
-
-		switch ((*i)->object) {
-		case kScriptObjectClass:
-			this->BuildConstruction(next, i);
-			break;
-		case kScriptObjectIf:
-		case kScriptObjectElse:
-		case kScriptObjectWhile:
-		case kScriptObjectDo:
-		case kScriptObjectFor:
-			this->BuildCondition(next, i);
-			break;
-		default:
-			continue;
-		}
-
-		prevNode = next; ++i;
+		this->_BuildRecursive(node, i);
 	}
 }
 
-Void ScriptBuilder::BuildConstruction(ScriptNodePtr node, Iterator& i) {
-	
-	Vector<ScriptNodePtr> nodeStack;
-	Vector<ScriptNodePtr>* lastStack = 0;
-	ScriptNodePtr prevNode = 0;
-	ScriptNodePtr lastParent = 0;
+Void ScriptBuilder::_BuildCondition(ScriptNodePtr parent, IteratorRef i) {
+
 	Uint32 extraParentheses = 0;
-	StringC typeName = 0;
-	Uint32 modificators = 0;
 
-	node->object->type.name = (*++i)->word;
+	parent->type = kScriptNodeCondition;
 
-	if (node->object->type == kScriptTypeDefault) {
-		node->type = kScriptNodeClass;
+	// skip parent node
+	++i;
+
+	// if condition is 'else' then we have to skip condition block
+	if (parent->object->object == kScriptObjectElse) {
+		goto __SkipParentheses;
 	}
-	else {
-		node->type = kScriptNodeFunction;
-	}
 
-	while (++i != this->parser->objectList.end()) {
+	while (LAME_TRUE) {
 
-		ScriptNodePtr next = new ScriptNode();
-
-		next->parent = node;
-		next->object = *i;
-
-		if (!next->var) {
-			next->var = new ScriptVariable(next->object);
+		if ((*i)->object == kScriptObjectParentheseR) {
+			if (extraParentheses == 1) {
+				this->_PopStack();
+				++i;
+				break;
+			}
+			--extraParentheses;
+			goto __SaveNode;
 		}
 
-		if (next->object->object == kScriptObjectDefault) {
-			typeName = next->object->word.data();
-			next->object->type.Parse(&typeName);
-			if (next->object->type == kScriptTypeDefault) {
-				ScriptNodePtr typeNode = this->performer->FindType(typeName);
-				if (typeNode) {
-					next = typeNode;
-					next->object->object = kScriptObjectType;
-					next->object->arguments = 1;
-				}
+		if ((*i)->object == kScriptObjectParentheseL) {
+			if (extraParentheses >= 1) {
+				++extraParentheses;
+				goto __SaveNode;
 			}
 			else {
-				next->object->object = kScriptObjectType;
-				next->object->arguments = 1;
+				this->_PushStack(&parent->condition);
+				extraParentheses = 1;
 			}
-		}
-
-		if (next->object->IsModificator()) {
-			switch (next->object->object) {
-				case kScriptObjectPublic:
-					modificators |= kScriptModificatorPublic;
-					break;
-				case kScriptObjectPrivate:
-					modificators |= kScriptModificatorPrivate;
-					break;
-				case kScriptObjectProtected:
-					modificators |= kScriptModificatorProtected;
-					break;
-				case kScriptObjectFinal:
-					modificators |= kScriptModificatorFinal;
-					break;
-				case kScriptObjectOverride:
-					modificators |= kScriptModificatorOverride;
-					break;
-				case kScriptObjectAbstract:
-					modificators |= kScriptModificatorAbstract;
-					break;
-				case kScriptObjectStatic:
-					modificators |= kScriptModificatorStatic;
-					break;
-			}
-			continue;
 		}
 		else {
-			next->var->modificators = modificators;
-			modificators = 0;
+			if (!this->nodeQueue_) {
+				PostSyntaxError((*i)->line, "Parenthese in unknown place without parent", 1);
+			}
+
+		__SaveNode:
+			ScriptNodePtr node = this->_AppendNode(*i);
+			this->nodeQueue_->push_back(node);
+
+			if (this->_BuildRecursive(node, i)) {
+				--i;
+			}
 		}
 
-		switch ((*i)->object) {
-			case kScriptObjectBraceL:
-				if (extraParentheses) {
-					PostSyntaxError(next->object->line, "Parentheses mismatched", 1);
-				}
-				lastStack = &node->block;
-				break;
-			case kScriptObjectBraceR:
-				if (!lastStack) {
-					PostSyntaxError(next->object->line, "Braces mismatched", 1);
-				}
-				if (extraParentheses) {
-					PostSyntaxError(next->object->line, "Parentheses mismatched", 1);
-				}
-				goto __ExitLoop;
-				break;
-			case kScriptObjectParentheseL:
-				if (lastStack != &node->condition) {
-					lastStack = &node->condition;
-				}
-				else {
-					++extraParentheses; goto __SaveNode;
-				}
-				break;
-			case kScriptObjectParentheseR:
-				if (!lastStack) {
-					PostSyntaxError(next->object->line, "Parentheses mismatched", 1);
-				}
-				if (!extraParentheses) {
-					lastStack = 0;
-				}
-				else {
-					--extraParentheses; goto __SaveNode;
-				}
-				break;
-			case kScriptObjectType:
-				if (node->type == kScriptNodeClass) {
-					this->BuildConstruction(next, i);
-				}
-				goto __SaveNode;
-			default:
-			__SaveNode:
-				if (lastStack) {
-					lastStack->push_back(next);
-					if (next->object->IsCondition()) {
-						this->BuildCondition(next, i);
-					}
-				}
-				break;
-		}
-		prevNode = next;
-	}
-	PostSyntaxError(this->parser->objectList.back()->line, "Braces mismatched", 1);
-__ExitLoop:
-
-	// register current class as type
-	this->performer->RegisterType(node);
-
-	// order node's condition and block
-	node->Order(this->performer);
-
-	// seeking for constants in block or condition and registering its variable
-	for (ScriptNodePtr node : node->condition) {
-		switch (node->object->object) {
-		case kScriptObjectInt:
-			node->var = new ScriptVariable(node->object);
-			node->object->type = kScriptTypeInt;
-			node->var->intValue = ScriptObject::ParseIntValue(node->object->word);
-			break;
-		case kScriptObjectFloat:
-			node->var = new ScriptVariable(node->object);
-			node->object->type = kScriptTypeFloat;
-			node->var->floatValue = ScriptObject::ParseFloatValue(node->object->word);
-			break;
-		case kScriptObjectString:
-			node->var = new ScriptVariable(node->object);
-			node->object->type = kScriptTypeString;
-			node->var->stringValue = ScriptObject::ParseStringValue(node->object->word);
-			break;
-		case kScriptObjectBool:
-			node->var = new ScriptVariable(node->object);
-			node->object->type = kScriptTypeBool;
-			node->var->boolValue = (ScriptNativeBool)ScriptObject::ParseIntValue(node->object->word);
-			break;
+		if (++i == this->parser->objectList.end()) {
+			PostSyntaxError((*(i - 1))->line, "Parenthese mismatched", 1);
 		}
 	}
-	for (ScriptNodePtr node : node->block) {
-		switch (node->object->object) {
-		case kScriptObjectInt:
-			node->var = new ScriptVariable(node->object);
-			node->object->type = kScriptTypeInt;
-			node->var->intValue = ScriptObject::ParseIntValue(node->object->word);
+
+__SkipParentheses:
+	if ((*i)->object == kScriptObjectBraceL) {
+		this->_BuildBlock(parent, i);
+	}
+}
+
+Void ScriptBuilder::_BuildBlock(ScriptNodePtr parent, IteratorRef i) {
+
+	while (LAME_TRUE) {
+
+		if ((*i)->object == kScriptObjectBraceR) {
+			this->_PopStack();
+			++i;
 			break;
-		case kScriptObjectFloat:
-			node->var = new ScriptVariable(node->object);
-			node->object->type = kScriptTypeFloat;
-			node->var->floatValue = ScriptObject::ParseFloatValue(node->object->word);
-			break;
-		case kScriptObjectString:
-			node->var = new ScriptVariable(node->object);
-			node->object->type = kScriptTypeString;
-			node->var->stringValue = ScriptObject::ParseStringValue(node->object->word);
-			break;
-		case kScriptObjectBool:
-			node->var = new ScriptVariable(node->object);
-			node->object->type = kScriptTypeBool;
-			node->var->boolValue = (ScriptNativeBool)ScriptObject::ParseIntValue(node->object->word);
-			break;
+		}
+
+		if ((*i)->object == kScriptObjectBraceL) {
+			this->_PushStack(&parent->block);
+		}
+		else {
+			if (!this->nodeQueue_) {
+				PostSyntaxError((*i)->line, "Braces in unknown place without parent", 1);
+			}
+
+			ScriptNodePtr node = this->_AppendNode(*i);
+			this->nodeQueue_->push_back(node);
+
+			if (this->_BuildRecursive(node, i)) {
+				--i;
+			}
+		}
+
+		if (++i == this->parser->objectList.end()) {
+			PostSyntaxError((*(i - 1))->line, "Braces mismatched", 1);
 		}
 	}
 }
 
-Void ScriptBuilder::BuildCondition(ScriptNodePtr node, Iterator& i) {
+Void ScriptBuilder::_BuildClass(ScriptNodePtr parent, IteratorRef i) {
 
-	Vector<ScriptNodePtr> nodeStack;
-	Vector<ScriptNodePtr>* lastStack = 0;
-	ScriptNodePtr prevNode = 0;
-	ScriptNodePtr lastParent = 0;
 	Uint32 extraParentheses = 0;
 
-	node->type = kScriptNodeCondition;
+	parent->type = kScriptNodeClass;
 
-	while (++i != this->parser->objectList.end()) {
+	// skip parent node
+	__Inc(i);
 
-		ScriptNodePtr next = new ScriptNode();
+	// save type's name
+	(*i)->type.name = (*i)->word;
 
-		next->parent = node;
-		next->object = *i;
-
-		switch ((*i)->object) {
-			case kScriptObjectBraceL:
-				if (extraParentheses) {
-					PostSyntaxError(next->object->line, "Parentheses mismatched", 1);
-				}
-				lastStack = &node->block;
-				break;
-			case kScriptObjectBraceR:
-				if (!lastStack) {
-					PostSyntaxError(next->object->line, "Braces mismatched", 1);
-				}
-				if (extraParentheses) {
-					PostSyntaxError(next->object->line, "Parentheses mismatched", 1);
-				}
-				goto __ExitLoop;
-				break;
-			case kScriptObjectParentheseL:
-				if (prevNode && !prevNode->object->IsCondition()) {
-					++extraParentheses; goto __SaveNode;
-				}
-				if (lastStack != &node->condition) {
-					lastStack = &node->condition;
-				}
-				else {
-					++extraParentheses; goto __SaveNode;
-				}
-				break;
-			case kScriptObjectParentheseR:
-				if (!lastStack) {
-					PostSyntaxError(next->object->line, "Parentheses mismatched", 1);
-				}
-				if (!extraParentheses) {
-					lastStack = 0;
-				}
-				else {
-					--extraParentheses; goto __SaveNode;
-				}
-				break;
-			default:
-			__SaveNode:
-				if (lastStack) {
-					lastStack->push_back(next);
-					if (next->object->IsCondition()) {
-						this->BuildCondition(next, i);
-					}
-				}
-				break;
-		}
-		prevNode = next;
+	// declare type
+	if (!this->performer->vtManager_.DeclareType(&(*i)->type)) {
+		PostSyntaxError((*i)->line, "Type redeclaration (%s)", (*i)->type.GetString());
 	}
-	PostSyntaxError(this->parser->objectList.back()->line, "Braces mismatched", 1);
-__ExitLoop:
 
-	// order node's condition and block
-	node->Order(this->performer);
+	// skip class name
+	__Inc(i);
 
-	// seeking for constants in block or condition and registering its variable
-	for (ScriptNodePtr node : node->condition) {
-		switch (node->object->object) {
-			case kScriptObjectInt:
-				node->var = new ScriptVariable(node->object);
-				node->object->type = kScriptTypeInt;
-				node->var->intValue = ScriptObject::ParseIntValue(node->object->word);
-				break;
-			case kScriptObjectFloat:
-				node->var = new ScriptVariable(node->object);
-				node->object->type = kScriptTypeFloat;
-				node->var->floatValue = ScriptObject::ParseFloatValue(node->object->word);
-				break;
-			case kScriptObjectString:
-				node->var = new ScriptVariable(node->object);
-				node->object->type = kScriptTypeString;
-				node->var->stringValue = ScriptObject::ParseStringValue(node->object->word);
-				break;
-			case kScriptObjectBool:
-				node->var = new ScriptVariable(node->object);
-				node->object->type = kScriptTypeBool;
-				node->var->boolValue = (ScriptNativeBool)ScriptObject::ParseIntValue(node->object->word);
-				break;
-		}
+	if ((*i)->object == kScriptObjectBraceL) {
+		this->_BuildBlock(parent, i);
 	}
-	for (ScriptNodePtr node : node->block) {
-		switch (node->object->object) {
-		case kScriptObjectInt:
-			node->var = new ScriptVariable(node->object);
-			node->object->type = kScriptTypeInt;
-			node->var->intValue = ScriptObject::ParseIntValue(node->object->word);
-			break;
-		case kScriptObjectFloat:
-			node->var = new ScriptVariable(node->object);
-			node->object->type = kScriptTypeFloat;
-			node->var->floatValue = ScriptObject::ParseFloatValue(node->object->word);
-			break;
-		case kScriptObjectString:
-			node->var = new ScriptVariable(node->object);
-			node->object->type = kScriptTypeString;
-			node->var->stringValue = ScriptObject::ParseStringValue(node->object->word);
-			break;
-		case kScriptObjectBool:
-			node->var = new ScriptVariable(node->object);
-			node->object->type = kScriptTypeBool;
-			node->var->boolValue = (ScriptNativeBool)ScriptObject::ParseIntValue(node->object->word);
+}
+
+Void ScriptBuilder::_BuildField(ScriptNodePtr parent, IteratorRef i) {
+
+	ScriptTypePtr type;
+	ScriptNodePtr node;
+
+	parent->type = kScriptNodeField;
+	parent->object->object = kScriptObjectVariable;
+
+	try {
+		type = this->performer->FindType((*i)->word);
+	}
+	catch (...) {
+		__Inc(i); return;
+	}
+
+	__Inc(i);
+	node = this->_AppendNode(*i);
+	__Inc(i);
+
+	// swap parent's objects with variable
+	std::swap(parent->object, node->object);
+	std::swap(parent->var, node->var);
+
+	// save variable's type
+	parent->object->type = *type;
+
+	if ((*i)->object == kScriptObjectSemicolon) {
+		return;
+	}
+	else if ((*i)->object == kScriptObjectSet) {
+		parent->block.push_back(parent);
+		while (LAME_TRUE) {
+			if ((*i)->object == kScriptObjectSemicolon) {
+				break;
+			}
+			else {
+				parent->block.push_back(this->_AppendNode(*i));
+			}
+			if (++i == this->parser->objectList.end()) {
+				PostSyntaxError((*(i - 1))->line, "Expression not closed with semicolon", 1);
+			}
+		}
+		++i;
+	}
+	else if ((*i)->object == kScriptObjectParentheseL) {
+		parent->type = kScriptNodeField;
+		parent->var->modificators = kScriptModificatorFunction;
+		__Dec(i);
+		this->_BuildCondition(parent, i);
+	}
+	else if ((*i)->object == kScriptObjectParentheseR) {
+		// :D
+	}
+	else if ((*i)->object == kScriptObjectComa) {
+		++i;
+	}
+	else {
+		PostSyntaxError((*i)->line, "Invalid expression after variable (%s)", (*i)->word.data());
+	}
+}
+
+Void ScriptBuilder::_BuildThread(ScriptNodePtr parent, IteratorRef i) {
+
+	parent->type = kScriptNodeThread;
+
+	// skip parent node
+	++i;
+
+	while (LAME_TRUE) {
+
+		if ((*i)->object == kScriptObjectParentheseR) {
+			this->_PopStack();
+			__Inc(i);
 			break;
 		}
+
+		if ((*i)->object == kScriptObjectParentheseL) {
+			this->_PushStack(&parent->condition);
+		}
+		else if ((*i)->object == kScriptObjectString) {
+			if (!this->nodeQueue_) {
+				PostSyntaxError((*i)->line, "Brace in unknown place without parent", 1);
+			}
+
+			ScriptNodePtr node = this->_AppendNode(*i);
+			this->nodeQueue_->push_back(node);
+
+			if (this->_BuildRecursive(node, i)) {
+				__Dec(i);
+			}
+		}
+		else {
+			PostSyntaxError((*i)->line, "Thread's name must be string, but not (%s)", (*i)->word.data());
+		}
+
+		if (++i == this->parser->objectList.end()) {
+			PostSyntaxError((*(i - 1))->line, "Brace mismatched", 1);
+		}
 	}
+
+	if ((*i)->object == kScriptObjectBraceL) {
+		this->_BuildBlock(parent, i);
+	}
+}
+
+Bool ScriptBuilder::_BuildRecursive(ScriptNodePtr parent, IteratorRef i) {
+
+	if ((*i)->IsClass()) {
+		this->_BuildClass(parent, i);
+	}
+	else if ((*i)->IsCondition()) {
+		this->_BuildCondition(parent, i);
+	}
+	else if ((*i)->IsVariable()) {
+		this->_BuildField(parent, i);
+	}
+	else if ((*i)->IsThread()) {
+		this->_BuildThread(parent, i);
+	}
+	else {
+		return LAME_FALSE;
+	}
+
+	return LAME_TRUE;
+}
+
+ScriptNodePtr ScriptBuilder::_AppendNode(ScriptObjectPtr object) {
+
+	ScriptNodePtr node (new ScriptNode());
+
+	node->var = new ScriptVariable(object);
+	node->object = object;
+	node->var->object = object;
+	node->prev = this->prevNode_;
+	node->parent = this->parentNode_;
+
+	if (this->prevNode_) {
+		this->prevNode_->next = node;
+	}
+
+	this->prevNode_ = node;
+
+	if (node->object->IsCondition() ||
+		node->object->IsClass() ||
+		node->object->IsThread()
+	) {
+		this->parentNode_ = node;
+	}
+
+	this->performer->RegisterConstant(node);
+
+	return node;
+}
+
+ScriptNodePtr ScriptBuilder::_RemoveNode(ScriptNodePtr node) {
+
+	if (!node) {
+		return LAME_NULL;
+	}
+
+	// save node's parent
+	ScriptNodePtr parent = node->parent;
+
+	// remove nodes from condition block
+	if (node->condition.size()) {
+		for (ScriptNodePtr n : node->condition) {
+			this->_RemoveNode(n);
+		}
+	}
+
+	// remove nodes from executable block
+	if (node->block.size()) {
+		for (ScriptNodePtr n : node->block) {
+			this->_RemoveNode(n);
+		}
+	}
+
+	ScriptNodePtr next = node->next;
+	ScriptNodePtr prev = node->prev;
+
+	// remove links from node
+	if (prev) {
+		prev->next = next;
+	}
+	if (next) {
+		next->prev = prev;
+	}
+
+	// deallocate memory
+	delete node->var;
+	delete node->object;
+	delete node;
+
+	// return parent
+	return parent;
+}
+
+Void ScriptBuilder::_PushStack(Vector<ScriptNodePtr>* stack) {
+
+	// push current node stack to queue
+	if (this->nodeQueue_) {
+		this->stackNodeQueue_.push_back(this->nodeQueue_);
+	}
+
+	// save active queue
+	this->nodeQueue_ = stack;
+}
+
+Vector<ScriptNodePtr>* ScriptBuilder::_PopStack(Void) {
+
+	// if we queue is empty
+	if (!this->stackNodeQueue_.size()) {
+		// set last queue as NULL
+		this->nodeQueue_ = LAME_NULL;
+	}
+	else {
+		// remove nodeQueue from tail
+		this->nodeQueue_ = this->stackNodeQueue_.back();
+		this->stackNodeQueue_.pop_back();
+	}
+
+	// return tail
+	return this->nodeQueue_;
 }
 
 LAME_END

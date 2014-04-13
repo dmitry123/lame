@@ -1,7 +1,5 @@
-class Main {
-	public void onObjectCreate() {
-		int intValue = 0x7b;
-	}
-	public void onObjectDestroy() {
-	}
+thread ("Main") {
+	Int left = 0x7b;
+	Int right = 0xff;
+	Int result = left + right;
 }

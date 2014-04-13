@@ -33,7 +33,10 @@ ScriptParser& ScriptParser::Parse(StringC script) {
 
 		if (key->object == kScriptObjectQuote || key->object == kScriptObjectApostrophe) {
 			constString.clear();
-			while (*script && *script != *key->GetString()) {
+			while (*script != *key->GetString()) {
+				if (!*script) {
+					PostSyntaxError(line, "Quote or Apostrophe mismatched", 1);
+				}
 				constString.append(1, *script++);
 			} ++script;
 			key->object = kScriptObjectString;

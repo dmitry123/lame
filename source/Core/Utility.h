@@ -422,20 +422,20 @@ public:
 		}
 		this->instance_ = any.instance_;
 	}
-	Any(const __AnySingleton<T>& any) {
+	Any(const internal::__AnySingleton<T>& any) {
 		if (!any.instance_) {
 			this->__Construct();
 		}
 		this->instance_ = any.instance_;
 	}
 public:
-	inline typename __AnySingleton<T>::TypeRef operator * () {
+	inline typename internal::__AnySingleton<T>::TypeRef operator * () {
 		if (!this->instance_) {
 			this->__Construct();
 		}
 		return *this->instance_.reference_;
 	}
-	inline typename __AnySingleton<T>::TypePtr operator -> () {
+	inline typename internal::__AnySingleton<T>::TypePtr operator -> () {
 		if (!this->instance_) {
 			this->__Construct();
 		}
@@ -457,7 +457,7 @@ public:
 	}
 private:
 	Void __Construct(Void) {
-		this->instance_(new typename __AnySingleton<T>::Type);
+		this->instance_(new typename internal::__AnySingleton<T>::Type);
 	}
 };
 

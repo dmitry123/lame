@@ -392,117 +392,142 @@ Void ScriptPerformer::AsBool(ScriptVariable& left) {
 	}
 }
 
-Bool ScriptPerformer::RegisterType(ScriptNodePtr node) {
-	this->typeList.push_back(node);
-	return LAME_TRUE;
+Void ScriptPerformer::RegisterType(ScriptNodePtr node) {
+	if (!this->vtManager_.DeclareType(&node->object->type)) {
+		PostSyntaxError(node->object->line, "Type redeclaration (%s)", node->object->type.GetString());
+	}
+	node->object->object = kScriptObjectType;
 }
 
-Bool ScriptPerformer::RegisterVar(ScriptNodePtr node) {
+Void ScriptPerformer::RegisterVar(ScriptNodePtr node) {
+	if (!this->vtManager_.DeclareVar(node->var)) {
+		PostSyntaxError(node->object->line, "Variable redeclaration (%s)", node->object->type.GetString());
+	}
+	node->var->declared = LAME_TRUE;
+	node->object->object = kScriptObjectVariable;
+}
+
+ScriptTypePtr ScriptPerformer::FindType(const Buffer& name) {
+
+	ScriptTypePtr type = this->vtManager_.FindType(name);
+
+	if (!type) {
+		PostSyntaxError(0, "Undeclared type (%s)", name);
+	}
+
+	return type;
+}
+
+ScriptVariablePtr ScriptPerformer::FindVar(const Buffer& name) {
+
+	ScriptVariablePtr var = this->vtManager_.FindVar(name);
+
+	if (!var) {
+		PostSyntaxError(0, "Undeclared variable (%s)", name.data());
+	}
+
+	return var;
+}
+
+Void ScriptPerformer::GetVariableWithNode(ScriptNodePtr node, Bool right) {
+    
 	if (!node->var) {
-		node->var = new ScriptVariable(node->object);
-	}
-	this->varList.push_back(node);
-	return LAME_TRUE;
-}
-
-ScriptNodePtr ScriptPerformer::FindType(StringC name) {
-	for (ScriptNodePtr node : this->typeList) {
-		if (node->object->word == name) {
-			return node;
+        
+		ScriptVariablePtr left_ = FindVar(node->object->word.data());
+        
+		if (!this->FindVar(node->object->word.data())) {
+			PostSyntaxError(node->object->line, "Undeclared variable (%s)", node->object->word.data());
+		}
+        
+		if (right) {
+			this->tempList_.push_back({*left_, *left_->object});
+            node->var = &this->tempList_.back().var;
+            node->object = &this->tempList_.back().object;
+            node->var->object = node->object;
+		}
+		else {
+			node->object = left_->object;
+			node->var = left_;
 		}
 	}
-	return LAME_NULL;
 }
 
-ScriptNodePtr ScriptPerformer::FindVar(StringC name) {
-	for (ScriptNodePtr node : this->varList) {
-		if (node->object->word == name) {
-			return node;
-		}
+Void ScriptPerformer::RegisterConstant(ScriptNodePtr node) {
+
+#pragma message LAME_TODO("add TRUE/FALSE for Bool type")
+
+	if (node->object->object == kScriptObjectInt) {
+		node->var->intValue = ScriptObject::ParseIntValue(node->object->word);
+		*node->object = *ScriptObject::FindScriptObjectByFlag(kScriptObjectInt);
+		node->object->type = kScriptTypeInt;
 	}
-	return LAME_NULL;
+	else if (node->object->object == kScriptObjectFloat) {
+		node->var->floatValue = ScriptObject::ParseFloatValue(node->object->word);
+		*node->object = *ScriptObject::FindScriptObjectByFlag(kScriptObjectFloat);
+		node->object->type = kScriptTypeFloat;
+	}
+	else if (node->object->object == kScriptObjectBool) {
+		node->var->boolValue = (ScriptNativeBool)ScriptObject::ParseIntValue(node->object->word);
+		*node->object = *ScriptObject::FindScriptObjectByFlag(kScriptObjectBool);
+		node->object->type = kScriptTypeBool;
+	}
+	else if (node->object->object == kScriptObjectString) {
+		node->var->stringValue = ScriptObject::ParseStringValue(node->object->word);
+		*node->object = *ScriptObject::FindScriptObjectByFlag(kScriptObjectString);
+		node->object->type = kScriptTypeString;
+	}
 }
 
 Void ScriptPerformer::EvaluateSingleExpression(
 	ScriptNodePtr left,
-	ScriptNodePtr token
-	) {
-	if (!left->var && token->object->object != kScriptObjectType) {
-		ScriptNodePtr left_ = FindVar(left->object->word.data());
-		if (!this->FindVar(left->object->word.data())) {
-			PostSyntaxError(left->object->line, "Undeclared variable (%s)", left->object->word.data());
-		}
-		if (token->object->IsRightAssociated()) {
-			this->tempList.push_back(*left_->var);
-			left->var = &this->tempList.back();
-		}
-		else {
-			left->object = left_->object;
-			left->var = left_->var;
-		}
-	}
-	switch (token->object->object) {
-	case kScriptObjectType:
-		if (!this->RegisterVar(left)) {
-			PostSyntaxError(left->object->line, "Variable redeclaration (%s)", left->object->word.data());
-		}
-		left->object->type = token->object->type;
-		break;
-	case kScriptObjectIncrement:
-		this->Inc(*left->var);
-		break;
-	case kScriptObjectDecrement:
-		this->Dec(*left->var);
-		break;
-	case kScriptObjectNot:
-		this->Not(*left->var);
-		break;
-	case kScriptObjectBitNot:
-		this->BitNot(*left->var);
-		break;
-	default:
-		break;
+	ScriptObjectPtr token
+) {
+    if (token->object != kScriptObjectType) {
+        GetVariableWithNode(left, token->IsRightAssociated());
+    }
+    
+	switch (token->object) {
+        case kScriptObjectType:
+            if (left->object->IsLeftAssociated()) {
+				this->RegisterVar(left);
+				left->object->type = token->type;
+            }
+            else {
+                GetVariableWithNode(left, LAME_TRUE);
+				left->var->Convert(token->type);
+				left->object->type = token->type;
+                left->var->object->type = left->object->type;
+            }
+            if (left->object->type == kScriptTypeVar) {
+                left->var->modificators |= kScriptModificatorVar;
+            }
+            break;
+        case kScriptObjectIncrement:
+            this->Inc(*left->var);
+            break;
+        case kScriptObjectDecrement:
+            this->Dec(*left->var);
+            break;
+        case kScriptObjectNot:
+            this->Not(*left->var);
+            break;
+        case kScriptObjectBitNot:
+            this->BitNot(*left->var);
+            break;
+        default:
+            break;
 	}
 }
 
 Void ScriptPerformer::EvaluateDoubleExpression(
 	ScriptNodePtr left,
 	ScriptNodePtr right,
-	ScriptNodePtr token
-	) {
-	Bool isUseVar = LAME_FALSE;
+	ScriptObjectPtr token
+) {
+	GetVariableWithNode(left, token->IsRightAssociated());
+    GetVariableWithNode(right, LAME_TRUE);
 
-	if (token->object->IsRightAssociated()) {
-		if (left->object->object == kScriptObjectVariable) {
-			left->var = LAME_NULL;
-		}
-	}
-
-	if (!left->var) {
-		ScriptNodePtr left_ = this->FindVar(left->object->word.data());
-		if (!left_) {
-			PostSyntaxError(left->object->line, "Undeclared variable (%s)", left->object->word.data());
-		}
-		if (token->object->IsRightAssociated()) {
-			this->tempList.push_back(*left_->var);
-			left->var = &this->tempList.back();
-		}
-		else {
-			left->object = left_->object;
-			left->var = left_->var;
-		}
-		isUseVar = LAME_TRUE;
-	}
-	if (!right->var) {
-		ScriptNodePtr right_ = this->FindVar(right->object->word.data());
-		if (!right_) {
-			PostSyntaxError(right->object->line, "Undeclared variable (%s)", right->object->word.data());
-		}
-		this->tempList.push_back(*right_->var);
-		right->var = &this->tempList.back();
-	}
-
-	switch (token->object->object) {
+	switch (token->object) {
 	case kScriptObjectAnd:
 		this->And(*left->var, *right->var);
 		break;
@@ -531,14 +556,14 @@ Void ScriptPerformer::EvaluateDoubleExpression(
 		goto __EvaluateMathExpression;
 	}
 	left->object->type = kScriptTypeBool;
-	isUseVar = LAME_FALSE;
+    left->var->object->type = kScriptTypeBool;
 
 	goto __Return;
 __EvaluateMathExpression:
-
-	ScriptVariable::Convert(*right->var, *left->var);
-
-	switch (token->object->object) {
+    
+    right->var->Convert(left->var->object->type);
+    
+	switch (token->object) {
 	case kScriptObjectSet:
 		this->Set(*left->var, *right->var);
 		break;
@@ -601,30 +626,10 @@ Void ScriptPerformer::Evaluate(
 	ScriptNodePtr right = 0;
 	ScriptNodePtr kw = 0;
 
-	this->tempList.clear();
+	this->tempList_.clear();
+
 	for (Iterator i = list->begin(); i != list->end(); i++) {
-
 		kw = *i;
-
-		if (kw->object->object == kScriptObjectVariable) {
-
-			ScriptType type;
-			StringC name = kw->object->word.data();
-
-			type.Parse(&name);
-
-			if (type == kScriptTypeDefault) {
-				ScriptNodePtr typeNode = this->FindType(kw->object->word.data());
-				if (typeNode) {
-					kw = typeNode;
-					kw->object->object = kScriptObjectType;
-				}
-			}
-			else {
-				kw->object->type = type;
-				kw->object->object = kScriptObjectType;
-			}
-		}
 
 		if (kw->object->object == kScriptObjectInt ||
 			kw->object->object == kScriptObjectFloat ||
@@ -671,68 +676,58 @@ Void ScriptPerformer::Evaluate(
 				result->push_back(left);
 			}
 		}
-	}
 
-	for (ScriptNodePtr node : *result) {
-		if (node->object->object == kScriptObjectVariable) {
-			if (!node->var) {
-				ScriptNodePtr right_ = this->FindVar(node->object->word.data());
-				if (!right_) {
-					PostSyntaxError(node->object->line, "Undeclared variable (%s)", node->object->word.data());
-				}
-				node->object = right_->object;
-			}
-			if (node->object->type == kScriptTypeDefault) {
-				StringC ptr = node->object->type.name.data();
-				node->object->type.Parse(&ptr);
-			}
+		if (!kw->var->IsDeclared() && kw->object->IsVariable()) {
+			this->RegisterVar(kw);
+			this->Evaluate(&kw->block, result);
+			result->clear();
 		}
 	}
 }
 
 Void ScriptPerformer::Trace(Void) {
 
-	puts("------------------------");
-	for (ScriptNodePtr node : this->typeList) {
-		if (node->type == kScriptNodeFunction) {
-			printf("%s %s.%s\n", node->object->word.data(), node->parent->object->type.name.data(), node->object->type.name.data());
+	puts("\n----------");
+	printf("- TYPES -\n");
+	puts("----------\n");
+	for (ScriptTypeManager::TypeMap& vm : this->vtManager_.GetTypeManager()->spaceMapQueue) {
+		for (auto i = vm.begin(); i != vm.end(); i++) {
+			if (*i->first.data() != '$') {
+				printf("%s\n", i->first.data());
+			}
 		}
-		else {
-			printf("%s %s\n", node->object->word.data(), node->object->type.name.data());
+	}
+	puts("");
+
+	puts("-------------");
+	printf("- VARIABLES -\n");
+	puts("-------------");
+	for (ScriptVarManager::VarMap& vm : this->vtManager_.GetVarManager()->spaceMapQueue) {
+		for (auto i = vm.begin(); i != vm.end(); i++) {
+			printf("%s %s = ", i->second->object->type.GetString(), i->second->object->word.data());
+			switch (i->second->object->type) {
+				case kScriptTypeBool:
+					printf("%s", i->second->boolValue ? "TRUE" : "FALSE");
+					break;
+				case kScriptTypeFloat:
+					printf("%.2f", i->second->floatValue);
+					break;
+				case kScriptTypeFunction:
+					printf("FUNCTION");
+					break;
+				case kScriptTypeInt:
+					printf("%lld", i->second->intValue);
+					break;
+				case kScriptTypeString:
+					printf("\"%s\"", i->second->stringValue.data());
+					break;
+				default:
+					break;
+			}
+			puts("");
 		}
 	}
-
-	if (this->typeList.size()) {
-		puts("------------------------");
-	}
-
-	for (ScriptNodePtr node : this->varList) {
-		printf("%s %s = ", node->object->type.GetString(), node->object->word.data());
-		switch (node->object->type) {
-		case kScriptTypeBool:
-			printf("%s", node->var->boolValue ? "TRUE" : "FALSE");
-			break;
-		case kScriptTypeFloat:
-			printf("%.2f", node->var->floatValue);
-			break;
-		case kScriptTypeFunction:
-			printf("FUNCTION");
-			break;
-		case kScriptTypeInt:
-			printf("%lld", node->var->intValue);
-			break;
-		case kScriptTypeString:
-			printf("\"%s\"", node->var->stringValue.data());
-			break;
-		default:
-			break;
-		}
-		puts("");
-	}
-
-	if (this->varList.size()) {
-		puts("------------------------");
-	}
+	puts("");
 }
 
 LAME_END

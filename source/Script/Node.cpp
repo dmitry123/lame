@@ -50,7 +50,7 @@ Void ScriptNode::Evaluate(ScriptPerformerPtr performer) {
 				break;
 			case kScriptObjectElse:
                 
-				if (!this->parent) {
+				if (!this->parent || this->parent->object->object != kScriptObjectIf) {
 					PostSyntaxError(this->object->line, "Else construction must have 'if' node", 1);
 				}
                 
@@ -83,7 +83,7 @@ Void ScriptNode::Evaluate(ScriptPerformerPtr performer) {
                     if (this->parent->block.size()) {
                         performer->Evaluate(&this->parent->block, &result);
                         result.clear();
-                    } 
+                    }
                 }
                 
 				if (!this->result) {
@@ -206,6 +206,11 @@ Void ScriptNode::Evaluate(ScriptPerformerPtr performer) {
 			break;
 		}
 	}
+	else if (this->object->IsThread()) {
+		if (this->block.size()) {
+			performer->Evaluate(&this->block, &result);
+		}
+	}
 
 __ExitExpression:
 	return;
@@ -218,32 +223,13 @@ Void ScriptNode::Order(ScriptPerformerPtr performer, Vector<ScriptNodePtr>* list
 
 	Bool found = 0;
 	ScriptNodePtr back = 0;
-	ScriptNodePtr type = 0;
+	ScriptTypePtr type = 0;
 	ScriptObjectPtr object = 0;
-
+    
 	for (ScriptNodePtr node : *list) {
 
 		if (!node->object) {
 			continue;
-		}
-
-		if (node->object->object == kScriptObjectDefault) {
-			type = performer->FindType(node->object->word.data());
-			if (type) {
-				node->object->arguments = type->object->arguments;
-				node->object->associativity = type->object->associativity;
-				node->object->object = type->object->object;
-				node->object->priority = type->object->priority;
-				node->object->type = type->object->type;
-			}
-			else {
-				object = object->FindScriptObjectByFlag(kScriptObjectVariable);
-				node->object->arguments = object->arguments;
-				node->object->associativity = object->associativity;
-				node->object->object = object->object;
-				node->object->priority = object->priority;
-				node->object->type = object->type;
-			}
 		}
 
 		if ( // If object constant or variable
@@ -332,6 +318,14 @@ Void ScriptNode::Order(ScriptPerformerPtr performer, Vector<ScriptNodePtr>* list
 			stack.pop_back();
 		}
 	}
+    
+//    for (auto n : result) {
+//        printf("%s ", n->object->word.data());
+//        if (n->object->object == kScriptObjectSemicolon) {
+//            puts("");
+//        }
+//    }
+//    puts("");
 
 	list->clear();
 
