@@ -7,10 +7,10 @@ class Main {
 
 thread ("Main") {
 	
-	Main main = new Main();
+	Var left = new (Main);
 
-	main.stringValue = 'hello, world';
-	main.intValue = 0x7b;
-	main.floatValue = 7.5f;
-	main.boolValue = 1;
+	left.stringValue = 'hello, world';
+	left.intValue = 0x7b;
+	left.floatValue = 7.5f;
+	left.boolValue = 1;
 }

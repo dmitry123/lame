@@ -531,7 +531,6 @@ Void ScriptPerformer::EvaluateSingleExpression(
             }
 
             break;
-
 		case kScriptObjectNew:
 
 			// find class type
@@ -542,8 +541,10 @@ Void ScriptPerformer::EvaluateSingleExpression(
 			left->object = classType->object->object;
 			left->var->object = left->object;
 
-			// initialize class data
-			this->Evaluate(&left->var->classValue->block, &result);
+			// copy class's fields
+			for (ScriptNodePtr& n : left->var->classValue->block) {
+				n->var = new ScriptVariable(*n->var);
+			}
 
 			break;
         case kScriptObjectIncrement:
@@ -789,10 +790,15 @@ Void ScriptPerformer::Trace(Void) {
 	for (ScriptVarManager::VarMap& vm : this->vtManager_.GetVarManager()->spaceMapQueue) {
 		for (auto i = vm.begin(); i != vm.end(); i++) {
 			printf("%s %s = ", i->second->object->type.name.data(), i->second->object->word.data());
-			if (kScriptTypeClass) {
-				printf("{\n");
-				this->_Trace(i->second->object->type.object);
-				printf("}");
+			if (i->second->object->type == kScriptTypeClass) {
+				if (i->second->classValue) {
+					printf("{\n");
+					this->_Trace(i->second->object->type.object);
+					printf("}");
+				}
+				else {
+					printf("NULL");
+				}
 			}
 			else {
 				switch (i->second->object->type) {
@@ -877,6 +883,8 @@ Void ScriptPerformer::_Trace(ScriptNodePtr node) {
 		}
 		puts("");
 	}
+
+	--this->printDepth_;
 }
 
 ScriptPerformer::~ScriptPerformer() {

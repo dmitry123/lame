@@ -8,10 +8,8 @@ Void ScriptVariable::Convert(ScriptType& type) {
 	}
 	if (type == kScriptTypeVoid ||
 		type == kScriptTypeFunction ||
-		type == kScriptTypeClass ||
 		this->object->type == kScriptTypeVoid ||
-		this->object->type == kScriptTypeFunction ||
-		this->object->type == kScriptTypeClass
+		this->object->type == kScriptTypeFunction
 	) {
 		goto __Error;
 	}
