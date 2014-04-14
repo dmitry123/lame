@@ -14,39 +14,45 @@ ScriptBuilder& ScriptBuilder::Build(ScriptParserPtr parser, ScriptPerformerPtr p
 	this->parser = parser;
 	this->performer = performer;
 
+	// add braces to parser
+	this->parser->objectList.push_front(
+		new ScriptObject(*ScriptObject::FindScriptObjectByFlag(kScriptObjectBraceL)));
+	this->parser->objectList.push_back(
+		new ScriptObject(*ScriptObject::FindScriptObjectByFlag(kScriptObjectBraceR)));
+
 	Iterator first = this->parser->objectList.begin();
-
-	while (first != this->parser->objectList.end()) {
-		if ((*first)->object == kScriptObjectThread) {
-			break;
-		}
-		++first;
-	}
-
-	if (first == this->parser->objectList.end()) {
-		PostSyntaxError(this->parser->objectList.back()->line, "Unable to find 'Main' thread as entry point", 1);
-	}
 
 	if (!performer->root) {
 		performer->root = this->_AppendNode(*first);
 	}
 
-	try {
-		this->_BuildThread(performer->root, first);
-	}
-	catch (SyntaxException& e) {
-		if (first != this->parser->objectList.end()) {
-			throw e;
-		}
-	}
+	// save root's block as node stack
+	this->_PushStack(&performer->root->block);
 
-	ScriptNodePtr node = performer->root;
+	// build block with root
+	this->_BuildBlock(performer->root, first);
 
-	while (node) {
-		node->Order(this->performer); node = node->next;
-	}
+	// order root node
+	this->_Order(performer->root);
 
 	return *this;
+}
+
+Void ScriptBuilder::_Order(ScriptNodePtr node) {
+
+	node->Order(this->performer);
+
+	for (ScriptNodePtr n : node->block) {
+		if (n->type == kScriptNodeDefault) {
+			continue;
+		}
+		if (n->type == kScriptNodeDeclare) {
+			n->Order(this->performer);
+		}
+		else {
+			this->_Order(n);
+		}
+	}
 }
 
 Void ScriptBuilder::_Build(ScriptNodePtr node, IteratorRef i) {
@@ -65,7 +71,9 @@ Void ScriptBuilder::_BuildCondition(ScriptNodePtr parent, IteratorRef i) {
 	++i;
 
 	// if condition is 'else' then we have to skip condition block
-	if (parent->object->object == kScriptObjectElse) {
+	if (parent->object->object == kScriptObjectElse ||
+		parent->object->object == kScriptObjectDo
+	) {
 		goto __SkipParentheses;
 	}
 
@@ -162,7 +170,7 @@ Void ScriptBuilder::_BuildClass(ScriptNodePtr parent, IteratorRef i) {
 
 	// declare type
 	if (!this->performer->vtManager_.DeclareType(&(*i)->type)) {
-		PostSyntaxError((*i)->line, "Type redeclaration (%s)", (*i)->type.GetString());
+		PostSyntaxError((*i)->line, "Type redeclaration (%s)", (*i)->word.data());
 	}
 
 	// skip class name
@@ -177,6 +185,8 @@ Void ScriptBuilder::_BuildField(ScriptNodePtr parent, IteratorRef i) {
 
 	ScriptTypePtr type;
 	ScriptNodePtr node;
+	ScriptNodePtr typeNode;
+	Buffer variableName;
 
 	parent->type = kScriptNodeField;
 	parent->object->object = kScriptObjectVariable;
@@ -188,7 +198,11 @@ Void ScriptBuilder::_BuildField(ScriptNodePtr parent, IteratorRef i) {
 		__Inc(i); return;
 	}
 
+	// get object's type node
+	typeNode = this->_AppendNode(*i);
 	__Inc(i);
+
+	// get variable
 	node = this->_AppendNode(*i);
 	__Inc(i);
 
@@ -196,14 +210,32 @@ Void ScriptBuilder::_BuildField(ScriptNodePtr parent, IteratorRef i) {
 	std::swap(parent->object, node->object);
 	std::swap(parent->var, node->var);
 
-	// save variable's type
-	parent->object->type = *type;
+	// find type object
+	*typeNode->object = *ScriptObject::FindScriptObjectByFlag(kScriptObjectType);
+	typeNode->object->type = *type;
+
+	// find variable object
+	variableName = parent->object->word;
+	*parent->object = *ScriptObject::FindScriptObjectByFlag(kScriptObjectVariable);
+	parent->object->word = variableName;
+	parent->type = kScriptNodeDeclare;
 
 	if ((*i)->object == kScriptObjectSemicolon) {
+
+		// push parent in block
+		parent->block.push_back(parent);
+		// push var's type in block
+		parent->block.push_back(typeNode);
+
 		return;
 	}
 	else if ((*i)->object == kScriptObjectSet) {
+
+		// push parent in block
 		parent->block.push_back(parent);
+		// push var's type in block
+		parent->block.push_back(typeNode);
+
 		while (LAME_TRUE) {
 			if ((*i)->object == kScriptObjectSemicolon) {
 				break;
@@ -218,7 +250,6 @@ Void ScriptBuilder::_BuildField(ScriptNodePtr parent, IteratorRef i) {
 		++i;
 	}
 	else if ((*i)->object == kScriptObjectParentheseL) {
-		parent->type = kScriptNodeField;
 		parent->var->modificators = kScriptModificatorFunction;
 		__Dec(i);
 		this->_BuildCondition(parent, i);
@@ -301,20 +332,27 @@ Bool ScriptBuilder::_BuildRecursive(ScriptNodePtr parent, IteratorRef i) {
 
 ScriptNodePtr ScriptBuilder::_AppendNode(ScriptObjectPtr object) {
 
+	// allocate script node
 	ScriptNodePtr node (new ScriptNode());
 
-	node->var = new ScriptVariable(object);
+	// allocate script variable
+	this->performer->varList_.push_back(new ScriptVariable(object));
+
+	// initialize node
+	node->var = this->performer->varList_.back();
 	node->object = object;
 	node->var->object = object;
 	node->prev = this->prevNode_;
 	node->parent = this->parentNode_;
 
+	// create doubly linked list
 	if (this->prevNode_) {
 		this->prevNode_->next = node;
 	}
 
 	this->prevNode_ = node;
 
+	// initialize parent
 	if (node->object->IsCondition() ||
 		node->object->IsClass() ||
 		node->object->IsThread()
@@ -322,6 +360,7 @@ ScriptNodePtr ScriptBuilder::_AppendNode(ScriptObjectPtr object) {
 		this->parentNode_ = node;
 	}
 
+	// check for constant and register
 	this->performer->RegisterConstant(node);
 
 	return node;

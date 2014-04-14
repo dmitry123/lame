@@ -1,5 +1,19 @@
+class A {}
+class B {}
+class C {}
+
 thread ("Main") {
-	Int left = 0x7b;
-	Int right = 0xff;
-	Int result = left + right;
+	Int a = 0xff;
+	Int c = 0x00;
+	Int b = 0x00;
+
+	b = a;
+	while (a--) {
+		++c;
+	}
+
+	a = b;
+	do {
+		++c;
+	} while (a--);
 }

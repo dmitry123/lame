@@ -54,10 +54,6 @@ Void ScriptTypeManager::_DeclareLanguageTypes(Void) {
 
 Bool ScriptVarManager::Declare(ScriptVariablePtr var) {
 
-	if (var->declared) {
-		return LAME_TRUE;
-	}
-
 	// return false if we've just registered type in current typespace
 	if (this->spaceMap->count(var->object->word)) {
 		return LAME_FALSE;
@@ -65,9 +61,6 @@ Bool ScriptVarManager::Declare(ScriptVariablePtr var) {
 
 	// declare type for current typespace
 	(*this->spaceMap)[var->object->word] = var;
-
-	// set declared flag to TRUE
-	var->declared = LAME_TRUE;
 
 	return LAME_TRUE;
 }

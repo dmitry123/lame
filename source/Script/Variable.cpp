@@ -98,8 +98,8 @@ Void ScriptVariable::Reset() {
 	this->intValue = 0;
 	this->floatValue = 0;
 	this->modificators = 0;
-	this->stringValue.clear();
 	this->declared = 0;
+	this->stringValue.clear();
 }
 
 LAME_END

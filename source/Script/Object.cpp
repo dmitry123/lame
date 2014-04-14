@@ -11,7 +11,7 @@ LAME_BEGIN
 namespace internal {
 	static const ScriptObject scriptObjects[kScriptObjectAmount] =
 	{
-		{ "${name}", P(16), kScriptObjectVariable, 1, LA },
+		{ "${variable}", P(16), kScriptObjectVariable, 1, LA },
 		{ "${int}", P(16), kScriptObjectInt, 1, RA },
 		{ "${float}", P(16), kScriptObjectFloat, 1, RA },
 		{ "${string}", P(16), kScriptObjectString, 1, RA },
@@ -74,7 +74,7 @@ namespace internal {
 		{ ";", P(1), kScriptObjectSemicolon, 0, DA },
 		{ "{", P(1), kScriptObjectBraceL, 0, DA },
 		{ "}", P(1), kScriptObjectBraceR, 0, DA },
-		{ "class", P(1), kScriptObjectClass, 0, DA },
+		{ "class", P(1), kScriptObjectClass, 1, DA },
 		{ "abstract", P(1), kScriptObjectAbstract, 0, DA },
 		{ "implements", P(1), kScriptObjectImplements, 0, DA },
 		{ "extends", P(1), kScriptObjectExtends, 0, DA },

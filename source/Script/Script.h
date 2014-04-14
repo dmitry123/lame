@@ -111,16 +111,16 @@ typedef enum {
 } EScriptType;
 
 typedef enum {
-	kScriptModificatorDefault = 0x0000,
-	kScriptModificatorAbstract = 0x0001,
-	kScriptModificatorFinal = 0x0002,
-	kScriptModificatorOverride = 0x0004,
-	kScriptModificatorPublic = 0x0008,
-	kScriptModificatorPrivate = 0x0010,
-	kScriptModificatorProtected = 0x0020,
-	kScriptModificatorStatic = 0x0040,
-    kScriptModificatorVar = 0x0080,
-	kScriptModificatorFunction = 0x0100
+	kScriptModificatorDefault = 0x0001,
+	kScriptModificatorAbstract = 0x0002,
+	kScriptModificatorFinal = 0x0004,
+	kScriptModificatorOverride = 0x0008,
+	kScriptModificatorPublic = 0x0010,
+	kScriptModificatorPrivate = 0x0020,
+	kScriptModificatorProtected = 0x0040,
+	kScriptModificatorStatic = 0x0080,
+    kScriptModificatorVar = 0x0100,
+	kScriptModificatorFunction = 0x0200
 } EScriptModificator;
 
 typedef enum {
@@ -130,6 +130,7 @@ typedef enum {
 	kScriptNodeField,
 	kScriptNodeExpression,
 	kScriptNodeThread,
+	kScriptNodeDeclare,
 	kScriptNodeAmount
 } EScriptNode;
 
@@ -223,6 +224,13 @@ public:
 	ScriptParser& Load(StringC filename);
 public:
 	Vector<ScriptObjectPtr> objectList;
+public:
+	~ScriptParser() {
+		for (ScriptObjectPtr object : this->objectList) {
+			delete object;
+		}
+		this->objectList.clear();
+	}
 };
 
 class LAME_API ScriptVariable {
@@ -240,15 +248,15 @@ public:
 	Uint32 modificators;
 	Bool declared;
 public:
-    inline Bool IsAbstract() const { return this->modificators & kScriptModificatorAbstract; }
-    inline Bool IsFinal() const { return this->modificators & kScriptModificatorFinal; }
-    inline Bool IsOverride() const { return this->modificators & kScriptModificatorOverride; }
-    inline Bool IsPublic() const { return this->modificators & kScriptModificatorPublic; }
-    inline Bool IsPrivate() const { return this->modificators & kScriptModificatorPrivate; }
-    inline Bool IsProtected() const { return this->modificators & kScriptModificatorProtected; }
-    inline Bool IsStatic() const { return this->modificators & kScriptModificatorStatic; }
-    inline Bool IsVar() const { return this->modificators & kScriptModificatorVar; }
-	inline Bool IsFunction() const { return this->modificators & kScriptModificatorFunction; }
+    inline Bool IsAbstract() const { return (this->modificators & kScriptModificatorAbstract); }
+	inline Bool IsFinal() const { return (this->modificators & kScriptModificatorFinal); }
+	inline Bool IsOverride() const { return (this->modificators & kScriptModificatorOverride); }
+	inline Bool IsPublic() const { return (this->modificators & kScriptModificatorPublic); }
+	inline Bool IsPrivate() const { return (this->modificators & kScriptModificatorPrivate); }
+	inline Bool IsProtected() const { return (this->modificators & kScriptModificatorProtected); }
+	inline Bool IsStatic() const { return (this->modificators & kScriptModificatorStatic); }
+	inline Bool IsVar() const { return (this->modificators & kScriptModificatorVar); }
+	inline Bool IsFunction() const { return (this->modificators & kScriptModificatorFunction); }
 	inline Bool IsDeclared() const { return this->declared; }
 public:
 	Void Convert(ScriptType& type);
@@ -413,20 +421,6 @@ private:
 		ScriptNodePtr left,
 		ScriptNodePtr right,
 		ScriptObjectPtr token);
-private:
-	inline Void EvaluateSingleExpression(
-		ScriptNodePtr left,
-		ScriptNodePtr token
-	) {
-		this->EvaluateSingleExpression(left, token->object);
-	}
-	inline Void EvaluateDoubleExpression(
-		ScriptNodePtr left,
-		ScriptNodePtr right,
-		ScriptNodePtr token
-	) {
-		this->EvaluateDoubleExpression(left, right, token->object);
-	}
 public:
 	ScriptNodePtr root = 0;
 private:
@@ -436,26 +430,10 @@ private:
     } Temporary;
 private:
 	List<Temporary> tempList_;
+	List<ScriptVariablePtr> varList_;
 	ScriptManager vtManager_;
 public:
-	~ScriptPerformer() {
-
-		ScriptNodePtr next = 0;
-
-		while (this->root) {
-
-			next = this->root->next;
-
-			this->root->condition.clear();
-			this->root->block.clear();
-
-			delete this->root->var;
-			delete this->root->object;
-			delete this->root;
-
-			this->root = next;
-		}
-	}
+	~ScriptPerformer();
 };
 
 class LAME_API ScriptThread {
@@ -488,6 +466,7 @@ private:
 	ScriptParserPtr parser = 0;
 	ScriptPerformerPtr performer = 0;
 private:
+	Void _Order(ScriptNodePtr node);
 	Void _Build(ScriptNodePtr node, IteratorRef i);
 	Void _BuildCondition(ScriptNodePtr parent, IteratorRef i);
 	Void _BuildBlock(ScriptNodePtr parent, IteratorRef i);
