@@ -1,19 +1,16 @@
-class A {}
-class B {}
-class C {}
+class Main {
+	String stringValue;
+	Int intValue;
+	Float floatValue;
+	Bool boolValue;
+}
 
 thread ("Main") {
-	Int a = 0xff;
-	Int c = 0x00;
-	Int b = 0x00;
+	
+	Main main = new Main();
 
-	b = a;
-	while (a--) {
-		++c;
-	}
-
-	a = b;
-	do {
-		++c;
-	} while (a--);
+	main.stringValue = 'hello, world';
+	main.intValue = 0x7b;
+	main.floatValue = 7.5f;
+	main.boolValue = 1;
 }

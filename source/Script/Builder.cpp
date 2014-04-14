@@ -168,9 +168,14 @@ Void ScriptBuilder::_BuildClass(ScriptNodePtr parent, IteratorRef i) {
 	// save type's name
 	(*i)->type.name = (*i)->word;
 
+	// save parent's type
+	parent->object->type = (*i)->type;
+	parent->object->type.type = kScriptTypeClass;
+	parent->object->type.object = parent;
+
 	// declare type
-	if (!this->performer->vtManager_.DeclareType(&(*i)->type)) {
-		PostSyntaxError((*i)->line, "Type redeclaration (%s)", (*i)->word.data());
+	if (!this->performer->vtManager_.DeclareType(&parent->object->type)) {
+		PostSyntaxError((*i)->line, "Type redeclaration (%s)", parent->object->type.GetString());
 	}
 
 	// skip class name
@@ -219,6 +224,7 @@ Void ScriptBuilder::_BuildField(ScriptNodePtr parent, IteratorRef i) {
 	*parent->object = *ScriptObject::FindScriptObjectByFlag(kScriptObjectVariable);
 	parent->object->word = variableName;
 	parent->type = kScriptNodeDeclare;
+	parent->object->type = typeNode->object->type;
 
 	if ((*i)->object == kScriptObjectSemicolon) {
 
@@ -226,8 +232,8 @@ Void ScriptBuilder::_BuildField(ScriptNodePtr parent, IteratorRef i) {
 		parent->block.push_back(parent);
 		// push var's type in block
 		parent->block.push_back(typeNode);
-
-		return;
+		// skip semicolon
+		++i;
 	}
 	else if ((*i)->object == kScriptObjectSet) {
 

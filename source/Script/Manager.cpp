@@ -9,8 +9,12 @@ Bool ScriptTypeManager::Declare(ScriptTypePtr type) {
 		return LAME_FALSE;
 	}
 
+	if (type->type == kScriptTypeDefault) {
+		type->type = kScriptTypeClass;
+	}
+
 	// declare type for current typespace
-	(*this->spaceMap)[type->name] = type;
+	(*this->spaceMap)[type->name] = new ScriptType(*type);
 
 	return LAME_TRUE;
 }
@@ -60,7 +64,7 @@ Bool ScriptVarManager::Declare(ScriptVariablePtr var) {
 	}
 
 	// declare type for current typespace
-	(*this->spaceMap)[var->object->word] = var;
+	(*this->spaceMap)[var->object->word] = new ScriptVariable(*var);
 
 	return LAME_TRUE;
 }

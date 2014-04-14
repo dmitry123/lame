@@ -19,6 +19,9 @@ Void ScriptPerformer::Set(ScriptVariable& left, const ScriptVariable& right) {
 	case kScriptTypeString:
 		left.stringValue = right.stringValue;
 		break;
+	case kScriptTypeClass:
+		left.classValue = right.classValue;
+		break;
 	default:
 		__EvalError(=);
 	}
@@ -437,8 +440,8 @@ ScriptVariablePtr ScriptPerformer::FindVar(const Buffer& name) {
 
 Void ScriptPerformer::GetVariableWithNode(ScriptNodePtr node, Bool right) {
 
-	// if node isn't variable or variable declared
-	if (!node->object->IsVariable() || node->var->IsDeclared()) {
+	// if node isn't variable
+	if (!node->object->IsVariable()) {
 		return;
 	}
 
@@ -488,8 +491,13 @@ Void ScriptPerformer::EvaluateSingleExpression(
 	ScriptNodePtr left,
 	ScriptObjectPtr token
 ) {
-    if (token->object != kScriptObjectType) {
-        GetVariableWithNode(left, token->IsRightAssociated());
+	ScriptTypePtr classType = LAME_NULL;
+	Vector<ScriptNodePtr> result;
+
+    if (token->object != kScriptObjectType && token->object != kScriptObjectNew) {
+		if (left->parent->type != kScriptNodeClass) {
+			GetVariableWithNode(left, token->IsRightAssociated());
+		}
     }
     
 	switch (token->object) {
@@ -499,10 +507,12 @@ Void ScriptPerformer::EvaluateSingleExpression(
             if (left->object->IsLeftAssociated()) {
 				// checking for invalid type
 				if (token->type == kScriptTypeDefault) {
-					PostSyntaxError(token->line, "Undeclared type (%s)", token->word.data());
+					token->type = *this->FindType(token->type.name);
 				}
-				// registering variable in manager
-				this->RegisterVar(left);
+				// register variable
+				if (left->parent->type != kScriptNodeClass) {
+					this->RegisterVar(left);
+				}
 				// save new type
 				left->object->type = token->type;
             }
@@ -521,6 +531,21 @@ Void ScriptPerformer::EvaluateSingleExpression(
             }
 
             break;
+
+		case kScriptObjectNew:
+
+			// find class type
+			classType = this->FindType(left->object->word);
+
+			// allocate new class node with object and variable
+			left->var->classValue.reset(new ScriptNode(*classType->object));
+			left->object = classType->object->object;
+			left->var->object = left->object;
+
+			// initialize class data
+			this->Evaluate(&left->var->classValue->block, &result);
+
+			break;
         case kScriptObjectIncrement:
             this->Inc(*left->var);
             break;
@@ -543,8 +568,17 @@ Void ScriptPerformer::EvaluateDoubleExpression(
 	ScriptNodePtr right,
 	ScriptObjectPtr token
 ) {
-	GetVariableWithNode(left, token->IsRightAssociated());
-    GetVariableWithNode(right, LAME_TRUE);
+	ScriptNodePtr childNode = LAME_NULL;
+
+	if (left->parent->type != kScriptNodeClass) {
+		GetVariableWithNode(left, token->IsRightAssociated());
+	}
+
+	if (token->object != kScriptObjectMediated && token->object != kScriptObjectDirect) {
+		if (right->parent->type != kScriptNodeClass) {
+			GetVariableWithNode(right, LAME_TRUE);
+		}
+	}
 
 	switch (token->object) {
 	case kScriptObjectAnd:
@@ -572,14 +606,42 @@ Void ScriptPerformer::EvaluateDoubleExpression(
 		this->NotEqual(*left->var, *right->var);
 		break;
 	default:
-		goto __EvaluateMathExpression;
+		goto __EvaluateClassExpression;
 	}
+
 	left->object->type = kScriptTypeBool;
     left->var->object->type = kScriptTypeBool;
 
 	goto __Return;
+
+__EvaluateClassExpression:
+
+	switch (token->object) {
+	case kScriptObjectMediated:
+	case kScriptObjectDirect:
+
+		if (!left->var->classValue) {
+			PostSyntaxError(left->object->line, "Variable (%s) isn't class object", left->object->word.data());
+		}
+
+		childNode = left->var->classValue->FindChild(right->object->word);
+
+		if (!childNode) {
+			PostSyntaxError(left->object->line, "Field (%s) isn't object's variable or function", right->object->word.data());
+		}
+
+		left->var = childNode->var;
+		left->object = childNode->object;
+		left->type = childNode->type;
+		left->parent = childNode->parent;
+
+		break;
+	default:
+		goto __EvaluateMathExpression;
+	}
+	goto __Return;
+
 __EvaluateMathExpression:
-    
     right->var->Convert(left->var->object->type);
     
 	switch (token->object) {
@@ -707,6 +769,8 @@ Void ScriptPerformer::Evaluate(Vector<ScriptNodePtr>* list, Vector<ScriptNodePtr
 
 Void ScriptPerformer::Trace(Void) {
 
+	this->printDepth_ = 0;
+
 	puts("\n----------");
 	printf("- TYPES -\n");
 	puts("----------\n");
@@ -724,8 +788,14 @@ Void ScriptPerformer::Trace(Void) {
 	puts("-------------");
 	for (ScriptVarManager::VarMap& vm : this->vtManager_.GetVarManager()->spaceMapQueue) {
 		for (auto i = vm.begin(); i != vm.end(); i++) {
-			printf("%s %s = ", i->second->object->type.GetString(), i->second->object->word.data());
-			switch (i->second->object->type) {
+			printf("%s %s = ", i->second->object->type.name.data(), i->second->object->word.data());
+			if (kScriptTypeClass) {
+				printf("{\n");
+				this->_Trace(i->second->object->type.object);
+				printf("}");
+			}
+			else {
+				switch (i->second->object->type) {
 				case kScriptTypeBool:
 					printf("%s", i->second->boolValue ? "TRUE" : "FALSE");
 					break;
@@ -741,13 +811,72 @@ Void ScriptPerformer::Trace(Void) {
 				case kScriptTypeString:
 					printf("\"%s\"", i->second->stringValue.data());
 					break;
+				case kScriptTypeClass:
+					if (i->second->classValue) {
+						printf("new %s", i->second->object->type.GetString());
+					}
+					else {
+						printf("NULL");
+					}
+					break;
 				default:
 					break;
+				}
 			}
 			puts("");
 		}
 	}
 	puts("");
+}
+
+Void ScriptPerformer::_Trace(ScriptNodePtr node) {
+
+	++this->printDepth_;
+
+	for (ScriptNodePtr n : node->block) {
+		if (n->type == kScriptNodeClass) {
+			this->_Trace(n);
+		}
+		else {
+			for (Uint32 i = 0; i < this->printDepth_; i++) {
+				printf("  ");
+			}
+			printf("%s %s = ", n->object->type.name.data(), n->object->word.data());
+			if (n->var->IsFunction()) {
+				printf("FUNCTION");
+			}
+			else {
+				switch (n->object->type) {
+				case kScriptTypeBool:
+					printf("%s", n->var->boolValue ? "TRUE" : "FALSE");
+					break;
+				case kScriptTypeFloat:
+					printf("%.2f", n->var->floatValue);
+					break;
+				case kScriptTypeFunction:
+					printf("FUNCTION");
+					break;
+				case kScriptTypeInt:
+					printf("%lld", n->var->intValue);
+					break;
+				case kScriptTypeString:
+					printf("\"%s\"", n->var->stringValue.data());
+					break;
+				case kScriptTypeClass:
+					if (n->var->classValue) {
+						printf("new %s", n->var->object->type.GetString());
+					}
+					else {
+						printf("NULL");
+					}
+					break;
+				default:
+					break;
+				}
+			}
+		}
+		puts("");
+	}
 }
 
 ScriptPerformer::~ScriptPerformer() {

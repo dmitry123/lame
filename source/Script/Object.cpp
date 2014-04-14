@@ -20,8 +20,8 @@ namespace internal {
 		{ "]", P(16), kScriptObjectBracketR, 1, DA },
 		{ "(", P(0), kScriptObjectParentheseL, 1, DA },
 		{ ")", P(0), kScriptObjectParentheseR, 1, DA },
-		{ ".", P(16), kScriptObjectDirect, 1, DA },
-		{ "->", P(16), kScriptObjectMediated, 1, DA },
+		{ ".", P(16), kScriptObjectDirect, 2, RA },
+		{ "->", P(16), kScriptObjectMediated, 2, RA },
 		{ "++", P(15), kScriptObjectIncrement, 1, LA },
 		{ "--", P(15), kScriptObjectDecrement, 1, LA },
 		{ "sizeof", P(15), kScriptObjectSizeof, 1, RA },
@@ -89,7 +89,8 @@ namespace internal {
 		{ "try", P(1), kScriptObjectTry, 0, DA },
 		{ "catch", P(1), kScriptObjectCatch, 0, DA },
 		{ "throw", P(1), kScriptObjectThrow, 0, DA },
-		{ "thread", P(1), kScriptObjectThread, 0, DA }
+		{ "thread", P(1), kScriptObjectThread, 0, DA },
+		{ "new", P(15), kScriptObjectNew, 1, RA }
 	};
 }
 
@@ -210,6 +211,7 @@ Void ScriptObject::Reset(Void) {
 	this->associativity = DA;
 	this->line = 0;
 	this->type = kScriptTypeDefault;
+	this->type.object = 0;
 }
 
 Bool ScriptObject::IsDigit(Sint8 symbol) {

@@ -216,6 +216,21 @@ __ExitExpression:
 	return;
 }
 
+ScriptNodePtr ScriptNode::FindChild(const Buffer& name) {
+
+	if (!this->block.size() || this->type != kScriptNodeClass) {
+		return LAME_NULL;
+	}
+
+	for (ScriptNodePtr n : this->block) {
+		if (n->object->word == name) {
+			return n;
+		}
+	}
+
+	return LAME_NULL;
+}
+
 Void ScriptNode::Order(ScriptPerformerPtr performer, Vector<ScriptNodePtr>* list) {
 
 	List<ScriptNodePtr> stack;

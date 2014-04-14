@@ -6,7 +6,12 @@ ScriptVirtualMachine& ScriptVirtualMachine::Execute(ScriptPerformerPtr performer
 
 	ScriptNodePtr node = performer->root;
 
-	while (node && node->object->object != kScriptObjectThread) {
+	while (node) {
+
+		if (node->type == kScriptNodeThread) {
+			break;
+		}
+
 		node = node->next;
 	}
 

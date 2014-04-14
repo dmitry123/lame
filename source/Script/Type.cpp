@@ -1,17 +1,21 @@
 #include "Script.h"
 
+#ifdef LAME_MSVC
+#  define strcasecmp _stricmp
+#endif
+
 LAME_BEGIN
 
 namespace internal {
 	static const ScriptType scriptTypes[kScriptTypeAmount] = {
-		{ "Void", kScriptTypeVoid },
-		{ "Int", kScriptTypeInt },
-		{ "Float", kScriptTypeFloat },
-		{ "Bool", kScriptTypeBool },
-		{ "String", kScriptTypeString },
-		{ "Var", kScriptTypeVar },
-		{ "${function}", kScriptTypeFunction },
-		{ "${class}", kScriptTypeClass }
+		{ "Void", kScriptTypeVoid, LAME_NULL },
+		{ "Int", kScriptTypeInt, LAME_NULL },
+		{ "Float", kScriptTypeFloat, LAME_NULL },
+		{ "Bool", kScriptTypeBool, LAME_NULL },
+		{ "String", kScriptTypeString, LAME_NULL },
+		{ "Var", kScriptTypeVar, LAME_NULL },
+		{ "${function}", kScriptTypeFunction, LAME_NULL },
+		{ "${class}", kScriptTypeClass, LAME_NULL }
 	};
 }
 
@@ -21,7 +25,7 @@ Void ScriptType::Parse(StringC* word) {
 	// look though all types
 	for (Uint32 i = 0; i < kScriptTypeAmount; i++) {
 		// compare word
-		if (!strcmp(internal::scriptTypes[i].name.data(), *word)) {
+		if (!strcasecmp(internal::scriptTypes[i].name.data(), *word)) {
 			// copy information from type
 			*this = internal::scriptTypes[i]; 
 			// move pointer
@@ -33,6 +37,9 @@ Void ScriptType::Parse(StringC* word) {
 }
 
 StringC ScriptType::GetString(Void) const {
+	if (this->name.length() && this->name[0] != '$') {
+		return this->name.data();
+	}
 	// check type and return its name
 	for (Uint32 i = 0; i < kScriptTypeAmount; i++) {
 		if (this->type == internal::scriptTypes[i].type) {

@@ -4,6 +4,8 @@
 #include "Define.h"
 #include "Exception.h"
 
+#include <memory>
+
 LAME_BEGIN
 
 typedef enum {
@@ -87,6 +89,7 @@ typedef enum {
 	kScriptObjectCatch,
 	kScriptObjectThrow,
 	kScriptObjectThread,
+	kScriptObjectNew,
 	kScriptObjectAmount
 } EScriptObject;
 
@@ -149,6 +152,8 @@ typedef class ScriptBuilder ScriptBuilder, *ScriptBuilderPtr;
 typedef class ScriptVirtualMachine ScriptVirtualMachine, *ScriptVirtualMachinePtr;
 typedef class ScriptController ScriptController, *ScriptControllerPtr;
 
+typedef std::shared_ptr<ScriptNode> ScriptNativeClass;
+
 class LAME_API ScriptType {
 	friend class ScriptTypeManager;
 public:
@@ -157,12 +162,12 @@ public:
 public:
 	Void Parse(StringC* word);
 	StringC GetString(Void) const;
-	Void Reset(Void);
 private:
 	static ScriptTypePtr GetList(Void);
 public:
 	Buffer name;
 	EScriptType type;
+	ScriptNodePtr object;
 };
 
 class LAME_API ScriptObject {
@@ -238,11 +243,14 @@ public:
 	ScriptVariable(ScriptObjectPtr object) : object(object) {
 		this->Reset();
 	}
+	~ScriptVariable() {
+	}
 public:
 	ScriptNativeBool boolValue;
 	ScriptNativeInt intValue;
 	ScriptNativeFloat floatValue;
 	ScriptNativeString stringValue;
+	ScriptNativeClass classValue;
 public:
 	ScriptObjectPtr object;
 	Uint32 modificators;
@@ -256,7 +264,7 @@ public:
 	inline Bool IsProtected() const { return (this->modificators & kScriptModificatorProtected); }
 	inline Bool IsStatic() const { return (this->modificators & kScriptModificatorStatic); }
 	inline Bool IsVar() const { return (this->modificators & kScriptModificatorVar); }
-	inline Bool IsFunction() const { return (this->modificators & kScriptModificatorFunction); }
+	inline Bool IsFunction() const { return (this->modificators & kScriptModificatorFunction) == kScriptModificatorFunction; }
 	inline Bool IsDeclared() const { return this->declared; }
 public:
 	Void Convert(ScriptType& type);
@@ -267,6 +275,7 @@ class LAME_API ScriptNode {
 public:
 	Void Order(ScriptPerformerPtr performer);
 	Void Evaluate(ScriptPerformerPtr performer);
+	ScriptNodePtr FindChild(const Buffer& name);
 public:
 	ScriptObjectPtr object = 0;
 	ScriptNodePtr parent = 0;
@@ -424,6 +433,8 @@ private:
 public:
 	ScriptNodePtr root = 0;
 private:
+	Void _Trace(ScriptNodePtr node);
+private:
     typedef struct {
         ScriptVariable var;
         ScriptObject object;
@@ -432,6 +443,7 @@ private:
 	List<Temporary> tempList_;
 	List<ScriptVariablePtr> varList_;
 	ScriptManager vtManager_;
+	Uint32 printDepth_;
 public:
 	~ScriptPerformer();
 };

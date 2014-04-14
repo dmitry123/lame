@@ -3,7 +3,7 @@
 LAME_BEGIN
 
 Void ScriptVariable::Convert(ScriptType& type) {
-	if (type == this->object->type) {
+	if (type.type == this->object->type.type) {
         return;
 	}
 	if (type == kScriptTypeVoid ||
@@ -87,7 +87,7 @@ __Warning:
 	goto __Exit;
 __Error:
 	PostSyntaxError(this->object->line, "Invalid type conversion from (%s) to (%s)",
-		this->object->type.GetString(),
+		this->object->type.name.data(),
 		type.GetString());
 	goto __Exit;
 __Exit:;

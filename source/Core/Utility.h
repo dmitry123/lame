@@ -45,11 +45,9 @@ inline VoidP ZeroAlloc(Uint32 size) {
 template <class T> class SharedPtr {
 public:
     inline SharedPtr() {
-        if (this) {
-            this->reference_ = 0;
-            this->counter_ = 0;
-            this->weaks_ = 0;
-        }
+        this->reference_ = 0;
+        this->counter_ = 0;
+        this->weaks_ = 0;
     }
     inline ~SharedPtr() {
         this->__Destroy();
@@ -83,6 +81,9 @@ public:
     inline Void reset() {
 		this->UnLink();
     }
+	inline Void reset(TypeP reference) {
+		this->__Create(reference);
+	}
 public:
 	inline TypeP operator -> () {
 		return this->reference_;
