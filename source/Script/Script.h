@@ -10,17 +10,21 @@ LAME_BEGIN
 
 typedef enum {
 	kScriptObjectDefault = -1,
+    // variable/constants
 	kScriptObjectVariable,
 	kScriptObjectInt,
 	kScriptObjectFloat,
 	kScriptObjectString,
 	kScriptObjectBool,
+    // brackets
 	kScriptObjectBracketL,
 	kScriptObjectBracketR,
 	kScriptObjectParentheseL,
 	kScriptObjectParentheseR,
+    // selectors
 	kScriptObjectDirect,
 	kScriptObjectMediated,
+    // single-argument
 	kScriptObjectIncrement,
 	kScriptObjectDecrement,
 	kScriptObjectSizeof,
@@ -29,12 +33,15 @@ typedef enum {
 	kScriptObjectUnaryMinus,
 	kScriptObjectUnaryPlus,
 	kScriptObjectType,
+    kScriptObjectNew,
+    // constructions
 	kScriptObjectIf,
 	kScriptObjectElse,
 	kScriptObjectWhile,
 	kScriptObjectDo,
 	kScriptObjectFor,
 	kScriptObjectFunction,
+    // math
 	kScriptObjectMul,
 	kScriptObjectDiv,
 	kScriptObjectMod,
@@ -42,17 +49,9 @@ typedef enum {
 	kScriptObjectSub,
 	kScriptObjectBitShiftL,
 	kScriptObjectBitShiftR,
-	kScriptObjectBellow,
-	kScriptObjectAbove,
-	kScriptObjectBellowEqual,
-	kScriptObjectAboveEqual,
-	kScriptObjectEqual,
-	kScriptObjectNotEqual,
 	kScriptObjectBitAnd,
 	kScriptObjectBitXor,
 	kScriptObjectBitOr,
-	kScriptObjectAnd,
-	kScriptObjectOr,
 	kScriptObjectSet,
 	kScriptObjectAddSet,
 	kScriptObjectSubSet,
@@ -64,6 +63,16 @@ typedef enum {
 	kScriptObjectBitAndSet,
 	kScriptObjectBitXorSet,
 	kScriptObjectBitOrSet,
+    // bool
+	kScriptObjectBellow,
+	kScriptObjectAbove,
+	kScriptObjectBellowEqual,
+	kScriptObjectAboveEqual,
+	kScriptObjectEqual,
+	kScriptObjectNotEqual,
+	kScriptObjectAnd,
+	kScriptObjectOr,
+    // special
 	kScriptObjectComa,
 	kScriptObjectCommentL,
 	kScriptObjectCommentR,
@@ -73,9 +82,7 @@ typedef enum {
 	kScriptObjectSemicolon,
 	kScriptObjectBraceL,
 	kScriptObjectBraceR,
-	kScriptObjectClass,
-	kScriptObjectImplements,
-	kScriptObjectExtends,
+    // modificators
 	kScriptObjectPublic,
 	kScriptObjectPrivate,
 	kScriptObjectProtected,
@@ -83,13 +90,16 @@ typedef enum {
 	kScriptObjectOverride,
 	kScriptObjectAbstract,
 	kScriptObjectStatic,
+    // keywords
+	kScriptObjectClass,
+	kScriptObjectImplements,
+	kScriptObjectExtends,
 	kScriptObjectBreak,
 	kScriptObjectContinue,
 	kScriptObjectTry,
 	kScriptObjectCatch,
 	kScriptObjectThrow,
 	kScriptObjectThread,
-	kScriptObjectNew,
 	kScriptObjectAmount
 } EScriptObject;
 
@@ -101,92 +111,65 @@ typedef enum {
 } EScriptAssociativity;
 
 typedef enum {
-	kScriptTypeDefault,
-	kScriptTypeVoid,
-	kScriptTypeInt,
-	kScriptTypeFloat,
-	kScriptTypeBool,
-	kScriptTypeString,
-	kScriptTypeVar,
-	kScriptTypeFunction,
-	kScriptTypeClass,
-	kScriptTypeAmount
-} EScriptType;
-
-typedef enum {
-	kScriptModificatorDefault = 0x0001,
-	kScriptModificatorAbstract = 0x0002,
-	kScriptModificatorFinal = 0x0004,
-	kScriptModificatorOverride = 0x0008,
-	kScriptModificatorPublic = 0x0010,
-	kScriptModificatorPrivate = 0x0020,
-	kScriptModificatorProtected = 0x0040,
-	kScriptModificatorStatic = 0x0080,
-    kScriptModificatorVar = 0x0100,
-	kScriptModificatorFunction = 0x0200
-} EScriptModificator;
+	kScriptFlagDefault = 0x00001,
+	kScriptFlagAbstract = 0x00002,
+	kScriptFlagFinal = 0x00004,
+	kScriptFlagOverride = 0x00008,
+	kScriptFlagPublic = 0x00010,
+	kScriptFlagPrivate = 0x00020,
+	kScriptFlagProtected = 0x00040,
+	kScriptFlagStatic = 0x00080,
+    kScriptFlagVar = 0x00100,
+	kScriptFlagFunction = 0x00200,
+	kScriptFlagVoid = 0x00400,
+	kScriptFlagInt = 0x00800,
+	kScriptFlagFloat = 0x01000,
+	kScriptFlagBool = 0x02000,
+	kScriptFlagString = 0x04000,
+	kScriptFlagClass = 0x08000,
+    kScriptFlagTemp = 0x10000
+} EScriptFlag;
 
 typedef enum {
 	kScriptNodeDefault = -1,
 	kScriptNodeCondition,
 	kScriptNodeClass,
 	kScriptNodeField,
-	kScriptNodeExpression,
 	kScriptNodeThread,
 	kScriptNodeDeclare,
 	kScriptNodeAmount
 } EScriptNode;
 
-typedef class ScriptType ScriptType, *ScriptTypePtr;
-typedef class ScriptObject ScriptObject, *ScriptObjectPtr;
-typedef class ScriptParser ScriptParser, *ScriptParserPtr;
-typedef class ScriptVariable ScriptVariable, *ScriptVariablePtr;
-typedef class ScriptNode ScriptNode, *ScriptNodePtr;
-typedef class ScriptTypeManager ScriptTypeManager, *ScriptTypeManagerPtr;
-typedef class ScriptVarManager ScriptVarManager, *ScriptVarManagerPtr;
-typedef class ScriptManager ScriptManager, *ScriptManagerPtr;
-typedef class ScriptPerformer ScriptPerformer, *ScriptPerformerPtr;
-typedef class ScriptThread ScriptThread, *ScriptThreadPtr;
-typedef class ScriptThreadManager ScriptThreadManager, *ScriptThreadManagerPtr;
-typedef class ScriptBuilder ScriptBuilder, *ScriptBuilderPtr;
-typedef class ScriptVirtualMachine ScriptVirtualMachine, *ScriptVirtualMachinePtr;
-typedef class ScriptController ScriptController, *ScriptControllerPtr;
+/* Basic language types */
+
+typedef Sint64 ScriptNativeInt;
+typedef Float32 ScriptNativeFloat;
+typedef Buffer ScriptNativeString;
+typedef Bool ScriptNativeBool;
+
+/* Script objects */
+;
+typedef class ScriptLex *ScriptLexPtr;
+typedef class ScriptNode *ScriptNodePtr;
+typedef class ScriptVar *ScriptVarPtr;
+typedef class ScriptManager *ScriptManagerPtr;
+typedef class ScriptParser *ScriptParserPtr;
+typedef class ScriptBuilder *ScriptBuilderPtr;
+typedef class ScriptVirtualMachine *ScriptVirtualMachinePtr;
+
+/* Callback type for native invokes */
+
+typedef Void(*ScriptCallback)(ScriptNodePtr var, VoidP data);
+
+/* Native class type */
 
 typedef std::shared_ptr<ScriptNode> ScriptNativeClass;
+typedef const Buffer& BufferRefC;
 
-class LAME_API ScriptType {
-	friend class ScriptTypeManager;
-public:
-	inline operator EScriptType () const { return this->type; }
-	inline Void operator = (EScriptType type) { this->type = type; }
+class LAME_API ScriptLex {
 public:
 	Void Parse(StringC* word);
-	StringC GetString(Void) const;
-private:
-	static ScriptTypePtr GetList(Void);
-public:
-	Buffer name;
-	EScriptType type;
-	ScriptNodePtr object;
-};
-
-class LAME_API ScriptObject {
-public:
-	inline Bool IsLeftAssociated() const { return this->associativity == kScriptAssociativityLeft; }
-	inline Bool IsRightAssociated() const { return this->associativity == kScriptAssociativityRight; }
-	inline Bool IsType() const { return this->object == kScriptObjectType; }
-	inline Bool IsString() const { return this->type == kScriptTypeString; };
-	inline Bool IsVoid() const { return this->type == kScriptTypeVoid; }
-	inline Bool IsInt() const { return this->type == kScriptTypeInt; }
-	inline Bool IsFloat() const { return this->type == kScriptTypeFloat; }
-	inline Bool IsClass() const { return this->object == kScriptObjectClass; }
-	inline Bool IsCondition() const { return this->object >= kScriptObjectIf && this->object <= kScriptObjectFor; }
-	inline Bool IsVariable() const { return this->object == kScriptObjectVariable || this->object == kScriptObjectDefault; }
-	inline Bool IsModificator() const { return this->object >= kScriptObjectPublic && this->object <= kScriptObjectStatic; }
-	inline Bool IsThread() const { return this->object == kScriptObjectThread; }
-public:
-	Void Parse(StringC* word);
-	StringC GetString(Void) const;
+	StringC Parse(StringC word);
 	Void Reset(Void);
 public:
 	Buffer word;
@@ -195,342 +178,297 @@ public:
 	Uint32 arguments;
 	EScriptAssociativity associativity;
 	Uint32 line;
-	ScriptType type;
 public:
-	static Bool IsDigit(Sint8 symbol);
-	static Bool IsLetter(Sint8 symbol);
-	static Bool IsIntValue(StringC string);
-	static Bool IsHexValue(StringC string);
-	static Bool IsStringValue(StringC string);
-	static Bool IsIntValue(const Buffer& string);
-	static Bool IsFloatValue(StringC string);
-	static Bool IsFloatValue(const Buffer& string);
+	inline Bool IsLeftAssociated() const { return this->associativity == kScriptAssociativityLeft; }
+	inline Bool IsRightAssociated() const { return this->associativity == kScriptAssociativityRight; }
+	inline Bool IsType() const { return this->object == kScriptObjectType; }
+	inline Bool IsClass() const { return this->object == kScriptObjectClass; }
+	inline Bool IsCondition() const { return this->object >= kScriptObjectIf && this->object <= kScriptObjectFor; }
+	inline Bool IsVariable() const { return this->object == kScriptObjectVariable || this->object == kScriptObjectDefault; }
+	inline Bool IsModificator() const { return this->object >= kScriptObjectPublic && this->object <= kScriptObjectStatic; }
+	inline Bool IsThread() const { return this->object == kScriptObjectThread; }
+    inline Bool IsMath() const { return this->object >= kScriptObjectMul && this->object <= kScriptObjectBitOrSet; }
+    inline Bool IsBool() const { return this->object >= kScriptObjectBellow && this->object <= kScriptObjectOr; }
+	inline Bool IsFunction() const { return this->object == kScriptObjectFunction; }
 public:
-	static ScriptNativeInt ParseIntValue(StringC string);
-	static ScriptNativeFloat ParseFloatValue(StringC string);
-	static ScriptNativeString ParseStringValue(StringC string);
-public:
-	inline static ScriptNativeInt ParseIntValue(const Buffer& string) {
-		return ParseIntValue(string.data());
-	}
-	inline static ScriptNativeFloat ParseFloatValue(const Buffer& string) {
-		return ParseFloatValue(string.data());
-	}
-	inline static ScriptNativeString ParseStringValue(const Buffer& string) {
-		return ParseStringValue(string.data());
-	}
-public:
-	static ScriptObjectPtr FindScriptObjectByFlag(EScriptObject object);
+	static ScriptLexPtr Find(EScriptObject object);
 };
 
-class LAME_API ScriptParser {
+class LAME_API ScriptNode {
+	typedef Vector<ScriptNodePtr> NodeList, *NodeListPtr;
 public:
-	ScriptParser& Parse(StringC script);
-	ScriptParser& Load(StringC filename);
+	ScriptLexPtr __lex;
 public:
-	Vector<ScriptObjectPtr> objectList;
+	Void Reset(Void);
+	Void Order(Void);
 public:
-	~ScriptParser() {
-		for (ScriptObjectPtr object : this->objectList) {
-			delete object;
-		}
-		this->objectList.clear();
-	}
+	inline ScriptNodePtr FindField(BufferRefC name) { return this->_Find(&this->fieldList, name); }
+	inline ScriptNodePtr FindCondition(BufferRefC name) { return this->_Find(&this->conditionList, name); }
+	inline ScriptNodePtr FindBlock(BufferRefC name) { return this->_Find(&this->blockList, name); }
+public:
+	inline Void RegisterField(ScriptNodePtr node) { this->fieldList.push_back(node); }
+	inline Void RegisterCondition(ScriptNodePtr node) { this->conditionList.push_back(node); }
+	inline Void RegisterBlock(ScriptNodePtr node) { this->blockList.push_back(node); }
+public:
+	Void GoToLeft(Void);
+public:
+	ScriptNodePtr next = 0;
+	ScriptNodePtr prev = 0;
+	ScriptNodePtr parent = 0;
+public:
+	Vector<ScriptNodePtr> conditionList;
+	Vector<ScriptNodePtr> blockList;
+	Vector<ScriptNodePtr> fieldList;
+public:
+	ScriptVarPtr var = 0;
+	EScriptNode node = kScriptNodeDefault;
+private:
+	ScriptNodePtr _Find(NodeListPtr list, BufferRefC name);
+	Void _Order(NodeListPtr root);
+public:
+	~ScriptNode();
 };
 
-class LAME_API ScriptVariable {
+class LAME_API ScriptVar {
+	friend class ScriptManager;
+    friend class ScriptVirtualMachine;
 public:
-	ScriptVariable(ScriptObjectPtr object) : object(object) {
-		this->Reset();
-	}
-	~ScriptVariable() {
+	typedef enum {
+		kScriptTypeDefault,
+		kScriptTypeVar,
+		kScriptTypeFunction,
+		kScriptTypeVoid,
+		kScriptTypeInt,
+		kScriptTypeFloat,
+		kScriptTypeBool,
+		kScriptTypeString,
+		kScriptTypeClass
+	} EType;
+private:
+	ScriptVar(Void);
+public:
+	ScriptVar(ScriptLexPtr lex) : ScriptVar() {
+		this->lex = lex;
 	}
 public:
-	ScriptNativeBool boolValue;
+	ScriptVar(ScriptNativeInt intValue);
+	ScriptVar(ScriptNativeFloat floatValue);
+	ScriptVar(ScriptNativeBool intValue);
+	ScriptVar(ScriptNativeString stringValue);
+	ScriptVar(ScriptNativeClass classValue);
+public:
+	Void Reset(Void);
+	Void Convert(EType& type);
+	Void Clone(ScriptVarPtr result);
+	Void Invoke(Vector<ScriptNodePtr>& parameters);
+public:
+	inline Bool IsAbstract() const { return (this->flags & kScriptFlagAbstract) != 0; }
+	inline Bool IsFinal() const { return (this->flags & kScriptFlagFinal) != 0; }
+	inline Bool IsOverride() const { return (this->flags & kScriptFlagOverride) != 0; }
+	inline Bool IsPublic() const { return (this->flags & kScriptFlagPublic) != 0; }
+	inline Bool IsPrivate() const { return (this->flags & kScriptFlagPrivate) != 0; }
+	inline Bool IsProtected() const { return (this->flags & kScriptFlagProtected) != 0; }
+	inline Bool IsStatic() const { return (this->flags & kScriptFlagStatic) != 0; }
+	inline Bool IsVar() const { return (this->flags & kScriptFlagVar) != 0; }
+	inline Bool IsFunction() const { return (this->flags & kScriptFlagFunction) != 0; }
+	inline Bool IsVoid() const { return (this->flags & kScriptFlagVoid) != 0; }
+	inline Bool IsInt() const { return (this->flags & kScriptFlagInt) != 0; }
+	inline Bool IsFloat() const { return (this->flags & kScriptFlagFloat) != 0; }
+	inline Bool IsBool() const { return (this->flags & kScriptFlagBool) != 0; }
+	inline Bool IsString() const { return (this->flags & kScriptFlagString) != 0; }
+	inline Bool IsClass() const { return (this->flags & kScriptFlagClass) != 0; }
+	inline Bool IsTemp() const { return (this->flags & kScriptFlagTemp) != 0; }
+public:
+	inline Void MakeVar() {
+		this->flags |= kScriptFlagVar;
+		this->type = kScriptTypeVar;
+	}
+	inline Void MakeFunction() {
+		this->flags |= kScriptFlagFunction;
+		this->type = kScriptTypeFunction;
+	}
+	inline Void MakeVoid() {
+		this->flags |= kScriptFlagVoid;
+		this->type = kScriptTypeVoid;
+	}
+	inline Void MakeInt() {
+		this->flags |= kScriptFlagInt;
+		this->type = kScriptTypeInt;
+	}
+	inline Void MakeFloat() {
+		this->flags |= kScriptFlagFloat;
+		this->type = kScriptTypeFloat;
+	}
+	inline Void MakeBool() {
+		this->flags |= kScriptFlagBool;
+		this->type = kScriptTypeBool;
+	}
+	inline Void MakeString() {
+		this->flags |= kScriptFlagString;
+		this->type = kScriptTypeString;
+	}
+	inline Void MakeClass() {
+		this->flags |= kScriptFlagClass;
+		this->type = kScriptTypeClass;
+	}
+    inline Void MakeTemp() {
+        this->flags |= kScriptFlagTemp;
+    }
+private:
+	Void _EvaluateMath(ScriptVarPtr right, ScriptLexPtr lex);
+	Void _EvaluateBool(ScriptVarPtr right, ScriptLexPtr lex);
+private:
+    ScriptVarPtr _EvaluateDouble(ScriptNodePtr right, ScriptLexPtr lex);
+	ScriptVarPtr _EvaluateSingle(ScriptLexPtr lex);
+public:
+	Bool Boolean(Void);
+public:
 	ScriptNativeInt intValue;
 	ScriptNativeFloat floatValue;
 	ScriptNativeString stringValue;
 	ScriptNativeClass classValue;
 public:
-	ScriptObjectPtr object;
-	Uint32 modificators;
-	Bool declared;
-public:
-    inline Bool IsAbstract() const { return (this->modificators & kScriptModificatorAbstract); }
-	inline Bool IsFinal() const { return (this->modificators & kScriptModificatorFinal); }
-	inline Bool IsOverride() const { return (this->modificators & kScriptModificatorOverride); }
-	inline Bool IsPublic() const { return (this->modificators & kScriptModificatorPublic); }
-	inline Bool IsPrivate() const { return (this->modificators & kScriptModificatorPrivate); }
-	inline Bool IsProtected() const { return (this->modificators & kScriptModificatorProtected); }
-	inline Bool IsStatic() const { return (this->modificators & kScriptModificatorStatic); }
-	inline Bool IsVar() const { return (this->modificators & kScriptModificatorVar); }
-	inline Bool IsFunction() const { return (this->modificators & kScriptModificatorFunction) == kScriptModificatorFunction; }
-	inline Bool IsDeclared() const { return this->declared; }
-public:
-	Void Convert(ScriptType& type);
-	Void Reset(Void);
-};
-
-class LAME_API ScriptNode {
-public:
-	Void Order(ScriptPerformerPtr performer);
-	Void Evaluate(ScriptPerformerPtr performer);
-	ScriptNodePtr FindChild(const Buffer& name);
-public:
-	ScriptObjectPtr object = 0;
-	ScriptNodePtr parent = 0;
-	ScriptNodePtr next = 0;
-	ScriptNodePtr prev = 0;
-	Bool result = 0;
-	ScriptVariablePtr var = 0;
-	EScriptNode type = kScriptNodeDefault;
-public:
-	Vector<ScriptNodePtr> condition;
-	Vector<ScriptNodePtr> block;
-private:
-	Void Order(
-		ScriptPerformerPtr performer,
-		Vector<ScriptNodePtr>* list);
-};
-
-class LAME_API ScriptTypeManager {
-	friend class ScriptPerformer;
-public:
-	typedef Map<Buffer, ScriptTypePtr> TypeMap, *TypeMapPtr;
-public:
-	Bool Declare(ScriptTypePtr type);
-	ScriptTypePtr Find(const Buffer& typeName);
-public:
-	Void Push(Void);
-	Void Pop(Void);
-public:
-	inline Uint32 GetCurrentDepth() {
-		return this->spaceMapQueue.size();
-	}
-public:
-	ScriptTypeManager() {
-		this->Push(); this->_DeclareLanguageTypes();
-	}
-private:
-	Void _DeclareLanguageTypes(Void);
-private:
-	TypeMapPtr spaceMap = 0;
-	List<TypeMap> spaceMapQueue;
-};
-
-class LAME_API ScriptVarManager {
-	friend class ScriptPerformer;
-public:
-	typedef Map<Buffer, ScriptVariablePtr> VarMap, *TypeVarPtr;
-public:
-	Bool Declare(ScriptVariablePtr var);
-	ScriptVariablePtr Find(const Buffer& varName);
-public:
-	Void Push(Void);
-	Void Pop(Void);
-public:
-	inline Uint32 GetCurrentDepth() {
-		return this->spaceMapQueue.size();
-	}
-public:
-	ScriptVarManager() {
-		this->Push();
-	}
-private:
-	TypeVarPtr spaceMap = 0;
-	List<VarMap> spaceMapQueue;
+	Uint32 flags;
+	EType type;
+	Buffer name;
+	ScriptCallback callback;
+	ScriptLexPtr lex;
+    ScriptNodePtr condition;
+    Bool result;
+	Buffer className;
 };
 
 class LAME_API ScriptManager {
+	friend class ScriptPerformer;
+    friend class ScriptVirtualMachine;
 public:
-	inline Bool DeclareVar(ScriptVariablePtr var) {
-		return this->varManager.Declare(var);
+	typedef Map<Buffer, ScriptVarPtr> Map, *MapPtr;
+public:
+	inline Bool DeclareType(ScriptVarPtr var) {
+		// declare type
+		return this->_Declare(this->typeMap, var);
 	}
-	inline Bool DeclareType(ScriptTypePtr type) {
-		return this->typeManager.Declare(type);
+	inline ScriptVarPtr FindType(const Buffer& varName) {
+		return this->_Find(this->typeMap, varName);
 	}
-	inline ScriptVariablePtr FindVar(const Buffer& name) {
-		return this->varManager.Find(name);
+	inline Bool DeclareVar(ScriptVarPtr var) {
+		// reset class valur for variable
+		var->classValue.reset();
+		// declare variable
+		return this->_Declare(this->varMap, var);
 	}
-	inline ScriptTypePtr FindType(const Buffer& name) {
-		return this->typeManager.Find(name);
+	inline ScriptVarPtr FindVar(const Buffer& varName) {
+		return this->_Find(this->varMap, varName);
 	}
 public:
-	inline Void Push() {
-		this->varManager.Push();
-		this->typeManager.Push();
-	}
-	inline Void Pop() {
-		this->varManager.Pop();
-		this->typeManager.Pop();
-	}
+	Void Push(Void);
+	Void Pop(Void);
 public:
-	inline ScriptVarManagerPtr GetVarManager() const {
-		return (ScriptVarManagerPtr)&this->varManager;
-	}
-	inline ScriptTypeManagerPtr GetTypeManager() const {
-		return (ScriptTypeManagerPtr)&this->typeManager;
-	}
+	ScriptManager(Void);
+	~ScriptManager(Void);
 private:
-	ScriptVarManager varManager;
-	ScriptTypeManager typeManager;
+	Bool _Declare(MapPtr map, ScriptVarPtr var);
+	ScriptVarPtr _FindQueue(List<Map>* queue, const Buffer& name);
+	ScriptVarPtr _Find(MapPtr map, const Buffer& name);
+private:
+	MapPtr varMap = 0;
+	MapPtr typeMap = 0;
+private:
+	List<Map> varMapQueue;
+	List<Map> typeMapQueue;
 };
 
-class LAME_API ScriptPerformer {
+class LAME_API ScriptParser {
 	friend class ScriptBuilder;
+	friend class ScriptVirtualMachine;
 public:
-	Void Set(ScriptVariable& left, const ScriptVariable& right);
-	Void Add(ScriptVariable& left, const ScriptVariable& right);
-	Void Sub(ScriptVariable& left, const ScriptVariable& right);
-	Void Mul(ScriptVariable& left, const ScriptVariable& right);
-	Void Div(ScriptVariable& left, const ScriptVariable& right);
-	Void Mod(ScriptVariable& left, const ScriptVariable& right);
-	Void BitAnd(ScriptVariable& left, const ScriptVariable& right);
-	Void BitOr(ScriptVariable& left, const ScriptVariable& right);
-	Void BitXor(ScriptVariable& left, const ScriptVariable& right);
-	Void BitShiftR(ScriptVariable& left, const ScriptVariable& right);
-	Void BitShiftL(ScriptVariable& left, const ScriptVariable& right);
-	Void And(ScriptVariable& left, const ScriptVariable& right);
-	Void Or(ScriptVariable& left, const ScriptVariable& right);
-	Void Above(ScriptVariable& left, const ScriptVariable& right);
-	Void Bellow(ScriptVariable& left, const ScriptVariable& right);
-	Void AboveEqual(ScriptVariable& left, const ScriptVariable& right);
-	Void BellowEqual(ScriptVariable& left, const ScriptVariable& right);
-	Void Equal(ScriptVariable& left, const ScriptVariable& right);
-	Void NotEqual(ScriptVariable& left, const ScriptVariable& right);
-	Void BitNot(ScriptVariable& left);
-	Void Not(ScriptVariable& left);
-	Void Inc(ScriptVariable& left);
-	Void Dec(ScriptVariable& left);
-	Void AsBool(ScriptVariable& left);
+	Void Parse(StringC script);
+	Void Load(StringC file);
+private:
+	Vector<ScriptLexPtr> lexList_;
 public:
-	Void RegisterType(ScriptNodePtr node);
-	Void RegisterVar(ScriptNodePtr node);
-	ScriptTypePtr FindType(const Buffer& name);
-	ScriptVariablePtr FindVar(const Buffer& name);
-    Void GetVariableWithNode(ScriptNodePtr node, Bool right);
-	Void RegisterConstant(ScriptNodePtr node);
-public:
-	inline Void Push(Void) {
-		this->vtManager_.Push();
+	~ScriptParser() {
+		for (ScriptLexPtr object : this->lexList_) {
+			delete object;
+		}
+		this->lexList_.clear();
 	}
-	inline Void Pop(Void) {
-		this->vtManager_.Pop();
-	}
-public:
-	Void Evaluate(
-		Vector<ScriptNodePtr>* list,
-		Vector<ScriptNodePtr>* result);
-	Void Trace(Void);
-private:
-	Void EvaluateSingleExpression(
-		ScriptNodePtr left,
-		ScriptObjectPtr token);
-	Void EvaluateDoubleExpression(
-		ScriptNodePtr left,
-		ScriptNodePtr right,
-		ScriptObjectPtr token);
-public:
-	ScriptNodePtr root = 0;
-private:
-	Void _Trace(ScriptNodePtr node);
-private:
-    typedef struct {
-        ScriptVariable var;
-        ScriptObject object;
-    } Temporary;
-private:
-	List<Temporary> tempList_;
-	List<ScriptVariablePtr> varList_;
-	ScriptManager vtManager_;
-	Uint32 printDepth_;
-public:
-	~ScriptPerformer();
-};
-
-class LAME_API ScriptThread {
-public:
-	ScriptThread(
-		ScriptBuilderPtr builder,
-		ScriptVirtualMachinePtr machine
-	) {
-		this->builder_ = builder;
-		this->machine_ = machine;
-	}
-public:
-	Void Launch(Void);
-	Void Sleep(Uint32 delay);
-	Void Wait(Void);
-public:
-	Thread thread_;
-	ScriptBuilderPtr builder_ = 0;
-	ScriptVirtualMachinePtr machine_ = 0;
-	ScriptPerformer performer_;
 };
 
 class LAME_API ScriptBuilder {
-	typedef Vector<ScriptObjectPtr>::iterator Iterator, &IteratorRef;
+	typedef Vector<ScriptLexPtr>::iterator
+		 Iterator,
+		&IteratorRef;
 public:
-	ScriptBuilder& Build(
-		ScriptParserPtr parser,
-		ScriptPerformerPtr performer);
-private:
-	ScriptParserPtr parser = 0;
-	ScriptPerformerPtr performer = 0;
+	Void Build(ScriptParserPtr parser, ScriptVirtualMachinePtr machine);
 private:
 	Void _Order(ScriptNodePtr node);
-	Void _Build(ScriptNodePtr node, IteratorRef i);
-	Void _BuildCondition(ScriptNodePtr parent, IteratorRef i);
-	Void _BuildBlock(ScriptNodePtr parent, IteratorRef i);
-	Void _BuildClass(ScriptNodePtr parent, IteratorRef i);
-	Void _BuildField(ScriptNodePtr parent, IteratorRef i);
-	Void _BuildThread(ScriptNodePtr parent, IteratorRef i);
-	Bool _BuildRecursive(ScriptNodePtr parent, IteratorRef i);
-	ScriptNodePtr _AppendNode(ScriptObjectPtr object);
-	ScriptNodePtr _RemoveNode(ScriptNodePtr node);
-	Void _PushStack(Vector<ScriptNodePtr>* stack);
-	Vector<ScriptNodePtr>* _PopStack(Void);
+	Bool _RecursiveBuild(ScriptNodePtr node, IteratorRef i);
 private:
+	Void _BuildCondition(ScriptNodePtr node, IteratorRef i);
+	Void _BuildBlock(ScriptNodePtr node, IteratorRef i);
+	Void _BuildClass(ScriptNodePtr node, IteratorRef i);
+	Void _BuildAttribute(ScriptNodePtr node, IteratorRef i);
+	Void _BuildThread(ScriptNodePtr node, IteratorRef i);
+private:
+	ScriptNodePtr _CreateNode(ScriptLexPtr lex);
+	ScriptNodePtr _RemoveNode(ScriptNodePtr node);
+private:
+	Void _Push(Vector<ScriptNodePtr>* stack);
+	Vector<ScriptNodePtr>* _Pop(Void);
+private:
+	ScriptParserPtr parser = 0;
+	ScriptVirtualMachinePtr machine = 0;
 	List<Vector<ScriptNodePtr>*> stackNodeQueue_;
 	Vector<ScriptNodePtr>* nodeQueue_ = 0;
 	ScriptNodePtr prevNode_ = 0;
 	ScriptNodePtr parentNode_ = 0;
+	Vector<ScriptNodePtr> nodeList_;
+public:
+	~ScriptBuilder() {
+		for (ScriptNodePtr n : this->nodeList_) {
+			delete n;
+		}
+		this->nodeList_.clear();
+	}
 };
 
 class LAME_API ScriptVirtualMachine {
+	friend class ScriptBuilder;
 public:
-	ScriptVirtualMachine& Execute(ScriptPerformerPtr performer);
-};
-
-class LAME_API ScriptController {
-public:
-	inline ScriptController& Load(StringC fileName) {
-		this->parser_.Load(fileName); return *this;
-	}
-	inline ScriptController& Parse(StringC script) {
-		this->parser_.Parse(script); return *this;
-	}
-	inline ScriptController& Build(Void) {
-		this->builder_.Build(&this->parser_, &this->performer_); return *this;
-	}
-	inline ScriptController& Execute(Void) {
-		this->machine_.Execute(&this->performer_); return *this;
-	}
-	inline ScriptController& Trace(Void) {
-		this->performer_.Trace(); return *this;
-	}
-public:
-	ScriptController() {
-
-	}
-	~ScriptController() {
-
-	}
+    Void Execute(Void);
+    Void Trace(Void);
 private:
-	ScriptParser parser_;
-	ScriptPerformer performer_;
-	ScriptBuilder builder_;
-	ScriptVirtualMachine machine_;
+	Void _DeclareType(ScriptNodePtr node);
+	Void _DeclareVar(ScriptNodePtr node);
+	ScriptVarPtr _FindType(const Buffer& name);
+	ScriptVarPtr _FindVar(const Buffer& name);
+	Void _RegisterConstant(ScriptNodePtr node);
+    Void _Evaluate(Vector<ScriptNodePtr>* list, Vector<ScriptNodePtr>* result);
+    Void _EvaluateCondition(ScriptNodePtr node);
+    Void _Trace(ScriptNodePtr node);
+    StringC _GetTypeName(Uint32 type);
+private:
+    ScriptNodePtr _CreateTemp(ScriptNodePtr node);
+private:
+	ScriptNodePtr root = 0;
+	ScriptManager manager;
+private:
+    typedef struct {
+        ScriptNode node;
+        ScriptVar var;
+    } Temporary;
+private:
+    Uint32 traceDepth_ = 0;
+	Vector<ScriptVarPtr> varList_;
+	List<Temporary> tempList_;
+public:
+	~ScriptVirtualMachine() {
+		for (ScriptVarPtr var : this->varList_) {
+			delete var;
+		}
+		this->varList_.clear();
+	}
 };
 
 LAME_END

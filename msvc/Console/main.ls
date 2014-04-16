@@ -1,16 +1,11 @@
-class Main {
-	String stringValue;
-	Int intValue;
-	Float floatValue;
-	Bool boolValue;
+class A {
+	Int intValue = 0x7b;
+	Void functionValue(Int value) {
+		Int temp = 0x00;
+	}
 }
 
-thread ("Main") {
-	
-	Var left = new (Main);
-
-	left.stringValue = 'hello, world';
-	left.intValue = 0x7b;
-	left.floatValue = 7.5f;
-	left.boolValue = 1;
+thread("Main") {
+	A a = new A();
+	a.functionValue(0xff);
 }

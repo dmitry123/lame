@@ -2,99 +2,130 @@
 
 LAME_BEGIN
 
-Bool ScriptTypeManager::Declare(ScriptTypePtr type) {
+ScriptManager::ScriptManager() {
 
-	// return false if we've just registered type in current typespace
-	if (this->spaceMap->count(type->name)) {
+	this->Push();
+
+	ScriptVar var;
+
+	var.name = "Void";
+	var.MakeVoid();
+	var.lex = ScriptLex::Find(kScriptObjectType);
+	this->DeclareType(&var);
+
+	var.name = "Int";
+	var.MakeInt();
+	var.lex = ScriptLex::Find(kScriptObjectType);
+	this->DeclareType(&var);
+
+	var.name = "Float";
+	var.MakeFloat();
+	var.lex = ScriptLex::Find(kScriptObjectType);
+	this->DeclareType(&var);
+
+	var.name = "Bool";
+	var.MakeBool();
+	var.lex = ScriptLex::Find(kScriptObjectType);
+	this->DeclareType(&var);
+
+	var.name = "String";
+	var.MakeString();
+	var.lex = ScriptLex::Find(kScriptObjectType);
+	this->DeclareType(&var);
+
+	var.name = "Auto";
+	var.MakeVar();
+	var.lex = ScriptLex::Find(kScriptObjectType);
+	this->DeclareType(&var);
+
+	var.name = "Function";
+	var.MakeFunction();
+	var.lex = ScriptLex::Find(kScriptObjectType);
+	this->DeclareType(&var);
+
+	var.name = "Class";
+	var.MakeClass();
+	var.lex = ScriptLex::Find(kScriptObjectType);
+	this->DeclareType(&var);
+}
+
+ScriptManager::~ScriptManager(Void) {
+
+	while (this->varMapQueue.size() > 1) {
+		this->Pop();
+	}
+
+	for (auto i = this->typeMap->begin(); i != this->typeMap->end(); i++) {
+		delete i->second;
+	}
+	for (auto i = this->varMap->begin(); i != this->varMap->end(); i++) {
+		delete i->second;
+	}
+
+	this->typeMapQueue.pop_back();
+	this->varMapQueue.pop_back();
+}
+
+Bool ScriptManager::_Declare(MapPtr map, ScriptVarPtr var) {
+
+	if (this->varMap->count(var->name)) {
 		return LAME_FALSE;
 	}
 
-	if (type->type == kScriptTypeDefault) {
-		type->type = kScriptTypeClass;
-	}
-
-	// declare type for current typespace
-	(*this->spaceMap)[type->name] = new ScriptType(*type);
+	// allocate variable and push in map
+	(*map)[var->name] = new ScriptVar(*var);
 
 	return LAME_TRUE;
 }
 
-ScriptTypePtr ScriptTypeManager::Find(const Buffer& typeName) {
+ScriptVarPtr ScriptManager::_FindQueue(List<Map>* queue, const Buffer& name) {
+	
+	ScriptVarPtr var = 0;
 
-	// find type with name in all typespaces and return ir
-	for (const TypeMap& tm : this->spaceMapQueue) {
-		if (tm.count(typeName)) {
-			return tm.at(typeName);
+	for (const Map& m : *queue) {
+		if ((var = this->_Find((MapPtr)&m, name))) {
+			break;
 		}
 	}
 
-	return LAME_NULL;
+	return var;
 }
 
-Void ScriptTypeManager::Push(Void) {
+ScriptVarPtr ScriptManager::_Find(MapPtr map, const Buffer& name) {
 
-	this->spaceMapQueue.push_back(TypeMap());
-	this->spaceMap = &this->spaceMapQueue.back();
+	if (!map->count(name)) {
+		return LAME_NULL;
+	}
+	return map->at(name);
 }
 
-Void ScriptTypeManager::Pop(Void) {
+Void ScriptManager::Push(Void) {
+	
+	this->typeMapQueue.push_back(Map());
+	this->typeMap = &this->typeMapQueue.back();
+	this->varMapQueue.push_back(Map());
+	this->varMap = &this->varMapQueue.back();
+}
 
-	if (this->spaceMapQueue.size() == 1) {
-		PostErrorMessage("You can't pop global type space from queue", 1);
+Void ScriptManager::Pop(Void) {
+
+	if (this->varMapQueue.size() == 1 ||
+		this->typeMapQueue.size() == 1
+	) {
+		PostErrorMessage("You can't pop global space", 1);
 	}
 
-	this->spaceMapQueue.pop_back();
-	this->spaceMap = &this->spaceMapQueue.back();
-}
-
-Void ScriptTypeManager::_DeclareLanguageTypes(Void) {
-
-	ScriptTypePtr list = ScriptType::GetList();
-
-	while (*list != kScriptTypeDefault) {
-		this->Declare(list++);
+	for (auto i = this->typeMap->begin(); i != this->typeMap->end(); i++) {
+		delete i->second;
 	}
-}
-
-Bool ScriptVarManager::Declare(ScriptVariablePtr var) {
-
-	// return false if we've just registered type in current typespace
-	if (this->spaceMap->count(var->object->word)) {
-		return LAME_FALSE;
+	for (auto i = this->varMap->begin(); i != this->varMap->end(); i++) {
+		delete i->second;
 	}
 
-	// declare type for current typespace
-	(*this->spaceMap)[var->object->word] = new ScriptVariable(*var);
-
-	return LAME_TRUE;
-}
-
-ScriptVariablePtr ScriptVarManager::Find(const Buffer& varName) {
-
-	// find type with name in all typespaces and return ir
-	for (const VarMap& tm : this->spaceMapQueue) {
-		if (tm.count(varName)) {
-			return tm.at(varName);
-		}
-	}
-
-	return LAME_NULL;
-}
-
-Void ScriptVarManager::Push(Void) {
-
-	this->spaceMapQueue.push_back(VarMap());
-	this->spaceMap = &this->spaceMapQueue.back();
-}
-
-Void ScriptVarManager::Pop(Void) {
-
-	if (this->spaceMapQueue.size() == 1) {
-		PostErrorMessage("You can't pop global var space from queue", 1);
-	}
-
-	this->spaceMapQueue.pop_back();
-	this->spaceMap = &this->spaceMapQueue.back();
+	this->typeMapQueue.pop_back();
+	this->typeMap = &this->typeMapQueue.back();
+	this->varMapQueue.pop_back();
+	this->varMap = &this->varMapQueue.back();
 }
 
 LAME_END

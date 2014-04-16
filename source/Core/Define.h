@@ -155,7 +155,12 @@ typedef struct _##_name { int _unused; } *_name;
 #define __LAME_STRINGISE(x) __LAME_STRINGISE_IMPL(x)
 #define __LAME_FLL __FILE__ "(" __LAME_STRINGISE(__LINE__) ") : "
 
-#define LAME_WARNING(_message) (__LAME_FLL "WARNING : " _message)
-#define LAME_TODO(_message) (__LAME_FLL "TODO : "_message)
+#if defined(LAME_MSVC)
+#  define LAME_WARNING(_message) (__LAME_FLL "WARNING : " _message)
+#  define LAME_TODO(_message) (__LAME_FLL "TODO : "_message)
+#else
+#  define LAME_WARNING(_message) (_message)
+#  define LAME_TODO(_message) (_message)
+#endif
 
 #endif // ~__LAME_CORE__DEFINE__

@@ -17,13 +17,4 @@
 #  define LAME_API
 #endif
 
-LAME_BEGIN
-
-typedef Sint64 ScriptNativeInt;
-typedef Float32 ScriptNativeFloat;
-typedef Buffer ScriptNativeString;
-typedef Bool ScriptNativeBool;
-
-LAME_END
-
 #endif // ~__LAME_SCRIPT__DEFINE__

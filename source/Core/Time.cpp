@@ -80,11 +80,14 @@ Void Time::BuildForCurrentDate(Void) {
 
 	TIMET t;
 	this->BuildForDate(time(&t));
-
 }
 
 Clock Time::GetTime(Void) {
+#ifdef LAME_WINDOWS
 	return clock();
+#else
+    return clock() / 1000;
+#endif
 }
 
 Void Time::Sleep(Clock milliseconds) {

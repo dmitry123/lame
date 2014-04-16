@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>236FAD0E-B3C5-48D5-A5B5-B1514C5CC1C7</string>
+	<key>IDESourceControlProjectName</key>
+	<string>lame</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>F13E2C42-780A-45E3-88E6-CC85EA4FEDC3</key>
+		<string>https://github.com/dmitry123/lame.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>xcode/lame.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>F13E2C42-780A-45E3-88E6-CC85EA4FEDC3</key>
+		<string>../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://github.com/dmitry123/lame.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>F13E2C42-780A-45E3-88E6-CC85EA4FEDC3</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>F13E2C42-780A-45E3-88E6-CC85EA4FEDC3</string>
+			<key>IDESourceControlWCCName</key>
+			<string>lame</string>
+		</dict>
+	</array>
+</dict>
+</plist>

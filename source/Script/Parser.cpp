@@ -2,7 +2,7 @@
 
 LAME_BEGIN
 
-ScriptParser& ScriptParser::Parse(StringC script) {
+Void ScriptParser::Parse(StringC script) {
 
 	Bool isCommentLock = 0;
 	Buffer constString;
@@ -10,8 +10,8 @@ ScriptParser& ScriptParser::Parse(StringC script) {
 
 	while (*script) {
 
-		ScriptObjectPtr key = new ScriptObject();
-
+		ScriptLexPtr key = new ScriptLex();
+        
 		key->Parse(&script);
 
 		while (
@@ -30,10 +30,10 @@ ScriptParser& ScriptParser::Parse(StringC script) {
 		}
 
 		key->line = line;
-
+        
 		if (key->object == kScriptObjectQuote || key->object == kScriptObjectApostrophe) {
 			constString.clear();
-			while (*script != *key->GetString()) {
+			while (*script != key->word[0]) {
 				if (!*script) {
 					PostSyntaxError(line, "Quote or Apostrophe mismatched", 1);
 				}
@@ -52,6 +52,9 @@ ScriptParser& ScriptParser::Parse(StringC script) {
 		}
 
 		if (key->object == kScriptObjectLineComment) {
+			if (*(script - 1) == '\n' || *(script - 1) == '\r') {
+				continue;
+			}
 			while (*script && *script != '\n') {
 				++script;
 			}
@@ -63,26 +66,31 @@ ScriptParser& ScriptParser::Parse(StringC script) {
 		}
 
 		if (key->word.length()) {
-			this->objectList.push_back(key);
+			this->lexList_.push_back(key);
+		}
+		else {
+			delete key;
 		}
 	}
 __ExitLoop:
-	return *this;
+	;
 }
 
-ScriptParser& ScriptParser::Load(StringC file) {
+Void ScriptParser::Load(StringC file) {
 
 	File handle;
 	Buffer script;
-
+    
 	handle.Open(file, "rt");
 	script.resize(handle.GetSize());
 	handle.Read((String)script.data(), handle.GetSize());
 	handle.Close();
 
 	this->Parse(script.data());
-
-	return *this;
+    
+//    for (ScriptLexPtr lex : this->lexList_) {
+//        printf("[%s]\n", lex->word.data());
+//    }
 }
 
 LAME_END

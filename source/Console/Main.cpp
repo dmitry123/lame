@@ -15,14 +15,19 @@ int main(int argc, char** argv) {
 		fileName = "main.ls";
 	}
 
-	lame::ScriptController script;
+	lame::ScriptParser parser;
+	lame::ScriptBuilder builder;
+	lame::ScriptVirtualMachine machine;
 
 	try {
-		script
-			.Load(fileName)
-			.Build()
-			.Execute()
-			.Trace();
+		parser.Load(fileName);
+		builder.Build(&parser, &machine);
+        
+        time = lame::Time::GetTime();
+        machine.Execute();
+        time = lame::Time::GetTime() - time;
+        
+        machine.Trace();
 	}
 	catch (lame::SyntaxException& e) {
 		puts("\n------------------------");
@@ -33,8 +38,8 @@ int main(int argc, char** argv) {
 		e.Debug();
 		puts("\n------------------------");
 	}
-
-	printf("Elapsed Time : %d ms", lame::Uint32(lame::Time::GetTime() - time));
+    
+	printf("Elapsed Time : %d ms", lame::Uint32(time));
 	puts("\n------------------------");
 
 #ifdef LAME_WINDOWS
