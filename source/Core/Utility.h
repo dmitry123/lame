@@ -42,6 +42,11 @@ inline VoidP ZeroAlloc(Uint32 size) {
 	return ZeroMemory(Malloc(size), size);
 }
 
+#if defined(_LIBCPP_MEMORY)
+template <class T> using SharedPtr = std::shared_ptr<T>;
+template <class T> using WeakPtr = std::weak_ptr<T>;
+#else
+
 template <class T> class SharedPtr {
 public:
     inline SharedPtr() {
@@ -55,10 +60,10 @@ public:
 public:
 	typedef T Type, *TypeP, &TypeR;
 public:
-	inline explicit SharedPtr(TypeP reference) {
+	inline explicit SharedPtr(TypeP reference) : SharedPtr() {
         this->__Create(reference);
     }
-	inline SharedPtr(const SharedPtr <T>& sp) {
+	inline SharedPtr(const SharedPtr <T>& sp) : SharedPtr(){
         this->__Copy(sp);
     }
 public:
@@ -253,6 +258,8 @@ private:
 		}
 	}
 };
+
+#endif
 
 class LAME_API Buffer : public std::string {
 public:

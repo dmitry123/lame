@@ -6,47 +6,30 @@ ScriptManager::ScriptManager() {
 
 	this->Push();
 
-	ScriptVar var;
+	this->Declare(&ScriptVar(kScriptTypeVoid, "Void", "Void", 0));
+	this->Declare(&ScriptVar(kScriptTypeInt, "Int", "Int", 0));
+	this->Declare(&ScriptVar(kScriptTypeBool, "Bool", "Bool", 0));
+	this->Declare(&ScriptVar(kScriptTypeFloat, "Float", "Float", 0));
+	this->Declare(&ScriptVar(kScriptTypeString, "String", "String", 0));
+	this->Declare(&ScriptVar(kScriptTypeArray, "Array", "Array", 0));
+	this->Declare(&ScriptVar(kScriptTypeList, "List", "List", 0));
+	this->Declare(&ScriptVar(kScriptTypeFunction, "Function", "Function", 0));
+	this->Declare(&ScriptVar(kScriptTypeAuto, "Auto", "Auto", 0));
+	this->Declare(&ScriptVar(kScriptTypeBool, "True", "True", 0));
+	this->Declare(&ScriptVar(kScriptTypeBool, "False", "False", 0));
+	this->Declare(&ScriptVar(kScriptTypeClass, "Null", "Null", 0));
+	this->Declare(&ScriptVar(kScriptTypeAuto, "Undeclared", "Undeclared", 0));
 
-	var.name = "Void";
-	var.MakeVoid();
-	var.lex = ScriptLex::Find(kScriptObjectType);
-	this->DeclareType(&var);
+	ScriptVarPtr trueVar = this->Find("True");
+	ScriptVarPtr falseVar = this->Find("False");
+	ScriptVarPtr nullVar = this->Find("Null");
+	ScriptVarPtr undeclaredVar = this->Find("Undeclared");
 
-	var.name = "Int";
-	var.MakeInt();
-	var.lex = ScriptLex::Find(kScriptObjectType);
-	this->DeclareType(&var);
+	trueVar->intValue = LAME_TRUE;
+	falseVar->intValue = LAME_FALSE;
+	nullVar->classValue = LAME_NULL;
 
-	var.name = "Float";
-	var.MakeFloat();
-	var.lex = ScriptLex::Find(kScriptObjectType);
-	this->DeclareType(&var);
-
-	var.name = "Bool";
-	var.MakeBool();
-	var.lex = ScriptLex::Find(kScriptObjectType);
-	this->DeclareType(&var);
-
-	var.name = "String";
-	var.MakeString();
-	var.lex = ScriptLex::Find(kScriptObjectType);
-	this->DeclareType(&var);
-
-	var.name = "Auto";
-	var.MakeVar();
-	var.lex = ScriptLex::Find(kScriptObjectType);
-	this->DeclareType(&var);
-
-	var.name = "Function";
-	var.MakeFunction();
-	var.lex = ScriptLex::Find(kScriptObjectType);
-	this->DeclareType(&var);
-
-	var.name = "Class";
-	var.MakeClass();
-	var.lex = ScriptLex::Find(kScriptObjectType);
-	this->DeclareType(&var);
+	undeclaredVar->Reset();
 }
 
 ScriptManager::~ScriptManager(Void) {
@@ -66,37 +49,34 @@ ScriptManager::~ScriptManager(Void) {
 	this->varMapQueue.pop_back();
 }
 
-Bool ScriptManager::_Declare(MapPtr map, ScriptVarPtr var) {
+Bool ScriptManager::Declare(ScriptVarPtr var) {
 
 	if (this->varMap->count(var->name)) {
 		return LAME_FALSE;
 	}
 
 	// allocate variable and push in map
-	(*map)[var->name] = new ScriptVar(*var);
+	(*this->varMap)[var->name] = new ScriptVar(*var);
 
 	return LAME_TRUE;
 }
 
-ScriptVarPtr ScriptManager::_FindQueue(List<Map>* queue, const Buffer& name) {
+ScriptVarPtr ScriptManager::Find(BufferRefC name) {
 	
 	ScriptVarPtr var = 0;
 
-	for (const Map& m : *queue) {
-		if ((var = this->_Find((MapPtr)&m, name))) {
+	for (const Map& m : this->varMapQueue) {
+
+		if (!m.count(name)) {
+			continue;
+		}
+
+		if ((var = var = m.at(name))) {
 			break;
 		}
 	}
 
 	return var;
-}
-
-ScriptVarPtr ScriptManager::_Find(MapPtr map, const Buffer& name) {
-
-	if (!map->count(name)) {
-		return LAME_NULL;
-	}
-	return map->at(name);
 }
 
 Void ScriptManager::Push(Void) {
@@ -126,6 +106,17 @@ Void ScriptManager::Pop(Void) {
 	this->typeMap = &this->typeMapQueue.back();
 	this->varMapQueue.pop_back();
 	this->varMap = &this->varMapQueue.back();
+}
+
+ScriptTypeID ScriptManager::GetTypeID(BufferRefC typeName) {
+
+	ScriptVarPtr var = this->Find(typeName);
+
+	if (!var) {
+		return kScriptTypeDefault;
+	}
+
+	return var->type;
 }
 
 LAME_END

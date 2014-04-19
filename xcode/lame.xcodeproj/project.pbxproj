@@ -7,13 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0A07865E18FD07500045A236 /* Builder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A07865318FD07500045A236 /* Builder.cpp */; };
-		0A07865F18FD07500045A236 /* Lex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A07865718FD07500045A236 /* Lex.cpp */; };
-		0A07866018FD07500045A236 /* Machine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A07865818FD07500045A236 /* Machine.cpp */; };
 		0A07866118FD07500045A236 /* Manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A07865918FD07500045A236 /* Manager.cpp */; };
-		0A07866218FD07500045A236 /* Node.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A07865A18FD07500045A236 /* Node.cpp */; };
 		0A07866318FD07500045A236 /* Parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A07865B18FD07500045A236 /* Parser.cpp */; };
-		0A07866418FD07500045A236 /* Variable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A07865D18FD07500045A236 /* Variable.cpp */; };
 		0A107D8018E54C2B00381CFD /* Atomic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A107D4B18E54C2B00381CFD /* Atomic.cpp */; };
 		0A107D8118E54C2B00381CFD /* Condition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A107D4D18E54C2B00381CFD /* Condition.cpp */; };
 		0A107D8218E54C2B00381CFD /* Directory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A107D5018E54C2B00381CFD /* Directory.cpp */; };
@@ -43,6 +38,10 @@
 		0A107D9B18E54C2B00381CFD /* uncompr.c in Sources */ = {isa = PBXBuildFile; fileRef = 0A107D7A18E54C2B00381CFD /* uncompr.c */; };
 		0A107D9C18E54C2B00381CFD /* zutil.c in Sources */ = {isa = PBXBuildFile; fileRef = 0A107D7D18E54C2B00381CFD /* zutil.c */; };
 		0A107D9D18E54C2B00381CFD /* Zlib.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A107D7F18E54C2B00381CFD /* Zlib.cpp */; };
+		0A40F6BB18FFD0FF000212E1 /* Lex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A40F6BA18FFD0FF000212E1 /* Lex.cpp */; };
+		0A40F6BD18FFD4BA000212E1 /* Node.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A40F6BC18FFD4BA000212E1 /* Node.cpp */; };
+		0A40F6BF18FFD84F000212E1 /* Variable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A40F6BE18FFD84F000212E1 /* Variable.cpp */; };
+		0A40F6C118FFD957000212E1 /* Machine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A40F6C018FFD957000212E1 /* Machine.cpp */; };
 		0A5F676018E1DED800CA603F /* lame.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 0A5F675F18E1DED800CA603F /* lame.1 */; };
 		0A89525518E1E2F900BE07E1 /* Main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A89525318E1E2F900BE07E1 /* Main.cpp */; };
 /* End PBXBuildFile section */
@@ -61,17 +60,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		0A07865318FD07500045A236 /* Builder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Builder.cpp; path = ../source/Script/Builder.cpp; sourceTree = "<group>"; };
 		0A07865418FD07500045A236 /* Define.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Define.h; path = ../source/Script/Define.h; sourceTree = "<group>"; };
 		0A07865518FD07500045A236 /* Exception.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Exception.h; path = ../source/Script/Exception.h; sourceTree = "<group>"; };
 		0A07865618FD07500045A236 /* Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Internal.h; path = ../source/Script/Internal.h; sourceTree = "<group>"; };
-		0A07865718FD07500045A236 /* Lex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Lex.cpp; path = ../source/Script/Lex.cpp; sourceTree = "<group>"; };
-		0A07865818FD07500045A236 /* Machine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Machine.cpp; path = ../source/Script/Machine.cpp; sourceTree = "<group>"; };
 		0A07865918FD07500045A236 /* Manager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Manager.cpp; path = ../source/Script/Manager.cpp; sourceTree = "<group>"; };
-		0A07865A18FD07500045A236 /* Node.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Node.cpp; path = ../source/Script/Node.cpp; sourceTree = "<group>"; };
 		0A07865B18FD07500045A236 /* Parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Parser.cpp; path = ../source/Script/Parser.cpp; sourceTree = "<group>"; };
 		0A07865C18FD07500045A236 /* Script.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Script.h; path = ../source/Script/Script.h; sourceTree = "<group>"; };
-		0A07865D18FD07500045A236 /* Variable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Variable.cpp; path = ../source/Script/Variable.cpp; sourceTree = "<group>"; };
 		0A107D4B18E54C2B00381CFD /* Atomic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Atomic.cpp; path = ../source/Core/Atomic.cpp; sourceTree = "<group>"; };
 		0A107D4C18E54C2B00381CFD /* Atomic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Atomic.h; path = ../source/Core/Atomic.h; sourceTree = "<group>"; };
 		0A107D4D18E54C2B00381CFD /* Condition.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Condition.cpp; path = ../source/Core/Condition.cpp; sourceTree = "<group>"; };
@@ -123,6 +117,10 @@
 		0A107D7D18E54C2B00381CFD /* zutil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = zutil.c; sourceTree = "<group>"; };
 		0A107D7E18E54C2B00381CFD /* zutil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = zutil.h; sourceTree = "<group>"; };
 		0A107D7F18E54C2B00381CFD /* Zlib.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Zlib.cpp; path = ../source/Core/Zlib.cpp; sourceTree = "<group>"; };
+		0A40F6BA18FFD0FF000212E1 /* Lex.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Lex.cpp; path = ../source/Script/Lex.cpp; sourceTree = "<group>"; };
+		0A40F6BC18FFD4BA000212E1 /* Node.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Node.cpp; path = ../source/Script/Node.cpp; sourceTree = "<group>"; };
+		0A40F6BE18FFD84F000212E1 /* Variable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Variable.cpp; path = ../source/Script/Variable.cpp; sourceTree = "<group>"; };
+		0A40F6C018FFD957000212E1 /* Machine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Machine.cpp; path = ../source/Script/Machine.cpp; sourceTree = "<group>"; };
 		0A5F675A18E1DED800CA603F /* lame */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = lame; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A5F675F18E1DED800CA603F /* lame.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = lame.1; sourceTree = "<group>"; };
 		0A89525318E1E2F900BE07E1 /* Main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Main.cpp; path = ../source/Console/Main.cpp; sourceTree = "<group>"; };
@@ -177,17 +175,16 @@
 		0A107D9E18E54C4200381CFD /* Script */ = {
 			isa = PBXGroup;
 			children = (
-				0A07865318FD07500045A236 /* Builder.cpp */,
+				0A40F6C018FFD957000212E1 /* Machine.cpp */,
+				0A40F6BE18FFD84F000212E1 /* Variable.cpp */,
+				0A40F6BC18FFD4BA000212E1 /* Node.cpp */,
+				0A40F6BA18FFD0FF000212E1 /* Lex.cpp */,
 				0A07865418FD07500045A236 /* Define.h */,
 				0A07865518FD07500045A236 /* Exception.h */,
 				0A07865618FD07500045A236 /* Internal.h */,
-				0A07865718FD07500045A236 /* Lex.cpp */,
-				0A07865818FD07500045A236 /* Machine.cpp */,
 				0A07865918FD07500045A236 /* Manager.cpp */,
-				0A07865A18FD07500045A236 /* Node.cpp */,
 				0A07865B18FD07500045A236 /* Parser.cpp */,
 				0A07865C18FD07500045A236 /* Script.h */,
-				0A07865D18FD07500045A236 /* Variable.cpp */,
 			);
 			name = Script;
 			sourceTree = "<group>";
@@ -314,7 +311,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0A107D8018E54C2B00381CFD /* Atomic.cpp in Sources */,
-				0A07865F18FD07500045A236 /* Lex.cpp in Sources */,
+				0A40F6BF18FFD84F000212E1 /* Variable.cpp in Sources */,
 				0A107D8418E54C2B00381CFD /* Exception.cpp in Sources */,
 				0A107D9018E54C2B00381CFD /* crc32.c in Sources */,
 				0A07866318FD07500045A236 /* Parser.cpp in Sources */,
@@ -328,26 +325,25 @@
 				0A07866118FD07500045A236 /* Manager.cpp in Sources */,
 				0A107D8718E54C2B00381CFD /* Key.cpp in Sources */,
 				0A107D8E18E54C2B00381CFD /* adler32.c in Sources */,
-				0A07865E18FD07500045A236 /* Builder.cpp in Sources */,
 				0A107D8118E54C2B00381CFD /* Condition.cpp in Sources */,
 				0A107D9518E54C2B00381CFD /* gzwrite.c in Sources */,
 				0A107D8618E54C2B00381CFD /* FileSystem.cpp in Sources */,
+				0A40F6BD18FFD4BA000212E1 /* Node.cpp in Sources */,
 				0A89525518E1E2F900BE07E1 /* Main.cpp in Sources */,
-				0A07866418FD07500045A236 /* Variable.cpp in Sources */,
-				0A07866018FD07500045A236 /* Machine.cpp in Sources */,
 				0A107D9218E54C2B00381CFD /* gzclose.c in Sources */,
 				0A107D9818E54C2B00381CFD /* inflate.c in Sources */,
 				0A107D9A18E54C2B00381CFD /* trees.c in Sources */,
+				0A40F6BB18FFD0FF000212E1 /* Lex.cpp in Sources */,
 				0A107D8218E54C2B00381CFD /* Directory.cpp in Sources */,
 				0A107D8518E54C2B00381CFD /* File.cpp in Sources */,
 				0A107D8F18E54C2B00381CFD /* compress.c in Sources */,
 				0A107D9718E54C2B00381CFD /* inffast.c in Sources */,
 				0A107D9C18E54C2B00381CFD /* zutil.c in Sources */,
 				0A107D9D18E54C2B00381CFD /* Zlib.cpp in Sources */,
-				0A07866218FD07500045A236 /* Node.cpp in Sources */,
 				0A107D8818E54C2B00381CFD /* Math.cpp in Sources */,
 				0A107D9318E54C2B00381CFD /* gzlib.c in Sources */,
 				0A107D8C18E54C2B00381CFD /* Time.cpp in Sources */,
+				0A40F6C118FFD957000212E1 /* Machine.cpp in Sources */,
 				0A107D9B18E54C2B00381CFD /* uncompr.c in Sources */,
 				0A107D8A18E54C2B00381CFD /* Thread.cpp in Sources */,
 			);

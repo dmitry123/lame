@@ -306,7 +306,7 @@ Bool CheckFileExtension(StringC filename, StringC exts) {
 Bool CheckFileExtension(StringC filename, const List <Buffer>& extList) {
 
 	StringC ext = GetFileExtension(filename);
-	Uint32 extlen = strlen(ext);
+	Uint32 extlen = (Uint32)strlen(ext);
 
 	for (const Buffer& ext_ : extList) {
 		if (ext_ == ext && extlen > 0 && ext_.length() > 0) {

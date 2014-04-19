@@ -163,4 +163,6 @@ typedef struct _##_name { int _unused; } *_name;
 #  define LAME_TODO(_message) (_message)
 #endif
 
+#define LAME_BLOCK
+
 #endif // ~__LAME_CORE__DEFINE__

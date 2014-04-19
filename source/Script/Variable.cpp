@@ -4,23 +4,23 @@
 LAME_BEGIN
 
 #define __EvalError(_operation) \
-	PostSyntaxError(left->lex->line, "Unable to apply %s operation to this type", #_operation, left->name.data());
+	PostSyntaxError(0, "Unable to apply %s operation to this type", #_operation, left->name.data());
 
 static Void Set(ScriptVarPtr left, ScriptVarPtr right) {
 	switch (left->type) {
-	case ScriptVar::kScriptTypeBool:
-	case ScriptVar::kScriptTypeInt:
+	case kScriptTypeBool:
+	case kScriptTypeInt:
 		left->intValue = right->intValue;
 		break;
-	case ScriptVar::kScriptTypeFloat:
+	case kScriptTypeFloat:
 		left->floatValue = right->floatValue;
 		break;
-	case ScriptVar::kScriptTypeString:
+	case kScriptTypeString:
 		left->stringValue = right->stringValue;
 		break;
-	case ScriptVar::kScriptTypeClass:
-		if (left->className != right->name) {
-			PostSyntaxError(left->lex->line, "Unable to copy class with another type", 1);
+	case kScriptTypeClass:
+		if (left->typeName != right->typeName) {
+			PostSyntaxError(left->line, "Unable to copy class with another type", 1);
 		}
 		left->classValue = right->classValue;
 		break;
@@ -31,14 +31,14 @@ static Void Set(ScriptVarPtr left, ScriptVarPtr right) {
 
 static Void Add(ScriptVarPtr left, ScriptVarPtr right) {
 	switch (left->type) {
-	case ScriptVar::kScriptTypeBool:
-	case ScriptVar::kScriptTypeInt:
+	case kScriptTypeBool:
+	case kScriptTypeInt:
 		left->intValue += right->intValue;
 		break;
-	case ScriptVar::kScriptTypeFloat:
+	case kScriptTypeFloat:
 		left->floatValue += right->floatValue;
 		break;
-	case ScriptVar::kScriptTypeString:
+	case kScriptTypeString:
 		left->stringValue += right->stringValue;
 		break;
 	default:
@@ -48,11 +48,11 @@ static Void Add(ScriptVarPtr left, ScriptVarPtr right) {
 
 static Void Sub(ScriptVarPtr left, ScriptVarPtr right) {
 	switch (left->type) {
-	case ScriptVar::kScriptTypeBool:
-	case ScriptVar::kScriptTypeInt:
+	case kScriptTypeBool:
+	case kScriptTypeInt:
 		left->intValue -= right->intValue;
 		break;
-	case ScriptVar::kScriptTypeFloat:
+	case kScriptTypeFloat:
 		left->floatValue -= right->floatValue;
 		break;
 	default:
@@ -62,11 +62,11 @@ static Void Sub(ScriptVarPtr left, ScriptVarPtr right) {
 
 static Void Mul(ScriptVarPtr left, ScriptVarPtr right) {
 	switch (left->type) {
-	case ScriptVar::kScriptTypeBool:
-	case ScriptVar::kScriptTypeInt:
+	case kScriptTypeBool:
+	case kScriptTypeInt:
 		left->intValue *= right->intValue;
 		break;
-	case ScriptVar::kScriptTypeFloat:
+	case kScriptTypeFloat:
 		left->floatValue *= right->floatValue;
 		break;
 	default:
@@ -76,11 +76,11 @@ static Void Mul(ScriptVarPtr left, ScriptVarPtr right) {
 
 static Void Div(ScriptVarPtr left, ScriptVarPtr right) {
 	switch (left->type) {
-	case ScriptVar::kScriptTypeBool:
-	case ScriptVar::kScriptTypeInt:
+	case kScriptTypeBool:
+	case kScriptTypeInt:
 		left->intValue /= right->intValue;
 		break;
-	case ScriptVar::kScriptTypeFloat:
+	case kScriptTypeFloat:
 		left->floatValue /= right->floatValue;
 		break;
 	default:
@@ -90,8 +90,8 @@ static Void Div(ScriptVarPtr left, ScriptVarPtr right) {
 
 static Void Mod(ScriptVarPtr left, ScriptVarPtr right) {
 	switch (left->type) {
-	case ScriptVar::kScriptTypeBool:
-	case ScriptVar::kScriptTypeInt:
+	case kScriptTypeBool:
+	case kScriptTypeInt:
 		left->intValue %= right->intValue;
 		break;
 	default:
@@ -101,8 +101,8 @@ static Void Mod(ScriptVarPtr left, ScriptVarPtr right) {
 
 static Void BitAnd(ScriptVarPtr left, ScriptVarPtr right) {
 	switch (left->type) {
-	case ScriptVar::kScriptTypeBool:
-	case ScriptVar::kScriptTypeInt:
+	case kScriptTypeBool:
+	case kScriptTypeInt:
 		left->intValue &= right->intValue;
 		break;
 	default:
@@ -112,8 +112,8 @@ static Void BitAnd(ScriptVarPtr left, ScriptVarPtr right) {
 
 static Void BitOr(ScriptVarPtr left, ScriptVarPtr right) {
 	switch (left->type) {
-	case ScriptVar::kScriptTypeBool:
-	case ScriptVar::kScriptTypeInt:
+	case kScriptTypeBool:
+	case kScriptTypeInt:
 		left->intValue |= right->intValue;
 		break;
 	default:
@@ -123,8 +123,8 @@ static Void BitOr(ScriptVarPtr left, ScriptVarPtr right) {
 
 static Void BitXor(ScriptVarPtr left, ScriptVarPtr right) {
 	switch (left->type) {
-	case ScriptVar::kScriptTypeBool:
-	case ScriptVar::kScriptTypeInt:
+	case kScriptTypeBool:
+	case kScriptTypeInt:
 		left->intValue ^= right->intValue;
 		break;
 	default:
@@ -134,8 +134,8 @@ static Void BitXor(ScriptVarPtr left, ScriptVarPtr right) {
 
 static Void BitShiftR(ScriptVarPtr left, ScriptVarPtr right) {
 	switch (left->type) {
-	case ScriptVar::kScriptTypeBool:
-	case ScriptVar::kScriptTypeInt:
+	case kScriptTypeBool:
+	case kScriptTypeInt:
 		left->intValue >>= right->intValue;
 		break;
 	default:
@@ -145,8 +145,8 @@ static Void BitShiftR(ScriptVarPtr left, ScriptVarPtr right) {
 
 static Void BitShiftL(ScriptVarPtr left, ScriptVarPtr right) {
 	switch (left->type) {
-	case ScriptVar::kScriptTypeBool:
-	case ScriptVar::kScriptTypeInt:
+	case kScriptTypeBool:
+	case kScriptTypeInt:
 		left->intValue <<= right->intValue;
 		break;
 	default:
@@ -156,14 +156,14 @@ static Void BitShiftL(ScriptVarPtr left, ScriptVarPtr right) {
 
 static Void And(ScriptVarPtr left, ScriptVarPtr right) {
 	switch (left->type) {
-	case ScriptVar::kScriptTypeBool:
-	case ScriptVar::kScriptTypeInt:
+	case kScriptTypeBool:
+	case kScriptTypeInt:
 		left->intValue = left->intValue && right->intValue;
 		break;
-	case ScriptVar::kScriptTypeFloat:
+	case kScriptTypeFloat:
 		left->intValue = left->floatValue && right->floatValue;
 		break;
-	case ScriptVar::kScriptTypeString:
+	case kScriptTypeString:
 		left->intValue = left->stringValue.length() && right->stringValue.length();
 		break;
 	default:
@@ -173,14 +173,14 @@ static Void And(ScriptVarPtr left, ScriptVarPtr right) {
 
 static Void Or(ScriptVarPtr left, ScriptVarPtr right) {
 	switch (left->type) {
-	case ScriptVar::kScriptTypeBool:
-	case ScriptVar::kScriptTypeInt:
+	case kScriptTypeBool:
+	case kScriptTypeInt:
 		left->intValue = left->intValue || right->intValue;
 		break;
-	case ScriptVar::kScriptTypeFloat:
+	case kScriptTypeFloat:
 		left->intValue = left->floatValue || right->floatValue;
 		break;
-	case ScriptVar::kScriptTypeString:
+	case kScriptTypeString:
 		left->intValue = left->stringValue.length() || right->stringValue.length();
 		break;
 	default:
@@ -190,14 +190,14 @@ static Void Or(ScriptVarPtr left, ScriptVarPtr right) {
 
 static Void Above(ScriptVarPtr left, ScriptVarPtr right) {
 	switch (left->type) {
-	case ScriptVar::kScriptTypeBool:
-	case ScriptVar::kScriptTypeInt:
+	case kScriptTypeBool:
+	case kScriptTypeInt:
 		left->intValue = left->intValue > right->intValue;
 		break;
-	case ScriptVar::kScriptTypeFloat:
+	case kScriptTypeFloat:
 		left->intValue = left->floatValue > right->floatValue;
 		break;
-	case ScriptVar::kScriptTypeString:
+	case kScriptTypeString:
 		left->intValue = left->stringValue > right->stringValue;
 		break;
 	default:
@@ -207,14 +207,14 @@ static Void Above(ScriptVarPtr left, ScriptVarPtr right) {
 
 static Void Bellow(ScriptVarPtr left, ScriptVarPtr right) {
 	switch (left->type) {
-	case ScriptVar::kScriptTypeBool:
-	case ScriptVar::kScriptTypeInt:
+	case kScriptTypeBool:
+	case kScriptTypeInt:
 		left->intValue = left->intValue < right->intValue;
 		break;
-	case ScriptVar::kScriptTypeFloat:
+	case kScriptTypeFloat:
 		left->intValue = left->floatValue < right->floatValue;
 		break;
-	case ScriptVar::kScriptTypeString:
+	case kScriptTypeString:
 		left->intValue = left->stringValue < right->stringValue;
 		break;
 	default:
@@ -224,14 +224,14 @@ static Void Bellow(ScriptVarPtr left, ScriptVarPtr right) {
 
 static Void AboveEqual(ScriptVarPtr left, ScriptVarPtr right) {
 	switch (left->type) {
-	case ScriptVar::kScriptTypeBool:
-	case ScriptVar::kScriptTypeInt:
+	case kScriptTypeBool:
+	case kScriptTypeInt:
 		left->intValue = left->intValue >= right->intValue;
 		break;
-	case ScriptVar::kScriptTypeFloat:
+	case kScriptTypeFloat:
 		left->intValue = left->floatValue >= right->floatValue;
 		break;
-	case ScriptVar::kScriptTypeString:
+	case kScriptTypeString:
 		left->intValue = left->stringValue >= right->stringValue;
 		break;
 	default:
@@ -241,14 +241,14 @@ static Void AboveEqual(ScriptVarPtr left, ScriptVarPtr right) {
 
 static Void BellowEqual(ScriptVarPtr left, ScriptVarPtr right) {
 	switch (left->type) {
-	case ScriptVar::kScriptTypeBool:
-	case ScriptVar::kScriptTypeInt:
+	case kScriptTypeBool:
+	case kScriptTypeInt:
 		left->intValue = left->intValue <= right->intValue;
 		break;
-	case ScriptVar::kScriptTypeFloat:
+	case kScriptTypeFloat:
 		left->intValue = left->floatValue <= right->floatValue;
 		break;
-	case ScriptVar::kScriptTypeString:
+	case kScriptTypeString:
 		left->intValue = left->stringValue <= right->stringValue;
 		break;
 	default:
@@ -258,15 +258,18 @@ static Void BellowEqual(ScriptVarPtr left, ScriptVarPtr right) {
 
 static Void Equal(ScriptVarPtr left, ScriptVarPtr right) {
 	switch (left->type) {
-	case ScriptVar::kScriptTypeBool:
-	case ScriptVar::kScriptTypeInt:
+	case kScriptTypeBool:
+	case kScriptTypeInt:
 		left->intValue = left->intValue == right->intValue;
 		break;
-	case ScriptVar::kScriptTypeFloat:
+	case kScriptTypeFloat:
 		left->intValue = left->floatValue == right->floatValue;
 		break;
-	case ScriptVar::kScriptTypeString:
+	case kScriptTypeString:
 		left->intValue = left->stringValue == right->stringValue;
+		break;
+	case kScriptTypeAuto:
+		left->intValue = left->type == right->type;
 		break;
 	default:
 		__EvalError(==);
@@ -275,14 +278,14 @@ static Void Equal(ScriptVarPtr left, ScriptVarPtr right) {
 
 static Void NotEqual(ScriptVarPtr left, ScriptVarPtr right) {
 	switch (left->type) {
-	case ScriptVar::kScriptTypeBool:
-	case ScriptVar::kScriptTypeInt:
+	case kScriptTypeBool:
+	case kScriptTypeInt:
 		left->intValue = left->intValue != right->intValue;
 		break;
-	case ScriptVar::kScriptTypeFloat:
+	case kScriptTypeFloat:
 		left->intValue = left->floatValue != right->floatValue;
 		break;
-	case ScriptVar::kScriptTypeString:
+	case kScriptTypeString:
 		left->intValue = left->stringValue != right->stringValue;
 		break;
 	default:
@@ -292,8 +295,8 @@ static Void NotEqual(ScriptVarPtr left, ScriptVarPtr right) {
 
 static Void BitNot(ScriptVarPtr left) {
 	switch (left->type) {
-	case ScriptVar::kScriptTypeBool:
-	case ScriptVar::kScriptTypeInt:
+	case kScriptTypeBool:
+	case kScriptTypeInt:
 		left->intValue = ~left->intValue;
 		break;
 	default:
@@ -303,8 +306,8 @@ static Void BitNot(ScriptVarPtr left) {
 
 static Void Not(ScriptVarPtr left) {
 	switch (left->type) {
-	case ScriptVar::kScriptTypeBool:
-	case ScriptVar::kScriptTypeInt:
+	case kScriptTypeBool:
+	case kScriptTypeInt:
 		left->intValue = !left->intValue;
 		break;
 	default:
@@ -314,8 +317,8 @@ static Void Not(ScriptVarPtr left) {
 
 static Void Inc(ScriptVarPtr left) {
 	switch (left->type) {
-	case ScriptVar::kScriptTypeBool:
-    case ScriptVar::kScriptTypeInt:
+	case kScriptTypeBool:
+    case kScriptTypeInt:
 		++left->intValue;
 		break;
 	default:
@@ -325,8 +328,8 @@ static Void Inc(ScriptVarPtr left) {
 
 static Void Dec(ScriptVarPtr left) {
 	switch (left->type) {
-	case ScriptVar::kScriptTypeBool:
-	case ScriptVar::kScriptTypeInt:
+	case kScriptTypeBool:
+	case kScriptTypeInt:
 		--left->intValue;
 		break;
 	default:
@@ -334,111 +337,83 @@ static Void Dec(ScriptVarPtr left) {
 	}
 }
 
-ScriptVar::ScriptVar(Void) {
-	this->Reset();
-}
-
-ScriptVar::ScriptVar(ScriptNativeInt intValue) {
-	this->intValue = intValue;
-	this->flags |= kScriptFlagInt;
-}
-
-ScriptVar::ScriptVar(ScriptNativeFloat floatValue) {
-	this->floatValue = floatValue;
-	this->flags |= kScriptFlagFloat;
-}
-
-ScriptVar::ScriptVar(ScriptNativeBool intValue) {
-	this->intValue = intValue;
-	this->flags |= kScriptFlagInt;
-	this->flags |= kScriptFlagBool;
-}
-
-ScriptVar::ScriptVar(ScriptNativeString stringValue) {
-	this->stringValue = stringValue;
-	this->flags |= kScriptFlagString;
-}
-
-ScriptVar::ScriptVar(ScriptNativeClass classValue) {
-	this->classValue = classValue;
-	this->flags |= kScriptFlagClass;
-}
-
 Void ScriptVar::Reset(Void) {
+
 	this->intValue = 0;
 	this->floatValue = 0.0f;
 	this->stringValue.clear();
 	this->classValue.reset();
 	this->flags = 0;
-	this->name.clear();
 	this->callback = 0;
-	this->type = kScriptTypeDefault;
-    this->condition = 0;
-    this->result = 0;
 }
 
-Void ScriptVar::Convert(EType& type) {
-	if (type == this->type) {
+Void ScriptVar::Convert(ScriptVarPtr var) {
+	if (var->type == this->type) {
 		return;
 	}
-	if (type == kScriptTypeVoid || type == kScriptTypeFunction ||
+	if (var->type == kScriptTypeVoid || var->type == kScriptTypeFunction ||
 		this->type == kScriptTypeVoid || this->type == kScriptTypeFunction
 	) {
 		goto __Error;
 	}
-	if (type == kScriptTypeVar) {
-		type = this->type; return;
+	if (var->type == kScriptTypeAuto) {
+		var->type = this->type;
+		var->typeName = this->typeName;
+		return;
 	}
-	switch (type) {
-	case ScriptVar::kScriptTypeInt:
+	switch (var->type) {
+	case kScriptTypeInt:
 		switch (this->type) {
-		case ScriptVar::kScriptTypeFloat:
+		case kScriptTypeFloat:
 			this->intValue = (ScriptNativeInt)this->floatValue;
 			goto __Warning;
-		case ScriptVar::kScriptTypeBool:
+		case kScriptTypeBool:
             goto __Exit;
-		case ScriptVar::kScriptTypeString:
+		case kScriptTypeString:
 			this->intValue = ParseIntValue(this->stringValue.data());
 			goto __Exit;
 		default:
 			break;
 		} break;
-	case ScriptVar::kScriptTypeFloat:
+	case kScriptTypeFloat:
 		switch (this->type) {
-		case ScriptVar::kScriptTypeInt:
+		case kScriptTypeInt:
 			this->floatValue = (ScriptNativeFloat)this->intValue;
 			goto __Warning;
-		case ScriptVar::kScriptTypeBool:
+		case kScriptTypeBool:
 			this->floatValue = (ScriptNativeFloat)this->intValue;
 			goto __Warning;
-		case ScriptVar::kScriptTypeString:
+		case kScriptTypeString:
 			this->floatValue = (ScriptNativeFloat)strtof(this->stringValue.data(), NULL);
 			goto __Exit;
 		default:
 			break;
 		} break;
-	case ScriptVar::kScriptTypeBool:
+	case kScriptTypeBool:
 		switch (this->type) {
-		case ScriptVar::kScriptTypeInt:
+		case kScriptTypeInt:
             goto __Exit;
-		case ScriptVar::kScriptTypeFloat:
+		case kScriptTypeFloat:
 			this->intValue = (ScriptNativeBool)this->floatValue;
 			goto __Warning;
-		case ScriptVar::kScriptTypeString:
+		case kScriptTypeString:
 			this->intValue = (ScriptNativeBool)strtol(this->stringValue.data(), NULL, 10);
+			goto __Exit;
+		case kScriptTypeAuto:
+			this->intValue = 0;
 			goto __Exit;
 		default:
 			break;
 		} break;
-	case ScriptVar::kScriptTypeString:
+	case kScriptTypeString:
 		switch (this->type) {
-		case ScriptVar::kScriptTypeInt:
+		case kScriptTypeInt:
 			this->stringValue.Format("%d", this->intValue);
 			goto __Exit;
-		case ScriptVar::kScriptTypeFloat:
+		case kScriptTypeFloat:
 			this->stringValue.Format("%.2f", this->floatValue);
 			goto __Exit;
-		case ScriptVar::kScriptTypeBool:
+		case kScriptTypeBool:
 			this->stringValue.Format("%s", this->intValue ? "TRUE" : "FALSE");
 			goto __Exit;
 		default:
@@ -447,20 +422,21 @@ Void ScriptVar::Convert(EType& type) {
 	default:
 		break;
 	}
-	PostSyntaxError(this->lex->line, "Invalid conversion from unknown type (%s)",
-		this->name.data());
+	PostSyntaxError(this->line, "Invalid conversion from unknown type (%s)",
+		this->typeName.data());
 __Warning:
-	PostSyntaxWarning(this->lex->line, "Unsafe type conversion from (%s) to (%s)",
-		this->name.data(),
-		this->name.data());
+	PostSyntaxWarning(this->line, "Unsafe type conversion from (%s) to (%s)",
+		this->typeName.data(),
+		var->typeName.data());
 	goto __Exit;
 __Error:
-	PostSyntaxError(this->lex->line, "Invalid type conversion from (%s) to (%s)",
-		this->name.data(),
-		this->name.data());
+	PostSyntaxError(this->line, "Invalid type conversion from (%s) to (%s)",
+		this->typeName.data(),
+		var->typeName.data());
 	goto __Exit;
 __Exit:
-    this->type = type;
+	this->type = var->type;
+	this->typeName = var->typeName;
 }
 
 Void ScriptVar::Clone(ScriptVarPtr result) {
@@ -474,54 +450,50 @@ Void ScriptVar::Clone(ScriptVarPtr result) {
 	result->callback = this->callback;
 }
 
-Void ScriptVar::Invoke(Vector<ScriptNodePtr>& parameters) {
-	__asm int 3
-}
-
 Void ScriptVar::_EvaluateMath(ScriptVarPtr right, ScriptLexPtr lex) {
     
-	switch (lex->object) {
-	case kScriptObjectSet:
+	switch (lex->id) {
+	case kScriptLexSet:
 		Set(this, right);
 		break;
-	case kScriptObjectMul:
-	case kScriptObjectMulSet:
+	case kScriptLexMul:
+	case kScriptLexMulSet:
 		Mul(this, right);
 		break;
-	case kScriptObjectDiv:
-	case kScriptObjectDivSet:
+	case kScriptLexDiv:
+	case kScriptLexDivSet:
 		Div(this, right);
 		break;
-	case kScriptObjectMod:
-	case kScriptObjectModSet:
+	case kScriptLexMod:
+	case kScriptLexModSet:
 		Mod(this, right);
 		break;
-	case kScriptObjectAdd:
-	case kScriptObjectAddSet:
+	case kScriptLexAdd:
+	case kScriptLexAddSet:
 		Add(this, right);
 		break;
-	case kScriptObjectSub:
-	case kScriptObjectSubSet:
+	case kScriptLexSub:
+	case kScriptLexSubSet:
 		Sub(this, right);
 		break;
-	case kScriptObjectBitShiftL:
-	case kScriptObjectBitShiftSetL:
+	case kScriptLexBitShiftL:
+	case kScriptLexBitShiftSetL:
 		BitShiftL(this, right);
 		break;
-	case kScriptObjectBitShiftR:
-	case kScriptObjectBitShiftSetR:
+	case kScriptLexBitShiftR:
+	case kScriptLexBitShiftSetR:
 		BitShiftR(this, right);
 		break;
-	case kScriptObjectBitAnd:
-	case kScriptObjectBitAndSet:
+	case kScriptLexBitAnd:
+	case kScriptLexBitAndSet:
 		BitAnd(this, right);
 		break;
-	case kScriptObjectBitXor:
-	case kScriptObjectBitXorSet:
+	case kScriptLexBitXor:
+	case kScriptLexBitXorSet:
 		BitXor(this, right);
 		break;
-	case kScriptObjectBitOr:
-	case kScriptObjectBitOrSet:
+	case kScriptLexBitOr:
+	case kScriptLexBitOrSet:
 		BitOr(this, right);
 		break;
 	default:
@@ -531,29 +503,29 @@ Void ScriptVar::_EvaluateMath(ScriptVarPtr right, ScriptLexPtr lex) {
 
 Void ScriptVar::_EvaluateBool(ScriptVarPtr right, ScriptLexPtr lex) {
 
-	switch (lex->object) {
-	case kScriptObjectAnd:
+	switch (lex->id) {
+	case kScriptLexAnd:
 		And(this, right);
 		break;
-	case kScriptObjectOr:
+	case kScriptLexOr:
 		Or(this, right);
 		break;
-	case kScriptObjectAbove:
+	case kScriptLexAbove:
 		Above(this, right);
 		break;
-	case kScriptObjectAboveEqual:
+	case kScriptLexAboveEqual:
 		AboveEqual(this, right);
 		break;
-	case kScriptObjectBellow:
+	case kScriptLexBellow:
 		Bellow(this, right);
 		break;
-	case kScriptObjectBellowEqual:
+	case kScriptLexBellowEqual:
 		BellowEqual(this, right);
 		break;
-	case kScriptObjectEqual:
+	case kScriptLexEqual:
 		Equal(this, right);
 		break;
-	case kScriptObjectNotEqual:
+	case kScriptLexNotEqual:
 		NotEqual(this, right);
 		break;
 	default:
@@ -561,37 +533,34 @@ Void ScriptVar::_EvaluateBool(ScriptVarPtr right, ScriptLexPtr lex) {
 	}
 }
 
-ScriptVarPtr ScriptVar::_EvaluateDouble(ScriptNodePtr right, ScriptLexPtr lex) {
+ScriptNodePtr ScriptVar::_EvaluateDouble(ScriptNodePtr right, ScriptLexPtr lex) {
 
-	ScriptNodePtr fieldNode;
+	ScriptNodePtr fieldNode = LAME_NULL;
 
-	if (lex->object == kScriptObjectMediated ||
-		lex->object == kScriptObjectDirect
+	if (lex->id == kScriptLexMediated ||
+		lex->id == kScriptLexDirected
 	) {
 		if (!this->classValue) {
 			PostSyntaxError(lex->line, "Non-Initialized class object (%s)", this->name.data());
 		}
 
-		fieldNode = this->classValue->FindField(right->var->name);
+		fieldNode = this->classValue->FindChild(right->word);
 
 		if (!fieldNode) {
 			if (this->type == kScriptTypeClass) {
 				fieldNode = right;
-				fieldNode->var->MakeVar();
-				this->classValue->RegisterField(fieldNode);
+				fieldNode->var->type = kScriptTypeAuto;
+				this->classValue->childList.push_back(fieldNode);
 			}
 			else {
-				PostSyntaxError(right->var->lex->line, "Unable to find class field (%s)", right->var->name.data());
+				PostSyntaxError(right->lex->line, "Unable to find class field (%s)", right->var->name.data());
 			}
 		}
-
 		fieldNode->var->MakeTemp();
 
-		return fieldNode->var;
+		return fieldNode;
 	}
 	else {
-		right->var->Convert(this->type);
-
 		if (lex->IsMath()) {
 			this->_EvaluateMath(right->var, lex);
 		}
@@ -603,34 +572,34 @@ ScriptVarPtr ScriptVar::_EvaluateDouble(ScriptNodePtr right, ScriptLexPtr lex) {
 		}
 	}
 
-	return this;
+	return fieldNode;
 }
 
 ScriptVarPtr ScriptVar::_EvaluateSingle(ScriptLexPtr lex) {
     
-    switch (lex->object) {
-        case kScriptObjectIncrement:
-            Inc(this);
-            break;
-        case kScriptObjectDecrement:
-            Dec(this);
-            break;
-        case kScriptObjectSizeof:
-            break;
-        case kScriptObjectBitNot:
-            BitNot(this);
-            break;
-        case kScriptObjectNot:
-            Not(this);
-            break;
-        case kScriptObjectUnaryMinus:
-            break;
-        case kScriptObjectUnaryPlus:
-            break;
-        case kScriptObjectNew:
-            break;
-        default:
-            __debugbreak();
+    switch (lex->id) {
+    case kScriptLexIncrement:
+        Inc(this);
+        break;
+	case kScriptLexDecrement:
+        Dec(this);
+        break;
+	case kScriptLexSizeof:
+        break;
+	case kScriptLexBitNot:
+        BitNot(this);
+        break;
+	case kScriptLexNot:
+        Not(this);
+        break;
+	case kScriptLexUnaryMinus:
+        break;
+	case kScriptLexUnaryPlus:
+        break;
+	case kScriptLexNew:
+        break;
+    default:
+        __debugbreak();
     }
 
 	return this;
@@ -639,16 +608,16 @@ ScriptVarPtr ScriptVar::_EvaluateSingle(ScriptLexPtr lex) {
 Bool ScriptVar::Boolean(Void) {
 
 	switch (this->type) {
-	case ScriptVar::kScriptTypeBool:
-	case ScriptVar::kScriptTypeInt:
+	case kScriptTypeBool:
+	case kScriptTypeInt:
 		return this->intValue != 0;
-	case ScriptVar::kScriptTypeFloat:
+	case kScriptTypeFloat:
 		return this->floatValue != 0;
-	case ScriptVar::kScriptTypeString:
+	case kScriptTypeString:
 		return this->stringValue.length() > 0;
-	case ScriptVar::kScriptTypeClass:
-		return (bool)this->classValue;
-	case ScriptVar::kScriptTypeFunction:
+	case kScriptTypeClass:
+		return (Bool)this->classValue;
+	case kScriptTypeFunction:
 		return LAME_FALSE;
 	default:
 		break;

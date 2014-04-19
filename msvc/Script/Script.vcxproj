@@ -82,18 +82,22 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\source\Script\Builder.h" />
     <ClInclude Include="..\..\source\Script\Define.h" />
     <ClInclude Include="..\..\source\Script\Exception.h" />
     <ClInclude Include="..\..\source\Script\Internal.h" />
+    <ClInclude Include="..\..\source\Script\Manager.h" />
+    <ClInclude Include="..\..\source\Script\Parser.h" />
+    <ClInclude Include="..\..\source\Script\Performer.h" />
     <ClInclude Include="..\..\source\Script\Script.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\Script\Builder.cpp" />
-    <ClCompile Include="..\..\source\Script\Lex.cpp" />
-    <ClCompile Include="..\..\source\Script\Machine.cpp" />
+    <ClCompile Include="..\..\source\Script\Exception.cpp" />
     <ClCompile Include="..\..\source\Script\Manager.cpp" />
     <ClCompile Include="..\..\source\Script\Node.cpp" />
     <ClCompile Include="..\..\source\Script\Parser.cpp" />
+    <ClCompile Include="..\..\source\Script\Performer.cpp" />
     <ClCompile Include="..\..\source\Script\Variable.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,13 +1,13 @@
 #include "Main.h"
 
-#include <memory>
+using namespace lame;
 
 int main(int argc, char** argv) {
 
-	lame::Clock time;
-	lame::StringC fileName;
+	Clock time;
+	StringC fileName;
 
-	time = lame::Time::GetTime();
+	time = Time::GetTime();
 
 	if (argc > 1) {
 		fileName = argv[1];
@@ -15,31 +15,30 @@ int main(int argc, char** argv) {
 		fileName = "main.ls";
 	}
 
-	lame::ScriptParser parser;
-	lame::ScriptBuilder builder;
-	lame::ScriptVirtualMachine machine;
+	ScriptParser parser;
+	ScriptBuilder builder;
+	ScriptPerformer performer;
 
 	try {
 		parser.Load(fileName);
-		builder.Build(&parser, &machine);
-        
-        time = lame::Time::GetTime();
-        machine.Execute();
-        time = lame::Time::GetTime() - time;
-        
-        machine.Trace();
+		builder.Build(&parser);
+        time = Time::GetTime();
+		performer.Evaluate(&builder);
+        time = Time::GetTime() - time;
+		performer.Trace();
 	}
-	catch (lame::SyntaxException& e) {
+	catch (SyntaxException& e) {
 		puts("\n------------------------");
 		e.Debug();
 		puts("\n------------------------");
 	}
-	catch (lame::Exception& e) {
+	catch (Exception& e) {
 		e.Debug();
 		puts("\n------------------------");
 	}
     
-	printf("Elapsed Time : %d ms", lame::Uint32(time));
+	puts("\n------------------------");
+	printf("Elapsed Time : %d ms", Uint32(time));
 	puts("\n------------------------");
 
 #ifdef LAME_WINDOWS

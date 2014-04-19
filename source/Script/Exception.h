@@ -5,41 +5,27 @@
 
 LAME_BEGIN
 
-class SyntaxException : public Exception {
+class LAME_API SyntaxException : public Exception {
 public:
-	SyntaxException(Uint32 line, Uint32 where, StringC message, ...) {
-		this->warning_ = 0;
-		this->line_ = line;
-        this->where_ = where;
-		VaList list;
-		va_start(list, message);
-		vsprintf(this->buffer_, message, list);
-		va_end(list);
-	}
-	SyntaxException(Bool, Uint32 line, Uint32 where, StringC message, ...) {
-		this->warning_ = 1;
-		this->line_ = line;
-        this->where_ = where;
-		VaList list;
-		va_start(list, message);
-		vsprintf(this->buffer_, message, list);
-		va_end(list);
-	}
+	SyntaxException(
+		Uint32 line,
+		Uint32 where,
+		StringC message,
+		...);
+	SyntaxException(
+		Bool warning,
+		Uint32 line,
+		Uint32 where,
+		StringC message, ...);
 public:
 	inline Uint32 Line() {
 		return this->line_;
 	}
-	inline Void Debug() {
-		if (this->warning_) {
-			printf("Syntax Warning (%d, %d) : %s\n", this->line_, this->where_, this->buffer_);
-		}
-		else {
-			printf("Syntax Error (%d, %d) : %s", this->line_, this->where_, this->buffer_);
-		}
-	}
 	inline Bool IsWarning() {
 		return this->warning_;
 	}
+public:
+	Void Debug();
 protected:
 	Bool warning_;
 	Uint32 line_;
