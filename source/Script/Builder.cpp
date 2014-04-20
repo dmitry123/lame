@@ -25,7 +25,7 @@ ScriptBuilder::Iterator ScriptBuilder::_BuildFunction(ScriptNodePtr& parent, Ite
 	ScriptNodePtr functionNode;
 	Buffer functionType;
 	ScriptNodePtr typeNode;
-
+	
 	functionType = (*i++)->word;
 	functionNode = this->_CreateNode(*i, kScriptNodeFunction);
 	functionNode->typeName = functionType;
@@ -33,8 +33,8 @@ ScriptBuilder::Iterator ScriptBuilder::_BuildFunction(ScriptNodePtr& parent, Ite
 	parent = functionNode;
 	this->parentNode_ = parent;
 	
-	this->_RemoveNode(typeNode)
-		->childList.push_back(parent);
+	//this->_RemoveNode(typeNode)
+	//	->childList.push_back(parent);
 	
 	__Inc(i);
 
@@ -62,11 +62,20 @@ ScriptBuilder::Iterator ScriptBuilder::_BuildFunction(ScriptNodePtr& parent, Ite
 			this->_Pop();
 		}
 		else if ((*i)->lex->id == kScriptLexComa) {
+			if (this->nodeQueue_ == &parent->argList) {
+				++parent->args;
+			}
 			goto __NextNode;
 		}
 		else {
+			if (!parent->args && this->nodeQueue_ == &parent->argList) {
+				++parent->args;
+			}
 			this->nodeQueue_->push_back(this->_CreateNode(*i, kScriptNodeDefault));
 			i = this->_Build(this->nodeQueue_->back(), i);
+			if ((*i)->lex->id == kScriptLexParentheseR) {
+				__Dec(i);
+			}
 		}
 	__NextNode:
 		if (++i == this->parser_->lexList_.end()) {
@@ -83,9 +92,10 @@ ScriptBuilder::Iterator ScriptBuilder::_BuildFunction(ScriptNodePtr& parent, Ite
 
 ScriptBuilder::Iterator ScriptBuilder::_BuildVariable(ScriptNodePtr& parent, Iterator i) {
 
-	ScriptNodePtr varNode;
+	ScriptNodePtr typeNode = 0;
+	ScriptNodePtr prevNode = 0;
+	ScriptNodePtr varNode = 0;
 	Buffer varType;
-	ScriptNodePtr typeNode;
 
 	varType = (*i++)->word;
 	varNode = this->_CreateNode(*i, kScriptNodeVariable);
@@ -93,25 +103,26 @@ ScriptBuilder::Iterator ScriptBuilder::_BuildVariable(ScriptNodePtr& parent, Ite
 	typeNode = parent;
 	parent = varNode;
 
-	this->_RemoveNode(typeNode)
-		->childList.push_back(parent);
+	//this->_RemoveNode(typeNode)
+	//	->childList.push_back(parent);
 
 	__Inc(i);
 
 	this->_Push(&parent->childList);
 
 	while (LAME_TRUE) {
-		if ((*i)->lex->id == kScriptLexSemicolon) {
+		if ((*i)->lex->id == kScriptLexSemicolon ||
+			(*i)->lex->id == kScriptLexComa ||
+			(*i)->lex->id == kScriptLexParentheseR
+		) {
 			break;
 		}
-		else if (
-			(*i)->lex->id == kScriptLexComa ||
-			(*i)->lex->id == kScriptLexSet
-		) {
+		else if ((*i)->lex->id == kScriptLexSet) {
 			goto __NextNode;
 		}
 		else {
 			this->nodeQueue_->push_back(this->_CreateNode(*i, kScriptNodeDefault));
+			prevNode = this->nodeQueue_->back();
 			i = this->_Build(this->nodeQueue_->back(), i);
 		}
 	__NextNode:
@@ -229,7 +240,62 @@ ScriptBuilder::Iterator ScriptBuilder::_BuildEntry(ScriptNodePtr& parent, Iterat
 	return i;
 }
 
-ScriptBuilder::Iterator ScriptBuilder::_Build(ScriptNodePtr node, Iterator i) {
+ScriptBuilder::Iterator ScriptBuilder::_BuildArguments(ScriptNodePtr& parent, Iterator i) {
+
+	ScriptNodePtr prevNode = 0;
+	Uint32 extraParenseses = 0;
+
+	__Inc(i);
+
+	while (LAME_TRUE) {
+		if ((*i)->lex->id == kScriptLexParentheseL) {
+			if (extraParenseses == 1) {
+				++extraParenseses;
+				goto __SaveNode;
+			}
+			else {
+				this->_Push(&parent->argList);
+				extraParenseses = 1;
+			}
+		}
+		else if ((*i)->lex->id == kScriptLexParentheseR) {
+			if (extraParenseses == 1) {
+				this->_Pop();
+				break;
+			}
+			else {
+				--extraParenseses;
+			}
+		}
+		else if ((*i)->lex->id == kScriptLexComa) {
+			if (this->nodeQueue_ == &parent->argList) {
+				++parent->args;
+			}
+			goto __NextNode;
+		}
+		else {
+		__SaveNode:
+			if (!parent->args && this->nodeQueue_ == &parent->argList) {
+				++parent->args;
+			}
+			this->nodeQueue_->push_back(this->_CreateNode(*i, kScriptNodeDefault));
+			prevNode = this->nodeQueue_->back();
+			i = this->_Build(this->nodeQueue_->back(), i);
+		}
+	__NextNode:
+		if (++i == this->parser_->lexList_.end()) {
+			if (this->stackNodeQueue_.size()) {
+				PostSyntaxError((*(i - 1))->line, "Braces or Parentheses mismatched", 1);
+			}
+			break;
+		}
+	}
+	parent->Order();
+
+	return i;
+}
+
+ScriptBuilder::Iterator ScriptBuilder::_Build(ScriptNodePtr& node, Iterator i) {
 
 	if (node->lex->IsLanguage()) {
 		if (node->lex->id == kScriptLexClass) {
@@ -253,7 +319,9 @@ ScriptBuilder::Iterator ScriptBuilder::_Build(ScriptNodePtr node, Iterator i) {
 				(*(i + 0))->lex->IsUnknown() &&
 				(*(i + 1))->lex->IsUnknown() &&
 				((*(i + 2))->lex->id == kScriptLexSemicolon ||
-				(*(i + 2))->lex->id == kScriptLexSet)
+				(*(i + 2))->lex->id == kScriptLexSet ||
+				(*(i + 2))->lex->id == kScriptLexComa ||
+				(*(i + 2))->lex->id == kScriptLexParentheseR)
 			) {
 				i = this->_BuildVariable(node, i);
 			}
@@ -262,7 +330,8 @@ ScriptBuilder::Iterator ScriptBuilder::_Build(ScriptNodePtr node, Iterator i) {
 			if ((*(i + 0))->lex->IsUnknown() &&
 				(*(i + 1))->lex->id == kScriptLexParentheseL
 			) {
-				// something for function invoke
+				node->MakeInvoke();
+				i = this->_BuildArguments(node, i);
 			}
 		}
 	}

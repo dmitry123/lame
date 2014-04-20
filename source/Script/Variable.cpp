@@ -372,19 +372,23 @@ Void ScriptVar::Convert(ScriptVarPtr var) {
 		case kScriptTypeString:
 			this->intValue = ParseIntValue(this->stringValue.data());
 			goto __Exit;
+		case kScriptTypeAuto:
+			this->intValue = LAME_FALSE;
+			goto __Exit;
 		default:
 			break;
 		} break;
 	case kScriptTypeFloat:
 		switch (this->type) {
 		case kScriptTypeInt:
-			this->floatValue = (ScriptNativeFloat)this->intValue;
-			goto __Warning;
 		case kScriptTypeBool:
 			this->floatValue = (ScriptNativeFloat)this->intValue;
 			goto __Warning;
 		case kScriptTypeString:
 			this->floatValue = (ScriptNativeFloat)strtof(this->stringValue.data(), NULL);
+			goto __Exit;
+		case kScriptTypeAuto:
+			this->intValue = LAME_FALSE;
 			goto __Exit;
 		default:
 			break;
@@ -400,7 +404,7 @@ Void ScriptVar::Convert(ScriptVarPtr var) {
 			this->intValue = (ScriptNativeBool)strtol(this->stringValue.data(), NULL, 10);
 			goto __Exit;
 		case kScriptTypeAuto:
-			this->intValue = 0;
+			this->intValue = LAME_FALSE;
 			goto __Exit;
 		default:
 			break;
@@ -408,13 +412,13 @@ Void ScriptVar::Convert(ScriptVarPtr var) {
 	case kScriptTypeString:
 		switch (this->type) {
 		case kScriptTypeInt:
-			this->stringValue.Format("%d", this->intValue);
+			this->stringValue.Format("%lld", this->intValue);
 			goto __Exit;
 		case kScriptTypeFloat:
 			this->stringValue.Format("%.2f", this->floatValue);
 			goto __Exit;
 		case kScriptTypeBool:
-			this->stringValue.Format("%s", this->intValue ? "TRUE" : "FALSE");
+			this->stringValue.Format("%s", this->intValue ? "True" : "False");
 			goto __Exit;
 		default:
 			break;
@@ -531,6 +535,8 @@ Void ScriptVar::_EvaluateBool(ScriptVarPtr right, ScriptLexPtr lex) {
 	default:
         __debugbreak();
 	}
+
+	this->type = kScriptTypeBool;
 }
 
 ScriptNodePtr ScriptVar::_EvaluateDouble(ScriptNodePtr right, ScriptLexPtr lex) {
@@ -547,13 +553,13 @@ ScriptNodePtr ScriptVar::_EvaluateDouble(ScriptNodePtr right, ScriptLexPtr lex) 
 		fieldNode = this->classValue->FindChild(right->word);
 
 		if (!fieldNode) {
-			if (this->type == kScriptTypeClass) {
+			if (this->IsType() && !this->IsTemp()) {
 				fieldNode = right;
 				fieldNode->var->type = kScriptTypeAuto;
 				this->classValue->childList.push_back(fieldNode);
 			}
 			else {
-				PostSyntaxError(right->lex->line, "Unable to find class field (%s)", right->var->name.data());
+				PostSyntaxError(right->lex->line, "Unable to find class field (%s)", right->word.data());
 			}
 		}
 		fieldNode->var->MakeTemp();

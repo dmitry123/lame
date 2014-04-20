@@ -134,6 +134,7 @@ Void ScriptPerformer::_Trace(ScriptNodePtr node) {
 					}
 					break;
 				default:
+					printf("Function");
 					break;
 				}
 			}
@@ -150,10 +151,6 @@ Void ScriptPerformer::_Declare(ScriptNodePtr node) {
 	Vector<ScriptNodePtr> result;
 	ScriptVarPtr resultVar;
 
-	if (node->var) {
-		PostSyntaxError(node->lex->line, "Variable redeclaration (%s)", node->var->name.data());
-	}
-
 	if (node->id == kScriptNodeClass) {
 		goto __DeclareClass;
 	}
@@ -166,6 +163,7 @@ __DeclareVariable:
 
 	node->var = new ScriptVar(*typeVar);
 	node->var->name = node->word;
+	node->var->flags &= ~kScriptFlagType;
 
 	isVar = node->id == kScriptNodeVariable;
 
@@ -219,6 +217,7 @@ __DeclareClass:
 
 			node->var = new ScriptVar(*typeVar);
 			node->var->name = node->word;
+			node->var->flags &= ~kScriptFlagType;
 
 			isVar = node->id == kScriptNodeVariable;
 
@@ -298,17 +297,13 @@ Void ScriptPerformer::_Evaluate(Vector<ScriptNodePtr>* list, Vector<ScriptNodePt
 	Uint32 arguments = 0;
 	ScriptVarPtr typeVar = 0;
 	ScriptVarPtr classVar = 0;
+	ScriptNodePtr invokeNode = 0;
 
-	this->tempList_.clear();
 	result->clear();
 
 	for (ScriptNodePtr node : *list) {
 
 		this->cmdList_.push_back(node->word);
-
-		if (node->word == "b") {
-			//__asm int 3
-		}
 
 		if (!node->var && node->lex->IsConst()) {
 			this->_RegisterConstant(node);
@@ -316,7 +311,14 @@ Void ScriptPerformer::_Evaluate(Vector<ScriptNodePtr>* list, Vector<ScriptNodePt
 
 		if ((typeVar = this->manager_.Find(node->word))) {
 			if (typeVar->IsType()) {
+				if (node->var) {
+					PostSyntaxError(node->lex->line, "You can't use variable (%s) as operator", node->word.data());
+				}
+				node->var = typeVar;
 				goto __EvaluateOperator;
+			}
+			if (typeVar->IsClass()) {
+				node->var = typeVar;
 			}
 			typeVar = LAME_NULL;
 		}
@@ -335,7 +337,8 @@ Void ScriptPerformer::_Evaluate(Vector<ScriptNodePtr>* list, Vector<ScriptNodePt
 				// :D
 			}
 			else if (node->id == kScriptNodeInvoke) {
-				// :D
+				result->push_back(node);
+				invokeNode = node;
 			}
 		}
 		else {
@@ -346,7 +349,7 @@ Void ScriptPerformer::_Evaluate(Vector<ScriptNodePtr>* list, Vector<ScriptNodePt
 			}
 			else {
 			__EvaluateOperator:
-				if (node->lex->id == kScriptLexDefault) {
+				if (node->lex->id == kScriptLexDefault && !typeVar) {
 					result->push_back(node); continue;
 				}
 				if ((arguments = node->lex->args) == -1) {
@@ -387,7 +390,7 @@ Void ScriptPerformer::_Evaluate(Vector<ScriptNodePtr>* list, Vector<ScriptNodePt
 						if (!node->lex->IsUnknown()) {
 							left->var->_EvaluateSingle(node->lex);
 						}
-						else {
+						else if (!typeVar) {
 							result->push_back(node);
 						}
 					}
@@ -398,6 +401,10 @@ Void ScriptPerformer::_Evaluate(Vector<ScriptNodePtr>* list, Vector<ScriptNodePt
 					result->pop_back();
 					left = result->back();
 					result->pop_back();
+
+					if (right->var && right->parent->args) {
+						right->var = 0;
+					}
 
 					if (!left->var || left->lex->IsUnknown() && left->var && !left->var->IsTemp()) {
 						if (left->parent->id != kScriptNodeClass) {
@@ -419,11 +426,65 @@ Void ScriptPerformer::_Evaluate(Vector<ScriptNodePtr>* list, Vector<ScriptNodePt
 					if (right->var && left->var) {
 						right->var->Convert(left->var);
 					}
+					if (left->var->IsType()) {
+						PostSyntaxError(node->lex->line, "Type (%s) isn't left associated", left->word.data());
+					}
+					if (left->var->IsFinal()) {
+						PostSyntaxError(node->lex->line, "You can't change final variables", left->word.data());
+					}
 					if ((expNode = left->var->_EvaluateDouble(right, node->lex))) {
-						left = expNode;
+						std::swap(left, expNode);
 					}
 				}
 				if (arguments) {
+					if (invokeNode) {
+						//if (invokeNode->word == left->word) {
+						//	ScriptVarPtr varNode = this->_Find(left->word, node);
+						//	left = varNode->classValue->FindChild(left->word);
+						//	if (!expNode) {
+						//		expNode = left;
+						//	}
+						//	expNode->var = varNode;
+						//}
+						if (left->var->type != kScriptTypeClass) {
+							left->var->MakeFunction();
+						}
+						if (invokeNode->args != left->args) {
+							PostSyntaxError(node->lex->line, "Method (%s.%s) requires (%d) arguments", left->parent->typeName.data(), left->word.data(), left->args);
+						}
+						if (invokeNode->argList.size()) {
+							this->_Evaluate(&invokeNode->argList, result);
+						}
+						if (left->childList.size()) {
+
+							this->manager_.Push();
+
+							auto i = invokeNode->argList.begin();
+
+							for (ScriptNodePtr n : left->argList) {
+								this->_Declare(n);
+								ScriptVarPtr left = this->_Find(n->word, node);
+								left->Convert((*i)->var);
+								left->_EvaluateMath((*i)->var, ScriptParser::Find(kScriptLexSet));
+							}
+
+							ScriptNode thisNode("this", kScriptNodeVariable, ScriptParser::Find(kScriptLexDefault), left->parent);
+							
+							if (invokeNode->word == left->word) {
+								thisNode.typeName = expNode->word;
+							}
+							else {
+								thisNode.typeName = expNode->var->classValue->word;
+							}
+
+							this->_Declare(&thisNode);
+							this->_Find("this", node)->classValue = expNode->var->classValue;
+							this->_Evaluate(&left->childList, result);
+
+							this->manager_.Pop();
+						}
+					}
+					invokeNode = LAME_NULL;
 					result->push_back(left);
 				}
 			}

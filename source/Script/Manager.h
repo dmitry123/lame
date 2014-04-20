@@ -23,7 +23,9 @@ typedef enum {
 typedef enum {
 	kScriptFlagDefault = 0x0000,
 	kScriptFlagTemp = 0x0001,
-	kScriptFlagType = 0x0002
+	kScriptFlagType = 0x0002,
+	kScriptFlagFinal = 0x0004,
+	kScriptFlagFunction = 0x0008
 } ScriptFlagID;
 
 class LAME_API ScriptVar {
@@ -56,14 +58,17 @@ public:
 	inline Bool IsString() const { return this->type == kScriptTypeString; }
 	inline Bool IsClass() const { return this->type == kScriptTypeClass; }
 	inline Bool IsArray() const { return this->type == kScriptTypeArray; }
-	inline Bool IsFunction() const { return this->type == kScriptTypeFunction; }
 	inline Bool IsAuto() const { return this->type == kScriptTypeAuto; }
 public:
 	inline Bool IsTemp() const { return (this->flags & kScriptFlagTemp) != 0; }
 	inline Bool IsType() const { return (this->flags & kScriptFlagType) != 0; }
+	inline Bool IsFinal() const { return (this->flags & kScriptFlagFinal) != 0; }
+	inline Bool IsFunction() const { return (this->flags & kScriptFlagFunction) != 0; }
 public:
 	inline Void MakeTemp() { this->flags |= kScriptFlagTemp; }
 	inline Void MakeType() { this->flags |= kScriptFlagType; }
+	inline Void MakeFinal() { this->flags |= kScriptFlagFinal; }
+	inline Void MakeFunction() { this->flags |= kScriptFlagFinal; }
 private:
 	Void _EvaluateMath(ScriptVarPtr right, ScriptLexPtr lex);
 	Void _EvaluateBool(ScriptVarPtr right, ScriptLexPtr lex);

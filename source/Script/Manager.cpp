@@ -28,8 +28,12 @@ ScriptManager::ScriptManager() {
 	trueVar->intValue = LAME_TRUE;
 	falseVar->intValue = LAME_FALSE;
 	nullVar->classValue = LAME_NULL;
+	undeclaredVar->classValue = LAME_NULL;
 
-	undeclaredVar->Reset();
+	trueVar->MakeFinal();
+	falseVar->MakeFinal();
+	nullVar->MakeFinal();
+	undeclaredVar->MakeFinal();
 }
 
 ScriptManager::~ScriptManager(Void) {
@@ -55,8 +59,9 @@ Bool ScriptManager::Declare(ScriptVarPtr var) {
 		return LAME_FALSE;
 	}
 
-	// allocate variable and push in map
-	(*this->varMap)[var->name] = new ScriptVar(*var);
+	ScriptVarPtr newVar = new ScriptVar(*var);
+	newVar->flags &= ~kScriptFlagType;
+	(*this->varMap)[var->name] = newVar;
 
 	return LAME_TRUE;
 }
@@ -71,7 +76,7 @@ ScriptVarPtr ScriptManager::Find(BufferRefC name) {
 			continue;
 		}
 
-		if ((var = var = m.at(name))) {
+		if ((var = var = m.at(name)) && !var->IsTemp()) {
 			break;
 		}
 	}
@@ -98,9 +103,11 @@ Void ScriptManager::Pop(Void) {
 	for (auto i = this->typeMap->begin(); i != this->typeMap->end(); i++) {
 		delete i->second;
 	}
+	this->typeMap->clear();
 	for (auto i = this->varMap->begin(); i != this->varMap->end(); i++) {
 		delete i->second;
 	}
+	this->varMap->clear();
 
 	this->typeMapQueue.pop_back();
 	this->typeMap = &this->typeMapQueue.back();

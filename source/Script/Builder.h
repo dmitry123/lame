@@ -61,8 +61,9 @@ private:
 	Iterator _BuildClass(ScriptNodePtr& parent, Iterator i);
 	Iterator _BuildCondition(ScriptNodePtr& parent, Iterator i);
 	Iterator _BuildEntry(ScriptNodePtr& parent, Iterator i);
+	Iterator _BuildArguments(ScriptNodePtr& parent, Iterator i);
 private:
-	Iterator _Build(ScriptNodePtr node, Iterator i);
+	Iterator _Build(ScriptNodePtr& node, Iterator i);
 	Void _Reset(Void);
 private:
 	ScriptNodePtr _CreateNode(ScriptLexNodePtrC lex, ScriptNodeID id);
