@@ -17,6 +17,11 @@
 #  define LAME_API
 #endif
 
+#if 0
+#  define printf __noop
+#  define puts __noop
+#endif
+
 LAME_BEGIN
 
 typedef class ScriptLex *ScriptLexPtr, *const ScriptLexPtrC;

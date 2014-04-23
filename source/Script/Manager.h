@@ -25,7 +25,12 @@ typedef enum {
 	kScriptFlagTemp = 0x0001,
 	kScriptFlagType = 0x0002,
 	kScriptFlagFinal = 0x0004,
-	kScriptFlagFunction = 0x0008
+	kScriptFlagFunction = 0x0008,
+	kScriptFlagPublic = 0x0010,
+	kScriptFlagPrivate = 0x0020,
+	kScriptFlagProtected = 0x0040,
+	kScriptFlagStatic = 0x0080,
+	kScriptFlagNative = 0x0100
 } ScriptFlagID;
 
 class LAME_API ScriptVar {
@@ -64,14 +69,23 @@ public:
 	inline Bool IsType() const { return (this->flags & kScriptFlagType) != 0; }
 	inline Bool IsFinal() const { return (this->flags & kScriptFlagFinal) != 0; }
 	inline Bool IsFunction() const { return (this->flags & kScriptFlagFunction) != 0; }
+	inline Bool IsPublic() const { return (this->flags & kScriptFlagPublic) != 0; }
+	inline Bool IsPrivate() const { return (this->flags & kScriptFlagPrivate) != 0; }
+	inline Bool IsProtected() const { return (this->flags & kScriptFlagProtected) != 0; }
+	inline Bool IsStatic() const { return (this->flags & kScriptFlagStatic) != 0; }
+	inline Bool IsNative() const { return (this->flags & kScriptFlagNative) != 0; }
 public:
 	inline Void MakeTemp() { this->flags |= kScriptFlagTemp; }
 	inline Void MakeType() { this->flags |= kScriptFlagType; }
 	inline Void MakeFinal() { this->flags |= kScriptFlagFinal; }
-	inline Void MakeFunction() { this->flags |= kScriptFlagFinal; }
+	inline Void MakeFunction() { this->flags |= kScriptFlagFunction; }
+	inline Void MakePublic() { this->flags |= kScriptFlagPublic; }
+	inline Void MakePrivate() { this->flags |= kScriptFlagPrivate; }
+	inline Void MakeProtected() { this->flags |= kScriptFlagProtected; }
+	inline Void MakeStatic() { this->flags |= kScriptFlagStatic; }
 private:
-	Void _EvaluateMath(ScriptVarPtr right, ScriptLexPtr lex);
-	Void _EvaluateBool(ScriptVarPtr right, ScriptLexPtr lex);
+	Void _EvaluateMath(ScriptVarPtr right, ScriptLexID id);
+	Void _EvaluateBool(ScriptVarPtr right, ScriptLexID id);
 private:
 	ScriptNodePtr _EvaluateDouble(ScriptNodePtr right, ScriptLexPtr lex);
 	ScriptVarPtr _EvaluateSingle(ScriptLexPtr lex);
@@ -104,6 +118,11 @@ public:
 public:
 	ScriptManager(Void);
 	~ScriptManager(Void);
+private:
+	ScriptVarPtr _Find(ScriptTypeID type);
+private:
+    ScriptVarPtr _DeclareInternalType(ScriptTypeID type, BufferRefC name);
+	ScriptVarPtr _DeclareInternalVar(ScriptTypeID type, BufferRefC name);
 private:
 	MapPtr varMap = 0;
 	MapPtr typeMap = 0;

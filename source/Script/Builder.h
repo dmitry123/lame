@@ -23,21 +23,29 @@ public:
 	const ScriptLexPtr lex;
 	const ScriptNodeID id;
 	const ScriptNodePtr parent;
+	const ScriptNodePtr prev;
 public:
 	Buffer typeName;
 	Vector<ScriptNodePtr> childList;
 	Vector<ScriptNodePtr> argList;
 	ScriptVarPtr var;
+    ScriptVarPtr returnVar;
 	Uint32 args;
+	Uint32 modificators;
+	Bool result;
 public:
-	ScriptNode(Buffer word, ScriptNodeID id, ScriptLexPtr lex, ScriptNodePtr parent) :
+	ScriptNode(Buffer word, ScriptNodeID id, ScriptLexPtr lex, ScriptNodePtr parent, ScriptNodePtr prev) :
 		word(word),
 		id(id),
 		lex(lex),
-		parent(parent)
+		parent(parent),
+		prev(prev)
 	{
+        this->returnVar = 0;
 		this->var = 0;
 		this->args = 0;
+		this->modificators = 0;
+		this->result = 0;
 	}
 public:
 	Void Order(Void);
@@ -74,6 +82,7 @@ private:
 private:
 	Vector<ScriptNodePtr> nodeList_;
 	ScriptNodePtr parentNode_;
+	ScriptNodePtr prevNode_;
 	Vector<ScriptNodePtr>* nodeQueue_;
 	List<Vector<ScriptNodePtr>*> stackNodeQueue_;
 	ScriptNodePtr rootNode_;

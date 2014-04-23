@@ -20,6 +20,12 @@
 
 #include <string>
 
+#define LAME_SHAREDPTR
+
+#if !defined(LAME_SHAREDPTR)
+#  include <memory>
+#endif
+
 LAME_BEGIN
 
 inline VoidP Malloc(Uint32 size) {
@@ -42,7 +48,7 @@ inline VoidP ZeroAlloc(Uint32 size) {
 	return ZeroMemory(Malloc(size), size);
 }
 
-#if defined(_LIBCPP_MEMORY)
+#if !defined(LAME_SHAREDPTR)
 template <class T> using SharedPtr = std::shared_ptr<T>;
 template <class T> using WeakPtr = std::weak_ptr<T>;
 #else

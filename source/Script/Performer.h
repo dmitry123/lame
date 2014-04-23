@@ -18,9 +18,11 @@ private:
 	Void _RegisterConstant(ScriptNodePtr node);
 	Void _Evaluate(Vector<ScriptNodePtr>* list);
 	Void _Evaluate(Vector<ScriptNodePtr>* list, Vector<ScriptNodePtr>* result);
-	Void _EvaluateArgs(ScriptNodePtr node);
-	Void _EvaluateBlock(ScriptNodePtr node);
-	ScriptVarPtr _CreateTemp(ScriptVarPtr var);
+    Void _EvaluateNew(ScriptNodePtr node, ScriptNodePtr left, ScriptVarPtr var);
+    Void _EvaluateSingle(ScriptNodePtr node, ScriptNodePtr left);
+    Void _EvaluateReturn(ScriptNodePtr node, ScriptNodePtr left);
+	ScriptNodePtr _InvokeMethod(ScriptNodePtr node, ScriptNodePtr expNode, ScriptNodePtr invokeNode, ScriptNodePtr left);
+	ScriptNodePtr _CreateTemp(ScriptVarPtr var);
 	ScriptNodePtr _CreateTemp(ScriptNodePtr node);
 	Void _EvaluateCondition(ScriptNodePtr node);
 private:

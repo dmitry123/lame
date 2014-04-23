@@ -24,6 +24,7 @@ typedef enum {
 	kScriptLexIncrement,
 	kScriptLexDecrement,
 	kScriptLexSizeof,
+    kScriptLexReturn,
 	kScriptLexBitNot,
 	kScriptLexNot,
 	kScriptLexUnaryMinus,
@@ -82,6 +83,12 @@ typedef enum {
 	kScriptLexImplements,
 	kScriptLexBreak,
 	kScriptLexContinue,
+	kScriptLexPublic,
+	kScriptLexPrivate,
+	kScriptLexProtected,
+	kScriptLexStatic,
+	kScriptLexNative,
+	kScriptLexFinal,
 	kScriptLexAmount
 } ScriptLexID;
 
@@ -94,7 +101,8 @@ typedef enum {
 	kScriptLexFlagBool = 0x0010,
 	kScriptLexFlagCondition = 0x0020,
 	kScriptLexFlagLanguage = 0x0040,
-	kScriptLexFlagUnknown = 0x0080
+	kScriptLexFlagModificator = 0x0080,
+	kScriptLexFlagUnknown = 0x0100
 } ScriptLexFlagID;
 
 class LAME_API ScriptLex {
@@ -105,14 +113,17 @@ public:
 	const Uint32 args;
 	const Uint32 flags;
 public:
-	inline Bool IsUnknown() { return (this->flags & kScriptLexFlagUnknown) != 0; }
-	inline Bool IsLeft() { return (this->flags & kScriptLexFlagLeft) != 0; }
-	inline Bool IsRight() { return (this->flags & kScriptLexFlagRight) != 0; }
-	inline Bool IsConst() { return (this->flags & kScriptLexFlagConst) != 0; }
-	inline Bool IsMath() { return (this->flags & kScriptLexFlagMath) != 0; }
-	inline Bool IsBool() { return (this->flags & kScriptLexFlagBool) != 0; }
-	inline Bool IsCondition() { return (this->flags & kScriptLexFlagCondition) != 0; }
-	inline Bool IsLanguage() { return (this->flags & kScriptLexFlagLanguage) != 0; }
+	inline Bool IsUnknown() const { return (this->flags & kScriptLexFlagUnknown) != 0; }
+	inline Bool IsLeft() const { return (this->flags & kScriptLexFlagLeft) != 0; }
+	inline Bool IsRight() const { return (this->flags & kScriptLexFlagRight) != 0; }
+	inline Bool IsConst() const { return (this->flags & kScriptLexFlagConst) != 0; }
+	inline Bool IsMath() const { return (this->flags & kScriptLexFlagMath) != 0; }
+	inline Bool IsBool() const { return (this->flags & kScriptLexFlagBool) != 0; }
+	inline Bool IsCondition() const { return (this->flags & kScriptLexFlagCondition) != 0; }
+	inline Bool IsLanguage() const { return (this->flags & kScriptLexFlagLanguage) != 0; }
+	inline Bool IsModificator() const { return (this->flags & kScriptLexFlagModificator) != 0; }
+public:
+	inline Bool IsClass() const { return this->id == kScriptLexClass; }
 public:
 	Uint32 line;
 };
@@ -140,9 +151,9 @@ public:
 	Void Load(StringC file);
 	Void Parse(StringC script);
 public:
-	static ScriptLexPtrC Find(ScriptLexID id);
-	static ScriptLexPtrC Find(StringC word);
-	static ScriptLexPtrC Find(BufferRefC word);
+	static ScriptLexPtrC Find(ScriptLexPtr lex, ScriptLexID id);
+	static ScriptLexPtrC Find(ScriptLexPtr lex, StringC word);
+	static ScriptLexPtrC Find(ScriptLexPtr lex, BufferRefC word);
 public:
 	inline Vector<ScriptLexNodePtr>* const GetLexList() const {
 		return (Vector<ScriptLexNodePtr>* const)&this->lexList_;

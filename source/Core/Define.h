@@ -46,11 +46,11 @@
 #endif
 
 #if !defined(LAME_TRUE)
-#  define LAME_TRUE (LAME_NAMESPACE::Uint8)1
+#  define LAME_TRUE (LAME_NAMESPACE::Bool)1
 #endif
 
 #if !defined(LAME_FALSE)
-#  define LAME_FALSE (LAME_NAMESPACE::Uint8)0
+#  define LAME_FALSE (LAME_NAMESPACE::Bool)0
 #endif
 
 #if defined(_DEBUG) || defined(DEBUG) || defined(NDEBUG)

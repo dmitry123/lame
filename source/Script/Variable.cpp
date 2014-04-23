@@ -7,6 +7,7 @@ LAME_BEGIN
 	PostSyntaxError(0, "Unable to apply %s operation to this type", #_operation, left->name.data());
 
 static Void Set(ScriptVarPtr left, ScriptVarPtr right) {
+	Uint32 flags = left->flags;
 	switch (left->type) {
 	case kScriptTypeBool:
 	case kScriptTypeInt:
@@ -27,6 +28,7 @@ static Void Set(ScriptVarPtr left, ScriptVarPtr right) {
 	default:
 		__EvalError(=);
 	}
+	left->flags = flags;
 }
 
 static Void Add(ScriptVarPtr left, ScriptVarPtr right) {
@@ -449,14 +451,14 @@ Void ScriptVar::Clone(ScriptVarPtr result) {
 	result->floatValue = this->floatValue;
 	result->stringValue = this->stringValue;
 	result->classValue = this->classValue;
-	result->flags = this->flags;
+	//result->flags = this->flags;
 	result->type = this->type;
 	result->callback = this->callback;
 }
 
-Void ScriptVar::_EvaluateMath(ScriptVarPtr right, ScriptLexPtr lex) {
+Void ScriptVar::_EvaluateMath(ScriptVarPtr right, ScriptLexID id) {
     
-	switch (lex->id) {
+	switch (id) {
 	case kScriptLexSet:
 		Set(this, right);
 		break;
@@ -505,9 +507,9 @@ Void ScriptVar::_EvaluateMath(ScriptVarPtr right, ScriptLexPtr lex) {
 	}
 }
 
-Void ScriptVar::_EvaluateBool(ScriptVarPtr right, ScriptLexPtr lex) {
+Void ScriptVar::_EvaluateBool(ScriptVarPtr right, ScriptLexID id) {
 
-	switch (lex->id) {
+	switch (id) {
 	case kScriptLexAnd:
 		And(this, right);
 		break;
@@ -553,25 +555,23 @@ ScriptNodePtr ScriptVar::_EvaluateDouble(ScriptNodePtr right, ScriptLexPtr lex) 
 		fieldNode = this->classValue->FindChild(right->word);
 
 		if (!fieldNode) {
-			if (this->IsType() && !this->IsTemp()) {
-				fieldNode = right;
-				fieldNode->var->type = kScriptTypeAuto;
-				this->classValue->childList.push_back(fieldNode);
-			}
-			else {
-				PostSyntaxError(right->lex->line, "Unable to find class field (%s)", right->word.data());
-			}
+			PostSyntaxError(right->lex->line, "Unable to find class field (%s)", right->word.data());
 		}
+
 		fieldNode->var->MakeTemp();
+
+		if (this->IsFinal()) {
+			fieldNode->var->MakeFinal();
+		}
 
 		return fieldNode;
 	}
 	else {
 		if (lex->IsMath()) {
-			this->_EvaluateMath(right->var, lex);
+			this->_EvaluateMath(right->var, lex->id);
 		}
 		else if (lex->IsBool()) {
-			this->_EvaluateBool(right->var, lex);
+			this->_EvaluateBool(right->var, lex->id);
 		}
 		else {
 			PostSyntaxError(lex->line, "Non-Implemented operation with 2 arguments (%s)", lex->word.data());
@@ -603,6 +603,7 @@ ScriptVarPtr ScriptVar::_EvaluateSingle(ScriptLexPtr lex) {
 	case kScriptLexUnaryPlus:
         break;
 	case kScriptLexNew:
+    case kScriptLexReturn:
         break;
     default:
         __debugbreak();

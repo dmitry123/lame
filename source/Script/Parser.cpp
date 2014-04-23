@@ -21,12 +21,32 @@ static const ScriptLex scriptObjects[] = {
 	// implements language word
 	{ "implements", P(1), kScriptLexImplements, 0,
 		kScriptLexFlagLanguage },
+	// protected modificator
+	{ "protected", P(0), kScriptLexProtected, 1,
+		kScriptLexFlagLanguage | kScriptLexFlagModificator },
 	// continue language word
 	{ "continue", P(1), kScriptLexContinue, 0,
 		kScriptLexFlagLanguage },
+	// private modificator
+	{ "private", P(0), kScriptLexPrivate, 1,
+		kScriptLexFlagLanguage | kScriptLexFlagModificator },
 	// sizeof language word
 	{ "sizeof", P(15), kScriptLexSizeof, 1,
 		kScriptLexFlagRight },
+	// public modificator
+	{ "public", P(0), kScriptLexPublic, 1,
+	kScriptLexFlagLanguage | kScriptLexFlagModificator },
+	// static modificator
+	{ "static", P(0), kScriptLexStatic, 1,
+	kScriptLexFlagLanguage | kScriptLexFlagModificator },
+	// native modificator
+	{ "native", P(0), kScriptLexNative, 1,
+	kScriptLexFlagLanguage | kScriptLexFlagModificator },
+    // return word
+    { "return", P(15), kScriptLexReturn, 1,
+		kScriptLexFlagLanguage | kScriptLexFlagRight },
+	{ "final", P(0), kScriptLexFinal, 1,
+		kScriptLexFlagLanguage | kScriptLexFlagModificator },
 	// class language word
 	{ "class", P(15), kScriptLexClass, 0,
 		kScriptLexFlagLanguage },
@@ -151,10 +171,10 @@ static const ScriptLex scriptObjects[] = {
 	{ "!", P(15), kScriptLexNot, 1,
 		kScriptLexFlagRight | kScriptLexFlagMath },
 	// unary minus
-	{ "±", P(15), kScriptLexUnaryMinus, 1,
+	{ ":", P(15), kScriptLexUnaryMinus, 1,
 		kScriptLexFlagRight | kScriptLexFlagMath },
 	// unary plus
-	{ "±", P(15), kScriptLexUnaryPlus, 1,
+	{ ":", P(15), kScriptLexUnaryPlus, 1,
 		kScriptLexFlagRight | kScriptLexFlagMath },
 	// mul
 	{ "*", P(13), kScriptLexMul, 2,
@@ -279,34 +299,61 @@ __ExitLoop:
 	;
 }
 
-ScriptLexPtrC ScriptParser::Find(ScriptLexID id) {
+ScriptLexPtrC ScriptParser::Find(ScriptLexPtr lex, ScriptLexID id) {
+
+	Uint32 lines = lex ? lex->line : 0;
+
+	lex = LAME_NULL;
 
 	for (Uint32 i = 0; i < kScriptLexAmount; i++) {
 		if (scriptObjects[i].id == id) {
-			return (ScriptLexPtrC)&scriptObjects[i];
+			lex = (ScriptLexPtrC)&scriptObjects[i];
 		}
 	}
-	return LAME_NULL;
+
+	if (lines) {
+		lex->line = lines;
+	}
+
+	return lex;
 }
 
-ScriptLexPtrC ScriptParser::Find(StringC word) {
+ScriptLexPtrC ScriptParser::Find(ScriptLexPtr lex, StringC word) {
+
+	Uint32 lines = lex ? lex->line : 0;
+
+	lex = LAME_NULL;
 
 	for (Uint32 i = 0; i < kScriptLexAmount; i++) {
 		if (scriptObjects[i].word == word) {
-			return (ScriptLexPtrC)&scriptObjects[i];
+			lex = (ScriptLexPtrC)&scriptObjects[i];
 		}
 	}
-	return LAME_NULL;
+
+	if (lines) {
+		lex->line = lines;
+	}
+
+	return lex;
 }
 
-ScriptLexPtrC ScriptParser::Find(BufferRefC word) {
+ScriptLexPtrC ScriptParser::Find(ScriptLexPtr lex, BufferRefC word) {
+
+	Uint32 lines = lex ? lex->line : 0;
+
+	lex = LAME_NULL;
 
 	for (Uint32 i = 0; i < kScriptLexAmount; i++) {
 		if (scriptObjects[i].word == word) {
-			return (ScriptLexPtrC)&scriptObjects[i];
+			lex = (ScriptLexPtrC)&scriptObjects[i];
 		}
 	}
-	return LAME_NULL;
+
+	if (lines) {
+		lex->line = lines;
+	}
+
+	return lex;
 }
 
 ScriptLexPtrC ScriptParser::_ParseLex(StringC* wordPtr, Buffer* name) {
@@ -329,12 +376,12 @@ ScriptLexPtrC ScriptParser::_ParseLex(StringC* wordPtr, Buffer* name) {
 			lexWord.append(1, *word);
 		}
 		++word;
-		lex = (ScriptLexPtr)this->Find(kScriptLexString);
+		lex = (ScriptLexPtr)this->Find(lex, kScriptLexString);
 		goto __Return;
 	}
 
 	if (IsFloatValue(word)) {
-		lex = this->Find(kScriptLexFloat);
+		lex = this->Find(lex, kScriptLexFloat);
 		strtof(word, (String*)&word);
 		if (*word == 'f') {
 			++word;
@@ -342,12 +389,12 @@ ScriptLexPtrC ScriptParser::_ParseLex(StringC* wordPtr, Buffer* name) {
 		goto __SaveWord;
 	}
 	else if (IsHexValue(word)) {
-		lex = this->Find(kScriptLexInt);
+		lex = this->Find(lex, kScriptLexInt);
 		strtol(word + 2, (String*)&word, 16);
 		goto __SaveWord;
 	}
 	else if (IsIntValue(word)) {
-		lex = this->Find(kScriptLexInt);
+		lex = this->Find(lex, kScriptLexInt);
 		strtol(word, (String*)&word, 10);
 		goto __SaveWord;
 	}
@@ -381,9 +428,9 @@ ScriptLexPtrC ScriptParser::_ParseLex(StringC* wordPtr, Buffer* name) {
 	lexWord.append(savedWord, Sint32(word - savedWord));
 
 	if (!lex) {
-		lex = this->Find(lexWord);
+		lex = this->Find(lex, lexWord);
 		if (!lex) {
-			lex = this->Find(kScriptLexDefault);
+			lex = this->Find(lex, kScriptLexDefault);
 		}
 	}
 

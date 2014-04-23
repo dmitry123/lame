@@ -28,18 +28,27 @@ int main(int argc, char** argv) {
 		performer.Trace();
 	}
 	catch (SyntaxException& e) {
-		puts("\n------------------------");
+		performer.Trace();
+		puts("------------------------");
 		e.Debug();
-		puts("\n------------------------");
 	}
 	catch (Exception& e) {
 		e.Debug();
 		puts("\n------------------------");
 	}
     
+#pragma push_macro("printf")
+#pragma push_macro("puts");
+
+#undef printf
+#undef puts
+
 	puts("\n------------------------");
 	printf("Elapsed Time : %d ms", Uint32(time));
 	puts("\n------------------------");
+
+#pragma pop_macro("printf")
+#pragma pop_macro("puts");
 
 #ifdef LAME_WINDOWS
 	if (argc == 1) {

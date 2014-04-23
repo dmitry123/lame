@@ -6,34 +6,28 @@ ScriptManager::ScriptManager() {
 
 	this->Push();
 
-	this->Declare(&ScriptVar(kScriptTypeVoid, "Void", "Void", 0));
-	this->Declare(&ScriptVar(kScriptTypeInt, "Int", "Int", 0));
-	this->Declare(&ScriptVar(kScriptTypeBool, "Bool", "Bool", 0));
-	this->Declare(&ScriptVar(kScriptTypeFloat, "Float", "Float", 0));
-	this->Declare(&ScriptVar(kScriptTypeString, "String", "String", 0));
-	this->Declare(&ScriptVar(kScriptTypeArray, "Array", "Array", 0));
-	this->Declare(&ScriptVar(kScriptTypeList, "List", "List", 0));
-	this->Declare(&ScriptVar(kScriptTypeFunction, "Function", "Function", 0));
-	this->Declare(&ScriptVar(kScriptTypeAuto, "Auto", "Auto", 0));
-	this->Declare(&ScriptVar(kScriptTypeBool, "True", "True", 0));
-	this->Declare(&ScriptVar(kScriptTypeBool, "False", "False", 0));
-	this->Declare(&ScriptVar(kScriptTypeClass, "Null", "Null", 0));
-	this->Declare(&ScriptVar(kScriptTypeAuto, "Undeclared", "Undeclared", 0));
-
-	ScriptVarPtr trueVar = this->Find("True");
-	ScriptVarPtr falseVar = this->Find("False");
-	ScriptVarPtr nullVar = this->Find("Null");
-	ScriptVarPtr undeclaredVar = this->Find("Undeclared");
+    this->_DeclareInternalType(kScriptTypeVoid, "void");
+	this->_DeclareInternalType(kScriptTypeInt, "int");
+	this->_DeclareInternalType(kScriptTypeBool, "boolean");
+	this->_DeclareInternalType(kScriptTypeFloat, "float");
+	this->_DeclareInternalType(kScriptTypeString, "String");
+	this->_DeclareInternalType(kScriptTypeArray, "Array");
+	this->_DeclareInternalType(kScriptTypeList, "List");
+	this->_DeclareInternalType(kScriptTypeFunction, "Function");
+	this->_DeclareInternalType(kScriptTypeAuto, "Auto");
+	this->_DeclareInternalType(kScriptTypeClass, "Null");
+    
+	ScriptVarPtr trueVar;
+	ScriptVarPtr falseVar;
+	ScriptVarPtr undeclaredVar;
+    
+	trueVar = this->_DeclareInternalVar(kScriptTypeBool, "True");
+	falseVar = this->_DeclareInternalVar(kScriptTypeBool, "False");
+	undeclaredVar = this->_DeclareInternalVar(kScriptTypeAuto, "Undeclared");
 
 	trueVar->intValue = LAME_TRUE;
 	falseVar->intValue = LAME_FALSE;
-	nullVar->classValue = LAME_NULL;
 	undeclaredVar->classValue = LAME_NULL;
-
-	trueVar->MakeFinal();
-	falseVar->MakeFinal();
-	nullVar->MakeFinal();
-	undeclaredVar->MakeFinal();
 }
 
 ScriptManager::~ScriptManager(Void) {
@@ -76,7 +70,29 @@ ScriptVarPtr ScriptManager::Find(BufferRefC name) {
 			continue;
 		}
 
-		if ((var = var = m.at(name)) && !var->IsTemp()) {
+		if ((var = m.at(name))) {
+			break;
+		}
+	}
+
+	return var;
+}
+
+ScriptVarPtr ScriptManager::_Find(ScriptTypeID type) {
+
+	ScriptVarPtr var = 0;
+
+	for (const Map& m : this->varMapQueue) {
+
+		for (auto& n : m) {
+			if (n.second->type == type) {
+				if ((var = n.second)) {
+					break;
+				}
+			}
+		}
+
+		if (var) {
 			break;
 		}
 	}
@@ -124,6 +140,29 @@ ScriptTypeID ScriptManager::GetTypeID(BufferRefC typeName) {
 	}
 
 	return var->type;
+}
+
+ScriptVarPtr ScriptManager::_DeclareInternalType(ScriptTypeID type, BufferRefC name) {
+    ScriptVar var(type, name, name, 0);
+    this->Declare(&var);
+    ScriptVarPtr result = this->Find(name);
+    result->MakeType();
+    return result;
+}
+
+ScriptVarPtr ScriptManager::_DeclareInternalVar(ScriptTypeID type, BufferRefC name) {
+
+	ScriptVarPtr typeVar = this->_Find(type);
+
+	if (!typeVar) {
+		PostErrorMessage("Invalid type's id (%d)", type);
+	}
+
+	ScriptVar var(type, name, typeVar->typeName, 0);
+	this->Declare(&var);
+	typeVar = this->Find(name);
+	typeVar->MakeFinal();
+	return typeVar;
 }
 
 LAME_END

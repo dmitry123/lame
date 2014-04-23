@@ -48,7 +48,9 @@ Void ScriptNode::_Order(Vector<ScriptNodePtr>* list) {
 
 		if (
 			node->lex->IsConst() ||
-			node->lex->IsUnknown()
+			node->lex->IsUnknown() ||
+			node->lex->IsCondition() ||
+			node->lex->IsClass()
 		) {
 			result.push_back(node);
 		}
@@ -135,7 +137,7 @@ Void ScriptNode::_Order(Vector<ScriptNodePtr>* list) {
 			PostSyntaxError(back->lex->line, "Parentheses mismatched", 1);
 		}
 		else if (back->id != kScriptNodeDefault) {
-			result.push_front(back);
+			result.push_back(back);
 		}
 		else {
 			result.push_back(back);
