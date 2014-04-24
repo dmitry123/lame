@@ -267,13 +267,11 @@ private:
 
 #endif
 
-class LAME_API Buffer : public std::string {
+class Buffer : public std::string {
 public:
 	Buffer() {
-		// nothing
 	}
 	~Buffer() {
-		// nothing
 	}
 public:
 	Buffer(const char* string) : std::string(string) {}

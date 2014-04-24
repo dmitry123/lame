@@ -143,6 +143,8 @@ public:
 			lex->line = line;
 		}
 	}
+	~ScriptLexNode() {
+	}
 };
 
 class LAME_API ScriptParser {
@@ -162,6 +164,9 @@ private:
 	ScriptLexPtrC _ParseLex(StringC* word, Buffer* name);
 private:
 	Vector<ScriptLexNodePtr> lexList_;
+public:
+	ScriptParser();
+	~ScriptParser();
 };
 
 LAME_END

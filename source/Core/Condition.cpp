@@ -4,7 +4,7 @@
 #include <errno.h>
 
 #ifdef LAME_MSVC
-#  ifdef DKJS_X64
+#  ifdef LAME_X64
 #    pragma comment(lib, "x64/pthreadvc2.lib")
 #  else
 #    pragma comment(lib, "x86/pthreadvc2.lib")

@@ -36,6 +36,10 @@ private:
 	ScriptBuilderPtr builder_;
 	ScriptManager manager_;
 	Uint32 traceDepth_ = 0;
+	Vector<ScriptVarPtr> varList_;
+	Vector<ScriptVarPtr> newList_;
+public:
+	~ScriptPerformer();
 };
 
 LAME_END

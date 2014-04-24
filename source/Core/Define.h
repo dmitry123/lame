@@ -164,5 +164,10 @@ typedef struct _##_name { int _unused; } *_name;
 #endif
 
 #define LAME_BLOCK
+//#define LAME_VLD
+
+#if defined(LAME_VLD) && defined(LAME_MSVC)
+#  include <vld.h>
+#endif
 
 #endif // ~__LAME_CORE__DEFINE__

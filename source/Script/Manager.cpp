@@ -40,6 +40,17 @@ ScriptManager::~ScriptManager(Void) {
 		delete i->second;
 	}
 	for (auto i = this->varMap->begin(); i != this->varMap->end(); i++) {
+		if (i->first == "a") {
+			//__asm int 3
+		}
+		if (i->second->classValue) {
+			for (ScriptNodePtr n : i->second->classValue->childList) {
+				//n->var = 0;
+				//n->childList.clear();
+				//delete n;
+			}
+			i->second->classValue->childList.clear();
+		}
 		delete i->second;
 	}
 
@@ -54,7 +65,11 @@ Bool ScriptManager::Declare(ScriptVarPtr var) {
 	}
 
 	ScriptVarPtr newVar = new ScriptVar(*var);
-	newVar->flags &= ~kScriptFlagType;
+
+	if (newVar->name != newVar->typeName) {
+		newVar->flags &= ~kScriptFlagType;
+	}
+
 	(*this->varMap)[var->name] = newVar;
 
 	return LAME_TRUE;
@@ -143,6 +158,7 @@ ScriptTypeID ScriptManager::GetTypeID(BufferRefC typeName) {
 }
 
 ScriptVarPtr ScriptManager::_DeclareInternalType(ScriptTypeID type, BufferRefC name) {
+
     ScriptVar var(type, name, name, 0);
     this->Declare(&var);
     ScriptVarPtr result = this->Find(name);

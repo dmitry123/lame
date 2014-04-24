@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
 	}
     
 #pragma push_macro("printf")
-#pragma push_macro("puts");
+#pragma push_macro("puts")
 
 #undef printf
 #undef puts
@@ -48,7 +48,7 @@ int main(int argc, char** argv) {
 	puts("\n------------------------");
 
 #pragma pop_macro("printf")
-#pragma pop_macro("puts");
+#pragma pop_macro("puts")
 
 #ifdef LAME_WINDOWS
 	if (argc == 1) {

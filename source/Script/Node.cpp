@@ -2,10 +2,32 @@
 
 LAME_BEGIN
 
+ScriptNode::~ScriptNode() {
+
+	//if (this->var) {
+	//	if (this->var->classValue) {
+	//		for (ScriptNodePtr n : this->var->classValue->childList) {
+	//			if (n->var) {
+	//				delete n->var;
+	//				n->var = 0;
+	//			}
+	//			delete n;
+	//		}
+	//		this->var->classValue->childList.clear();
+	//		this->var->classValue.reset();
+	//	}
+	//	if (!this->var->IsTemp()) {
+	//		delete var;
+	//	}
+	//}
+
+	//this->var = 0;
+}
+
 Void ScriptNode::Order(Void) {
 
-	if (this->childList.size()) {
-		this->_Order(&this->childList);
+	if (this->blockList.size()) {
+		this->_Order(&this->blockList);
 	}
 	if (this->argList.size()) {
 		this->_Order(&this->argList);
@@ -15,6 +37,16 @@ Void ScriptNode::Order(Void) {
 ScriptNodePtr ScriptNode::FindChild(BufferRefC name) {
 
 	for (ScriptNodePtr node : this->childList) {
+		if (node->word == name) {
+			return node;
+		}
+	}
+	return LAME_NULL;
+}
+
+ScriptNodePtr ScriptNode::FindBlock(BufferRefC name) {
+
+	for (ScriptNodePtr node : this->blockList) {
 		if (node->word == name) {
 			return node;
 		}

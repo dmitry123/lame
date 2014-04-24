@@ -50,6 +50,9 @@ public:
 			this->MakeType();
 		}
 	}
+	~ScriptVar() {
+		this->classValue.reset();
+	}
 public:
 	Void Reset(Void);
 	Void Convert(ScriptVarPtr type);

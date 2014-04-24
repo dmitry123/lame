@@ -232,12 +232,12 @@ Void ScriptParser::Load(StringC file) {
 	script.resize(handle.GetSize());
 	handle.Read((String)script.data(), handle.GetSize());
 	handle.Close();
-
 	this->Parse(script.data());
+	script.clear();
 
-	//for (ScriptLexNodePtr lex : this->lexList_) {
-	//	printf("[%s]\n", lex->word.data());
-	//}
+	/*for (ScriptLexNodePtr lex : this->lexList_) {
+		printf("[%s]\n", lex->word.data());
+	}*/
 }
 
 Void ScriptParser::Parse(StringC script) {
@@ -447,6 +447,22 @@ __Return:
 	}
 
 	return ScriptLexPtrC(lex);
+}
+
+ScriptParser::ScriptParser() {
+
+	for (ScriptLexNodePtr lex : this->lexList_) {
+		delete lex;
+	}
+	this->lexList_.clear();
+}
+
+ScriptParser::~ScriptParser() {
+
+	for (ScriptLexNodePtr lex : this->lexList_) {
+		delete lex;
+	}
+	this->lexList_.clear();
 }
 
 LAME_END

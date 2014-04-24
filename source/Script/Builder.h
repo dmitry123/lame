@@ -26,13 +26,15 @@ public:
 	const ScriptNodePtr prev;
 public:
 	Buffer typeName;
-	Vector<ScriptNodePtr> childList;
-	Vector<ScriptNodePtr> argList;
 	ScriptVarPtr var;
     ScriptVarPtr returnVar;
 	Uint32 args;
 	Uint32 modificators;
 	Bool result;
+public:
+	Vector<ScriptNodePtr> childList;
+	Vector<ScriptNodePtr> argList;
+	Vector<ScriptNodePtr> blockList;
 public:
 	ScriptNode(Buffer word, ScriptNodeID id, ScriptLexPtr lex, ScriptNodePtr parent, ScriptNodePtr prev) :
 		word(word),
@@ -47,9 +49,11 @@ public:
 		this->modificators = 0;
 		this->result = 0;
 	}
+	~ScriptNode();
 public:
 	Void Order(Void);
 	ScriptNodePtr FindChild(BufferRefC name);
+	ScriptNodePtr FindBlock(BufferRefC name);
 public:
 	Void MakeInvoke() { *((ScriptNodeID*)&this->id) = kScriptNodeInvoke; }
 	Void MakeDefault() { *((ScriptNodeID*)&this->id) = kScriptNodeDefault; }

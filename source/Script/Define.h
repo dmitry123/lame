@@ -33,13 +33,16 @@ typedef class ScriptVar *ScriptVarPtr, *const ScriptVarPtrC;
 typedef class ScriptManager *ScriptManagerPtr, *const ScriptManagerPtrC;
 typedef class ScriptPerformer *ScriptPerformerPtr, *const ScriptPerformerPtrC;
 
+typedef SharedPtr<ScriptVarPtr> ScriptVarSP;
+typedef SharedPtr<ScriptNode> ScriptNodeSP;
+
 typedef Sint64 ScriptNativeInt;
 typedef Float32 ScriptNativeFloat;
 typedef Buffer ScriptNativeString;
 typedef Bool ScriptNativeBool;
 typedef SharedPtr<ScriptNode> ScriptNativeClass;
 
-typedef Void(*ScriptCallback)(ScriptNodePtr var, VoidP data);
+typedef Void(*ScriptCallback)(ScriptNodePtr var, ScriptManagerPtr manager, ScriptVarPtr self);
 typedef const Buffer& BufferRefC;
 
 LAME_END

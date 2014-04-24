@@ -35,8 +35,12 @@ File::~File() {
 	if (this->handle_) {
 		this->Close();
 	}
-
-	new (this) File();
+		
+	this->size_ = 0;
+	this->handle_ = 0;
+	this->flags_ = 0;
+	this->permission_ = kPermissionDefault;
+	this->type_ = kTypeDefault;
 }
 
 Void File::Open(StringC filename, Uint32 flags) {
@@ -197,7 +201,11 @@ Void File::Close(Void) {
 		}
 	}
 
-	new (this) File ();
+	this->size_ = 0;
+	this->handle_ = 0;
+	this->flags_ = 0;
+	this->permission_ = kPermissionDefault;
+	this->type_ = kTypeDefault;
 }
 
 Uint32 File::GetPosition(Void) {

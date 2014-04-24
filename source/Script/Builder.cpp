@@ -40,10 +40,10 @@ ScriptBuilder::Iterator ScriptBuilder::_BuildFunction(ScriptNodePtr& parent, Ite
 
 	while (LAME_TRUE) {
 		if ((*i)->lex->id == kScriptLexBraceL) {
-			this->_Push(&parent->childList);
+			this->_Push(&parent->blockList);
 		}
 		else if ((*i)->lex->id == kScriptLexBraceR) {
-			if (this->nodeQueue_ != &parent->childList) {
+			if (this->nodeQueue_ != &parent->blockList) {
 				PostSyntaxError((*i)->line, "Left brace lost or braces mismatched", 1);
 			}
 			this->_Pop();
@@ -60,6 +60,10 @@ ScriptBuilder::Iterator ScriptBuilder::_BuildFunction(ScriptNodePtr& parent, Ite
 				PostSyntaxError((*i)->line, "Left parenthese lost", 1);
 			}
 			this->_Pop();
+			if ((*(i + 1))->lex->id == kScriptLexSemicolon) {
+				__Inc(i);
+				break;
+			}
 		}
 		else if ((*i)->lex->id == kScriptLexComa) {
 			if (this->nodeQueue_ == &parent->argList) {
@@ -107,7 +111,7 @@ ScriptBuilder::Iterator ScriptBuilder::_BuildVariable(ScriptNodePtr& parent, Ite
 
 	__Inc(i);
 
-	this->_Push(&parent->childList);
+	this->_Push(&parent->blockList);
 
 	while (LAME_TRUE) {
 		if ((*i)->lex->id == kScriptLexSemicolon ||
@@ -152,7 +156,7 @@ ScriptBuilder::Iterator ScriptBuilder::_BuildClass(ScriptNodePtr& parent, Iterat
 
 	while (LAME_TRUE) {
 		if ((*i)->lex->id == kScriptLexBraceL) {
-			this->_Push(&parent->childList);
+			this->_Push(&parent->blockList);
 		}
 		else if ((*i)->lex->id == kScriptLexBraceR) {
 			this->_Pop();
@@ -214,7 +218,7 @@ ScriptBuilder::Iterator ScriptBuilder::_BuildCondition(ScriptNodePtr& parent, It
 
 	while (LAME_TRUE) {
 		if ((*i)->lex->id == kScriptLexBraceL) {
-			this->_Push(&parent->childList);
+			this->_Push(&parent->blockList);
 		}
 		else if ((*i)->lex->id == kScriptLexBraceR) {
 			if (isSingleExpression) {
@@ -242,7 +246,7 @@ ScriptBuilder::Iterator ScriptBuilder::_BuildCondition(ScriptNodePtr& parent, It
 				}
 				else if ((*(i + 1))->lex->id != kScriptLexBraceL) {
 				__AvoidBraces:
-					this->_Push(&parent->childList);
+					this->_Push(&parent->blockList);
 					isSingleExpression = LAME_TRUE;
 					if ((*i)->lex->id != kScriptLexParentheseR) {
 						goto __SaveNode;
@@ -297,7 +301,7 @@ ScriptBuilder::Iterator ScriptBuilder::_BuildCondition(ScriptNodePtr& parent, It
 
 ScriptBuilder::Iterator ScriptBuilder::_BuildEntry(ScriptNodePtr& parent, Iterator i) {
 
-	this->_Push(&parent->childList);
+	this->_Push(&parent->blockList);
 	while (LAME_TRUE) {
 		this->nodeQueue_->push_back(this->_CreateNode(*i, kScriptNodeDefault));
 		i = this->_Build(this->nodeQueue_->back(), i);
@@ -421,6 +425,9 @@ ScriptBuilder::Iterator ScriptBuilder::_Build(ScriptNodePtr& node, Iterator i) {
 Void ScriptBuilder::_Reset(Void) {
 
 	for (ScriptNodePtr n : this->nodeList_) {
+		if (n->var) {
+			n->var = 0;
+		}
 		delete n;
 	}
 
@@ -460,21 +467,21 @@ ScriptNodePtr ScriptBuilder::_RemoveNode(ScriptNodePtr node) {
 
 	if (node->parent) {
 
-		Vector<ScriptNodePtr>::iterator i = node->parent->childList.begin();
+		Vector<ScriptNodePtr>::iterator i = node->parent->blockList.begin();
 
-		while (i != node->parent->childList.end()) {
+		while (i != node->parent->blockList.end()) {
 			if (*i == node) {
-				i = node->parent->childList.erase(i);
+				i = node->parent->blockList.erase(i);
 				break;
 			}
 			++i;
 		}
 	}
 
-	for (ScriptNodePtr n : node->childList) {
+	for (ScriptNodePtr n : node->blockList) {
 		n = this->_RemoveNode(n);
 	}
-	node->childList.clear();
+	node->blockList.clear();
 
 	// return parent
 	return parent;

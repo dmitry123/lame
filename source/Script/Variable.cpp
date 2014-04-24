@@ -555,7 +555,11 @@ ScriptNodePtr ScriptVar::_EvaluateDouble(ScriptNodePtr right, ScriptLexPtr lex) 
 		fieldNode = this->classValue->FindChild(right->word);
 
 		if (!fieldNode) {
-			PostSyntaxError(right->lex->line, "Unable to find class field (%s)", right->word.data());
+			PostSyntaxError(lex->line, "Unable to find class field (%s)", right->word.data());
+		}
+
+		if (this->IsType() && !fieldNode->var->IsStatic()) {
+			PostSyntaxError(lex->line, "You can't address to non-static members with type (%s)", this->typeName.data());
 		}
 
 		fieldNode->var->MakeTemp();
