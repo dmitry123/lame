@@ -2,6 +2,48 @@
 
 using namespace lame;
 
+class AnimationState : public State {
+public:
+    AnimationState() : State("animation") {
+        this->left = this->right = NULL;
+    }
+public:
+    void Set(StatePtr left, StatePtr right) {
+        
+        this->left = left;
+        this->right = right;
+    }
+public:
+    void onStateRender() {
+        
+    }
+private:
+    StatePtr left;
+    StatePtr right;
+};
+
+class MainState : State {
+public:
+    MainState() : State("main") {
+    }
+public:
+    void onStateChange(StatePtr state) {
+        GetStateMachine()->FindState("animation")->Set(this, machine.FindState("main-this"));
+    }
+private:
+    StateMachine machine;
+};
+
+int main(int argc, char** argv) {
+    
+    StateMachine machine;
+    
+    machine.AttachState(new AnimationState());
+    
+    return 0;
+}
+
+/*
 int main(int argc, char** argv) {
 
 	Clock time;
@@ -55,6 +97,6 @@ int main(int argc, char** argv) {
 		system("pause");
 	}
 #endif
-
-    return 0;
+	return 0;
 }
+*/

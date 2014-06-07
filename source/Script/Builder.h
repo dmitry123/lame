@@ -20,7 +20,7 @@ typedef enum {
 class LAME_API ScriptNode {
 public:
 	const Buffer word;
-	const ScriptLexPtr lex;
+	const ScriptLexNodePtr lex;
 	const ScriptNodeID id;
 	const ScriptNodePtr parent;
 	const ScriptNodePtr prev;
@@ -36,7 +36,7 @@ public:
 	Vector<ScriptNodePtr> argList;
 	Vector<ScriptNodePtr> blockList;
 public:
-	ScriptNode(Buffer word, ScriptNodeID id, ScriptLexPtr lex, ScriptNodePtr parent, ScriptNodePtr prev) :
+	ScriptNode(Buffer word, ScriptNodeID id, ScriptLexNodePtr lex, ScriptNodePtr parent, ScriptNodePtr prev) :
 		word(word),
 		id(id),
 		lex(lex),
@@ -74,6 +74,7 @@ private:
 	Iterator _BuildCondition(ScriptNodePtr& parent, Iterator i);
 	Iterator _BuildEntry(ScriptNodePtr& parent, Iterator i);
 	Iterator _BuildArguments(ScriptNodePtr& parent, Iterator i);
+	Iterator _BuildJson(ScriptNodePtr& parent, Iterator i);
 private:
 	Iterator _Build(ScriptNodePtr& node, Iterator i);
 	Void _Reset(Void);

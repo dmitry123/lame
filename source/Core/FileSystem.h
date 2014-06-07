@@ -8,6 +8,11 @@
 
 LAME_BEGIN
 
+typedef char FileSignature[LAME_SIGNATURE_MAX];
+typedef char FileName[LAME_FILENAME_MAX];
+typedef char FilePath[LAME_FILEPATH_MAX];
+typedef char FileExtension[LAME_FILEEXTENSION_MAX];
+
 Uint32 LAME_API GetFileSize(StringC filename);
 Uint32 LAME_API GetFileSize64(StringC filename);
 StringC LAME_API GetCurrentDirectory(Void);
@@ -143,7 +148,14 @@ private:
 	List <Buffer> extlist_;
 };
 
-class FilePath {
+class FilePathInfo {
+public:
+	FilePathInfo() {
+	}
+public:
+	FilePathInfo(StringC buffer) {
+		this->Parse(buffer);
+	}
 public:
 	inline Void Parse(StringC buffer) {
 		this->name = GetFileNameWithoutExtension(buffer);

@@ -270,6 +270,9 @@ static Void Equal(ScriptVarPtr left, ScriptVarPtr right) {
 	case kScriptTypeString:
 		left->intValue = left->stringValue == right->stringValue;
 		break;
+    case kScriptTypeClass:
+        left->intValue = left->classValue == right->classValue;
+        break;
 	case kScriptTypeAuto:
 		left->intValue = left->type == right->type;
 		break;
@@ -290,6 +293,12 @@ static Void NotEqual(ScriptVarPtr left, ScriptVarPtr right) {
 	case kScriptTypeString:
 		left->intValue = left->stringValue != right->stringValue;
 		break;
+    case kScriptTypeClass:
+        left->intValue = left->classValue == right->classValue;
+        break;
+    case kScriptTypeAuto:
+        left->intValue = left->type == right->type;
+        break;
 	default:
 		__EvalError(!=);
 	}

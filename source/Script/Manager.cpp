@@ -15,15 +15,18 @@ ScriptManager::ScriptManager() {
 	this->_DeclareInternalType(kScriptTypeList, "List");
 	this->_DeclareInternalType(kScriptTypeFunction, "Function");
 	this->_DeclareInternalType(kScriptTypeAuto, "Auto");
-	this->_DeclareInternalType(kScriptTypeClass, "Null");
+    this->_DeclareInternalType(kScriptTypeClass, "Class");
+	this->_DeclareInternalType(kScriptTypeJson, "Json");
     
 	ScriptVarPtr trueVar;
 	ScriptVarPtr falseVar;
 	ScriptVarPtr undeclaredVar;
+    ScriptVarPtr nullVar;
     
 	trueVar = this->_DeclareInternalVar(kScriptTypeBool, "True");
 	falseVar = this->_DeclareInternalVar(kScriptTypeBool, "False");
 	undeclaredVar = this->_DeclareInternalVar(kScriptTypeAuto, "Undeclared");
+    nullVar = this->_DeclareInternalVar(kScriptTypeClass, "Null");
 
 	trueVar->intValue = LAME_TRUE;
 	falseVar->intValue = LAME_FALSE;
@@ -79,16 +82,20 @@ ScriptVarPtr ScriptManager::Find(BufferRefC name) {
 	
 	ScriptVarPtr var = 0;
 
-	for (const Map& m : this->varMapQueue) {
-
-		if (!m.count(name)) {
+    for (List<Map>::reverse_iterator i = this->varMapQueue.rbegin(); i != this->varMapQueue.rend(); i++) {
+        
+		if (!i->count(name)) {
 			continue;
 		}
-
-		if ((var = m.at(name))) {
+        
+		if ((var = i->at(name))) {
 			break;
 		}
-	}
+    }
+    
+    if (var && var->name != var->typeName) {
+        var->flags &= ~kScriptFlagType;
+    }
 
 	return var;
 }
@@ -173,7 +180,7 @@ ScriptVarPtr ScriptManager::_DeclareInternalVar(ScriptTypeID type, BufferRefC na
 	if (!typeVar) {
 		PostErrorMessage("Invalid type's id (%d)", type);
 	}
-
+    
 	ScriptVar var(type, name, typeVar->typeName, 0);
 	this->Declare(&var);
 	typeVar = this->Find(name);

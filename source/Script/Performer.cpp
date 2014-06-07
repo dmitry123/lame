@@ -236,6 +236,9 @@ __DeclareVariable:
 			PostSyntaxError(node->lex->line, "Result of variable's expression must be something except nothing", 1);
 		}
 		resultVar = result.back()->var;
+		if (!resultVar) {
+			PostSyntaxError(node->lex->line, "Result of variable's expression must be something except nothing", 1);
+		}
 		resultVar->flags |= node->modificators;
 		if (!resultVar) {
 			PostSyntaxError(node->lex->line, "The result of variable's expression isn't variable or constant", 1);
@@ -329,7 +332,7 @@ ScriptVarPtr ScriptPerformer::_Find(BufferRefC name, ScriptNodePtr node) {
 
 Void ScriptPerformer::_RegisterConstant(ScriptNodePtr node) {
 
-	switch (node->lex->id) {
+	switch (node->lex->lex->id) {
 	case kScriptLexInt:
 		node->var = new ScriptVar(kScriptTypeInt, node->word, "Int", node->lex->line);
 		node->var->intValue = ParseIntValue(node->word.data());
@@ -374,16 +377,16 @@ Void ScriptPerformer::_Evaluate(Vector<ScriptNodePtr>* list, Vector<ScriptNodePt
 	for (ScriptNodePtr node : *list) {
 
 		// skip semicolons
-		if (node->lex->id == kScriptLexSemicolon) {
+		if (node->lex->lex->id == kScriptLexSemicolon) {
 			//this->tempList_.clear();
 		}
-
+        
 		// save current command in stack with commands (for trace)
-		//this->cmdList_.push_back(node->word);
+		this->cmdList_.push_back(node->word);
 
 		// if out node hasn't variable (every node hasn't variable) and
 		// was defined as const then register it's variable
-		if (node->lex->IsConst() && !node->var) {
+		if (node->lex->lex->IsConst() && !node->var) {
 			this->_RegisterConstant(node);
 		}
 
@@ -406,7 +409,7 @@ Void ScriptPerformer::_Evaluate(Vector<ScriptNodePtr>* list, Vector<ScriptNodePt
 				// look though all fields in node's list
 				// to declare it's constants
 				for (ScriptNodePtr n : node->argList) {
-					if (!n->var && n->lex->IsConst()) {
+					if (!n->var && n->lex->lex->IsConst()) {
 						this->_RegisterConstant(n);
 					}
 				}
@@ -428,6 +431,9 @@ Void ScriptPerformer::_Evaluate(Vector<ScriptNodePtr>* list, Vector<ScriptNodePt
 			if (typeVar->IsClass()) {
 				node->var = typeVar;
 			}
+            else {
+                node->var = typeVar;
+            }
 
 			typeVar = LAME_NULL;
 		}
@@ -436,7 +442,7 @@ Void ScriptPerformer::_Evaluate(Vector<ScriptNodePtr>* list, Vector<ScriptNodePt
 		// then it might be something more then normal
 		// variable or type, for example declaration
 		// of variable, function, class or condition block
-		// likes while, for, if, else etc
+		// like while, for, if, else etc
 		if (node->id != kScriptNodeDefault) {
 			if (node->id == kScriptNodeFunction) {
 				// if our node - function, so fuck it
@@ -462,8 +468,8 @@ Void ScriptPerformer::_Evaluate(Vector<ScriptNodePtr>* list, Vector<ScriptNodePt
 		else {
 
 			// if our lex const or unknown then push in stack
-			if (node->lex->IsConst() ||
-				node->lex->IsUnknown()
+			if (node->lex->lex->IsConst() ||
+				node->lex->lex->IsUnknown()
 			) {
 				result->push_back(node);
 			}
@@ -471,12 +477,12 @@ Void ScriptPerformer::_Evaluate(Vector<ScriptNodePtr>* list, Vector<ScriptNodePt
 			__EvaluateOperator:
 
 				// if out lex has unknown id and isn't variable
-				if (node->lex->id == kScriptLexDefault && !typeVar) {
+				if (node->lex->lex->id == kScriptLexDefault && !typeVar) {
 					result->push_back(node); continue;
 				}
 
 				// if we have unknown count of operands in lex then we have unknown lex, so have to throw an exception
-				if ((arguments = node->lex->args) == -1) {
+				if ((arguments = node->lex->lex->args) == -1) {
 					PostSyntaxError(node->lex->line, "Lex (%s) isn't as operation", node->lex->word.data());
 				}
 
@@ -493,7 +499,7 @@ Void ScriptPerformer::_Evaluate(Vector<ScriptNodePtr>* list, Vector<ScriptNodePt
 					result->pop_back();
 
 					// if we havn't left variable or have, but its not temporary and has unknown lex
-					if (left->lex && left->lex->IsUnknown() && left->var && !left->var->IsTemp()) {
+					if (left->lex && left->lex->lex->IsUnknown() && left->var && !left->var->IsTemp()) {
 						// if parent's id isn't class, its mean that variable isn't class's field
 						if (left->parent->id != kScriptNodeClass) {
 							left->var = this->_Find(left->word, node);
@@ -501,7 +507,7 @@ Void ScriptPerformer::_Evaluate(Vector<ScriptNodePtr>* list, Vector<ScriptNodePt
 					}
 
 					// if left variable type then throw an exception
-					if ((left->var->IsType() || left->var->IsFinal()) && node->lex->IsLeft()) {
+					if ((left->var->IsType() || left->var->IsFinal()) && node->lex->lex->IsLeft()) {
 						PostSyntaxError(node->lex->line, "You can't change final variables", 1);
 					}
 
@@ -509,7 +515,7 @@ Void ScriptPerformer::_Evaluate(Vector<ScriptNodePtr>* list, Vector<ScriptNodePt
 					// modificators then we must throw an exception, but
 					if (left->var->IsPrivate() || left->var->IsProtected()) {
 
-						// only if we right's parent's parent not equal
+						// only if we're right's parent's parent are not equal
 						// with left's parent, its mean that right object
 						// is local and has method parent, and method has
 						// same parent as field's parent - its a class
@@ -519,11 +525,11 @@ Void ScriptPerformer::_Evaluate(Vector<ScriptNodePtr>* list, Vector<ScriptNodePt
 					}
 
 					// if node's lex is new, then evaluate new lex
-					if (node->lex->id == kScriptLexNew) {
+					if (node->lex->lex->id == kScriptLexNew) {
 						this->_EvaluateNew(node, left, classVar);
 					}
 					// if node's lex is return, then evaluate return lex
-					else if (node->lex->id == kScriptLexReturn) {
+					else if (node->lex->lex->id == kScriptLexReturn) {
 						this->_EvaluateReturn(node, left);
 					}
 					// else evaluate single expression
@@ -547,7 +553,7 @@ Void ScriptPerformer::_Evaluate(Vector<ScriptNodePtr>* list, Vector<ScriptNodePt
 					}
 
 					// if we havn't left variable or have, but its not temporary and has unknown lex
-					if (!left->var || left->lex && left->lex->IsUnknown() && left->var && !left->var->IsTemp()) {
+					if (!left->var || (left->lex && left->lex->lex->IsUnknown() && left->var && !left->var->IsTemp())) {
 						// if parent's id isn't class, its mean that variable isn't class's field
 						if (left->parent->id != kScriptNodeClass) {
 							left->var = this->_Find(left->word, node);
@@ -555,14 +561,14 @@ Void ScriptPerformer::_Evaluate(Vector<ScriptNodePtr>* list, Vector<ScriptNodePt
 					}
 
 					// if we havn't right variable and lex is selection then create temp
-					if (!right->var || right->var && !right->var->IsTemp() && !right->lex->IsConst()) {
-						if (node->lex->id != kScriptLexDirected && node->lex->id != kScriptLexMediated) {
+					if (!right->var || (right->var && !right->var->IsTemp() && !right->lex->lex->IsConst())) {
+						if (node->lex->lex->id != kScriptLexDirected && node->lex->lex->id != kScriptLexMediated) {
 							right->var = this->_CreateTemp(this->_Find(right->word, node))->var;
 						}
 					}
 
 					// if operator right associated then create temporary var
-					if (node->lex->IsRight()) {
+					if (node->lex->lex->IsRight()) {
 						left->var = this->_CreateTemp(left->var)->var;
 					}
 
@@ -577,12 +583,12 @@ Void ScriptPerformer::_Evaluate(Vector<ScriptNodePtr>* list, Vector<ScriptNodePt
 					}
 
 					// if left variable type then throw an exception
-					if ((left->var->IsType() || left->var->IsFinal()) && node->lex->IsLeft()) {
+					if ((left->var->IsType() || left->var->IsFinal()) && node->lex->lex->IsLeft()) {
 						PostSyntaxError(node->lex->line, "You can't change final variables", 1);
 					}
 
 					// if we have result from double expression then swap left with result
-					if ((expNode = left->var->_EvaluateDouble(right, node->lex))) {
+					if ((expNode = left->var->_EvaluateDouble(right, node->lex->lex))) {
 						std::swap(left, expNode);
 					}
 
@@ -595,12 +601,12 @@ Void ScriptPerformer::_Evaluate(Vector<ScriptNodePtr>* list, Vector<ScriptNodePt
 					// if left variable has private/protected
 					// modificators then we must throw an exception, but
 					if (left->var->IsPrivate() || left->var->IsProtected() ||
-						right->var && (
+						(right->var && (
 						right->var->IsPrivate() ||
-						right->var->IsProtected())
+						right->var->IsProtected()))
 					) {
 
-						// only if we right's parent's parent not equal
+						// only if we're right's parent's parent and are not equal
 						// with left's parent, its mean that right object
 						// is local and has method parent, and method has
 						// same parent as field's parent - its a class
@@ -651,7 +657,7 @@ Void ScriptPerformer::_EvaluateNew(ScriptNodePtr node, ScriptNodePtr left, Scrip
 	// we'll move all variables and nodes from type object to new
 	// and save it to new object's child list
 	for (ScriptNodePtr n : var->classValue->childList) {
-		if (!n->var->IsStatic()) {
+		if (!n->var->IsStatic() && !n->var->IsFunction()) {
 			ScriptNodePtr node = new ScriptNode(*n);
 			node->var = new ScriptVar(*n->var);
 			left->var->classValue->childList.push_back(node);
@@ -672,11 +678,11 @@ Void ScriptPerformer::_EvaluateSingle(ScriptNodePtr node, ScriptNodePtr left) {
 	// if our lex has unknown token ... we have to
 	// convert left variable to found token's word? Wut?
 	// anyway, else we can evaluate single expression
-	if (node->lex->IsUnknown()) {
+	if (node->lex->lex->IsUnknown()) {
 		left->var->Convert(this->_Find(node->word, node));
 	}
 	else {
-		left->var->_EvaluateSingle(node->lex);
+		left->var->_EvaluateSingle(node->lex->lex);
 	}
 }
 
@@ -756,7 +762,7 @@ ScriptNodePtr ScriptPerformer::_InvokeMethod(ScriptNodePtr node, ScriptNodePtr e
 		}
 
 		// create 'this' node
-		ScriptNode thisNode("this", kScriptNodeVariable, ScriptParser::Find(node->lex, kScriptLexDefault), left->parent, LAME_NULL);
+		ScriptNode thisNode("this", kScriptNodeVariable, NULL, left->parent, NULL); // ScriptParser::Find(node->lex, kScriptLexDefault), left->parent, LAME_NULL);
 
 		// if it has same names, that its constructor
 		// and save left's word
@@ -777,10 +783,6 @@ ScriptNodePtr ScriptPerformer::_InvokeMethod(ScriptNodePtr node, ScriptNodePtr e
 		(thisVar = this->_Find("this", node))->classValue = expNode->var->classValue;
 
 		if (left->var->IsNative()) {
-			left->var->callback = [](ScriptNodePtr var, ScriptManagerPtr manager, ScriptVarPtr self) {
-				self->classValue->returnVar = new ScriptVar(kScriptTypeString, "TEMP", "String", var->lex->line);
-				self->classValue->returnVar->stringValue = "Hello from C++!";
-			};
 			if (!left->var->callback) {
 				PostSyntaxError(node->lex->line, "Undeclared native method (%s.%s)", expNode->word.data(), left->word.data());
 			}
@@ -851,7 +853,7 @@ Void ScriptPerformer::_EvaluateCondition(ScriptNodePtr node) {
 
 	this->manager_.Push();
 
-	switch (node->lex->id) {
+	switch (node->lex->lex->id) {
 	case kScriptLexIf:
 
 		this->_Evaluate(&node->argList, &result);
@@ -868,7 +870,7 @@ Void ScriptPerformer::_EvaluateCondition(ScriptNodePtr node) {
 		break;
 	case kScriptLexElse:
 
-		if (!node->prev || node->prev->lex->id != kScriptLexIf) {
+		if (!node->prev || node->prev->lex->lex->id != kScriptLexIf) {
 			PostSyntaxError(node->lex->line, "Else construction must have 'if' node", 1);
 		}
 
@@ -890,7 +892,7 @@ Void ScriptPerformer::_EvaluateCondition(ScriptNodePtr node) {
 		node->result = result.back()->var->Boolean();
 		result.clear();
 
-		if (node->prev->lex->id == kScriptLexDo && node->prev->parent->parent) {
+		if (node->prev->lex->lex->id == kScriptLexDo && node->prev->parent->parent) {
 			if (node->prev->blockList.size()) {
 				this->_Evaluate(&node->prev->blockList, &result);
 				result.clear();
@@ -901,7 +903,7 @@ Void ScriptPerformer::_EvaluateCondition(ScriptNodePtr node) {
 			break;
 		}
 
-		if (node->prev && node->prev->lex->id == kScriptLexDo && node->prev->parent->parent) {
+		if (node->prev && node->prev->lex->lex->id == kScriptLexDo && node->prev->parent->parent) {
 			if (!node->prev->blockList.size()) {
 				break;
 			}
@@ -915,7 +917,7 @@ Void ScriptPerformer::_EvaluateCondition(ScriptNodePtr node) {
 			} while (node->result);
 		}
 		else {
-			if (!node->blockList.size() && node->argList.size() == 1 && node->argList.back()->lex->IsConst() && node->argList.back()->var->Boolean()) {
+			if (!node->blockList.size() && node->argList.size() == 1 && node->argList.back()->lex->lex->IsConst() && node->argList.back()->var->Boolean()) {
 				PostSyntaxError(node->lex->line, "Infinite loop, non-zero constant expression in while without body", 1);
 			}
 			while (node->result) {

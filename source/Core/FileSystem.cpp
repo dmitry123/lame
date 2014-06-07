@@ -541,33 +541,9 @@ static List <Buffer> __FindContainingFilesAtPath(StringC path, StringC name, Str
 List <Buffer> FindContainingFilesAtPath(StringC path, StringC name, StringC extensions) {
 	return __FindContainingFilesAtPath(path, name, extensions, Directory::kFiles);
 }
+
 List <Buffer> FindContainingFilesAtPathWithDeep(StringC path, StringC name, StringC extensions) {
 	return __FindContainingFilesAtPath(path, name, extensions, Directory::kFiles | Directory::kDeep);
 }
-//
-//FilePathInfo ParseFilePath(StringC path) {
-//
-//	FilePathInfo info;
-//
-//	info.name = GetFileNameWithoutExtension(path);
-//	info.extension = GetFileExtension(path);
-//	info.path = GetPathWithoutEnd(path);
-//	info.path = NormalizePath(info.path.data());
-//
-//	return info;
-//}
-//
-//Buffer CreateFilePathFromInfo(FilePathInfo info) {
-//
-//	FilePath path = { 0 };
-//
-//	strcat(path, info.path.data());
-//	strcat(path, LAME_SLASH_STR);
-//	strcat(path, info.name.data());
-//	strcat(path, ".");
-//	strcat(path, info.extension.data());
-//
-//	return Buffer(path);
-//}
 
 LAME_END

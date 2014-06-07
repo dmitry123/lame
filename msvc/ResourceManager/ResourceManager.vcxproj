@@ -1,0 +1,206 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{E277608C-59B6-448E-80E7-73632FEE350B}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>ResourceManager</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>D:\code\C++\Projects\lame\source;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;RESOURCEMANAGER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;RESOURCEMANAGER_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\source\ResourceManager\AudioLoader.h" />
+    <ClInclude Include="..\..\source\ResourceManager\Define.h" />
+    <ClInclude Include="..\..\source\ResourceManager\libjpeg\jconfig.h" />
+    <ClInclude Include="..\..\source\ResourceManager\libjpeg\jdct.h" />
+    <ClInclude Include="..\..\source\ResourceManager\libjpeg\jerror.h" />
+    <ClInclude Include="..\..\source\ResourceManager\libjpeg\jinclude.h" />
+    <ClInclude Include="..\..\source\ResourceManager\libjpeg\jmemsys.h" />
+    <ClInclude Include="..\..\source\ResourceManager\libjpeg\jmorecfg.h" />
+    <ClInclude Include="..\..\source\ResourceManager\libjpeg\jpegint.h" />
+    <ClInclude Include="..\..\source\ResourceManager\libjpeg\jpeglib.h" />
+    <ClInclude Include="..\..\source\ResourceManager\libjpeg\jversion.h" />
+    <ClInclude Include="..\..\source\ResourceManager\libpng\png.h" />
+    <ClInclude Include="..\..\source\ResourceManager\libpng\pngconf.h" />
+    <ClInclude Include="..\..\source\ResourceManager\libpng\pngdebug.h" />
+    <ClInclude Include="..\..\source\ResourceManager\libpng\pnginfo.h" />
+    <ClInclude Include="..\..\source\ResourceManager\libpng\pnglibconf.h" />
+    <ClInclude Include="..\..\source\ResourceManager\libpng\pngpriv.h" />
+    <ClInclude Include="..\..\source\ResourceManager\libpng\pngstruct.h" />
+    <ClInclude Include="..\..\source\ResourceManager\Resource.h" />
+    <ClInclude Include="..\..\source\ResourceManager\ResourceManager.h" />
+    <ClInclude Include="..\..\source\ResourceManager\TextureLoader.h" />
+    <ClInclude Include="..\..\source\ResourceManager\zlib\crc32.h" />
+    <ClInclude Include="..\..\source\ResourceManager\zlib\deflate.h" />
+    <ClInclude Include="..\..\source\ResourceManager\zlib\gzguts.h" />
+    <ClInclude Include="..\..\source\ResourceManager\zlib\inffast.h" />
+    <ClInclude Include="..\..\source\ResourceManager\zlib\inffixed.h" />
+    <ClInclude Include="..\..\source\ResourceManager\zlib\inflate.h" />
+    <ClInclude Include="..\..\source\ResourceManager\zlib\inftrees.h" />
+    <ClInclude Include="..\..\source\ResourceManager\zlib\trees.h" />
+    <ClInclude Include="..\..\source\ResourceManager\zlib\zconf.h" />
+    <ClInclude Include="..\..\source\ResourceManager\zlib\zlib.h" />
+    <ClInclude Include="..\..\source\ResourceManager\zlib\zutil.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Core.vcxproj">
+      <Project>{8e51e80f-eda6-41cb-8d0f-5a722293b445}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\source\ResourceManager\BmpLoader.cpp" />
+    <ClCompile Include="..\..\source\ResourceManager\JpegLoader.cpp" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jaricom.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jcapimin.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jcapistd.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jcarith.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jccoefct.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jccolor.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jcdctmgr.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jchuff.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jcinit.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jcmainct.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jcmarker.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jcmaster.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jcomapi.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jcparam.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jcprepct.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jcsample.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jctrans.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdapimin.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdapistd.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdarith.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdatadst.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdatasrc.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdcoefct.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdcolor.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jddctmgr.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdhuff.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdinput.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdmainct.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdmarker.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdmaster.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdmerge.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdpostct.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdsample.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdtrans.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jerror.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jfdctflt.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jfdctfst.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jfdctint.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jidctflt.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jidctfst.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jidctint.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jmemmgr.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jmemnobs.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jquant1.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jquant2.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jutils.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libpng\png.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngerror.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngget.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngmem.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngpread.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngread.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngrio.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngrtran.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngrutil.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngset.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngtrans.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngwio.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngwrite.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngwtran.c" />
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngwutil.c" />
+    <ClCompile Include="..\..\source\ResourceManager\PngLoader.cpp" />
+    <ClCompile Include="..\..\source\ResourceManager\Resource.cpp" />
+    <ClCompile Include="..\..\source\ResourceManager\ResourceManager.cpp" />
+    <ClCompile Include="..\..\source\ResourceManager\TgaLoader.cpp" />
+    <ClCompile Include="..\..\source\ResourceManager\WavLoader.cpp" />
+    <ClCompile Include="..\..\source\ResourceManager\zlib\adler32.c" />
+    <ClCompile Include="..\..\source\ResourceManager\zlib\compress.c" />
+    <ClCompile Include="..\..\source\ResourceManager\zlib\crc32.c" />
+    <ClCompile Include="..\..\source\ResourceManager\zlib\deflate.c" />
+    <ClCompile Include="..\..\source\ResourceManager\zlib\gzclose.c" />
+    <ClCompile Include="..\..\source\ResourceManager\zlib\gzlib.c" />
+    <ClCompile Include="..\..\source\ResourceManager\zlib\gzread.c" />
+    <ClCompile Include="..\..\source\ResourceManager\zlib\gzwrite.c" />
+    <ClCompile Include="..\..\source\ResourceManager\zlib\infback.c" />
+    <ClCompile Include="..\..\source\ResourceManager\zlib\inffast.c" />
+    <ClCompile Include="..\..\source\ResourceManager\zlib\inflate.c" />
+    <ClCompile Include="..\..\source\ResourceManager\zlib\inftrees.c" />
+    <ClCompile Include="..\..\source\ResourceManager\zlib\trees.c" />
+    <ClCompile Include="..\..\source\ResourceManager\zlib\uncompr.c" />
+    <ClCompile Include="..\..\source\ResourceManager\zlib\zutil.c" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

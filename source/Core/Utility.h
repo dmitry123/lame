@@ -22,9 +22,7 @@
 
 #define LAME_SHAREDPTR
 
-#if !defined(LAME_SHAREDPTR)
-#  include <memory>
-#endif
+#include <memory>
 
 LAME_BEGIN
 
@@ -49,16 +47,22 @@ inline VoidP ZeroAlloc(Uint32 size) {
 }
 
 #if !defined(LAME_SHAREDPTR)
+
 template <class T> using SharedPtr = std::shared_ptr<T>;
 template <class T> using WeakPtr = std::weak_ptr<T>;
+
 #else
+
+typedef struct StrongWeakCounter {
+    Atomic32 strong;
+    Atomic32 weak;
+} *StrongWeakCounterPtr;
 
 template <class T> class SharedPtr {
 public:
     inline SharedPtr() {
-        this->reference_ = 0;
-        this->counter_ = 0;
-        this->weaks_ = 0;
+        this->reference_ = NULL;
+        this->counter_ = NULL;
     }
     inline ~SharedPtr() {
         this->__Destroy();
@@ -69,7 +73,7 @@ public:
 	inline explicit SharedPtr(TypeP reference) : SharedPtr() {
         this->__Create(reference);
     }
-	inline SharedPtr(const SharedPtr <T>& sp) : SharedPtr(){
+	inline SharedPtr(const SharedPtr <T>& sp) : SharedPtr() {
         this->__Copy(sp);
     }
 public:
@@ -82,7 +86,7 @@ public:
 	inline Void operator () (TypeP reference) {
         this->__Create(reference);
     }
-public:
+protected:
 	Void __Create(TypeP reference);
 	Void __Destroy();
 	Void __Copy(const SharedPtr <T>& sp);
@@ -113,8 +117,7 @@ public:
 	}
 public:
 	TypeP reference_;
-	Atomic32* counter_;
-	Atomic32* weaks_;
+    StrongWeakCounterPtr counter_;
 };
 
 template <class T>
@@ -129,26 +132,26 @@ Void SharedPtr <T>::__Create(TypeP reference) {
 	}
     
 	this->reference_ = reference;
-	this->counter_ = new Atomic32 [2] {1, 0};
-	this->weaks_ = this->counter_ + 1;
+	this->counter_ = new StrongWeakCounter();
+    this->counter_->strong = 1;
+    this->counter_->weak = 0;
 }
 
 template <class T>
 Void SharedPtr <T>::__Destroy() {
     
-	if (!this || (this->weaks_ && *this->weaks_ != 0)) {
+	if (!this || (this->counter_ && this->counter_->weak != 0)) {
 		return;
 	}
     
-	if ((this->counter_ && *this->counter_ == 0) ||
-		(this->counter_ && --*this->counter_ == 0)) {
+	if ((this->counter_ &&   this->counter_->strong == 0) ||
+		(this->counter_ && --this->counter_->strong == 0)) {
         
         delete this->reference_;
-		delete[] this->counter_;
+		delete this->counter_;
         
 		this->counter_ = 0;
 		this->reference_ = 0;
-		this->weaks_ = 0;
 	}
 }
 
@@ -165,10 +168,9 @@ Void SharedPtr <T>::__Copy(const SharedPtr <T>& sp) {
     
 	this->reference_ = sp.reference_;
 	this->counter_ = sp.counter_;
-	this->weaks_ = sp.weaks_;
     
 	if (this->counter_) {
-		++(*this->counter_);
+		++this->counter_->strong;
 	}
 }
 
@@ -183,7 +185,6 @@ Void SharedPtr <T>::UnLink() {
     
 	this->reference_ = 0;
 	this->counter_ = 0;
-	this->weaks_ = 0;
 }
 
 template <class T> class WeakPtr : public SharedPtr<T> {
@@ -192,8 +193,9 @@ public:
     }
 	~WeakPtr() {
 		this->UnLink();
+        
 		if (this->counter_) {
-			this->counter_->Inc();
+			this->counter_->strong.Inc();
 		}
 	}
 public:
@@ -232,7 +234,6 @@ public:
         
 		sp.reference_ = this->reference_;
 		sp.counter_ = this->counter_;
-		sp.weaks_ = this->weaks_;
         
 		return sp;
 	}
@@ -245,10 +246,9 @@ private:
         
 		this->reference_ = sp.reference_;
 		this->counter_ = sp.counter_;
-		this->weaks_ = sp.weaks_;
         
-		if (this->weaks_) {
-			++*this->weaks_;
+		if (this->counter_) {
+			++this->counter_->weak;
 		}
 	}
 	Void __Create(typename SharedPtr<T>::TypeP st) {
@@ -257,8 +257,8 @@ private:
 	}
 	Void __Destroy() {
         
-		if ((this->weaks_ &&   *this->weaks_ == 0) ||
-			(this->weaks_ && --*this->weaks_ == 0 && *this->counter_ == 0)) {
+		if ((this->counter_ &&   this->counter_->weak == 0) ||
+			(this->counter_ && --this->counter_->weak == 0 && this->counter_->strong == 0)) {
             
 			this->SharedPtr<T>::__Destroy();
 		}
@@ -472,6 +472,8 @@ private:
 		this->instance_(new typename internal::__AnySingleton<T>::Type);
 	}
 };
+
+template <class T> using Arc = Any<T>;
 
 class LAME_API Exception {
 public:

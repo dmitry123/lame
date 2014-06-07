@@ -1,4 +1,5 @@
 #include "Script.h"
+#include "Json.h"
 
 #define __Inc(_i) \
 	if (_i == this->parser_->lexList_.end() || ++_i == this->parser_->lexList_.end()) {\
@@ -26,7 +27,6 @@ ScriptBuilder::Iterator ScriptBuilder::_BuildFunction(ScriptNodePtr& parent, Ite
 	ScriptNodePtr functionNode;
 	Buffer functionType;
 	ScriptNodePtr typeNode;
-	Bool isBuildingBlock = 0;
 	
 	functionType = (*i++)->word;
 	functionNode = this->_CreateNode(*i, kScriptNodeFunction);
@@ -164,24 +164,26 @@ ScriptBuilder::Iterator ScriptBuilder::_BuildClass(ScriptNodePtr& parent, Iterat
 		}
 		else if ((*i)->lex->IsModificator()) {
 			switch ((*i)->lex->id) {
-			case kScriptLexPublic:
-				modificators |= kScriptFlagPublic;
-				break;
-			case kScriptLexPrivate:
-				modificators |= kScriptFlagPrivate;
-				break;
-			case kScriptLexProtected:
-				modificators |= kScriptFlagProtected;
-				break;
-			case kScriptLexStatic:
-				modificators |= kScriptFlagStatic;
-				break;
-			case kScriptLexNative:
-				modificators |= kScriptFlagNative;
-				break;
-			case kScriptLexFinal:
-				modificators |= kScriptFlagFinal;
-				break;
+                case kScriptLexPublic:
+                    modificators |= kScriptFlagPublic;
+                    break;
+                case kScriptLexPrivate:
+                    modificators |= kScriptFlagPrivate;
+                    break;
+                case kScriptLexProtected:
+                    modificators |= kScriptFlagProtected;
+                    break;
+                case kScriptLexStatic:
+                    modificators |= kScriptFlagStatic;
+                    break;
+                case kScriptLexNative:
+                    modificators |= kScriptFlagNative;
+                    break;
+                case kScriptLexFinal:
+                    modificators |= kScriptFlagFinal;
+                    break;
+                default:
+                    break;
 			}
 		}
 		else {
@@ -210,8 +212,8 @@ ScriptBuilder::Iterator ScriptBuilder::_BuildCondition(ScriptNodePtr& parent, It
 	Bool isSingleExpression = 0;
 
 	if ((*i)->lex->id != kScriptLexBraceL && (
-		parent->lex->id == kScriptLexElse ||
-		parent->lex->id == kScriptLexDo)
+		parent->lex->lex->id == kScriptLexElse ||
+		parent->lex->lex->id == kScriptLexDo)
 	) {
 		goto __AvoidBraces;
 	}
@@ -368,16 +370,58 @@ ScriptBuilder::Iterator ScriptBuilder::_BuildArguments(ScriptNodePtr& parent, It
 	return i;
 }
 
+ScriptBuilder::Iterator ScriptBuilder::_BuildJson(ScriptNodePtr& parent, Iterator i) {
+
+	__Inc(i);
+
+	ScriptNativeJson json;
+
+	while (LAME_TRUE) {
+		if ((*i)->lex->id == kScriptLexBraceL) {
+			i = this->_BuildJson(parent, i);
+		}
+		else if ((*i)->lex->id == kScriptLexBraceR) {
+			break;
+		}
+		else {
+			Buffer fieldName = (*i++)->word;
+
+			if ((*i)->word.at(0) != ':') {
+				PostSyntaxError((*i)->lex->line, "Json syntax error, invalid token (%s)", (*i)->word.data());
+			}
+
+			Buffer fieldValue = (*(i + 1))->word;
+
+			if ((*i)->word.at(0) != ',' ||
+				(*i)->word.at(0) != '}'
+			) {
+				PostSyntaxError((*i)->lex->line, "Json syntax error, invalid token (%s)", (*i)->word.data());
+			}
+
+//			json.GetRoot()->push_back(SharedPtr<ScriptJsonNode>(new ScriptJsonNode(fieldName)));
+		}
+		if (++i == this->parser_->lexList_.end()) {
+			PostSyntaxError((*(i - 1))->line, "Braces mismatched", 1);
+		}
+	}
+
+	return i;
+}
+
 ScriptBuilder::Iterator ScriptBuilder::_Build(ScriptNodePtr& node, Iterator i) {
 
-	if (node->lex->IsLanguage()) {
-		if (node->lex->id == kScriptLexClass) {
+	if (node->lex->lex->id == kScriptLexBraceL) {
+		i = this->_BuildJson(node, i);
+	}
+
+	if (node->lex->lex->IsLanguage()) {
+		if (node->lex->lex->id == kScriptLexClass) {
 			i = this->_BuildClass(node, i);
 		}
-		else if (node->lex->IsCondition()) {
+		else if (node->lex->lex->IsCondition()) {
 			i = this->_BuildCondition(node, i);
 		}
-		else if (node->lex->IsModificator()) {
+		else if (node->lex->lex->IsModificator()) {
 		}
 	}
 	else {
@@ -449,11 +493,11 @@ ScriptNodePtr ScriptBuilder::_CreateNode(ScriptLexNodePtrC lex, ScriptNodeID id)
 	}
 
 	// allocate script node
-	ScriptNodePtr node(new ScriptNode(lex->word, id, lex->lex, this->parentNode_, this->prevNode_));
+	ScriptNodePtr node(new ScriptNode(lex->word, id, lex, this->parentNode_, this->prevNode_));
 	this->nodeList_.push_back(node);
 
 	// initialize parent
-	if (node->lex->IsCondition() || (node->lex->IsLanguage() && node->lex->id == kScriptLexClass)) {
+	if (node->lex->lex->IsCondition() || (node->lex->lex->IsLanguage() && node->lex->lex->id == kScriptLexClass)) {
 		this->prevNode_ = node;
 		this->parentNode_ = node;
 	}

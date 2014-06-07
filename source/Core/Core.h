@@ -7,6 +7,7 @@
 #include "FileSystem.h"
 #include "List.h"
 #include "Math.h"
+#include "State.h"
 #include "Thread.h"
 #include "Timer.h"
 #include "Utility.h"

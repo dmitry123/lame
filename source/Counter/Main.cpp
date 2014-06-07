@@ -7,8 +7,8 @@
 #endif
 
 #define CORE_LINK SOURCE_LINK "Core"
-#define ZLIB_LINK SOURCE_LINK "Core/Zlib"
 #define SCRIPT_LINK SOURCE_LINK "Script"
+#define RM_LINK SOURCE_LINK "ResourceManager"
 #define CONSOLE_LINK SOURCE_LINK "Console"
 #define COUNTER_LINK SOURCE_LINK "Counter"
 #define EXTENSION_FILTER "cpp&h&c"
@@ -54,12 +54,6 @@ int main() {
 		lines = GetCountOfLines(&coreList);
 		totalLines += lines;
 		PrintCountOfLines("Core", lines);
-
-		List<Buffer> zlibList = GetFilesAtPath(ZLIB_LINK, EXTENSION_FILTER);
-
-		lines = GetCountOfLines(&zlibList);
-		totalLines += lines;
-		PrintCountOfLines("Zlib", lines);
 		
 		List<Buffer> scriptList = GetFilesAtPath(SCRIPT_LINK, EXTENSION_FILTER);
 
@@ -78,6 +72,12 @@ int main() {
 		lines = GetCountOfLines(&counterList);
 		totalLines += lines;
 		PrintCountOfLines("Counter", lines);
+
+		List<Buffer> rmList = GetFilesAtPath(RM_LINK, EXTENSION_FILTER);
+
+		lines = GetCountOfLines(&rmList);
+		totalLines += lines;
+		PrintCountOfLines("ResourceManager", lines);
 	}
 	catch (Exception& e) {
 		e.Debug();

@@ -358,7 +358,7 @@ ScriptLexPtrC ScriptParser::Find(ScriptLexPtr lex, BufferRefC word) {
 
 ScriptLexPtrC ScriptParser::_ParseLex(StringC* wordPtr, Buffer* name) {
 
-	static StringC lockedTokens = "\n\r\t :";
+	static StringC lockedTokens = "\n\r\t ";
 	static StringC allowedTokens = "@$_=/|&><+-*";
 	static StringC wordTokens = "_$";
 

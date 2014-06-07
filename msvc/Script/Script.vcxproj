@@ -86,6 +86,7 @@
     <ClInclude Include="..\..\source\Script\Define.h" />
     <ClInclude Include="..\..\source\Script\Exception.h" />
     <ClInclude Include="..\..\source\Script\Internal.h" />
+    <ClInclude Include="..\..\source\Script\Json.h" />
     <ClInclude Include="..\..\source\Script\Manager.h" />
     <ClInclude Include="..\..\source\Script\Parser.h" />
     <ClInclude Include="..\..\source\Script\Performer.h" />
@@ -94,6 +95,8 @@
   <ItemGroup>
     <ClCompile Include="..\..\source\Script\Builder.cpp" />
     <ClCompile Include="..\..\source\Script\Exception.cpp" />
+    <ClCompile Include="..\..\source\Script\Json.cpp" />
+    <ClCompile Include="..\..\source\Script\JsonNode.cpp" />
     <ClCompile Include="..\..\source\Script\Manager.cpp" />
     <ClCompile Include="..\..\source\Script\Node.cpp" />
     <ClCompile Include="..\..\source\Script\Parser.cpp" />

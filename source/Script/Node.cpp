@@ -79,26 +79,26 @@ Void ScriptNode::_Order(Vector<ScriptNodePtr>* list) {
 		isSelectionLast = LAME_FALSE;
 
 		if (
-			node->lex->IsConst() ||
-			node->lex->IsUnknown() ||
-			node->lex->IsCondition() ||
-			node->lex->IsClass()
+			node->lex->lex->IsConst() ||
+			node->lex->lex->IsUnknown() ||
+			node->lex->lex->IsCondition() ||
+			node->lex->lex->IsClass()
 		) {
 			result.push_back(node);
 		}
-		else if (node->lex->id == kScriptLexParentheseL) {
-			if (prev && prev->lex->IsUnknown()) {
+		else if (node->lex->lex->id == kScriptLexParentheseL) {
+			if (prev && prev->lex->lex->IsUnknown()) {
 				stack.push_back(prev);
 				prev->MakeInvoke();
 				result.pop_back();
 			}
 			stack.push_back(node);
 		}
-		else if (node->lex->id == kScriptLexParentheseR) {
+		else if (node->lex->lex->id == kScriptLexParentheseR) {
 			isFound = 0;
 			while (stack.size()) {
 				back = stack.back();
-				if (back->lex->id == kScriptLexParentheseL) {
+				if (back->lex->lex->id == kScriptLexParentheseL) {
 					isFound = 1; break;
 				}
 				else {
@@ -113,8 +113,8 @@ Void ScriptNode::_Order(Vector<ScriptNodePtr>* list) {
 				stack.pop_back();
 				if (stack.size()) {
 					back = stack.back();
-					if (back->lex->IsCondition() ||
-						back->lex->IsUnknown()
+					if (back->lex->lex->IsCondition() ||
+						back->lex->lex->IsUnknown()
 					) {
 						result.push_back(back);
 						stack.pop_back();
@@ -122,11 +122,11 @@ Void ScriptNode::_Order(Vector<ScriptNodePtr>* list) {
 				}
 			}
 		}
-		else if (node->lex->id == kScriptLexSemicolon) {
+		else if (node->lex->lex->id == kScriptLexSemicolon) {
 			while (stack.size()) {
 				back = stack.back();
-				if (back->lex->id == kScriptLexParentheseL ||
-					back->lex->id == kScriptLexParentheseR
+				if (back->lex->lex->id == kScriptLexParentheseL ||
+					back->lex->lex->id == kScriptLexParentheseR
 				) {
 					PostSyntaxError(back->lex->line, "Parentheses mismatched", 1);
 				}
@@ -140,8 +140,8 @@ Void ScriptNode::_Order(Vector<ScriptNodePtr>* list) {
 		else {
 			while (stack.size()) {
 				back = stack.back();
-				if (((node->lex->IsLeft() && node->lex->priority >= back->lex->priority)) ||
-					(!node->lex->IsLeft() && node->lex->priority > back->lex->priority))
+				if (((node->lex->lex->IsLeft() && node->lex->lex->priority >= back->lex->lex->priority)) ||
+					(!node->lex->lex->IsLeft() && node->lex->lex->priority > back->lex->lex->priority))
 				{
 					result.push_back(back);
 					stack.pop_back();
@@ -150,8 +150,8 @@ Void ScriptNode::_Order(Vector<ScriptNodePtr>* list) {
 					break;
 				}
 			}
-			if (node->lex->id == kScriptLexMediated ||
-				node->lex->id == kScriptLexDirected
+			if (node->lex->lex->id == kScriptLexMediated ||
+				node->lex->lex->id == kScriptLexDirected
 			) {
 				isSelectionLast = LAME_TRUE;
 			}
@@ -163,8 +163,8 @@ Void ScriptNode::_Order(Vector<ScriptNodePtr>* list) {
 
 	while (stack.size()) {
 		back = stack.back();
-		if (back->lex->id == kScriptLexParentheseL ||
-			back->lex->id == kScriptLexParentheseR
+		if (back->lex->lex->id == kScriptLexParentheseL ||
+			back->lex->lex->id == kScriptLexParentheseR
 		) {
 			PostSyntaxError(back->lex->line, "Parentheses mismatched", 1);
 		}

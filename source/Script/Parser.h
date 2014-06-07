@@ -143,6 +143,12 @@ public:
 			lex->line = line;
 		}
 	}
+	ScriptLexNode(ScriptLexPtrC lex) :
+		word(lex->word),
+		line(lex->line),
+		lex(lex)
+	{
+	}
 	~ScriptLexNode() {
 	}
 };

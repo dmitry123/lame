@@ -1,0 +1,375 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Файлы исходного кода">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Заголовочные файлы">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Файлы ресурсов">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="zlib">
+      <UniqueIdentifier>{50cb1163-9eb7-4837-af1d-4d82cc66a0a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libjpg">
+      <UniqueIdentifier>{95e28909-490a-4a11-8598-e279891becac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="libpng">
+      <UniqueIdentifier>{5b617168-dca0-459b-a716-5f7caa4ee9fc}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\source\ResourceManager\Define.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\libjpeg\jconfig.h">
+      <Filter>libjpg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\libjpeg\jdct.h">
+      <Filter>libjpg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\libjpeg\jerror.h">
+      <Filter>libjpg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\libjpeg\jinclude.h">
+      <Filter>libjpg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\libjpeg\jmemsys.h">
+      <Filter>libjpg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\libjpeg\jmorecfg.h">
+      <Filter>libjpg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\libjpeg\jpegint.h">
+      <Filter>libjpg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\libjpeg\jpeglib.h">
+      <Filter>libjpg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\libjpeg\jversion.h">
+      <Filter>libjpg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\libpng\png.h">
+      <Filter>libpng</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\libpng\pngconf.h">
+      <Filter>libpng</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\libpng\pngdebug.h">
+      <Filter>libpng</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\libpng\pnginfo.h">
+      <Filter>libpng</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\libpng\pnglibconf.h">
+      <Filter>libpng</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\libpng\pngpriv.h">
+      <Filter>libpng</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\libpng\pngstruct.h">
+      <Filter>libpng</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\zlib\crc32.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\zlib\deflate.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\zlib\gzguts.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\zlib\inffast.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\zlib\inffixed.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\zlib\inflate.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\zlib\inftrees.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\zlib\trees.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\zlib\zconf.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\zlib\zlib.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\zlib\zutil.h">
+      <Filter>zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\AudioLoader.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\Resource.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\ResourceManager.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\ResourceManager\TextureLoader.h">
+      <Filter>Заголовочные файлы</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jaricom.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jcapimin.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jcapistd.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jcarith.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jccoefct.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jccolor.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jcdctmgr.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jchuff.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jcinit.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jcmainct.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jcmarker.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jcmaster.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jcomapi.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jcparam.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jcprepct.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jcsample.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jctrans.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdapimin.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdapistd.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdarith.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdatadst.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdatasrc.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdcoefct.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdcolor.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jddctmgr.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdhuff.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdinput.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdmainct.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdmarker.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdmaster.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdmerge.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdpostct.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdsample.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jdtrans.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jerror.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jfdctflt.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jfdctfst.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jfdctint.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jidctflt.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jidctfst.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jidctint.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jmemmgr.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jmemnobs.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jquant1.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jquant2.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libjpeg\jutils.c">
+      <Filter>libjpg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libpng\png.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngerror.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngget.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngmem.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngpread.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngread.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngrio.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngrtran.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngrutil.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngset.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngtrans.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngwio.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngwrite.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngwtran.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\libpng\pngwutil.c">
+      <Filter>libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\zlib\adler32.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\zlib\compress.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\zlib\crc32.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\zlib\deflate.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\zlib\gzclose.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\zlib\gzlib.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\zlib\gzread.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\zlib\gzwrite.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\zlib\infback.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\zlib\inffast.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\zlib\inflate.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\zlib\inftrees.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\zlib\trees.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\zlib\uncompr.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\zlib\zutil.c">
+      <Filter>zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\BmpLoader.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\JpegLoader.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\PngLoader.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\Resource.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\TgaLoader.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\WavLoader.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\ResourceManager\ResourceManager.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

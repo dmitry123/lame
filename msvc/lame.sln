@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Script", "Script\Script.vcx
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Counter", "Counter\Counter.vcxproj", "{DCFA4127-64C0-41F2-B577-73E5D6CD78D2}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ResourceManager", "ResourceManager\ResourceManager.vcxproj", "{E277608C-59B6-448E-80E7-73632FEE350B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -33,6 +35,10 @@ Global
 		{DCFA4127-64C0-41F2-B577-73E5D6CD78D2}.Debug|Win32.Build.0 = Debug|Win32
 		{DCFA4127-64C0-41F2-B577-73E5D6CD78D2}.Release|Win32.ActiveCfg = Release|Win32
 		{DCFA4127-64C0-41F2-B577-73E5D6CD78D2}.Release|Win32.Build.0 = Release|Win32
+		{E277608C-59B6-448E-80E7-73632FEE350B}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E277608C-59B6-448E-80E7-73632FEE350B}.Debug|Win32.Build.0 = Debug|Win32
+		{E277608C-59B6-448E-80E7-73632FEE350B}.Release|Win32.ActiveCfg = Release|Win32
+		{E277608C-59B6-448E-80E7-73632FEE350B}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

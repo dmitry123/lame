@@ -1,9 +1,5 @@
 do {
-	class A {
-		native String getFive();
-	}
-
-	A a = new A();
-	
-	String message = a.getFive();
+	Json json = {
+		"value" : "0x7b"
+	};
 }

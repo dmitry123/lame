@@ -86,6 +86,9 @@
     <ProjectReference Include="..\Core\Core.vcxproj">
       <Project>{8e51e80f-eda6-41cb-8d0f-5a722293b445}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\ResourceManager\ResourceManager.vcxproj">
+      <Project>{e277608c-59b6-448e-80e7-73632fee350b}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\Script\Script.vcxproj">
       <Project>{9847b55a-6304-4111-a214-caceb4df9b4c}</Project>
     </ProjectReference>

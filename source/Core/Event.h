@@ -27,7 +27,7 @@ public:
 		this->queue_.push_back(callback);
 	}
 	Void Invoke(Void) {
-		for (Proc p : this->list_) {
+		for (Proc p : this->queue_) {
 			p();
 		}
 	}

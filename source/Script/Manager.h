@@ -14,6 +14,7 @@ typedef enum {
 	kScriptTypeFloat,
 	kScriptTypeString,
 	kScriptTypeClass,
+	kScriptTypeJson,
 	kScriptTypeArray,
 	kScriptTypeList,
 	kScriptTypeFunction,
