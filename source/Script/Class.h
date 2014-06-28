@@ -42,6 +42,12 @@ public:
 		references = new Uint32(1);
 	}
 public:
+	~ScriptClass() {
+		if (this->references && !(*this->references)) {
+			delete this->references;
+		}
+	}
+public:
 	ScriptError Clone(ScriptObjectPtrC object) override;
 	ScriptError Cast(ScriptObjectPtrC object) override;
 	Void Trace(Uint32 offset) override;

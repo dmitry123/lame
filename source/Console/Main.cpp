@@ -220,8 +220,8 @@ int main(int argc, char** argv) {
 
 	// create object's methods
 	classB->GetClass()->GetScopeController()->GetMethodScope()->Find("a")
-		->GetMethod()->SetNativeMethod([] (ScriptMethodPtr m) {
-			printf("%s Method : ", m->GetThis()->GetClass()->GetName().data()); m->Trace(0); puts("");
+		->GetMethod()->SetNativeMethod([](ScriptMethodPtr m) {
+		printf("%s Method : ", m->GetThis()->GetClass()->GetName().data()); m->Trace(0); puts("");
 	});
 	classC->GetClass()->GetScopeController()->GetMethodScope()->Find("a")
 		->GetMethod()->SetNativeMethod([](ScriptMethodPtr m) {
