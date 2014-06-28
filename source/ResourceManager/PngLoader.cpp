@@ -6,7 +6,7 @@
 
 #include "libpng/png.h"
 
-LAME_BEGIN
+LAME_BEGIN2(ResourceManager)
 
 Bool PngLoader::Load(StringC fileName) {
 
@@ -23,7 +23,7 @@ Bool PngLoader::Load(StringC fileName) {
 		PostErrorMessage("Unable to read png file (%s)", image.message);
 	}
 
-	image.format = PNG_FORMAT_RGBA;
+	image.format = PNG_FORMAT_RGB;
 	buffer = (png_bytep)malloc(PNG_IMAGE_SIZE(image));
 	png_image_finish_read(&image, NULL, buffer, 0, NULL);
 
@@ -49,7 +49,12 @@ Bool PngLoader::Save(StringC fileName) {
 	image.height = texInfo->imageHeight;
 	buffer = (png_bytep)texInfo->imageData;
 	image.colormap_entries = image.width;
-	image.format = PNG_FORMAT_RGBA;
+
+	if (texInfo->imageBits != 32) {
+		image.format = PNG_FORMAT_RGB;
+	} else {
+		image.format = PNG_FORMAT_RGBA;
+	}
 
 	if (!png_image_write_to_file(&image, fileName, 0, buffer, 0, NULL)) {
 		return LAME_FALSE;
@@ -58,4 +63,4 @@ Bool PngLoader::Save(StringC fileName) {
 	return LAME_TRUE;
 }
 
-LAME_END
+LAME_END2

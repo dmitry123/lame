@@ -1,4 +1,4 @@
-#include "Thread.h"
+#include "Condition.h"
 
 #include <pthread.h>
 #include <errno.h>
@@ -11,7 +11,7 @@
 #  endif
 #endif
 
-LAME_BEGIN
+LAME_BEGIN2(Core)
 
 Condition::Condition() {
 	pthread_cond_init((pthread_cond_t*)&this->condition_, NULL);
@@ -69,4 +69,4 @@ Bool Condition::TimedWait(Clock duration) {
 	return result == ETIMEDOUT;
 }
 
-LAME_END
+LAME_END2

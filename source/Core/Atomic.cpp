@@ -4,11 +4,9 @@
 #  include <Windows.h>
 #elif defined(LAME_APPLE)
 #  include <libkern/OSAtomic.h>
-#else
-#  error "I'll add atomic operations for linux later!";
 #endif
 
-LAME_BEGIN
+LAME_BEGIN2(Core)
 
 /* 16 bits */
 
@@ -59,7 +57,7 @@ Uint16 Atomic16::Sub(Uint16 value) {
 Uint16 Atomic16::Set(Uint16 value) {
 
 #ifdef LAME_WINDOWS
-	InterlockedCompareExchange16((PSHORT)&this->counter_, this->counter_, value);
+	InterlockedCompareExchange16((PSHORT)&this->counter_, value, this->counter_);
 #else
     OSAtomicCompareAndSwap32(this->counter_, value, (volatile int32_t*)&this->counter_);
 #endif
@@ -114,9 +112,9 @@ Uint32 Atomic32::Sub(Uint32 value) {
 }
 
 Uint32 Atomic32::Set(Uint32 value) {
-    
+
 #ifdef LAME_WINDOWS
-	InterlockedCompareExchange((PLONG)&this->counter_, this->counter_, value);
+	InterlockedCompareExchange((PLONG)&this->counter_, value, this->counter_);
 #else
     OSAtomicCompareAndSwap32(this->counter_, value, (volatile int32_t*)&this->counter_);
 #endif
@@ -173,7 +171,7 @@ Uint64 Atomic64::Sub(Uint64 value) {
 Uint64 Atomic64::Set(Uint64 value) {
     
 #ifdef LAME_WINDOWS
-	InterlockedCompareExchange64((PLONGLONG)&this->counter_, this->counter_, value);
+	InterlockedCompareExchange64((PLONGLONG)&this->counter_, value, this->counter_);
 #else
     OSAtomicCompareAndSwap64(this->counter_, value, (volatile int64_t*)&this->counter_);
 #endif
@@ -181,4 +179,4 @@ Uint64 Atomic64::Set(Uint64 value) {
     return this->counter_;
 }
 
-LAME_END
+LAME_END2

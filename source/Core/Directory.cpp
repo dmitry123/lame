@@ -1,4 +1,5 @@
-#include "FileSystem.h"
+#include "Directory.h"
+#include "File.h"
 
 #ifdef LAME_WINDOWS
 #  include <Windows.h>
@@ -56,7 +57,7 @@ typedef struct dirent* Dirent;
 #  define INVALID_HANDLE_VALUE (VoidP)-1
 #endif
 
-LAME_BEGIN
+LAME_BEGIN2(Core)
 
 Directory::Directory() {
 
@@ -92,7 +93,7 @@ Void Directory::Open(StringC path, Uint32 flags, StringC extfilter) {
     }
     
     if (!path || path[0] == '\0') {
-        path = GetCurrentDirectory();
+        path = File::GetCurrentDirectory();
     }
 
 	strcpy(searchPath, path);
@@ -197,7 +198,7 @@ __RepeatFileSearch:;
         goto __RepeatFileSearch;
     }
     
-    NormalizePath(this->last_);
+    File::NormalizePath(this->last_);
 
 	if (stat(this->last_, &st) == 0) {
         
@@ -231,7 +232,7 @@ __RepeatFileSearch:;
 		else {
 
 			// check file's extension
-			if (this->extfilter_ && !CheckFileExtension(filename, this->extlist_)) {
+			if (this->extfilter_ && !File::CheckFileExtension(filename, this->extlist_)) {
 				goto __RepeatFileSearch;
 			}
             
@@ -293,4 +294,177 @@ List <Buffer> Directory::GetList(Void) {
 	return list;
 }
 
-LAME_END
+static List <Buffer> __GetContentAtPath(StringC path, StringC ext, Uint32 flags) {
+
+	Directory dir;
+	List <Buffer> list;
+	List <Buffer> extList;
+
+	if (ext) {
+		extList = Buffer(ext).Split('&');
+	}
+
+	dir.Open(path, flags);
+	while (dir.Next()) {
+		if (ext) {
+			Bool state = LAME_FALSE;
+			for (const Buffer& ext_ : extList) {
+				if (strcasecmp(File::GetFileExtension(dir.GetLast()), ext_.data()) == 0) {
+					state = LAME_TRUE;
+				}
+			}
+			if (!state) {
+				continue;
+			}
+		}
+		list.push_back(dir.GetLast());
+	}
+	dir.Close();
+
+	return list;
+}
+
+static Buffer __FindFileAtPath(StringC path, StringC name, StringC extensions, Uint32 flags) {
+
+	Directory dir;
+	List <Buffer> extList;
+
+	if (extensions) {
+		extList = Buffer(extensions).Split('&');
+	}
+
+	dir.Open(path, flags);
+	while (dir.Next()) {
+		if (extensions) {
+			Bool state = LAME_FALSE;
+			for (const Buffer& ext_ : extList) {
+				if (strcasecmp(File::GetFileExtension(dir.GetLast()), ext_.data()) == 0) {
+					state = LAME_TRUE;
+				}
+			}
+			if (!state) {
+				continue;
+			}
+		}
+		if (strcasecmp(File::GetFileNameWithoutExtension(dir.GetLast() + 1).data(), name) == 0) {
+			return Buffer(dir.GetLast());
+		}
+	}
+	dir.Close();
+
+	return Buffer();
+}
+
+static List <Buffer> __FindFilesAtPath(StringC path, StringC name, StringC extensions, Uint32 flags) {
+
+	Directory dir;
+	List <Buffer> result;
+	List <Buffer> extList;
+
+	if (extensions) {
+		extList = Buffer(extensions).Split('&');
+	}
+
+	dir.Open(path, flags);
+	while (dir.Next()) {
+		if (extensions) {
+			Bool state = LAME_FALSE;
+			for (const Buffer& ext_ : extList) {
+				if (strcasecmp(File::GetFileExtension(dir.GetLast()), ext_.data()) == 0) {
+					state = LAME_TRUE;
+				}
+			}
+			if (!state) {
+				continue;
+			}
+		}
+		if (strcasecmp(File::GetFileNameWithoutExtension(dir.GetLast() + 1).data(), name) == 0) {
+			result.push_back(dir.GetLast());
+		}
+	}
+	dir.Close();
+
+	return result;
+}
+
+static List <Buffer> __FindContainingFilesAtPath(StringC path, StringC name, StringC extensions, Uint32 flags) {
+
+	Directory dir;
+	List <Buffer> result;
+	List <Buffer> extList;
+
+	if (extensions) {
+		extList = Buffer(extensions).Split('&');
+	}
+
+	dir.Open(path, flags);
+	while (dir.Next()) {
+		if (extensions) {
+			Bool state = LAME_FALSE;
+			for (const Buffer& ext_ : extList) {
+				if (strcasecmp(File::GetFileExtension(dir.GetLast()), ext_.data()) == 0) {
+					state = LAME_TRUE;
+				}
+			}
+			if (!state) {
+				continue;
+			}
+		}
+		if (strstr(dir.GetLast(), name)) {
+			result.push_back(dir.GetLast());
+		}
+	}
+	dir.Close();
+
+	return result;
+}
+
+List <Buffer> Directory::GetContentAtPath(StringC path) {
+	return __GetContentAtPath(path, LAME_NULL, Directory::kFiles | Directory::kDirectories);
+}
+
+List <Buffer> Directory::GetDirectoriesAtPath(StringC path) {
+	return __GetContentAtPath(path, LAME_NULL, Directory::kDirectories);
+}
+
+List <Buffer> Directory::GetFilesAtPath(StringC path, StringC extension) {
+	return __GetContentAtPath(path, extension, Directory::kFiles);
+}
+
+List <Buffer> Directory::GetContentAtPathWithDeep(StringC path) {
+	return __GetContentAtPath(path, LAME_NULL, Directory::kFiles | Directory::kDirectories | Directory::kDeep);
+}
+
+List <Buffer> Directory::GetDirectoriesAtPathWithDeep(StringC path) {
+	return __GetContentAtPath(path, LAME_NULL, Directory::kDirectories | Directory::kDeep);
+}
+
+List <Buffer> Directory::GetFilesAtPathWithDeep(StringC path, StringC extension) {
+	return __GetContentAtPath(path, extension, Directory::kFiles | Directory::kDeep);
+}
+
+Buffer Directory::FindFileAtPath(StringC path, StringC name, StringC extensions) {
+	return __FindFileAtPath(path, name, extensions, Directory::kFiles);
+}
+
+Buffer Directory::FindFileAtPathWithDeep(StringC path, StringC name, StringC extensions) {
+	return __FindFileAtPath(path, name, extensions, Directory::kFiles | Directory::kDeep);
+}
+
+List <Buffer> Directory::FindFilesAtPath(StringC path, StringC name, StringC extensions) {
+	return __FindFilesAtPath(path, name, extensions, Directory::kFiles);
+}
+
+List <Buffer> Directory::FindFilesAtPathWithDeep(StringC path, StringC name, StringC extensions) {
+	return __FindFilesAtPath(path, name, extensions, Directory::kFiles | Directory::kDeep);
+}
+
+List <Buffer> Directory::FindContainingFilesAtPath(StringC path, StringC name, StringC extensions) {
+	return __FindContainingFilesAtPath(path, name, extensions, Directory::kFiles);
+}
+
+List <Buffer> Directory::FindContainingFilesAtPathWithDeep(StringC path, StringC name, StringC extensions) {
+	return __FindContainingFilesAtPath(path, name, extensions, Directory::kFiles | Directory::kDeep);
+}
+
+LAME_END2

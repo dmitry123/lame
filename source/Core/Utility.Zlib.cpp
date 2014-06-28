@@ -2,7 +2,7 @@
 
 #include "zlib/zlib.h"
 
-LAME_BEGIN
+LAME_BEGIN2(Core)
 
 Zlib::Zlib() {
 
@@ -135,4 +135,4 @@ Bool Zlib::UnCompress(
 	return LAME_TRUE;
 }
 
-LAME_END
+LAME_END2

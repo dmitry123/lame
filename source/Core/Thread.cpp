@@ -1,4 +1,5 @@
 #include "Thread.h"
+#include "List.h"
 
 #include <pthread.h>
 #include <signal.h>
@@ -21,17 +22,20 @@
 #  undef Yield
 #endif
 
-LAME_BEGIN
+LAME_BEGIN2(Core)
 
 namespace internal {
-	typedef class ThreadNode : public Thread {
-		typedef ThreadNode* ThreadNodePtr;
-	public:
-		ThreadNodePtr next = 0;
-	} *ThreadNodePtr;
+	ThreadPtr mainThread = NULL;
+	Vector<ThreadPtr> threadList;
+}
 
-	ThreadNodePtr firstNode = 0;
-	ThreadNodePtr lastNode = 0;
+Thread::~Thread() {
+
+	this->Terminate();
+
+	internal::threadList.erase(std::find(
+		internal::threadList.begin(),
+		internal::threadList.end(), this));
 }
 
 Void Thread::Create(ThreadProc callback, VoidP parameter) {
@@ -47,16 +51,11 @@ Void Thread::Create(ThreadProc callback, VoidP parameter) {
 	pthread_attr_destroy(&thread_attributes);
 	pthread_detach(*(pthread_t*)&this->handle_);
 
-	if (!internal::firstNode) {
-		internal::firstNode = (internal::ThreadNodePtr)this;
-		internal::lastNode = internal::firstNode;
-		internal::firstNode->next = 0;
+	if (!internal::threadList.size()) {
+		internal::threadList.push_back(new Thread());
 	}
-	else {
-		internal::lastNode->next = (internal::ThreadNodePtr)this;
-		internal::lastNode = internal::lastNode->next;
-		internal::lastNode->next = 0;
-	}
+
+	internal::threadList.push_back(this);
 }
 
 Bool Thread::Wait(Void) {
@@ -178,6 +177,15 @@ Bool Thread::Equal(const Thread& thread) const {
 		*(pthread_t*)&thread.handle_);
 }
 
+Void Thread::Sleep(Clock delay) const {
+
+#ifdef LAME_WINDOWS
+	::Sleep((DWORD)delay);
+#else
+	::usleep((useconds_t)delay * 1000);
+#endif
+}
+
 Uint64 Thread::GetCurrentHandle(Void) {
     
     pthread_t handle = pthread_self();
@@ -186,17 +194,24 @@ Uint64 Thread::GetCurrentHandle(Void) {
 
 ThreadPtr Thread::GetCurrentThread(Void) {
 
-	internal::ThreadNodePtr node = internal::firstNode;
 	Handle handle = GetCurrentHandle();
 
-	while (node != internal::lastNode) {
-		if (node->handle_ == handle) {
-			return node;
+	for (ThreadPtr t : internal::threadList) {
+		if (t->handle_ == handle) {
+			return t;
 		}
-		node = node->next;
 	}
 
-	return LAME_NULL;
+	if (!internal::mainThread) {
+
+		internal::mainThread = new Thread();
+		internal::mainThread->callback_ = NULL;
+		internal::mainThread->flags_ = 0;
+		internal::mainThread->handle_ = handle;
+		internal::mainThread->parameter_ = NULL;
+	}
+
+	return internal::mainThread;
 }
 
 VoidP Thread::__PosixThread(VoidP __this) {
@@ -210,4 +225,4 @@ VoidP Thread::__PosixThread(VoidP __this) {
 	return LAME_NULL;
 }
 
-LAME_END
+LAME_END2

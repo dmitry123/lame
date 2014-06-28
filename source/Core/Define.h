@@ -46,11 +46,23 @@
 #endif
 
 #if !defined(LAME_TRUE)
-#  define LAME_TRUE (LAME_NAMESPACE::Bool)1
+#  define LAME_TRUE (::LAME_NAMESPACE::Bool)1
 #endif
 
 #if !defined(LAME_FALSE)
-#  define LAME_FALSE (LAME_NAMESPACE::Bool)0
+#  define LAME_FALSE (::LAME_NAMESPACE::Bool)0
+#endif
+
+#if !defined(TRUE)
+#  define TRUE 1
+#endif
+
+#if !defined(FALSE)
+#  define FALSE 0
+#endif
+
+#if !defined(NULL)
+#  define NULL 0
 #endif
 
 #if defined(_DEBUG) || defined(DEBUG) || defined(NDEBUG)
@@ -71,15 +83,22 @@
 
 #undef LAME_BEGIN
 #undef LAME_END
+#undef LAME_BEGIN2
+#undef LAME_END2
 
 #if defined(LAME_CPP)
-#  define LAME_NAMESPACE lame
+#  define LAME_NAMESPACE Lame
 #  define LAME_BEGIN namespace LAME_NAMESPACE {
-#  define LAME_END   }
+#  define LAME_END }
+#  define LAME_BEGIN2(_ns) LAME_BEGIN namespace _ns {
+#  define LAME_END2 LAME_END }
 #else
 #  define LAME_NAMESPACE
 #  define LAME_BEGIN
+#  define LAME_BEGIN2(Core)
 #  define LAME_END
+#  define LAME_BEGIN2
+#  define LAME_END2
 #endif
 
 #if defined(LAME_CPP)
@@ -115,9 +134,10 @@
 #endif
 
 #if defined(LAME_MSVC)
-#  pragma warning(disable: 4150)
-#  pragma warning(disable: 4996)
-#  pragma warning(disable: 4251)
+#  pragma warning(disable : 4150)
+#  pragma warning(disable : 4996)
+#  pragma warning(disable : 4251)
+#  pragma warning(disable : 4275)
 #endif
 
 #define LAME_INFINITE 0xffffffff
@@ -131,7 +151,7 @@
 #endif
 
 #define LAME_DECLARE_HANDLE(_name) \
-typedef struct _##_name { int _unused; } *_name;
+	typedef struct _##_name { int _unused; } *_name;
 
 #define LAME_SIGNATURE_MAX 10
 #define LAME_FILENAME_MAX 260

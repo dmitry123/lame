@@ -3,7 +3,7 @@
 
 #include "VirtualLoader.h"
 
-LAME_BEGIN
+LAME_BEGIN2(ResourceManager)
 
 class IAudioLoader : public IVirtualLoader<ResourceAudioInfo> {
 protected:
@@ -34,6 +34,6 @@ public:
 	Bool Save(StringC fileName);
 } *WavLoaderPtr;
 
-LAME_END
+LAME_END2
 
 #endif // ~__LAME_RESOURCE_MANAGER__AUDIO_LOADER__

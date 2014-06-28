@@ -4,7 +4,7 @@
 #include "Define.h"
 #include "Exception.h"
 
-LAME_BEGIN
+LAME_BEGIN2(Script)
 
 typedef enum {
 	kScriptLexDefault = -1,
@@ -175,6 +175,6 @@ public:
 	~ScriptParser();
 };
 
-LAME_END
+LAME_END2
 
 #endif // ~__LAME_SCRIPT__PARSER__

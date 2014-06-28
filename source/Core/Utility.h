@@ -1,10 +1,10 @@
 #ifndef __LAME_CORE__UTILITY__
 #define __LAME_CORE__UTILITY__
 
-#include "define.h"
-#include "types.h"
-#include "atomic.h"
-#include "list.h"
+#include "Define.h"
+#include "Types.h"
+#include "Atomic.h"
+#include "List.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,7 +24,7 @@
 
 #include <memory>
 
-LAME_BEGIN
+LAME_BEGIN2(Core)
 
 inline VoidP Malloc(Uint32 size) {
 	return ::malloc(size);
@@ -54,38 +54,43 @@ template <class T> using WeakPtr = std::weak_ptr<T>;
 #else
 
 typedef struct StrongWeakCounter {
-    Atomic32 strong;
-    Atomic32 weak;
+	Atomic32 strong;
+	Atomic32 weak;
 } *StrongWeakCounterPtr;
+
+namespace internal {
+	class __SharedPtrFromThis {
+	};
+}
 
 template <class T> class SharedPtr {
 public:
-    inline SharedPtr() {
-        this->reference_ = NULL;
-        this->counter_ = NULL;
-    }
-    inline ~SharedPtr() {
-        this->__Destroy();
-    }
+	inline SharedPtr() {
+		this->reference_ = NULL;
+		this->counter_ = NULL;
+	}
+	inline ~SharedPtr() {
+		this->__Destroy();
+	}
 public:
 	typedef T Type, *TypeP, &TypeR;
 public:
 	inline explicit SharedPtr(TypeP reference) : SharedPtr() {
-        this->__Create(reference);
-    }
+		this->__Create(reference);
+	}
 	inline SharedPtr(const SharedPtr <T>& sp) : SharedPtr() {
-        this->__Copy(sp);
-    }
+		this->__Copy(sp);
+	}
 public:
 	inline Void operator = (TypeP reference) {
-        this->__Create(reference);
-    }
+		this->__Create(reference);
+	}
 	inline Void operator = (const SharedPtr <T>& sp) {
-        this->__Copy(sp);
-    }
+		this->__Copy(sp);
+	}
 	inline Void operator () (TypeP reference) {
-        this->__Create(reference);
-    }
+		this->__Create(reference);
+	}
 protected:
 	Void __Create(TypeP reference);
 	Void __Destroy();
@@ -93,9 +98,9 @@ protected:
 public:
 	Void UnLink();
 public:
-    inline Void reset() {
+	inline Void reset() {
 		this->UnLink();
-    }
+	}
 	inline Void reset(TypeP reference) {
 		this->__Create(reference);
 	}
@@ -115,41 +120,53 @@ public:
 	inline Bool operator != (const SharedPtr <T>& sp) const {
 		return this->reference_ != sp.reference_;
 	}
+private:
+	Void _EnableSharedPtr(VoidP ptr) {
+		// ignore
+	}
+	Void _EnableSharedPtr(internal::__SharedPtrFromThis* ptr) {
+		((SharedPtrFromThis<T>*) ptr)->weakPtr.__Create(*this);
+	}
 public:
 	TypeP reference_;
-    StrongWeakCounterPtr counter_;
+	StrongWeakCounterPtr counter_;
 };
 
 template <class T>
 Void SharedPtr <T>::__Create(TypeP reference) {
-    
-    if (!reference || !this) {
-        return;
-    }
-    
+
+	if (!reference || !this) {
+		return;
+	}
+
 	if (this->counter_) {
 		this->__Destroy();
 	}
-    
+
 	this->reference_ = reference;
 	this->counter_ = new StrongWeakCounter();
-    this->counter_->strong = 1;
-    this->counter_->weak = 0;
+	this->counter_->strong = 1;
+	this->counter_->weak = 0;
+
+	this->_EnableSharedPtr(this->reference_);
 }
 
 template <class T>
 Void SharedPtr <T>::__Destroy() {
-    
-	if (!this || (this->counter_ && this->counter_->weak != 0)) {
+
+	if (!this) {
 		return;
 	}
-    
+
 	if ((this->counter_ &&   this->counter_->strong == 0) ||
 		(this->counter_ && --this->counter_->strong == 0)) {
-        
-        delete this->reference_;
-		delete this->counter_;
-        
+
+		if (this->counter_->weak == 0) {
+			delete this->counter_;
+		}
+
+		delete this->reference_;
+
 		this->counter_ = 0;
 		this->reference_ = 0;
 	}
@@ -157,18 +174,18 @@ Void SharedPtr <T>::__Destroy() {
 
 template <class T>
 Void SharedPtr <T>::__Copy(const SharedPtr <T>& sp) {
-    
-    if (!&sp || !this) {
-        return;
-    }
-    
+
+	if (!&sp || !this) {
+		return;
+	}
+
 	if (this->counter_) {
 		this->__Destroy();
 	}
-    
+
 	this->reference_ = sp.reference_;
 	this->counter_ = sp.counter_;
-    
+
 	if (this->counter_) {
 		++this->counter_->strong;
 	}
@@ -176,42 +193,32 @@ Void SharedPtr <T>::__Copy(const SharedPtr <T>& sp) {
 
 template <class T>
 Void SharedPtr <T>::UnLink() {
-    
+
 	if (!this) {
 		return;
 	}
-    
+
 	this->__Destroy();
-    
+
 	this->reference_ = 0;
 	this->counter_ = 0;
 }
 
-template <class T> class WeakPtr : public SharedPtr<T> {
+template <class T> class WeakPtr : private SharedPtr < T > {
+	friend class SharedPtr < T > ;
 public:
-    WeakPtr() {
-    }
+	WeakPtr() {
+	}
 	~WeakPtr() {
 		this->UnLink();
-        
-		if (this->counter_) {
-			this->counter_->strong.Inc();
-		}
 	}
 public:
-    explicit WeakPtr(const SharedPtr<T>& sp) {
+	explicit WeakPtr(const SharedPtr<T>& sp) {
 		this->__Create(sp);
-    }
+	}
 	explicit WeakPtr(typename SharedPtr<T>::TypeP st) {
 		this->__Create(st);
 	}
-public:
-    inline T& operator * () {
-		return *this->reference_;
-    }
-    inline T* operator-> () {
-		return this->reference_;
-    }
 public:
 	inline Void reset() {
 		this->UnLink();
@@ -221,48 +228,55 @@ public:
 		this->__Destroy();
 	}
 public:
-    inline WeakPtr<T> operator = (SharedPtr<T>& sp) {
-        return WeakPtr<T>(sp);
-    }
+	inline WeakPtr<T> operator = (SharedPtr<T>& sp) {
+		return WeakPtr<T>(sp);
+	}
 	inline WeakPtr<T> operator = (typename SharedPtr<T>::TypeP st) {
 		return WeakPtr<T>(st);
 	}
 public:
 	inline SharedPtr<T> Lock() {
-        
-		SharedPtr<T> sp;
-        
-		sp.reference_ = this->reference_;
-		sp.counter_ = this->counter_;
-        
-		return sp;
+		return SharedPtr<T>(*this);
+	}
+public:
+	inline operator Bool() const {
+		return this->counter_ != 0 && this->counter_->strong != 0;
 	}
 private:
 	Void __Create(const SharedPtr<T>& sp) {
-        
+
 		if (!&sp) {
 			return;
 		}
-        
+
 		this->reference_ = sp.reference_;
 		this->counter_ = sp.counter_;
-        
+
 		if (this->counter_) {
 			++this->counter_->weak;
 		}
 	}
-	Void __Create(typename SharedPtr<T>::TypeP st) {
-        
-		this->reference_ = st;
-	}
 	Void __Destroy() {
-        
+
 		if ((this->counter_ &&   this->counter_->weak == 0) ||
 			(this->counter_ && --this->counter_->weak == 0 && this->counter_->strong == 0)) {
-            
-			this->SharedPtr<T>::__Destroy();
+
+			delete this->counter_;
 		}
 	}
+};
+
+template <class T> class SharedPtrFromThis : public internal::__SharedPtrFromThis {
+	friend class SharedPtr < T > ;
+public:
+	SharedPtrFromThis() {
+	}
+protected:
+	SharedPtr<T> GetSharedPtrFromThis() {
+		return this->weakPtr.Lock();
+	}
+private:
+	WeakPtr<T> weakPtr;
 };
 
 #endif
@@ -275,110 +289,20 @@ public:
 	}
 public:
 	Buffer(const char* string) : std::string(string) {}
-	Buffer(      char* string) : std::string(string) {}
-    Buffer(const char  symbol) : std::string(&symbol, 1) {}
+	Buffer(char* string) : std::string(string) {}
+	Buffer(const char  symbol) : std::string(&symbol, 1) {}
 	Buffer(const std::string& string) : std::string(string) {}
 	Buffer(const char* string, Uint32 length) : std::string(string, length) {}
-	Buffer(      char* string, Uint32 length) : std::string(string, length) {}
+	Buffer(char* string, Uint32 length) : std::string(string, length) {}
 	Buffer(const std::string& string, Uint32 length) : std::string(string, length) {}
 public:
-	Void Format(StringC format, ...) {
-        
-		int size = 512;
-		char* buffer = new char[size];
-        
-		va_list vl;
-		va_start(vl, format);
-        
-		int nsize = vsnprintf(buffer, size, format, vl);
-        
-		if (size <= nsize) {
-            
-			delete[] buffer;
-            
-			buffer = 0;
-			buffer = new char[nsize + 1];
-            
-			vsnprintf(buffer, size, format, vl);
-		}
-        
-		*this = buffer;
-        
-		va_end(vl);
-        
-		delete[] buffer;
-	}
-    
-	List <Buffer> Split(Sint8 symbol) {
-        
-		List <Buffer> list;
-		StringC first;
-		StringC where;
-		Uint32 last;
-		Sint8P buffer;
-        
-		buffer = (Sint8P)this->data();
-		first = this->data();
-		last = 0;
-        
-		while ((first = strchr(first + 1, symbol))) {
-            
-			buffer[first - buffer] = '\0';
-            
-			where = buffer + last;
-            
-			while (*where == symbol) {
-				++where;
-			}
-            
-			if (*where) {
-				list.push_back(where);
-			}
-            
-			last += list.back().length();
-            
-			buffer[first - buffer] = symbol;
-            
-			while (*first == symbol) {
-				++first;
-				++last;
-			}
-		}
-        
-		where = buffer + last;
-        
-		while (*where == symbol) {
-			++where;
-		}
-        
-		if (*where) {
-			list.push_back(where);
-		}
-        
-		return list;
-	}
-    
-	Void Get(Void) {
-        
-		Sint32 symbol;
-		Buffer string;
-        
-		while (LAME_TRUE) {
-            
-			symbol = getchar();
-            
-			if (symbol == '\n' || symbol == '\r') {
-				break;
-			}
-            
-			if (symbol == '\b' && string.length() > 0) {
-				string.pop_back();
-			}
-            
-			string += symbol;
-		}
-        
-		*this = string;
+	Void LAME_API Format(StringC format, ...);
+	List <Buffer> LAME_API Split(Sint8 symbol) const;
+	Void LAME_API Get(Void);
+	Uint32 LAME_API GetHash(Void) const;
+public:
+	static Uint32 GetHash(StringC string) {
+		return Buffer(string).GetHash();
 	}
 };
 
@@ -416,8 +340,8 @@ namespace internal {
 	};
 }
 
-template <class T> class Any : public internal::__AnySingleton<T> {
-	friend class internal::__AnySingleton<T>;
+template <class T> class Any : public internal::__AnySingleton < T > {
+	friend class internal::__AnySingleton < T > ;
 public:
 	explicit Any(Bool construct = LAME_FALSE) {
 		if (construct && !this->instance_) {
@@ -473,7 +397,7 @@ private:
 	}
 };
 
-template <class T> using Arc = Any<T>;
+template <class T> using Arc = Any < T > ;
 
 class LAME_API Exception {
 public:
@@ -501,10 +425,10 @@ protected:
 };
 
 #define PostErrorMessage(_message, ...) \
-	throw LAME_NAMESPACE::Exception(__FILE__, __LINE__, __FUNCTION__, _message, __VA_ARGS__);
+	throw ::LAME_NAMESPACE::Core::Exception(__FILE__, __LINE__, __FUNCTION__, _message, __VA_ARGS__);
 
 #define PostWarningMessage(_message, ...) \
-	throw LAME_NAMESPACE::Exception(__FILE__, __LINE__, __FUNCTION__, _message, __VA_ARGS__);
+	throw ::LAME_NAMESPACE::Core::Exception(__FILE__, __LINE__, __FUNCTION__, _message, __VA_ARGS__);
 
 class LAME_API Zlib {
 public:
@@ -518,6 +442,6 @@ public:
 	Uint32 length;
 };
 
-LAME_END
+LAME_END2
 
 #endif // ~__LAME_CORE__UTILITY__

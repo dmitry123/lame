@@ -2,7 +2,7 @@
 #include "Performer.h"
 #include "Internal.h"
 
-LAME_BEGIN
+LAME_BEGIN2(Script)
 
 Void ScriptPerformer::Evaluate(ScriptBuilderPtr builder) {
 
@@ -960,4 +960,4 @@ ScriptPerformer::~ScriptPerformer() {
 	this->tempList_.clear();
 }
 
-LAME_END
+LAME_END2

@@ -1,6 +1,6 @@
 #include "Timer.h"
 
-LAME_BEGIN
+LAME_BEGIN2(Core)
 
 Void Timer::Create(Callback callback, Clock interval) {
 
@@ -54,4 +54,4 @@ Void Timer::Reset(Void) {
 	this->suspended_ = 0;
 }
 
-LAME_END
+LAME_END2

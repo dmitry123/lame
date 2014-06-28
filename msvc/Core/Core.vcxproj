@@ -78,10 +78,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\Core\Atomic.h" />
+    <ClInclude Include="..\..\source\Core\Condition.h" />
     <ClInclude Include="..\..\source\Core\Core.h" />
+    <ClInclude Include="..\..\source\Core\CriticalSection.h" />
+    <ClInclude Include="..\..\source\Core\Directory.h" />
     <ClInclude Include="..\..\source\Core\Event.h" />
-    <ClInclude Include="..\..\source\Core\FileSystem.h" />
+    <ClInclude Include="..\..\source\Core\File.h" />
+    <ClInclude Include="..\..\source\Core\FilePathInfo.h" />
+    <ClInclude Include="..\..\source\Core\Key.h" />
+    <ClInclude Include="..\..\source\Core\Lock.h" />
     <ClInclude Include="..\..\source\Core\Math.h" />
+    <ClInclude Include="..\..\source\Core\Mutex.h" />
+    <ClInclude Include="..\..\source\Core\RecursiveMutex.h" />
     <ClInclude Include="..\..\source\Core\Thread.h" />
     <ClInclude Include="..\..\source\Core\Timer.h" />
     <ClInclude Include="..\..\source\Core\Utility.h" />
@@ -103,18 +111,27 @@
   <ItemGroup>
     <ClCompile Include="..\..\source\Core\Atomic.cpp" />
     <ClCompile Include="..\..\source\Core\Condition.cpp" />
+    <ClCompile Include="..\..\source\Core\Core.cpp" />
+    <ClCompile Include="..\..\source\Core\CriticalSection.cpp" />
+    <ClCompile Include="..\..\source\Core\Define.cpp" />
     <ClCompile Include="..\..\source\Core\Directory.cpp" />
     <ClCompile Include="..\..\source\Core\ElasticBox.cpp" />
-    <ClCompile Include="..\..\source\Core\Exception.cpp" />
+    <ClCompile Include="..\..\source\Core\Event.cpp" />
+    <ClCompile Include="..\..\source\Core\List.cpp" />
+    <ClCompile Include="..\..\source\Core\Lock.cpp" />
+    <ClCompile Include="..\..\source\Core\Types.cpp" />
+    <ClCompile Include="..\..\source\Core\Utility.Buffer.cpp" />
+    <ClCompile Include="..\..\source\Core\Utility.Exception.cpp" />
     <ClCompile Include="..\..\source\Core\File.cpp" />
-    <ClCompile Include="..\..\source\Core\FileSystem.cpp" />
+    <ClCompile Include="..\..\source\Core\FilePathInfo.cpp" />
     <ClCompile Include="..\..\source\Core\Key.cpp" />
     <ClCompile Include="..\..\source\Core\Math.cpp" />
     <ClCompile Include="..\..\source\Core\Mutex.cpp" />
+    <ClCompile Include="..\..\source\Core\RecursiveMutex.cpp" />
     <ClCompile Include="..\..\source\Core\Thread.cpp" />
-    <ClCompile Include="..\..\source\Core\Time.cpp" />
+    <ClCompile Include="..\..\source\Core\Timer.Time.cpp" />
     <ClCompile Include="..\..\source\Core\Timer.cpp" />
-    <ClCompile Include="..\..\source\Core\Zlib.cpp" />
+    <ClCompile Include="..\..\source\Core\Utility.Zlib.cpp" />
     <ClCompile Include="..\..\source\Core\zlib\adler32.c" />
     <ClCompile Include="..\..\source\Core\zlib\compress.c" />
     <ClCompile Include="..\..\source\Core\zlib\crc32.c" />

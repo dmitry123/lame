@@ -1,6 +1,6 @@
 #include "Utility.h"
 
-LAME_BEGIN
+LAME_BEGIN2(Core)
 
 Exception::Exception(
 	StringC file,
@@ -26,4 +26,4 @@ Exception::Exception(
 	sprintf(this->buffer_, "%s : %s (%d) : [%s]", filename, function, line, subbuf);
 }
 
-LAME_END
+LAME_END2

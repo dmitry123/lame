@@ -1,6 +1,6 @@
 #include "Exception.h"
 
-LAME_BEGIN
+LAME_BEGIN2(Script)
 
 SyntaxException::SyntaxException(Uint32 line, Uint32 where, StringC message, ...) {
 
@@ -34,4 +34,4 @@ Void SyntaxException::Debug() {
 	}
 }
 
-LAME_END
+LAME_END2

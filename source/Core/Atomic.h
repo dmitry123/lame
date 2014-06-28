@@ -33,7 +33,7 @@ typedef volatile Uint64 Atomic64, *Atomic64P;
 	__LAME_ATOMIC_CONSTRUCT(_bits) \
 	__LAME_ATOMIC_BASE(Uint##_bits)
 
-LAME_BEGIN
+LAME_BEGIN2(Core)
 
 class LAME_API Atomic16 {
 	LAME_ATOMIC(16);
@@ -65,6 +65,6 @@ public:
 	Uint64 Set(Uint64 value);
 };
 
-LAME_END
+LAME_END2
 
 #endif // ~__LAME_CORE__ATOMIC__

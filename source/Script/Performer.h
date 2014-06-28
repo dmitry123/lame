@@ -5,7 +5,7 @@
 #include "Exception.h"
 #include "Builder.h"
 
-LAME_BEGIN
+LAME_BEGIN2(Script)
 
 class LAME_API ScriptPerformer {
 public:
@@ -42,6 +42,6 @@ public:
 	~ScriptPerformer();
 };
 
-LAME_END
+LAME_END2
 
 #endif // ~__LAME_SCRIPT__PERFORMER__

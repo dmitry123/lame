@@ -1,6 +1,6 @@
 #include "TextureLoader.h"
 
-LAME_BEGIN
+LAME_BEGIN2(ResourceManager)
 
 #pragma pack(push, 2)
 typedef struct {
@@ -91,4 +91,4 @@ Bool BmpLoader::Save(StringC fileName) {
 	return LAME_TRUE;
 }
 
-LAME_END
+LAME_END2

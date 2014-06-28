@@ -12,7 +12,7 @@
 typedef time_t TIMET, *TIMETP;
 typedef struct tm TM, *TMP;
 
-LAME_BEGIN
+LAME_BEGIN2(Core)
 
 Buffer Time::ConvertToString(Void) {
 
@@ -106,4 +106,4 @@ Time Time::GetCurrentDate(Void) {
 	return t;
 }
 
-LAME_END
+LAME_END2

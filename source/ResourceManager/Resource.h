@@ -5,7 +5,7 @@
 #include "AudioLoader.h"
 #include "VirtualLoader.h"
 
-LAME_BEGIN
+LAME_BEGIN2(ResourceManager)
 
 typedef class LAME_API Resource {
 public:
@@ -31,6 +31,6 @@ private:
 	} resourceLoader_;
 } *ResourcePtr;
 
-LAME_END
+LAME_END2
 
 #endif // ~__LAME_RESOURCE_MANAGER__RESOURCE__

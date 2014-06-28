@@ -1,14 +1,14 @@
 #include "ResourceManager.h"
 
-LAME_BEGIN
+LAME_BEGIN2(ResourceManager)
 
-ResourceManager::Resource ResourceManager::Load(StringC fileName, StringC tagName) {
+ResourceContainer::Resource ResourceContainer::Load(StringC fileName, StringC tagName) {
 
 	if (this->resourceMap_.count(tagName)) {
 		PostErrorMessage("Resource with that name already exists (%s)", tagName);
 	}
 
-	Resource resource(new ::lame::Resource);
+	Resource resource(new ::LAME_NAMESPACE::ResourceManager::Resource());
 
 	resource->Load(fileName);
 	this->resourceMap_[tagName] = resource;;
@@ -16,7 +16,7 @@ ResourceManager::Resource ResourceManager::Load(StringC fileName, StringC tagNam
 	return resource;
 }
 
-Bool ResourceManager::Erase(StringC tagName) {
+Bool ResourceContainer::Erase(StringC tagName) {
 
 	if (!this->resourceMap_.count(tagName)) {
 		return LAME_FALSE;
@@ -28,7 +28,7 @@ Bool ResourceManager::Erase(StringC tagName) {
 	return LAME_TRUE;
 }
 
-ResourceManager::Resource ResourceManager::Find(StringC tagName) {
+ResourceContainer::Resource ResourceContainer::Find(StringC tagName) {
 
 	if (!this->resourceMap_.count(tagName)) {
 		return Resource();
@@ -37,4 +37,4 @@ ResourceManager::Resource ResourceManager::Find(StringC tagName) {
 	return this->resourceMap_.at(tagName);
 }
 
-LAME_END
+LAME_END2

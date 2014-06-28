@@ -1,7 +1,7 @@
 #include "Parser.h"
 #include "Internal.h"
 
-LAME_BEGIN
+LAME_BEGIN2(Script)
 
 #define P(_p) Uint32(20-_p)
 
@@ -465,4 +465,4 @@ ScriptParser::~ScriptParser() {
 	this->lexList_.clear();
 }
 
-LAME_END
+LAME_END2

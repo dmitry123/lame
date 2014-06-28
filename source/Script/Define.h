@@ -22,29 +22,33 @@
 #  define puts __noop
 #endif
 
-LAME_BEGIN
+LAME_BEGIN2(Script)
 
+using namespace Core;
+
+typedef class ScriptError *ScriptErrorPtr, *const ScriptErrorPtrC;
 typedef class ScriptLex *ScriptLexPtr, *const ScriptLexPtrC;
 typedef class ScriptLexNode *ScriptLexNodePtr, *const ScriptLexNodePtrC;
 typedef class ScriptParser *ScriptParserPtr, *const ScriptParserPtrC;
 typedef class ScriptNode *ScriptNodePtr, *const ScriptNodePtrC;
 typedef class ScriptBuilder *ScriptBuilderPtr, *const ScriptBuilderPtrC;
+typedef class ScriptScope *ScriptScopePtr, *const ScriptScopePtrC;
+typedef class ScriptObject *ScriptObjectPtr, *const ScriptObjectPtrC;
+typedef class ScriptClass *ScriptClassPtr, *const ScriptClassPtrC;
+typedef class ScriptAbstract *ScriptAbstractPtr, *const ScriptAbstractPtrC;
+typedef class ScriptInterface *ScriptInterfacePtr, *const ScriptInterfacePtrC;
 typedef class ScriptVar *ScriptVarPtr, *const ScriptVarPtrC;
-typedef class ScriptManager *ScriptManagerPtr, *const ScriptManagerPtrC;
-typedef class ScriptPerformer *ScriptPerformerPtr, *const ScriptPerformerPtrC;
+typedef class ScriptMethod *ScriptMethodPtr, *const ScriptMethodPtrC;
+typedef class ScriptScope *ScriptScopePtr, *const ScriptScopePtrC;
+typedef class ScriptScopeController *ScriptScopeControllerPtr, *const ScriptScopeControllerPtrC;
 
-typedef SharedPtr<ScriptVarPtr> ScriptVarSP;
-typedef SharedPtr<ScriptNode> ScriptNodeSP;
-
-typedef Sint64 ScriptNativeInt;
-typedef Float32 ScriptNativeFloat;
 typedef Buffer ScriptNativeString;
+typedef Sint32 ScriptNativeInt;
+typedef Float32 ScriptNativeFloat;
 typedef Bool ScriptNativeBool;
-typedef SharedPtr<ScriptNode> ScriptNativeClass;
 
-typedef Void(*ScriptCallback)(ScriptNodePtr var, ScriptManagerPtr manager, ScriptVarPtr self);
 typedef const Buffer& BufferRefC;
 
-LAME_END
+LAME_END2
 
 #endif // ~__LAME_SCRIPT__DEFINE__

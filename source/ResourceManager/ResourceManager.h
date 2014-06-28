@@ -7,11 +7,11 @@
 #include "Resource.h"
 #include "TextureLoader.h"
 
-LAME_BEGIN
+LAME_BEGIN2(ResourceManager)
 
 typedef SharedPtr<Resource> SharedResourcePtr;
 
-typedef class LAME_API ResourceManager {
+typedef class LAME_API ResourceContainer {
 	typedef std::map<Buffer, SharedPtr<Resource>> ResourceMap;
 public:
 	typedef SharedPtr<Resource> Resource;
@@ -23,6 +23,6 @@ private:
 	ResourceMap resourceMap_;
 } *ResourceManagerPtr;
 
-LAME_END
+LAME_END2
 
 #endif // ~__LAME_RESOURCE_MANAGER__

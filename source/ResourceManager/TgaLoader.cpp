@@ -561,7 +561,7 @@ ________________________________________________________________________________
 --------------------------------------------------------------------------------
 */
 
-LAME_BEGIN
+LAME_BEGIN2(ResourceManager)
 
 #pragma pack(push, 1)
 typedef struct {
@@ -712,4 +712,4 @@ Bool TgaLoader::Save(StringC fileName) {
 	return LAME_TRUE;
 }
 
-LAME_END
+LAME_END2

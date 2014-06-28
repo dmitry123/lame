@@ -13,7 +13,8 @@
 #define COUNTER_LINK SOURCE_LINK "Counter"
 #define EXTENSION_FILTER "cpp&h&c"
 
-using namespace lame;
+using namespace Lame::Core;
+using namespace Lame;
 
 Uint32 GetCountOfLines(List<Buffer>* list) {
 
@@ -49,31 +50,31 @@ int main() {
 	Uint32 lines = 0;
 
 	try {
-		List<Buffer> coreList = GetFilesAtPath(CORE_LINK, EXTENSION_FILTER);
+		List<Buffer> coreList = Directory::GetFilesAtPath(CORE_LINK, EXTENSION_FILTER);
 
 		lines = GetCountOfLines(&coreList);
 		totalLines += lines;
 		PrintCountOfLines("Core", lines);
 		
-		List<Buffer> scriptList = GetFilesAtPath(SCRIPT_LINK, EXTENSION_FILTER);
+		List<Buffer> scriptList = Directory::GetFilesAtPath(SCRIPT_LINK, EXTENSION_FILTER);
 
 		lines = GetCountOfLines(&scriptList);
 		totalLines += lines;
 		PrintCountOfLines("Script", lines);
 		
-		List<Buffer> consoleList = GetFilesAtPath(CONSOLE_LINK, EXTENSION_FILTER);
+		List<Buffer> consoleList = Directory::GetFilesAtPath(CONSOLE_LINK, EXTENSION_FILTER);
 
 		lines = GetCountOfLines(&consoleList);
 		totalLines += lines;
 		PrintCountOfLines("Console", lines);
 
-		List<Buffer> counterList = GetFilesAtPath(COUNTER_LINK, EXTENSION_FILTER);
+		List<Buffer> counterList = Directory::GetFilesAtPath(COUNTER_LINK, EXTENSION_FILTER);
 
 		lines = GetCountOfLines(&counterList);
 		totalLines += lines;
 		PrintCountOfLines("Counter", lines);
 
-		List<Buffer> rmList = GetFilesAtPath(RM_LINK, EXTENSION_FILTER);
+		List<Buffer> rmList = Directory::GetFilesAtPath(RM_LINK, EXTENSION_FILTER);
 
 		lines = GetCountOfLines(&rmList);
 		totalLines += lines;

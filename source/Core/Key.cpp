@@ -1,8 +1,8 @@
-#include "Thread.h"
+#include "Key.h"
 
 #include <pthread.h>
 
-LAME_BEGIN
+LAME_BEGIN2(Core)
 
 Bool Key::Set(VoidP value) {
 	return pthread_setspecific(*(pthread_key_t*)&this->handle_, value) == 0;
@@ -24,4 +24,4 @@ Key::Key(KeyProc destructor) {
 	pthread_key_create((pthread_key_t*)&this->handle_, destructor);
 }
 
-LAME_END
+LAME_END2

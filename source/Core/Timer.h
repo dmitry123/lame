@@ -6,17 +6,7 @@
 #include "Utility.h"
 #include "Event.h"
 
-LAME_BEGIN
-
-#if defined(_TIME_T_DEFINED)
-typedef time_t Clock;
-#else
-#  if defined(LAME_X64)
-typedef long Clock;
-#  else
-typedef long long Clock;
-#  endif
-#endif
+LAME_BEGIN2(Core)
 
 typedef class Time Time, *TimePtr;
 typedef class Timer Timer, *TimerPtr;
@@ -70,6 +60,6 @@ private:
 	Bool suspended_ = 0;
 };
 
-LAME_END
+LAME_END2
 
 #endif // ~__LAME_CORE__TIMER__

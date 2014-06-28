@@ -5,7 +5,20 @@
 #include "Exception.h"
 #include "Parser.h"
 
-LAME_BEGIN
+LAME_BEGIN2(Script)
+
+typedef enum {
+	kScriptFlagDefault = 0x0000,
+	kScriptFlagTemp = 0x0001,
+	kScriptFlagType = 0x0002,
+	kScriptFlagFinal = 0x0004,
+	kScriptFlagFunction = 0x0008,
+	kScriptFlagPublic = 0x0010,
+	kScriptFlagPrivate = 0x0020,
+	kScriptFlagProtected = 0x0040,
+	kScriptFlagStatic = 0x0080,
+	kScriptFlagNative = 0x0100
+} ScriptFlagID;
 
 typedef enum {
 	kScriptNodeDefault,
@@ -62,7 +75,7 @@ private:
 };
 
 class LAME_API ScriptBuilder {
-	friend ScriptPerformer;
+	friend class ScriptPerformer;
 public:
 	typedef Vector<ScriptLexNodePtr>::iterator Iterator;
 public:
@@ -74,7 +87,6 @@ private:
 	Iterator _BuildCondition(ScriptNodePtr& parent, Iterator i);
 	Iterator _BuildEntry(ScriptNodePtr& parent, Iterator i);
 	Iterator _BuildArguments(ScriptNodePtr& parent, Iterator i);
-	Iterator _BuildJson(ScriptNodePtr& parent, Iterator i);
 private:
 	Iterator _Build(ScriptNodePtr& node, Iterator i);
 	Void _Reset(Void);
@@ -93,10 +105,10 @@ private:
 	ScriptNodePtr rootNode_;
 	ScriptParserPtr parser_;
 public:
-	ScriptBuilder();
+	 ScriptBuilder();
 	~ScriptBuilder();
 };
 
-LAME_END
+LAME_END2
 
 #endif // ~__LAME_SCRIPT__BUILDER__

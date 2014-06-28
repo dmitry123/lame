@@ -4,7 +4,7 @@
 
 #include <setjmp.h>
 
-LAME_BEGIN
+LAME_BEGIN2(ResourceManager)
 
 struct my_error_mgr {
 	jpeg_error_mgr pub;	/* "public" fields */
@@ -115,4 +115,4 @@ Bool JpgLoader::Save(StringC fileName) {
 	return LAME_TRUE;
 }
 
-LAME_END
+LAME_END2

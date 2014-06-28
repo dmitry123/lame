@@ -6,7 +6,7 @@
 
 #include <functional>
 
-LAME_BEGIN
+LAME_BEGIN2(Core)
 
 template <class T> class Event : public std::function <T> {
 public:
@@ -23,13 +23,14 @@ template <class T> class EventQueue {
 public:
 	typedef Event <T> Proc;
 public:
+	template <class T, typename... Args> Void Invoke(Args... args) {
+		for (Proc p : this->queue_) {
+			p(args...);
+		}
+	}
+public:
 	Void InsertEvent(Proc callback) {
 		this->queue_.push_back(callback);
-	}
-	Void Invoke(Void) {
-		for (Proc p : this->queue_) {
-			p();
-		}
 	}
 	Void Clear(Void) {
 		this->queue_.clear();
@@ -42,6 +43,6 @@ private:
 	List <Proc> queue_;
 };
 
-LAME_END
+LAME_END2
 
 #endif // ~__LAME_CORE__EVENT__

@@ -1,27 +1,8 @@
 #include "Script.h"
 
-LAME_BEGIN
+LAME_BEGIN2(Script)
 
 ScriptNode::~ScriptNode() {
-
-	//if (this->var) {
-	//	if (this->var->classValue) {
-	//		for (ScriptNodePtr n : this->var->classValue->childList) {
-	//			if (n->var) {
-	//				delete n->var;
-	//				n->var = 0;
-	//			}
-	//			delete n;
-	//		}
-	//		this->var->classValue->childList.clear();
-	//		this->var->classValue.reset();
-	//	}
-	//	if (!this->var->IsTemp()) {
-	//		delete var;
-	//	}
-	//}
-
-	//this->var = 0;
 }
 
 Void ScriptNode::Order(Void) {
@@ -184,4 +165,4 @@ Void ScriptNode::_Order(Vector<ScriptNodePtr>* list) {
 	}
 }
 
-LAME_END
+LAME_END2

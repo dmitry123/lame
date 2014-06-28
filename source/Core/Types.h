@@ -1,7 +1,7 @@
 #ifndef __LAME_CORE__TYPES__
 #define __LAME_CORE__TYPES__
 
-#include "define.h"
+#include "Define.h"
 
 #include <stdarg.h>
 
@@ -33,6 +33,10 @@ typedef char FilePathBuffer[LAME_FILEPATH_MAX];
 typedef char FileExtensionBuffer[LAME_FILEEXTENSION_MAX];
 typedef char ErrorBuffer[LAME_ERRORBUFFER_MAX];
 typedef char TimeBuffer[LAME_TIMEBUFFER_MAX];
+typedef char FileSignature[LAME_SIGNATURE_MAX];
+typedef char FileName[LAME_FILENAME_MAX];
+typedef char FilePath[LAME_FILEPATH_MAX];
+typedef char FileExtension[LAME_FILEEXTENSION_MAX];
 
 #if defined(_TIME_T_DEFINED)
 typedef time_t Clock;
@@ -73,6 +77,21 @@ struct FindFileInfo {
 
 typedef va_list VaList;
 
+typedef struct {
+	Sint32 x;
+	Sint32 y;
+} Point, *PointPtr;
+
 LAME_END
+
+LAME_BEGIN2(Core)
+
+typedef class CriticalSection CriticalSection, *CriticalSectionPtr;
+typedef class Mutex Mutex, *MutexPtr;
+typedef class RecursiveMutex RecursiveMutex, *RecursiveMutexPtr;
+typedef class Thread Thread, *ThreadPtr;
+typedef class Condition Condition, *ConditionPtr;
+
+LAME_END2
 
 #endif // ~__LAME_CORE__TYPES__

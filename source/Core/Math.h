@@ -3,7 +3,7 @@
 
 #include "Types.h"
 
-LAME_BEGIN
+LAME_BEGIN2(Core)
 
 class LAME_API ElasticBox {
 public:
@@ -26,7 +26,7 @@ public:
 		return this->h;
 	}
 public:
-	ElasticBox();
+	 ElasticBox();
 	~ElasticBox();
 public:
 	ElasticBox(Uint32 w, Uint32 h) : w(w), h(h) {
@@ -43,39 +43,46 @@ private:
 	ElasticBox** children4;
 };
 
-Float32 LAME_API powf(Float32 x, Float32 y);
-Float64 LAME_API powd(Float64 x, Float64 y);
-Float32 LAME_API powl(Sint32 x, Sint32 y);
-Float64 LAME_API powll(Sint64 x, Sint64 y);
-Float32 LAME_API sqrtf(Float32 x);
-Float64 LAME_API sqrtd(Float64 x);
-Float32 LAME_API sqrtl(Sint32 x);
-Float64 LAME_API sqrtll(Sint64 x);
-Float32 LAME_API sqrf(Float32 x);
-Float64 LAME_API sqrd(Float64 x);
-Sint32 LAME_API sqrl(Sint32 x);
-Sint64 LAME_API sqrll(Sint64 x);
-Float32 LAME_API fabs(Float32 x);
-Float64 LAME_API dabs(Float64 x);
-Sint32 LAME_API labs(Sint32 x);
-Sint64 LAME_API llabs(Sint64 x);
-Float32 LAME_API pow(Float32 x, Float32 y);
-Float64 LAME_API pow(Float64 x, Float64 y);
-Float32 LAME_API pow(Sint32 x, Sint32 y);
-Float64 LAME_API pow(Sint64 x, Sint64 y);
-Float32 LAME_API sqrt(Float32 x);
-Float64 LAME_API sqrt(Float64 x);
-Float32 LAME_API sqrt(Sint32 x);
-Float64 LAME_API sqrt(Sint64 x);
-Float32 LAME_API sqr(Float32 x);
-Float64 LAME_API sqr(Float64 x);
-Sint32 LAME_API sqr(Sint32 x);
-Sint64 LAME_API sqr(Sint64 x);
-Float32 LAME_API abs(Float32 x);
-Float64 LAME_API abs(Float64 x);
-Sint32 LAME_API abs(Sint32 x);
-Sint64 LAME_API abs(Sint64 x);
+namespace internal {
 
-LAME_END
+	Float32 LAME_API powf(Float32 x, Float32 y);
+	Float64 LAME_API powd(Float64 x, Float64 y);
+	Float32 LAME_API powl(Sint32 x, Sint32 y);
+	Float64 LAME_API powll(Sint64 x, Sint64 y);
+	Float32 LAME_API sqrtf(Float32 x);
+	Float64 LAME_API sqrtd(Float64 x);
+	Float32 LAME_API sqrtl(Sint32 x);
+	Float64 LAME_API sqrtll(Sint64 x);
+	Float32 LAME_API sqrf(Float32 x);
+	Float64 LAME_API sqrd(Float64 x);
+	Sint32  LAME_API sqrl(Sint32 x);
+	Sint64  LAME_API sqrll(Sint64 x);
+	Float32 LAME_API fabs(Float32 x);
+	Float64 LAME_API dabs(Float64 x);
+	Sint32  LAME_API labs(Sint32 x);
+	Sint64  LAME_API llabs(Sint64 x);
+}
+
+class LAME_API Math {
+public:
+	static Float32 pow(Float32 x, Float32 y);
+	static Float64 pow(Float64 x, Float64 y);
+	static Float32 pow(Sint32 x, Sint32 y);
+	static Float64 pow(Sint64 x, Sint64 y);
+	static Float32 sqrt(Float32 x);
+	static Float64 sqrt(Float64 x);
+	static Float32 sqrt(Sint32 x);
+	static Float64 sqrt(Sint64 x);
+	static Float32 sqr(Float32 x);
+	static Float64 sqr(Float64 x);
+	static Sint32  sqr(Sint32 x);
+	static Sint64  sqr(Sint64 x);
+	static Float32 abs(Float32 x);
+	static Float64 abs(Float64 x);
+	static Sint32  abs(Sint32 x);
+	static Sint64  abs(Sint64 x);
+};
+
+LAME_END2
 
 #endif // ~__LAME_CORE__MATH__

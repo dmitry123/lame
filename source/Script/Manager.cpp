@@ -1,6 +1,6 @@
 #include "Script.h"
 
-LAME_BEGIN
+LAME_BEGIN2(Script)
 
 ScriptManager::ScriptManager() {
 
@@ -188,4 +188,4 @@ ScriptVarPtr ScriptManager::_DeclareInternalVar(ScriptTypeID type, BufferRefC na
 	return typeVar;
 }
 
-LAME_END
+LAME_END2

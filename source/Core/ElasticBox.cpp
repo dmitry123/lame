@@ -1,6 +1,6 @@
 #include "Math.h"
 
-LAME_BEGIN
+LAME_BEGIN2(Core)
 
 ElasticBox::ElasticBox() {
 
@@ -148,4 +148,4 @@ Void ElasticBox::InsertItem(Uint32P x, Uint32P y, Uint32 width, Uint32 height) {
 	}
 }
 
-LAME_END
+LAME_END2

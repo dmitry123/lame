@@ -17,7 +17,9 @@
 #  define LAME_API
 #endif
 
-LAME_BEGIN
+LAME_BEGIN2(ResourceManager)
+
+typedef class ResourceController *ResourceControllerPtr;
 
 typedef enum {
 	kResourceTypeDefault,
@@ -65,7 +67,7 @@ public:
 public:
 	ResourceTypeID ParseFileName(StringC fileName) {
 
-		FilePathInfo filePathInfo(fileName);
+		Core::FilePathInfo filePathInfo(fileName);
 
 		if (filePathInfo.extension == "jpg") {
 			this->SetID(kResourceTypeJpg);
@@ -105,13 +107,13 @@ public:
 public:
 	Void BuildFileInfo(StringC fileName) {
 
-		FilePathInfo filePathInfo(fileName);
+		Core::FilePathInfo filePathInfo(fileName);
 
 		strcpy(this->fileName, filePathInfo.name.data());
 		strcpy(this->filePath, filePathInfo.path.data());
 		strcpy(this->fileExtension, filePathInfo.extension.data());
 
-		this->fileSize = GetFileSize(fileName);
+		this->fileSize = Core::File::GetFileSize(fileName);
 	}
 } *ResourceFileInfoPtr;
 
@@ -166,6 +168,6 @@ typedef struct ResourceAudioInfo : ResourceFileInfo {
 
 } *ResourceAudioInfoPtr;
 
-LAME_END
+LAME_END2
 
 #endif // ~__LAME_RESOURCE_MANAGER__DEFINE__

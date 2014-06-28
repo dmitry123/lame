@@ -3,7 +3,7 @@
 
 #include "Define.h"
 
-LAME_BEGIN
+LAME_BEGIN2(Script)
 
 class LAME_API SyntaxException : public Exception {
 public:
@@ -41,6 +41,6 @@ protected:
 		SyntaxException(1, _line, __LINE__, _message, __VA_ARGS__).Debug(); \
 	} __warningExceptionLock = 1;
 
-LAME_END
+LAME_END2
 
 #endif // ~__LAME_SCRIPT__EXCEPTION__

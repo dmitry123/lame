@@ -82,25 +82,40 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\source\Script\Abstract.h" />
     <ClInclude Include="..\..\source\Script\Builder.h" />
+    <ClInclude Include="..\..\source\Script\Class.h" />
     <ClInclude Include="..\..\source\Script\Define.h" />
+    <ClInclude Include="..\..\source\Script\Error.h" />
     <ClInclude Include="..\..\source\Script\Exception.h" />
+    <ClInclude Include="..\..\source\Script\GlobalScope.h" />
+    <ClInclude Include="..\..\source\Script\Interface.h" />
     <ClInclude Include="..\..\source\Script\Internal.h" />
-    <ClInclude Include="..\..\source\Script\Json.h" />
-    <ClInclude Include="..\..\source\Script\Manager.h" />
+    <ClInclude Include="..\..\source\Script\Method.h" />
+    <ClInclude Include="..\..\source\Script\Object.h" />
     <ClInclude Include="..\..\source\Script\Parser.h" />
-    <ClInclude Include="..\..\source\Script\Performer.h" />
+    <ClInclude Include="..\..\source\Script\Scope.h" />
+    <ClInclude Include="..\..\source\Script\ScopeController.h" />
     <ClInclude Include="..\..\source\Script\Script.h" />
+    <ClInclude Include="..\..\source\Script\Variable.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\source\Script\Abstract.cpp" />
     <ClCompile Include="..\..\source\Script\Builder.cpp" />
+    <ClCompile Include="..\..\source\Script\Class.cpp" />
+    <ClCompile Include="..\..\source\Script\Define.cpp" />
+    <ClCompile Include="..\..\source\Script\Error.cpp" />
     <ClCompile Include="..\..\source\Script\Exception.cpp" />
-    <ClCompile Include="..\..\source\Script\Json.cpp" />
-    <ClCompile Include="..\..\source\Script\JsonNode.cpp" />
-    <ClCompile Include="..\..\source\Script\Manager.cpp" />
+    <ClCompile Include="..\..\source\Script\GlobalScope.cpp" />
+    <ClCompile Include="..\..\source\Script\Interface.cpp" />
+    <ClCompile Include="..\..\source\Script\Internal.cpp" />
+    <ClCompile Include="..\..\source\Script\Method.cpp" />
     <ClCompile Include="..\..\source\Script\Node.cpp" />
+    <ClCompile Include="..\..\source\Script\Object.cpp" />
     <ClCompile Include="..\..\source\Script\Parser.cpp" />
-    <ClCompile Include="..\..\source\Script\Performer.cpp" />
+    <ClCompile Include="..\..\source\Script\Scope.cpp" />
+    <ClCompile Include="..\..\source\Script\ScopeController.cpp" />
+    <ClCompile Include="..\..\source\Script\Script.cpp" />
     <ClCompile Include="..\..\source\Script\Variable.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -8,7 +8,7 @@
 #  define stricmp(_left, _right) _stricmp((const char*)_left, (const char*)_right)
 #endif
 
-LAME_BEGIN
+LAME_BEGIN2(ResourceManager)
 
 typedef unsigned char  byte;
 typedef unsigned short word;
@@ -132,4 +132,4 @@ Bool WavLoader::Save(StringC fileName) {
 	return LAME_FALSE;
 }
 
-LAME_END
+LAME_END2

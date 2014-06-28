@@ -3,7 +3,9 @@
 
 #include "Define.h"
 
-LAME_BEGIN
+LAME_BEGIN2(ResourceManager)
+
+using namespace Core;
 
 template <class LoaderInfo> class IVirtualLoader {
     typedef LoaderInfo* LoaderInfoPtr;
@@ -37,6 +39,6 @@ public:
     LoaderInfo loaderInfo_;
 };
 
-LAME_END
+LAME_END2
 
 #endif // ~__LAME_RESOURCE_MANAGER__VIRTUAL_LOADER__

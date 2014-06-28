@@ -3,7 +3,7 @@
 
 #include "VirtualLoader.h"
 
-LAME_BEGIN
+LAME_BEGIN2(ResourceManager)
 
 class ITextureLoader : public IVirtualLoader<ResourceTextureInfo> {
 protected:
@@ -79,6 +79,6 @@ public:
 	Bool Save(StringC fileName);
 } *BmpLoaderPtr;
 
-LAME_END
+LAME_END2
 
 #endif // ~__LAME_RESOURCE_MANAGER__TEXTURE_LOADER__

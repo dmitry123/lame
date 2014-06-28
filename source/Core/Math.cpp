@@ -6,142 +6,137 @@
 
 #include <math.h>
 
-LAME_BEGIN
+LAME_BEGIN2(Core)
 
-Float32 powf(Float32 x, Float32 y) {
-	return ::powf(x, y);
+namespace internal {
+
+	Float32 powf(Float32 x, Float32 y) {
+		return ::powf(x, y);
+	}
+
+	Float64 powd(Float64 x, Float64 y) {
+		return ::pow(x, y);
+	}
+
+	Float32 powl(Sint32 x, Sint32 y) {
+		return ::pow((Float32)x, y);
+	}
+
+	Float64 powll(Sint64 x, Sint64 y) {
+		return ::pow((Float64)x, (Float64)y);
+	}
+
+	Float32 sqrtf(Float32 x) {
+		return ::sqrtf(x);
+	}
+
+	Float64 sqrtd(Float64 x) {
+		return ::sqrt(x);
+	}
+
+	Float32 sqrtl(Sint32 x) {
+		return ::sqrt((Float32)x);
+	}
+
+	Float64 sqrtll(Sint64 x) {
+		return ::sqrt((Float64)x);
+	}
+
+	Float32 sqrf(Float32 x) {
+		return x * x;
+	}
+
+	Float64 sqrd(Float64 x) {
+		return x * x;
+	}
+
+	Sint32 sqrl(Sint32 x) {
+		return x * x;
+	}
+
+	Sint64 sqrll(Sint64 x) {
+		return x * x;
+	}
+
+	Float32 fabs(Float32 x) {
+		return ::fabs(x);
+	}
+
+	Float64 dabs(Float64 x) {
+		return abs(x);
+	}
+
+	Sint32 labs(Sint32 x) {
+		return (Sint32)::labs(x);
+	}
+
+	Sint64 llabs(Sint64 x) {
+		return ::llabs(x);
+	}
 }
 
-Float64 powd(Float64 x, Float64 y) {
-	return ::pow(x, y);
+Float32 Math::pow(Float32 x, Float32 y) {
+	return internal::powf(x, y);
 }
 
-Float32 powl(Sint32 x, Sint32 y) {
-	return ::pow((Float32)x, y);
+Float64 Math::pow(Float64 x, Float64 y) {
+	return internal::powd(x, y);
 }
 
-Float64 powll(Sint64 x, Sint64 y) {
-	return ::pow((Float64)x, (Float64)y);
+Float32 Math::pow(Sint32 x, Sint32 y) {
+	return internal::powl(x, y);
 }
 
-Float32 sqrtf(Float32 x) {
-	return ::sqrtf(x);
+Float64 Math::pow(Sint64 x, Sint64 y) {
+	return internal::powll(x, y);
 }
 
-Float64 sqrtd(Float64 x) {
-	return ::sqrt(x);
+Float32 Math::sqrt(Float32 x) {
+	return internal::sqrtf(x);
 }
 
-Float32 sqrtl(Sint32 x) {
-	return ::sqrt((Float32)x);
+Float64 Math::sqrt(Float64 x) {
+	return internal::sqrtd(x);
 }
 
-Float64 sqrtll(Sint64 x) {
-	return ::sqrt((Float64)x);
+Float32 Math::sqrt(Sint32 x) {
+	return internal::sqrtl(x);
 }
 
-Float32 sqrf(Float32 x) {
-	return x * x;
+Float64 Math::sqrt(Sint64 x) {
+	return internal::sqrtll(x);
 }
 
-Float64 sqrd(Float64 x) {
-	return x * x;
+Float32 Math::sqr(Float32 x) {
+	return internal::sqrf(x);
 }
 
-Sint32 sqrl(Sint32 x) {
-	return x * x;
+Float64 Math::sqr(Float64 x) {
+	return internal::sqrd(x);
 }
 
-Sint64 sqrll(Sint64 x) {
-	return x * x;
+Sint32 Math::sqr(Sint32 x) {
+	return internal::sqrl(x);
 }
 
-Float32 fabs(Float32 x) {
-	return ::fabs(x);
+Sint64 Math::sqr(Sint64 x) {
+	return internal::sqrll(x);
 }
 
-Float64 dabs(Float64 x) {
-	return abs(x);
+Float32 Math::abs(Float32 x) {
+	return internal::fabs(x);
 }
 
-Sint32 labs(Sint32 x) {
-#ifdef LAME_MSVC
-	return (Sint32)::labs(x);
-#else
-	return (Sint32)labs(x);
-#endif
+Float64 Math::abs(Float64 x) {
+	return internal::dabs(x);
 }
 
-Sint64 llabs(Sint64 x) {
-#ifdef LAME_MSVC
-	return ::llabs(x);
-#else
-	return llabs(x);
-#endif
+Sint32 Math::abs(Sint32 x) {
+	return internal::labs(x);
 }
 
-Float32 pow(Float32 x, Float32 y) {
-	return powf(x, y);
+Sint64 Math::abs(Sint64 x) {
+	return internal::llabs(x);
 }
 
-Float64 pow(Float64 x, Float64 y) {
-	return powd(x, y);
-}
-
-Float32 pow(Sint32 x, Sint32 y) {
-	return powl(x, y);
-}
-
-Float64 pow(Sint64 x, Sint64 y) {
-	return powll(x, y);
-}
-
-Float32 sqrt(Float32 x) {
-	return sqrtf(x);
-}
-
-Float64 sqrt(Float64 x) {
-	return sqrtd(x);
-}
-
-Float32 sqrt(Sint32 x) {
-	return sqrtl(x);
-}
-
-Float64 sqrt(Sint64 x) {
-	return sqrtll(x);
-}
-
-Float32 sqr(Float32 x) {
-	return sqrf(x);
-}
-
-Float64 sqr(Float64 x) {
-	return sqrd(x);
-}
-
-Sint32 sqr(Sint32 x) {
-	return sqrl(x);
-}
-
-Sint64 sqr(Sint64 x) {
-	return sqrll(x);
-}
-
-Float32 abs(Float32 x) {
-	return fabs(x);
-}
-
-Float64 abs(Float64 x) {
-	return dabs(x);
-}
-
-Sint32 abs(Sint32 x) {
-	return labs(x);
-}
-
-Sint64 abs(Sint64 x) {
-	return llabs(x);
-}
-
-LAME_END
+LAME_END2
