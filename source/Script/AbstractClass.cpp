@@ -1,4 +1,4 @@
-#include "Abstract.h"
+#include "AbstractClass.h"
 
 LAME_BEGIN2(Script)
 

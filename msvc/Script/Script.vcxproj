@@ -80,9 +80,12 @@
     <ProjectReference Include="..\Core\Core.vcxproj">
       <Project>{8e51e80f-eda6-41cb-8d0f-5a722293b445}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\VirtualMachine\VirtualMachine.vcxproj">
+      <Project>{a6933c80-d4b7-4e85-9e91-4e87864306bb}</Project>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\source\Script\Abstract.cpp" />
+    <ClCompile Include="..\..\source\Script\AbstractClass.cpp" />
     <ClCompile Include="..\..\source\Script\Array.cpp" />
     <ClCompile Include="..\..\source\Script\NodeBuilder.cpp" />
     <ClCompile Include="..\..\source\Script\Class.cpp" />
@@ -98,16 +101,18 @@
     <ClCompile Include="..\..\source\Script\Node.cpp" />
     <ClCompile Include="..\..\source\Script\Object.cpp" />
     <ClCompile Include="..\..\source\Script\FileParser.cpp" />
-    <ClCompile Include="..\..\source\Script\Performer.cpp" />
+    <ClCompile Include="..\..\source\Script\Translator.cpp" />
     <ClCompile Include="..\..\source\Script\Scope.cpp" />
+    <ClCompile Include="..\..\source\Script\ScopeBuilder.cpp" />
     <ClCompile Include="..\..\source\Script\ScopeController.cpp" />
     <ClCompile Include="..\..\source\Script\Script.cpp" />
     <ClCompile Include="..\..\source\Script\Segment.cpp" />
+    <ClCompile Include="..\..\source\Script\SegmentBuilder.cpp" />
     <ClCompile Include="..\..\source\Script\SegmentLinker.cpp" />
     <ClCompile Include="..\..\source\Script\Variable.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\source\Script\Abstract.h" />
+    <ClInclude Include="..\..\source\Script\AbstractClass.h" />
     <ClInclude Include="..\..\source\Script\Array.h" />
     <ClInclude Include="..\..\source\Script\NodeBuilder.h" />
     <ClInclude Include="..\..\source\Script\Class.h" />
@@ -123,11 +128,13 @@
     <ClInclude Include="..\..\source\Script\Node.h" />
     <ClInclude Include="..\..\source\Script\Object.h" />
     <ClInclude Include="..\..\source\Script\FileParser.h" />
-    <ClInclude Include="..\..\source\Script\Performer.h" />
+    <ClInclude Include="..\..\source\Script\Translator.h" />
     <ClInclude Include="..\..\source\Script\Scope.h" />
+    <ClInclude Include="..\..\source\Script\ScopeBuilder.h" />
     <ClInclude Include="..\..\source\Script\ScopeController.h" />
     <ClInclude Include="..\..\source\Script\Script.h" />
     <ClInclude Include="..\..\source\Script\Segment.h" />
+    <ClInclude Include="..\..\source\Script\SegmentBuilder.h" />
     <ClInclude Include="..\..\source\Script\SegmentLinker.h" />
     <ClInclude Include="..\..\source\Script\Variable.h" />
   </ItemGroup>

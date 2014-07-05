@@ -57,10 +57,6 @@ Void Class::Trace(Uint32 offset) {
 	printf("}");
 }
 
-Void Class::Write(Uint8P buffer, Uint32P offset) {
-	this->GetScopeController()->Write(buffer + *offset, offset);
-}
-
 Error Class::New(ObjectPtr object) {
 
 	// check object for variable, cuz we can

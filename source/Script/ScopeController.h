@@ -42,7 +42,6 @@ public:
 	Void Trace(Uint32 offset = 0, Bool temp = 1);
 	Void Clear(Void);
 	Uint32 Size(Void);
-	Void Write(Uint8P buffer, Uint32P offset);
 private:
 	Scope classScope_;
 	Scope varScope_;

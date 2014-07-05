@@ -1,5 +1,5 @@
-#ifndef __LAME_SCRIPT__ABSTRACT__
-#define __LAME_SCRIPT__ABSTRACT__
+#ifndef __LAME_SCRIPT_ABSTRACT_CLASS__
+#define __LAME_SCRIPT_ABSTRACT_CLASS__
 
 #include "Class.h"
 
@@ -16,4 +16,4 @@ public:
 
 LAME_END2
 
-#endif // ~__LAME_SCRIPT__ABSTRACT__
+#endif // ~__LAME_SCRIPT_ABSTRACT_CLASS__

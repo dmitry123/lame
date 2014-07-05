@@ -41,6 +41,8 @@ typedef class Scope *ScopePtr, *const ScopePtrC;
 typedef class ScopeController *ScopeControllerPtr, *const ScopeControllerPtrC;
 typedef class Variable *VariablePtr, *const VariablePtrC;
 typedef class Segment *SegmentPtr, *const SegmentPtrC;
+typedef class SegmentBuilder *SegmentSegmentBuilderPtr, *const SegmentSegmentBuilderPtrC;
+typedef class SegmentLinker *SegmentLinkerPtr, *const SegmentLinkerPtrC;
 
 typedef Buffer ScriptNativeString;
 typedef Sint32 ScriptNativeInt;

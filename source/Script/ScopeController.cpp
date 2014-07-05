@@ -88,22 +88,4 @@ Uint32 ScopeController::Size(Void) {
 	return size;
 }
 
-Void ScopeController::Write(Uint8P buffer, Uint32P offset) {
-
-	for (auto& i : this->GetMethodScope()->GetStringMap()) {
-		if (i.second->GetScopeController()) {
-			i.second->GetScopeController()->Write(buffer + *offset, offset);
-		}
-	}
-
-	this->GetVarScope()->Write(buffer + *offset, offset);
-
-	for (auto& i : this->GetTempScope()->GetStringMap()) {
-		if (i.first.first.length() > 0) {
-			i.second->Write(buffer + *offset, offset);
-			*offset += i.second->GetSizeOf();
-		}
-	}
-}
-
 LAME_END2

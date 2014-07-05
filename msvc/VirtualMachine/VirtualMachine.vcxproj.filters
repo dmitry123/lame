@@ -11,7 +11,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\source\VirtualMachine\VirtualMachine.c">
+    <ClCompile Include="..\..\source\VirtualMachine\VirtualMachine.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

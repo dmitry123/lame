@@ -32,7 +32,9 @@ public:
 					while (!this->opStack.empty()) {
 						top = this->opStack.top();
 						if (top->lex->lex->id == kScriptLexParentheseL ||
-							top->lex->lex->id == kScriptLexParentheseR
+							top->lex->lex->id == kScriptLexParentheseR ||
+							top->lex->lex->id == kScriptLexBracketL ||
+							top->lex->lex->id == kScriptLexBracketR
 						) {
 							PostSyntaxError(node->lex->line, "Parenthese mismatched", 0);
 						}
@@ -40,10 +42,16 @@ public:
 						this->opStack.pop();
 					}
 				}
-				else if (node->lex->lex->id == kScriptLexParentheseL) {
+				else if (
+					node->lex->lex->id == kScriptLexParentheseL ||
+					node->lex->lex->id == kScriptLexBracketL
+				) {
 					this->HandleLeftParenthesis(node);
 				}
-				else if (node->lex->lex->id == kScriptLexParentheseR) {
+				else if (
+					node->lex->lex->id == kScriptLexParentheseR ||
+					node->lex->lex->id == kScriptLexBracketR
+				) {
 					this->HandleRightParenthesis(node);
 				}
 				else if (node->lex->lex->id == kScriptLexComma) {
@@ -82,11 +90,17 @@ private:
 		this->opStack.push(node);
 	}
 	inline void HandleRightParenthesis(NodePtr node) {
-		while (!this->opStack.empty() && this->opStack.top()->lex->lex->id != kScriptLexParentheseL) {
+		while (!this->opStack.empty() && (
+			this->opStack.top()->lex->lex->id != kScriptLexParentheseL &&
+			this->opStack.top()->lex->lex->id != kScriptLexBracketL)
+		) {
 			this->resultStack.push(this->opStack.top());
 			this->opStack.pop();
 		}
-		if (this->opStack.empty() || !this->opStack.empty() && this->opStack.top()->lex->lex->id != kScriptLexParentheseL) {
+		if (this->opStack.empty() || !this->opStack.empty() && (
+			this->opStack.top()->lex->lex->id != kScriptLexParentheseL &&
+			this->opStack.top()->lex->lex->id != kScriptLexBracketL)
+		) {
 			PostSyntaxError(node->lex->line, "Parenthese mismatched", 0);
 		}
 		this->opStack.pop();

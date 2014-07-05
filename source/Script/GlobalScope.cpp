@@ -12,7 +12,7 @@
 LAME_BEGIN2(Script)
 
 Void DeclareIntOperators(ClassPtr intClass) {
-    
+
 	intClass->Overload(Class::Operator::Move, [](VariablePtr left, VariablePtr right) {
 		if (left->CheckType(Class::Type::Variable)) {
 			left->v.intValue = right->v.intValue;
@@ -21,9 +21,13 @@ Void DeclareIntOperators(ClassPtr intClass) {
 		}
 	});
 
-	OVERLOAD(Add, intClass, {
+	intClass->Overload(Class::Operator::Add, [](VariablePtr left, VariablePtr right) {
 		left->v.intValue += right->v.intValue;
 	});
+
+	//OVERLOAD(Add, intClass, {
+	//	left->v.intValue += right->v.intValue;
+	//});
 
 	OVERLOAD(Sub, intClass, {
 		left->v.intValue -= right->v.intValue;

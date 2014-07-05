@@ -4,7 +4,7 @@
 #include "Interface.h"
 #include "Method.h"
 #include "Class.h"
-#include "Abstract.h"
+#include "AbstractClass.h"
 #include "Array.h"
 
 #include <utility>
@@ -227,22 +227,6 @@ Uint32 Scope::Size(Void) {
 	}
 
 	return size;
-}
-
-Void Scope::Write(Uint8P buffer, Uint32P offset) {
-
-	for (auto& i : this->stringMap_) {
-
-		if (i.second->CheckModificator(Class::Modificator::Register) ||
-			i.second->CheckModificator(Class::Modificator::Internal)
-		) {
-			continue;
-		}
-
-		i.second->Write(buffer + *offset, offset);
-
-		*offset += i.second->GetSizeOf();
-	}
 }
 
 Scope::~Scope() {

@@ -5,7 +5,7 @@
 
 LAME_BEGIN2(Script)
 
-using namespace ::LAME_NAMESPACE::Core;
+using namespace ::Lame::Core;
 
 typedef enum {
 	kScriptLexDefault = -1,

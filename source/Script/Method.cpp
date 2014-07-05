@@ -2,7 +2,7 @@
 #include "ScopeController.h"
 #include "Variable.h"
 #include "Class.h"
-#include "Performer.h"
+#include "Translator.h"
 
 LAME_BEGIN2(Script)
 

@@ -50,7 +50,6 @@ public:
 public:
 	Error Clone(ObjectPtrC object) override;
 	Void Trace(Uint32 offset) override;
-	Void Write(Uint8P buffer, Uint32P offset) override;
 public:
 	inline VariablePtr FindVariable(BufferRefC name) {
 		return (VariablePtr) this->GetScopeController()->GetVarScope()->Find(name);

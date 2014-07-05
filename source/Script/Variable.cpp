@@ -26,7 +26,7 @@ Variable::Variable(BufferRefC name, ObjectPtrC classType, Type type, NodePtr nod
 		this->SetInteger(0);
 	}
 
-	this->SetSizeOf(classType->GetSizeOf());
+	this->SetSizeOf(Object::SizeOf);
 }
 
 Variable::Variable(BufferRefC name, ObjectPtrC classType, NodePtr node) : Object(name, Type::Variable, node),
@@ -47,7 +47,11 @@ Variable::Variable(BufferRefC name, ObjectPtrC classType, NodePtr node) : Object
 		this->SetInteger(0);
 	}
 
-	this->SetSizeOf(classType->GetSizeOf());
+	if (!classType->GetSizeOf()) {
+		this->SetSizeOf(Object::SizeOf);
+	} else {
+		this->SetSizeOf(classType->GetSizeOf());
+	}
 }
 
 Variable::~Variable() {
@@ -85,7 +89,6 @@ VariablePtr Variable::SetObject(ClassPtr c) {
 		c->IncRef();
 	}
 
-	this->SetSizeOf(Object::SizeOf);
 	this->objectValue = c;
 	this->varType = Var::Object;
 
@@ -222,41 +225,6 @@ Void Variable::Trace(Uint32 offset) {
 			}
 		}
 	}
-}
-
-Void Variable::Write(Uint8P buffer, Uint32P offset) {
-
-	VoidP copyBuffer = NULL;
-
-	if (this->varType == Var::String) {
-		copyBuffer = (VoidP) this->stringValue.data();
-		//memcpy(buffer, this->stringValue.data(), this->GetSizeOf());
-	}
-	else if (this->varType == Var::Integer) {
-		copyBuffer = &this->v.intValue;
-		//memcpy(buffer, &this->v.intValue, this->GetSizeOf());
-	}
-	else if (this->varType == Var::Float) {
-		copyBuffer = &this->v.floatValue;
-		//memcpy(buffer, &this->v.floatValue, this->GetSizeOf());
-	}
-	else if (this->varType == Var::Object) {
-		if (this->GetObject()) {
-			this->GetObject()->Write(buffer + *offset, offset);
-		}
-	}
-
-	if (copyBuffer) {
-		memcpy(buffer, copyBuffer, this->GetSizeOf());
-	}
-
-	printf("| %s\t| %.8X | %d\t  | ", this->GetName().data(), *offset, this->GetSizeOf());
-	Buffer b;
-	for (Uint32 i = 0; i < this->GetSizeOf() && copyBuffer; i++) {
-		b.Format("%.8X", Uint8P(copyBuffer)[i]);
-		printf("%c%c ", b[b.length() - 2], b[b.length() - 1]);
-	}
-	puts("");
 }
 
 Bool Variable::IsChar(Void) {

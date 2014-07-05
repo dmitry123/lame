@@ -55,6 +55,13 @@ ObjectPtr Object::SetModificator(Modificator modificator, Bool state) {
 	return this;
 }
 
+Void Object::SetSegment(SegmentPtr segment, Uint32 address, Uint32 size) {
+
+	this->address_ = address;
+	this->size_ = size;
+	this->segment_ = segment;
+}
+
 Void Object::PrintModificators(Void) {
 
 	if (this->CheckModificator(Modificator::Public)) {

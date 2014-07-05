@@ -51,6 +51,9 @@ public:
 		this->scopeController_ = 0;
 		this->modificators_ = 0;
 		this->sizeOf_ = 0;
+		this->segment_ = 0;
+		this->address_ = 0;
+		this->size_ = 0;
 	}
 public:
 	Object(Object& object);
@@ -67,9 +70,9 @@ public:
 	inline virtual MethodPtr GetMethod() { return NULL; }
 	inline virtual InterfacePtr GetInterface() { return NULL; }
 	inline virtual ArrayPtr GetArray() { return NULL; }
-	inline virtual Void Write(Uint8P buffer, Uint32P offset) {  }
 public:
 	ObjectPtr SetModificator(Modificator modificator, Bool state = TRUE);
+	Void SetSegment(SegmentPtr segment, Uint32 address, Uint32 size);
 	Void PrintModificators(Void);
 public:
 	inline Void SetSizeOf(Uint32 sizeOf) {
@@ -94,6 +97,7 @@ public:
 	inline Type GetType() const { return this->type; }
 	inline Uint32 GetSizeOf() const { return this->sizeOf_; }
 	inline NodePtr GetNode() const { return this->node; }
+	inline SegmentPtr GetSegment() const { return this->segment_; }
 public:
 	inline ScopeControllerPtr GetScopeController() {
 		return scopeController_;
@@ -110,6 +114,9 @@ private:
 	ScopeControllerPtr scopeController_;
 	Bool isScopeControllerEnabled_;
 	Uint32 countOfArguments_;
+	SegmentPtr segment_;
+	Uint32 address_;
+	Uint32 size_;
 };
 
 LAME_END2

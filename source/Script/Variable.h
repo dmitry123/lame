@@ -32,7 +32,6 @@ public:
 public:
 	Error Clone(ObjectPtrC object) override;
 	Void Trace(Uint32 offset) override;
-	Void Write(Uint8P buffer, Uint32P offset) override;
 public:
 	inline ClassPtr GetClass() override { return this->classType; }
 	inline VariablePtr GetVariable() override { return this; }

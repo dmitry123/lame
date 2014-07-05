@@ -31,7 +31,6 @@ public:
 	Void Clear(Void);
 	Void Trace(Uint32 offset);
 	Uint32 Size(Void);
-	Void Write(Uint8P buffer, Uint32P offset);
 public:
 	inline StringMap& GetStringMap() {
 		return this->stringMap_;

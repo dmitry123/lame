@@ -625,13 +625,14 @@ StringC File::GetFileName(StringC filename) {
 
 Buffer File::GetFileNameWithoutExtension(StringC filename) {
 
-	Buffer result = GetFileName(filename[0] == LAME_SLASH ? filename + 1 : filename);
+	Uint32 fileNameLength = strlen(filename);
+	Buffer result;
 
-	for (Sint32 i = (Sint32)result.length() - 1; i >= 0; i--) {
-		if (result[i] == '.') {
-			result[i] = '\0';
+	for (Uint32 i = 0; i < fileNameLength; i++) {
+		if (filename[i] == '.') {
 			break;
 		}
+		result.push_back(filename[i]);
 	}
 
 	return result;

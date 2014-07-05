@@ -85,7 +85,7 @@
     <ClInclude Include="..\..\source\VirtualMachine\VirtualMachine.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\source\VirtualMachine\VirtualMachine.c" />
+    <ClCompile Include="..\..\source\VirtualMachine\VirtualMachine.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
