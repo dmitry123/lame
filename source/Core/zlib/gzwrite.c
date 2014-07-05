@@ -61,10 +61,6 @@ local int gz_init(state)
     return 0;
 }
 
-#ifndef _WIN32
-#  include <unistd.h>
-#endif
-
 /* Compress whatever is at avail_in and next_in and write to the output file.
    Return -1 if there is an error writing to the output file, otherwise 0.
    flush is assumed to be a valid deflate() flush value.  If flush is Z_FINISH,

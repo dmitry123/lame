@@ -85,20 +85,28 @@ Bool IsFloatValue(const Core::Buffer& string) {
 }
 
 ScriptNativeInt ParseIntValue(StringC string) {
-
+    
 	if (IsHexValue(string)) {
-		return strtoll(string, NULL, 16);
+        if (sizeof(ScriptNativeInt) == 8) {
+            return (ScriptNativeInt) strtoll(string, NULL, 16);
+        } else {
+            return (ScriptNativeInt) strtol(string, NULL, 16);
+        }
 	}
 
-	return strtoll(string, NULL, 10);
+    if (sizeof(ScriptNativeInt) == 8) {
+        return (ScriptNativeInt) strtoll(string, NULL, 10);
+    } else {
+        return (ScriptNativeInt) strtol(string, NULL, 10);
+    }
 }
 
 ScriptNativeFloat ParseFloatValue(StringC string) {
 
 	if (sizeof(ScriptNativeFloat) == 4) {
-		return strtof(string, NULL);
+		return (ScriptNativeFloat)strtof(string, NULL);
 	} else {
-		return strtod(string, NULL);
+		return (ScriptNativeFloat)strtod(string, NULL);
 	}
 }
 

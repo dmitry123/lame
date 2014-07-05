@@ -82,14 +82,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\source\VirtualMachine\Define.h" />
-    <ClInclude Include="..\..\source\VirtualMachine\FileParser.h" />
     <ClInclude Include="..\..\source\VirtualMachine\VirtualMachine.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\source\VirtualMachine\Define.cpp" />
-    <ClCompile Include="..\..\source\VirtualMachine\FileParser.cpp" />
-    <ClCompile Include="..\..\source\VirtualMachine\VirtualMachine.cpp" />
+    <ClCompile Include="..\..\source\VirtualMachine\VirtualMachine.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -63,15 +63,15 @@ namespace internal {
 	}
 
 	Float64 dabs(Float64 x) {
-		return abs(x);
+		return ::fabs(x);
 	}
 
 	Sint32 labs(Sint32 x) {
-		return (Sint32)::labs(x);
+		return (Sint32)::fabsl(x);
 	}
 
 	Sint64 llabs(Sint64 x) {
-		return ::llabs(x);
+		return (Sint64) ::fabsl((Float96) x);
 	}
 }
 

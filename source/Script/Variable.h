@@ -2,40 +2,46 @@
 #define __LAME_SCRIPT__VARIABLE__
 
 #include "Object.h"
-#include "Object.h"
 #include "Class.h"
 
 LAME_BEGIN2(Script)
 
-class LAME_API ScriptVar : public ScriptObject {
+class LAME_API Variable : public Object {
+	friend class Array;
 public:
 	enum class Var {
 		Integer,
 		Float,
-		Object
+		Object,
+		String
 	};
 public:
-	const ScriptClassPtr classType;
+	const ClassPtr classType;
 public:
-	ScriptVar(BufferRefC name, ScriptObjectPtrC type);
-	~ScriptVar();
+	Variable(BufferRefC name, ObjectPtrC classType, NodePtr node = NULL);
+	~Variable();
 public:
-	ScriptVarPtr MakeInteger(ScriptNativeInt i);
-	ScriptVarPtr MakeFloat(ScriptNativeFloat f);
-	ScriptVarPtr MakeObject(ScriptClassPtr c);
-	ScriptVarPtr MakeInteger(Void);
-	ScriptVarPtr MakeFloat(Void);
-	ScriptVarPtr MakeObject(Void);
+	VariablePtr SetInteger(ScriptNativeInt i);
+	VariablePtr SetFloat(ScriptNativeFloat f);
+	VariablePtr SetObject(ClassPtr c);
+	VariablePtr SetString(ScriptNativeString s);
 public:
-	ScriptError Clone(ScriptObjectPtrC object) override;
-	ScriptError Cast(ScriptObjectPtrC object) override;
+	ScriptNativeInt GetInteger(Void);
+	ScriptNativeFloat GetFloat(Void);
+	ScriptNativeString GetString(Void);
+public:
+	Error Clone(ObjectPtrC object) override;
 	Void Trace(Uint32 offset) override;
+	Void Write(Uint8P buffer, Uint32P offset) override;
 public:
-	inline ScriptClassPtr GetClass() override { return this->classType; }
-	inline ScriptVarPtr GetVariable() override { return this; }
+	inline ClassPtr GetClass() override { return this->classType; }
+	inline VariablePtr GetVariable() override { return this; }
 public:
-	inline ScriptClassPtr GetObject() {
+	inline ClassPtr GetObject() {
 		return this->objectValue;
+	}
+	inline Var GetVarType() {
+		return varType;
 	}
 public:
 	union {
@@ -43,7 +49,27 @@ public:
 		ScriptNativeFloat floatValue;
 	} v;
 public:
-	ScriptClassPtr objectValue;
+	ClassPtr objectValue;
+	ScriptNativeString stringValue;
+public:
+	Bool IsChar(Void);
+	Bool IsByte(Void);
+	Bool IsShort(Void);
+	Bool IsInt(Void);
+	Bool IsLong(Void);
+	Bool IsFloat(Void);
+	Bool IsDouble(Void);
+	Bool IsObject(Void);
+	Bool IsClass(Void);
+	Bool IsBoolean(Void);
+	Bool IsVoid(Void);
+	Bool IsString(Void);
+private:
+	Variable(
+		BufferRefC name,
+		ObjectPtrC classType,
+		Type type,
+		NodePtr node = NULL);
 private:
 	Var varType;
 };

@@ -1,138 +1,198 @@
 #include "Variable.h"
 #include "Internal.h"
+#include "GlobalScope.h"
+#include "Lex.h"
 
 LAME_BEGIN2(Script)
 
 #define __EvalError(_operation) \
 	PostSyntaxError(0, "Unable to apply %s operation to this type", #_operation, left->name.data());
 
-ScriptVar::ScriptVar(BufferRefC name, ScriptObjectPtrC type) : ScriptObject(name, Type::Variable),
-	classType((ScriptClassPtrC)type)
+Variable::Variable(BufferRefC name, ObjectPtrC classType, Type type, NodePtr node) : Object(name, type, node),
+	classType((ClassPtrC)classType)
 {
 	this->objectValue = NULL;
 
-	if (!type->CheckModificator(Modificator::Primitive)) {
-		this->MakeObject();
+	if (classType == GlobalScope::classString) {
+		this->SetString("");
 	}
+	else if (!classType->CheckModificator(Modificator::Primitive)) {
+		this->SetObject(NULL);
+	}
+	else if (classType == GlobalScope::classFloat) {
+		this->SetFloat(0.0f);
+	}
+	else {
+		this->SetInteger(0);
+	}
+
+	this->SetSizeOf(classType->GetSizeOf());
 }
 
-ScriptVar::~ScriptVar() {
+Variable::Variable(BufferRefC name, ObjectPtrC classType, NodePtr node) : Object(name, Type::Variable, node),
+	classType((ClassPtrC)classType)
+{
+	this->objectValue = NULL;
+
+	if (classType == GlobalScope::classString) {
+		this->SetString("");
+	}
+	else if (!classType->CheckModificator(Modificator::Primitive)) {
+		this->SetObject(NULL);
+	}
+	else if (classType == GlobalScope::classFloat) {
+		this->SetFloat(0.0f);
+	}
+	else {
+		this->SetInteger(0);
+	}
+
+	this->SetSizeOf(classType->GetSizeOf());
+}
+
+Variable::~Variable() {
 
 	if (this->objectValue != NULL && this->objectValue->DecRef()) {
 		delete this->objectValue;
 	}
 }
 
-ScriptVarPtr ScriptVar::MakeInteger(ScriptNativeInt i) {
+VariablePtr Variable::SetInteger(ScriptNativeInt i) {
 
 	this->v.intValue = i;
 	this->varType = Var::Integer;
+
 	return this;
 }
 
-ScriptVarPtr ScriptVar::MakeFloat(ScriptNativeFloat f) {
+VariablePtr Variable::SetFloat(ScriptNativeFloat f) {
 
 	this->v.floatValue = f;
 	this->varType = Var::Float;
-	return this;
-}
-
-ScriptVarPtr ScriptVar::MakeObject(ScriptClassPtr c) {
-
-	c->IncRef();
-	this->objectValue = c;
-	this->varType = Var::Object;
-	return this;
-}
-
-ScriptVarPtr ScriptVar::MakeInteger(Void) {
-
-	if (this->varType == Var::Integer) {
-		return this;
-	}
-
-	if (this->varType == Var::Float) {
-		this->v.intValue = (ScriptNativeInt) this->v.floatValue;
-	}
-
-	this->varType = Var::Integer;
 
 	return this;
 }
 
-ScriptVarPtr ScriptVar::MakeFloat(Void) {
-
-	if (this->varType == Var::Float) {
-		return this;
-	}
-
-	if (this->varType == Var::Integer) {
-		this->v.floatValue = (ScriptNativeFloat) this->v.intValue;
-	}
-
-	this->varType = Var::Float;
-
-	return this;
-}
-
-ScriptVarPtr ScriptVar::MakeObject(Void) {
+VariablePtr Variable::SetObject(ClassPtr c) {
 
 	if (this->objectValue) {
-		this->objectValue->DecRef();
+		if (this->objectValue->DecRef()) {
+			delete this->objectValue;
+		}
 	}
-	this->objectValue = NULL;
+
+	if (c != NULL) {
+		c->IncRef();
+	}
+
+	this->SetSizeOf(Object::SizeOf);
+	this->objectValue = c;
 	this->varType = Var::Object;
+
 	return this;
 }
 
-ScriptError ScriptVar::Clone(ScriptObjectPtrC object) {
+VariablePtr Variable::SetString(ScriptNativeString s) {
+
+	this->stringValue = s;
+	this->varType = Var::String;
+
+	return this;
+}
+
+ScriptNativeInt Variable::GetInteger(Void) {
+
+	if (this->varType == Var::String) {
+		return ParseIntValue(this->stringValue.data());
+	}
+
+	if (this->varType == Var::Float) {
+		return (ScriptNativeInt) this->v.floatValue;
+	}
+
+	if (this->varType == Var::Object) {
+		throw ClassInvalidCastException();
+	}
+
+	return this->v.intValue;
+}
+
+ScriptNativeFloat Variable::GetFloat(Void) {
+
+	if (this->varType == Var::String) {
+		return ParseFloatValue(this->stringValue.data());
+	}
+
+	if (this->varType == Var::Float) {
+		return (ScriptNativeFloat) this->v.intValue;
+	}
+
+	if (this->varType == Var::Object) {
+		throw ClassInvalidCastException();
+	}
+
+	return this->v.floatValue;
+}
+
+ScriptNativeString Variable::GetString(Void) {
+
+	Buffer b;
+
+	if (this->varType == Var::Integer) {
+		if (sizeof(this->v.intValue) == 4) {
+			b.Format("%d", this->v.intValue);
+		}
+		else {
+			b.Format("%lld", this->v.intValue);
+		}
+	}
+	else if (this->varType == Var::Float) {
+		b.Format("%.2f", this->v.floatValue);
+	}
+	else if (this->varType == Var::Object) {
+		b.Format("%s", this->objectValue->GetName().data());
+	}
+	else {
+		return this->stringValue;
+	}
+
+	return b;
+}
+
+Error Variable::Clone(ObjectPtrC object) {
+
+	Object::Clone(object);
 
 	if (!object->CheckType(Type::Variable)) {
-		return ScriptError::Class_ObjectNotVariable;
+		return Error::Class_ObjectNotVariable;
 	}
 
 	if (object->GetVariable()->varType == Var::Object) {
-		this->MakeObject(object->GetVariable()->objectValue);
+		object->GetVariable()->SetObject(this->GetVariable()->objectValue);
 	}
 	else if (object->GetVariable()->varType == Var::Float) {
-		this->MakeFloat(object->GetVariable()->v.floatValue);
+		object->GetVariable()->SetFloat(this->GetVariable()->v.floatValue);
+	}
+	else if (object->GetVariable()->varType == Var::String) {
+		object->GetVariable()->SetString(this->GetVariable()->stringValue);
 	}
 	else{
-		this->MakeInteger(object->GetVariable()->v.intValue);
+		object->GetVariable()->SetInteger(this->GetVariable()->v.intValue);
 	}
 
-	return ScriptError::NoError;
+	return Error::NoError;
 }
 
-ScriptError ScriptVar::Cast(ScriptObjectPtrC object) {
+Void Variable::Trace(Uint32 offset) {
 
-	ScriptVarPtr left = this->GetVariable();
-	ScriptVarPtr right = object->GetVariable();
-
-	if (!object->CheckType(Type::Variable)) {
-		return ScriptError::Object_UnableToCast;
-	}
-
-	if (left->varType == right->varType) {
-		return ScriptError::NoError;
-	}
-
-	if (left->varType != Var::Object &&
-		right->varType != Var::Object
-	) {
-		this->Clone(object);
-	}
-	else {
-		this->MakeObject(object->GetClass());
-	}
-
-	return ScriptError::NoError;
-}
-
-Void ScriptVar::Trace(Uint32 offset) {
+	this->PrintModificators();
 
 	if (this->GetClass()) {
-		printf("%s %s = ", this->GetClass()->GetName().data(), this->GetName().data());
+		if (this->GetName().size() > 0) {
+			printf("%s %s = ", this->GetClass()->GetName().data(), this->GetName().data());
+		} else {
+			printf("%s = ", this->GetClass()->GetName().data());
+		}
 	} else {
 		printf("null %s = ", this->GetName().data());
 	}
@@ -144,13 +204,107 @@ Void ScriptVar::Trace(Uint32 offset) {
 		printf("%d", this->v.intValue);
 	}
 	else {
-		if (this->objectValue) {
+		if (this->objectValue && this->GetName() != "this") {
 			this->objectValue->Trace(offset);
 		}
 		else {
-			printf("null");
+			if (this->varType == Var::Float) {
+				printf("%.2f", this->v.intValue);
+			}
+			else if (this->varType == Var::Integer) {
+				printf("%lld", this->v.intValue);
+			}
+			else if (this->varType == Var::Object) {
+				printf("null");
+			}
+			else if (this->varType == Var::String) {
+				printf("\"%s\"", this->stringValue.data());
+			}
 		}
 	}
+}
+
+Void Variable::Write(Uint8P buffer, Uint32P offset) {
+
+	VoidP copyBuffer = NULL;
+
+	if (this->varType == Var::String) {
+		copyBuffer = (VoidP) this->stringValue.data();
+		//memcpy(buffer, this->stringValue.data(), this->GetSizeOf());
+	}
+	else if (this->varType == Var::Integer) {
+		copyBuffer = &this->v.intValue;
+		//memcpy(buffer, &this->v.intValue, this->GetSizeOf());
+	}
+	else if (this->varType == Var::Float) {
+		copyBuffer = &this->v.floatValue;
+		//memcpy(buffer, &this->v.floatValue, this->GetSizeOf());
+	}
+	else if (this->varType == Var::Object) {
+		if (this->GetObject()) {
+			this->GetObject()->Write(buffer + *offset, offset);
+		}
+	}
+
+	if (copyBuffer) {
+		memcpy(buffer, copyBuffer, this->GetSizeOf());
+	}
+
+	printf("| %s\t| %.8X | %d\t  | ", this->GetName().data(), *offset, this->GetSizeOf());
+	Buffer b;
+	for (Uint32 i = 0; i < this->GetSizeOf() && copyBuffer; i++) {
+		b.Format("%.8X", Uint8P(copyBuffer)[i]);
+		printf("%c%c ", b[b.length() - 2], b[b.length() - 1]);
+	}
+	puts("");
+}
+
+Bool Variable::IsChar(Void) {
+	return this->classType == GlobalScope::classChar;
+}
+
+Bool Variable::IsByte(Void) {
+	return this->classType == GlobalScope::classByte;
+}
+
+Bool Variable::IsShort(Void) {
+	return this->classType == GlobalScope::classShort;
+}
+
+Bool Variable::IsInt(Void) {
+	return this->classType == GlobalScope::classInt;
+}
+
+Bool Variable::IsLong(Void) {
+	return this->classType == GlobalScope::classLong;
+}
+
+Bool Variable::IsFloat(Void) {
+	return this->classType == GlobalScope::classFloat;
+}
+
+Bool Variable::IsDouble(Void) {
+	return this->classType == GlobalScope::classDouble;
+}
+
+Bool Variable::IsObject(Void) {
+	return this->classType == GlobalScope::classObject;
+}
+
+Bool Variable::IsClass(Void) {
+	return this->classType == GlobalScope::classClass;
+}
+
+Bool Variable::IsBoolean(Void) {
+	return this->classType == GlobalScope::classBoolean;
+}
+
+Bool Variable::IsVoid(Void) {
+	return this->classType == GlobalScope::classVoid;
+}
+
+Bool Variable::IsString(Void) {
+	return this->classType == GlobalScope::classString;
 }
 
 LAME_END2

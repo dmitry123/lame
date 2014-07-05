@@ -15,10 +15,6 @@
 #endif
 #endif
 
-#ifndef _WIN32
-#  include <unistd.h>
-#endif
-
 /* Local functions */
 local void gz_reset OF((gz_statep));
 local gzFile gz_open OF((const void *, int, const char *));

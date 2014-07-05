@@ -1,0 +1,12 @@
+#ifndef __LAME_SCRIPT__CORE_SEGMENT_LINKER__
+#define __LAME_SCRIPT__CORE_SEGMENT_LINKER__
+
+#include "Segment.h"
+
+LAME_BEGIN2(Script)
+
+
+
+LAME_END2
+
+#endif // ~__LAME_SCRIPT__CORE_SEGMENT_LINKER__

@@ -2,6 +2,15 @@
 
 LAME_BEGIN2(Core)
 
+Exception::Exception(StringC message, ...) {
+
+	VaList list;
+
+	va_start(list, message);
+	vsprintf(this->buffer_, message, list);
+	va_end(list);
+}
+
 Exception::Exception(
 	StringC file,
 	Uint32 line,

@@ -1,7 +1,9 @@
 #ifndef __MAIN__
 #define __MAIN__
 
-#define LAME_VLD
+#if 0
+#  define LAME_VLD
+#endif
 
 #include <Core/Core.h>
 #include <ResourceManager/ResourceManager.h>

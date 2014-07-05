@@ -1,11 +1,19 @@
-do {
-	class A {
-		public void setValue(int value) {
-			this.value = value;
-		}
-		public int getValue() {
-			return this.value;
-		}
-		private int value = 0;
+class A {
+	public void foo(int mulA, int mulB, int mulC) {
+
+		char a = 1;
+		char b = 2;
+		char c = 3;
+
+		short z =
+			a * mulA +
+			b * mulB +
+			c * mulC;
+
+		return z;
 	}
 }
+
+A a = new A();
+
+a.foo(100, 10, 1);

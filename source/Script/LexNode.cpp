@@ -1,4 +1,4 @@
-#include "Define.h"
+#include "LexNode.h"
 
 LAME_BEGIN2(Script)
 

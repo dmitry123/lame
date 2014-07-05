@@ -3,15 +3,16 @@
 LAME_BEGIN2(Script)
 
 namespace internal {
-	static Uint32 lastError = ScriptError::NoError;
-	static ScriptError::ErrorHandler errorHandler = NULL;
+	static Uint32 lastError = Error::NoError;
+	static Error::ErrorHandler errorHandler = NULL;
 }
 
-const StringC ScriptError::description[] = {
+const StringC Error::description[] = {
 	"Unknown error",
 	"No error",
 	"Class already extended",
-	"Class already implemented with this one"
+	"Class already implemented with this one",
+	"Class can implements only interfaces",
 	"Unable to overload unknown operator",
 	"Object must be variable",
 	"Objects has different hash codes",
@@ -23,19 +24,21 @@ const StringC ScriptError::description[] = {
 	"Unable to cast object",
 	"Interface methods must't be implemented",
 	"Class must implement interface's methods",
-	"Abstract can't store implemented abstract methods",
-	"Non-abstract objects must implement abstract methods"
+	"Class must implement interface's methods",
+	"Abstract classes can't store implemented abstract methods",
+	"Non-abstract objects must implement abstract methods",
+	"Object must be array"
 };
 
-ScriptError ScriptError::GetLastError(Void) {
+Error Error::GetLastError(Void) {
 	return internal::lastError;
 }
 
-StringC ScriptError::GetErrorDescription(ScriptError error) {
+StringC Error::GetErrorDescription(Error error) {
 	return error.GetDescription();
 }
 
-Void ScriptError::SetLastError(ScriptErrorPtr code) {
+Void Error::SetLastError(ErrorPtr code) {
 
 	internal::lastError = code->errorCode;
 
@@ -44,7 +47,7 @@ Void ScriptError::SetLastError(ScriptErrorPtr code) {
 	}
 }
 
-Void ScriptError::SetErrorHandler(ErrorHandler handler) {
+Void Error::SetErrorHandler(ErrorHandler handler) {
 	internal::errorHandler = handler;
 }
 

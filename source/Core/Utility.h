@@ -125,7 +125,7 @@ private:
 		// ignore
 	}
 	Void _EnableSharedPtr(internal::__SharedPtrFromThis* ptr) {
-		((SharedPtrFromThis<T>*) ptr)->weakPtr.__Create(*this);
+//		((SharedPtrFromThis<T>*) ptr)->weakPtr.__Create(*this);
 	}
 public:
 	TypeP reference_;
@@ -306,6 +306,8 @@ public:
 	}
 };
 
+typedef const Buffer& BufferRefC;
+
 namespace internal {
 	template <class T> class __AnySingleton {
 	public:
@@ -405,6 +407,8 @@ public:
 		ZeroMemory(this->buffer_, sizeof(this->buffer_));
 	}
 public:
+	Exception(StringC message, ...);
+public:
 	Exception(
 		StringC file,
 		Uint32 line,
@@ -423,6 +427,9 @@ public:
 protected:
 	ErrorBuffer buffer_;
 };
+
+typedef Exception InvalidArgumentException;
+typedef Exception NullPointerException;
 
 #define PostErrorMessage(_message, ...) \
 	throw ::LAME_NAMESPACE::Core::Exception(__FILE__, __LINE__, __FUNCTION__, _message, __VA_ARGS__);

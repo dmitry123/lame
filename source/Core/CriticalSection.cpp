@@ -3,6 +3,8 @@
 
 #ifdef LAME_WINDOWS
 #  include <Windows.h>
+#else
+#  include <pthread.h>
 #endif
 
 LAME_BEGIN2(Core)

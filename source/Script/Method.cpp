@@ -2,44 +2,59 @@
 #include "ScopeController.h"
 #include "Variable.h"
 #include "Class.h"
+#include "Performer.h"
 
 LAME_BEGIN2(Script)
 
-ScriptMethod::ScriptMethod(
+Method::Method(
 		BufferRefC methodName,
-		ScriptObjectPtr thisClass,
-		ScriptObjectPtr returnClass,
-		Vector<Uint32> attributes) : ScriptObject(methodName, Type::Method),
+		NodePtr node,
+		ObjectPtr thisClass,
+		ObjectPtr returnClass,
+		Vector<ClassPtr> attributes) : Object(methodName, Type::Method, node),
 
 	attributesHash(attributes),
-	thisClass((ScriptVarPtr)thisClass),
-	returnClass((ScriptClassPtr) returnClass),
+	thisClass((VariablePtr)thisClass),
+	returnClass((ClassPtr) returnClass),
 	nativeMethod(0),
-	rootNode(0)
+	rootNode(0),
+	invokeHash(0)
 {
-	this->SetModificator(Modificator::Final);
 	this->EnableScopeController();
+
+	this->invokeHash =
+		this->ComputeInvokeHash(attributes);
 }
 
-ScriptClassPtr ScriptMethod::GetClass() {
+ClassPtr Method::GetClass() {
 	return thisClass->GetObject();
 }
 
-Void ScriptMethod::Trace(Uint32 offset) {
+Void Method::Trace(Uint32 offset) {
+
+	this->PrintModificators();
 
 	printf("%s %s::%s(",
 		this->returnClass->GetName().data(),
 		this->thisClass->GetName().data(),
 		this->GetName().data());
 
-	for (Uint32 hash : attributesHash) {
-		printf("%d, ", hash);
+	for (Uint32 i = 0; i < attributesHash.size(); i++) {
+		if (i == attributesHash.size() - 1) {
+			printf("%s", attributesHash[i]->GetName().data());
+		}
+		else {
+			printf("%s, ", attributesHash[i]->GetName().data());
+		}
 	}
 
 	printf(")");
 
 	if (this->rootNode) {
-		printf(" {}");
+		printf(" {");
+		this->GetScopeController()->Trace(offset + 1);
+		Lex::PrintLine(offset);
+		printf("}");
 	}
 	else {
 		if (this->GetNativeMethod()) {
@@ -51,51 +66,105 @@ Void ScriptMethod::Trace(Uint32 offset) {
 	}
 }
 
-ScriptError ScriptMethod::SetNativeMethod(NativeMethod method) {
+Uint64 Method::Hash(Void) const {
+	return Uint64(this->GetNameHash()) << 32 | this->invokeHash;
+}
+
+Error Method::SetNativeMethod(NativeMethod method) {
 
 	if (this->nativeMethod != NULL) {
-		//return ScriptError::Method_CantOverrideNativeMethod;
+		//return Error::Method_CantOverrideNativeMethod;
 	}
 
 	this->nativeMethod = method;
 	this->SetModificator(Modificator::Native);
 
-	return ScriptError::NoError;
+	return Error::NoError;
 }
 
-ScriptError ScriptMethod::Invoke(Vector<ScriptVarPtr> attributes) {
+Error Method::Invoke(NodePerformerPtr performer, Vector<VariablePtr> attributes) {
 
 	if (attributes.size() != this->attributesHash.size()) {
-		return ScriptError::Method_InvalidArguments;
+		return Error::Method_InvalidArguments;
 	}
 
-	ScriptScopeControllerPtr scopes
-		= this->GetScopeController();
-	
-	if (!scopes->Amount()) {
-
-		if (!this->thisClass && !this->CheckModificator(Modificator::Static)) {
-			return ScriptError::Class_NotStaticObjectWithoutThis;
+	for (Uint32 i = 0; i < this->attributesHash.size(); i++) {
+		if (  this->attributesHash[i]->GetNameHash() !=
+			attributes[i]->GetClass()->GetNameHash()
+		) {
+			return Error::Method_InvalidArguments;
 		}
+	}
 
-		if (this->thisClass) {
-			scopes->GetVarScope()->Add(new ScriptVar("this", this->thisClass))
-				->SetModificator(Modificator::Final)->Clone(this->GetThis());
-		}
+	ScopeControllerPtr scopes
+		= this->GetNode()->var->GetScopeController();
 
-		for (ScriptVarPtr var : attributes) {
-			scopes->GetVarScope()->Add(new ScriptVar(var->GetName().data(), var->GetClass()))
-				->Clone(var);
+	if (!this->thisClass && !this->CheckModificator(Modificator::Static)) {
+		return Error::Class_NotStaticObjectWithoutThis;
+	}
+
+	if (this->thisClass) {
+
+		ObjectPtr thisObject = scopes->GetVarScope()
+			->Add(new Variable("this", this->thisClass))
+			->SetModificator(Modificator::Internal);
+
+		if (thisObject) {
+			this->GetThis()->Clone(thisObject);
 		}
+	}
+
+	for (Uint32 i = 0; i < attributes.size(); i++) {
+		attributes[attributes.size() - 1 - i]->Clone(
+			scopes->GetVarScope()->Find(this->GetNode()->argList[i]->word.data()));
 	}
 
 	if (this->nativeMethod != NULL) {
 		this->nativeMethod(this);
-	} else {
-		// invoke script method
+	} else if (performer) {
+		performer->Evaluate(this->GetRootNode()->blockList);
 	}
 
-	return ScriptError::NoError;
+	return Error::NoError;
+}
+
+Bool Method::CompareArguments(MethodPtr method) {
+
+	if (method->attributesHash.size() != this->attributesHash.size()) {
+		return FALSE;
+	}
+
+	for (Uint32 i = 0; i < this->attributesHash.size(); i++) {
+		if (  this->attributesHash[i]->GetNameHash() !=
+			method->attributesHash[i]->GetClass()->GetNameHash()
+		) {
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}
+
+Uint32 Method::ComputeInvokeHash(Vector<ClassPtr>& classList) {
+
+	Uint32 invokeHash = 0;
+
+	for (ClassPtr c : classList) {
+		invokeHash = 31 * invokeHash + c->GetNameHash();
+	}
+
+	return invokeHash;
+}
+
+Uint32 Method::ComputeInvokeHash(Vector<VariablePtr>& classList) {
+
+	Uint32 invokeHash = 0;
+
+	for (VariablePtr c : classList) {
+		invokeHash = 31 * invokeHash + c->GetClass()->GetNameHash();
+	}
+
+	return invokeHash;
 }
 
 LAME_END2

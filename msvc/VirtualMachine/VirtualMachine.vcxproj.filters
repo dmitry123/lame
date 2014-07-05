@@ -6,24 +6,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\source\VirtualMachine\Define.h">
-      <Filter>source</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\source\VirtualMachine\VirtualMachine.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\VirtualMachine\FileParser.h">
       <Filter>source</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\source\VirtualMachine\Define.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\VirtualMachine\VirtualMachine.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\VirtualMachine\FileParser.cpp">
+    <ClCompile Include="..\..\source\VirtualMachine\VirtualMachine.c">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

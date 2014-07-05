@@ -5,10 +5,10 @@
 
 LAME_BEGIN2(Script)
 
-class LAME_API ScriptAbstract : public ScriptClass {
+class LAME_API Abstract : public Class {
 public:
-	ScriptAbstract(BufferRefC name) :
-		ScriptClass(name, Type::Abstract)
+	Abstract(BufferRefC name, NodePtr node = NULL) :
+		Class(name, Type::Abstract, node)
 	{
 		this->SetModificator(Modificator::Abstract);
 	}

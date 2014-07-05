@@ -5,15 +5,16 @@
 
 LAME_BEGIN2(Script)
 
-class LAME_API ScriptError {
+class LAME_API Error {
 public:
-	typedef Void(*ErrorHandler)(ScriptError error);
+	typedef Void(*ErrorHandler)(Error error);
 public:
 	enum {
 		UnknownError,
 		NoError,
 		Class_AlreadyExtended,
 		Class_AlreadyImplemented,
+		Class_CanImplementOnlyInterfaces,
 		Class_WrongOperator,
 		Class_ObjectNotVariable,
 		Class_ObjectsHaveDifferentHash,
@@ -27,14 +28,15 @@ public:
 		Interface_UnableToImplementClass,
 		Interface_ClassMustImplementMethods,
 		AbstractClass_CantStoreImplementedAbstractMethods,
-		AbstractClass_ObjectMustImplementAbstractMethod
+		AbstractClass_ObjectMustImplementAbstractMethod,
+		Array_ObjectNotArray
 	};
 public:
-	ScriptError() :
+	Error() :
 		errorCode(NoError)
 	{
 	}
-	ScriptError(Uint32 errorCode) :
+	Error(Uint32 errorCode) :
 		errorCode(errorCode)
 	{
 		if (errorCode != NoError) {
@@ -49,12 +51,15 @@ public:
 	inline StringC GetDescription() {
 		return description[errorCode];
 	}
+    inline Uint32 GetCode() {
+        return errorCode;
+    }
 public:
-	static ScriptError GetLastError(Void);
-	static StringC GetErrorDescription(ScriptError error);
+	static Error GetLastError(Void);
+	static StringC GetErrorDescription(Error error);
 	static Void SetErrorHandler(ErrorHandler handler);
 private:
-	static Void SetLastError(ScriptErrorPtr code);
+	static Void SetLastError(ErrorPtr code);
 private:
 	static const StringC description[];
 private:

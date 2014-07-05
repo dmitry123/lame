@@ -3,85 +3,130 @@
 #include "Variable.h"
 #include "Interface.h"
 #include "Method.h"
+#include "Class.h"
+#include "Abstract.h"
+#include "Array.h"
+
+#include <utility>
 
 LAME_BEGIN2(Script)
 
-ScriptObjectPtr ScriptScope::Add(ScriptObjectPtr object) {
+ObjectPtr Scope::Add(ObjectPtr object) {
 
-	StringPair stringPair = std::make_pair(object->GetName(), object->GetHash());
-	HashPair hashPair = std::make_pair(object->GetHash(), object->GetHash());
+	HashMap::iterator i;
+    StringPair stringPair;
+    HashPair hashPair;
+    
+    stringPair.first = object->GetName();
+	stringPair.second = object->Hash();
+    
+    hashPair.first = object->GetNameHash();
+	hashPair.second = object->Hash();
 
-	if (this->hashMap_.count(hashPair) > 0) {
+	if ((i = this->hashMap_.find(hashPair)) != this->hashMap_.end() && object->GetName().length() > 0) {
 		return LAME_NULL;
 	}
 
-	this->stringMap_[stringPair] = object;
-	this->hashMap_[hashPair] = object;
+	this->stringMap_.insert(MapStringPair(stringPair, object));
+	this->hashMap_.insert(MapHashPair(hashPair, object));
 
 	return object;
 }
 
-Void ScriptScope::Remove(ScriptObjectPtr var) {
+Void Scope::Remove(ObjectPtr var) {
 
 	StringMap::iterator i;
 	HashMap::iterator j;
+    
+    StringPair stringPair;
+    HashPair hashPair;
+    
+	stringPair.first = var->GetName();
+	stringPair.second = var->Hash();
 
-	if ((i = this->stringMap_.find(std::make_pair(var->GetName(), var->GetHash()))) == this->stringMap_.end() ||
-		(j = this->hashMap_.find(std::make_pair(var->GetHash(), var->GetHash()))) == this->hashMap_.end()
+	hashPair.first = var->GetNameHash();
+	hashPair.second = var->Hash();
+
+	if ((i = this->stringMap_.find(stringPair)) == this->stringMap_.end() ||
+		(j = this->hashMap_.find(hashPair)) == this->hashMap_.end()
 	) {
 		return;
 	}
 
-	ScriptObjectPtr object = i->second;
+	ObjectPtr object = i->second;
 
-	if (object->CheckType(ScriptObject::Type::Class)) {
-		
-		ScriptClassPtr clss = (ScriptClassPtr) object;
+	if (object->CheckType(Object::Type::Variable) &&
+		object->GetVariable()->GetVarType() == Variable::Var::Object
+	) {
+		ClassPtr clss = object->GetVariable()->GetObject();
 
 		if (clss->DecRef()) {
-			delete object;
+			if (isOwner_) {
+				delete object;
+			}
 		}
 	}
 	else {
-		delete object;
+		if (isOwner_) {
+			delete object;
+		}
 	}
 
 	this->stringMap_.erase(i);
 	this->hashMap_.erase(j);
 }
 
-ScriptObjectPtr ScriptScope::Find(StringC name) {
-	return this->Find(Buffer::GetHash(name));
+ObjectPtr Scope::Find(StringC name, Uint32 rightHash) {
+	return this->Find(Buffer::GetHash(name), rightHash);
 }
 
-ScriptObjectPtr ScriptScope::Find(Uint32 hash) {
+ObjectPtr Scope::Find(Uint32 hash, Uint32 rightHash) {
 
-	for (auto& hp : this->hashMap_) {
-		if (hp.first.first == hash) {
-			return hp.second;
+	HashMap::iterator i;
+	HashPair hashPair;
+
+	if (rightHash == -1) {
+		rightHash = hash;
+	}
+
+	hashPair.first = hash;
+	hashPair.second = (Uint64)hash << 32 | rightHash;
+
+	if ((i = this->hashMap_.find(hashPair)) == this->hashMap_.end()) {
+		return LAME_NULL;
+	}
+
+	return i->second;
+}
+
+static void _CloneObject(ScopePtr scope, ObjectPtr i) {
+
+	if (i->CheckModificator(Class::Modificator::Static)) {
+		scope->Add(i);
+	}
+	else {
+		if (i->CheckType(Object::Type::Class)) {
+			scope->Add(i);
+		}
+		else if (i->CheckType(Object::Type::Interface)) {
+			scope->Add(new Interface(*InterfacePtr(i)));
+		}
+		else if (i->CheckType(Object::Type::Method)) {
+			scope->Add(i);
+		}
+		else if (i->CheckType(Object::Type::Variable)) {
+			scope->Add(new Variable(*(VariablePtr)i));
+		}
+		else if (i->CheckType(Object::Type::Abstract)) {
+			scope->Add(new Abstract(*(AbstractPtr)i));
+		}
+		else if (i->CheckType(Object::Type::Array)) {
+			scope->Add(new Array(*(ArrayPtr)i));
 		}
 	}
-
-	return LAME_NULL;
 }
 
-static void _CloneObject(ScriptScopePtr scope, ScriptObjectPtr i) {
-
-	if (i->CheckType(ScriptObject::Type::Class)) {
-		scope->Add(new ScriptClass(*(ScriptClassPtr)i));
-	}
-	else if (i->CheckType(ScriptObject::Type::Interface)) {
-		scope->Add(new ScriptInterface(*(ScriptInterfacePtr)i));
-	}
-	else if (i->CheckType(ScriptObject::Type::Method)) {
-		scope->Add(new ScriptMethod(*(ScriptMethodPtr)i));
-	}
-	else if (i->CheckType(ScriptObject::Type::Variable)) {
-		scope->Add(new ScriptVar(*(ScriptVarPtr)i));
-	}
-}
-
-Void ScriptScope::Merge(ScriptScopePtrC scope) {
+Void Scope::Merge(ScopePtrC scope) {
 
 	if (this == scope) {
 		return;
@@ -89,11 +134,11 @@ Void ScriptScope::Merge(ScriptScopePtrC scope) {
 
 	for (auto& i : scope->stringMap_) {
 
-		if (i.second->CheckModificator(ScriptObject::Modificator::Static)) {
+		if (i.second->CheckModificator(Object::Modificator::Static)) {
 			_CloneObject(this, i.second);
 		}
 		else {
-			if (i.second->CheckType(ScriptObject::Type::Method)) {
+			if (i.second->CheckType(Object::Type::Method)) {
 				_CloneObject(this, i.second);
 			}
 			else {
@@ -103,41 +148,104 @@ Void ScriptScope::Merge(ScriptScopePtrC scope) {
 	}
 }
 
-Void ScriptScope::Clone(ScriptScopePtrC scope) {
+Void Scope::Clone(ScopePtrC scope) {
 
 	this->Clear();
 	this->Merge(scope);
 }
 
-Uint32 ScriptScope::Amount(Void) {
-	return this->hashMap_.size();
+Void Scope::Move(ScopePtrC scope) {
+
+	this->Clear();
+
+	if (this == scope) {
+		return;
+	}
+
+	for (auto& i : scope->stringMap_) {
+
+		if (i.second->CheckModificator(Object::Modificator::Static)) {
+			this->Add(i.second);
+		}
+		else {
+			if (i.second->CheckType(Object::Type::Method)) {
+				this->Add(i.second);
+			}
+			else {
+				this->Add(i.second);
+			}
+		}
+	}
+
+	isOwner_ = FALSE;
 }
 
-Void ScriptScope::Clear(Void) {
+Uint32 Scope::Amount(Void) {
+	return (Uint32) this->hashMap_.size();
+}
+
+Void Scope::Clear(Void) {
 
 	while (this->stringMap_.size()) {
 		this->Remove(this->stringMap_.begin()->second);
 	}
 }
 
-Void ScriptScope::Trace(Uint32 offset) {
+Void Scope::Trace(Uint32 offset) {
+
+	Uint32 count = 0;
 
 	for (auto& i : this->stringMap_) {
 
-		if (i.second->CheckModificator(ScriptClass::Modificator::Primitive)) {
+		++count;
+
+		if (i.second->CheckModificator(Class::Modificator::Primitive) ||
+			i.second->CheckModificator(Class::Modificator::Register) ||
+			i.second->CheckModificator(Class::Modificator::Internal)
+		) {
 			continue;
 		}
 
-		for (Uint32 j = 0; j < offset; j++) {
-			printf("  ");
-		}
-
+		Lex::PrintLine(offset);
 		i.second->Trace(offset);
-		puts("");
 	}
 }
 
-ScriptScope::~ScriptScope() {
+Uint32 Scope::Size(Void) {
+
+	Uint32 size = 0;
+
+	for (auto& i : this->stringMap_) {
+
+		if (i.second->CheckModificator(Class::Modificator::Register) ||
+			i.second->CheckModificator(Class::Modificator::Internal)
+		) {
+			continue;
+		}
+
+		size += i.second->GetSizeOf();
+	}
+
+	return size;
+}
+
+Void Scope::Write(Uint8P buffer, Uint32P offset) {
+
+	for (auto& i : this->stringMap_) {
+
+		if (i.second->CheckModificator(Class::Modificator::Register) ||
+			i.second->CheckModificator(Class::Modificator::Internal)
+		) {
+			continue;
+		}
+
+		i.second->Write(buffer + *offset, offset);
+
+		*offset += i.second->GetSizeOf();
+	}
+}
+
+Scope::~Scope() {
 	this->Clear();
 }
 

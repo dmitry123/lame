@@ -6,8 +6,12 @@
 
 LAME_BEGIN2(Script)
 
-class LAME_API ScriptObject {
-	friend class ScriptScope;
+class LAME_API Object {
+	friend class Scope;
+public:
+	enum {
+		SizeOf = 4
+	};
 public:
 	enum class Type : Uint32 {
 		Unknown,
@@ -15,7 +19,8 @@ public:
 		Variable,
 		Method,
 		Interface,
-		Abstract
+		Abstract,
+		Array
 	};
 public:
 	enum class Modificator : Uint32 {
@@ -27,62 +32,54 @@ public:
 		Final = 0x0010,
 		Native = 0x0020,
 		Primitive = 0x0040,
-		Abstract = 0x0080
+		Abstract = 0x0080,
+		Register = 0x0100,
+		Internal = 0x0200
 	};
 private:
 	const Buffer name;
 	const Uint32 hash;
-	const Type   type;
+	const Type type;
+	const NodePtr node;
 public:
-	ScriptObject(BufferRefC name, Type type) :
+	Object(BufferRefC name, Type type, NodePtr node) :
 		name(name),
 		hash(name.GetHash()),
-		type(type)
+		type(type),
+		node(node)
 	{
 		this->scopeController_ = 0;
 		this->modificators_ = 0;
 		this->sizeOf_ = 0;
 	}
 public:
-	ScriptObject(ScriptObject& object);
+	Object(Object& object);
 public:
-	virtual ~ScriptObject();
+	virtual ~Object();
 public:
-	virtual Bool Equal(ScriptObjectPtrC object) const {
-		if (this->type == Type::Class) {
-			return this->type == object->type && this->hash == object->hash;
-		} else {
-			return this->type == object->type;
-		}
-	}
+	virtual Bool Equal(ObjectPtrC object) const;
+	virtual Error Clone(ObjectPtrC object);
+	virtual Void Trace(Uint32 offset);
+	virtual Uint64 Hash(Void) const;
 public:
-	virtual ScriptError Cast(ScriptObjectPtrC object) {
-		return ScriptError::Object_UnableToCast;
-	}
-	virtual ScriptError Clone(ScriptObjectPtrC object) {
-		return ScriptError::Object_UnableToClone;
-	}
-	virtual Void Trace(Uint32 offset) {
-		// ignore
-	}
+	inline virtual ClassPtr GetClass() { return NULL; }
+	inline virtual VariablePtr GetVariable() { return NULL; }
+	inline virtual MethodPtr GetMethod() { return NULL; }
+	inline virtual InterfacePtr GetInterface() { return NULL; }
+	inline virtual ArrayPtr GetArray() { return NULL; }
+	inline virtual Void Write(Uint8P buffer, Uint32P offset) {  }
 public:
-	inline virtual ScriptClassPtr GetClass() {
-		return NULL;
-	}
-	inline virtual ScriptVarPtr GetVariable() {
-		return NULL;
-	}
-	inline virtual ScriptMethodPtr GetMethod() {
-		return NULL;
-	}
-	inline virtual ScriptInterfacePtr GetInterface() {
-		return NULL;
-	}
-public:
-	ScriptObjectPtr SetModificator(Modificator modificator, Bool state = TRUE);
+	ObjectPtr SetModificator(Modificator modificator, Bool state = TRUE);
+	Void PrintModificators(Void);
 public:
 	inline Void SetSizeOf(Uint32 sizeOf) {
 		this->sizeOf_ = sizeOf;
+	}
+	inline Void SetCountOfArguments(Uint32 count) {
+		this->countOfArguments_ = count;
+	}
+	inline Uint32 GetCountOfArguments() {
+		return this->countOfArguments_;
 	}
 public:
 	inline Bool CheckModificator(Modificator modificator) const {
@@ -93,24 +90,26 @@ public:
 	}
 public:
 	inline BufferRefC GetName() const { return this->name; }
-	inline Uint32 GetHash() const { return this->hash; }
+	inline Uint32 GetNameHash() const { return this->hash; }
 	inline Type GetType() const { return this->type; }
 	inline Uint32 GetSizeOf() const { return this->sizeOf_; }
+	inline NodePtr GetNode() const { return this->node; }
 public:
-	inline ScriptScopeControllerPtr GetScopeController() {
+	inline ScopeControllerPtr GetScopeController() {
 		return scopeController_;
 	}
 public:
 	Bool EnableScopeController(Void);
 private:
-	Void SetScopeController(ScriptScopeControllerPtr scopeController) {
+	Void SetScopeController(ScopeControllerPtr scopeController) {
 		this->scopeController_ = scopeController;
 	}
 private:
 	Uint32 modificators_;
 	Uint32 sizeOf_;
-	ScriptScopeControllerPtr scopeController_;
+	ScopeControllerPtr scopeController_;
 	Bool isScopeControllerEnabled_;
+	Uint32 countOfArguments_;
 };
 
 LAME_END2

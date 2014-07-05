@@ -1,963 +1,754 @@
-#include "Script.h"
 #include "Performer.h"
+#include "Exception.h"
+#include "Class.h"
+#include "Method.h"
+#include "Variable.h"
+#include "Interface.h"
+#include "GlobalScope.h"
 #include "Internal.h"
+#include "Array.h"
 
 LAME_BEGIN2(Script)
 
-Void ScriptPerformer::Evaluate(ScriptBuilderPtr builder) {
+static Map<LexID, Class::Operator> operatorMap =
+{
+	{ kScriptLexDefault, Class::Operator::Unkown },
+	{ kScriptLexAdd, Class::Operator::Add },
+	{ kScriptLexAddSet, Class::Operator::Add },
+	{ kScriptLexSub, Class::Operator::Sub },
+	{ kScriptLexSubSet, Class::Operator::Sub },
+	{ kScriptLexMul, Class::Operator::Mul },
+	{ kScriptLexMulSet, Class::Operator::Mul },
+	{ kScriptLexDiv, Class::Operator::Div },
+	{ kScriptLexDivSet, Class::Operator::Div },
+	{ kScriptLexMod, Class::Operator::Mod },
+	{ kScriptLexModSet, Class::Operator::Mod },
+	{ kScriptLexAbove, Class::Operator::Above },
+	{ kScriptLexEqual, Class::Operator::Equal },
+	{ kScriptLexNotEqual, Class::Operator::NotEqual },
+	{ kScriptLexSet, Class::Operator::Move },
+	{ kScriptLexBitShiftR, Class::Operator::ShiftR },
+	{ kScriptLexBitShiftSetR, Class::Operator::ShiftR },
+	{ kScriptLexBitShiftL, Class::Operator::ShiftL },
+	{ kScriptLexBitShiftSetL, Class::Operator::ShiftL },
+	{ kScriptLexBitAnd, Class::Operator::BitAnd },
+	{ kScriptLexBitAndSet, Class::Operator::BitAnd },
+	{ kScriptLexBitOr, Class::Operator::BitOr },
+	{ kScriptLexBitOrSet, Class::Operator::BitOr },
+	{ kScriptLexBitXor, Class::Operator::BitXor },
+	{ kScriptLexBitXorSet, Class::Operator::BitXor },
+	{ kScriptLexBellowEqual, Class::Operator::BellowE },
+	{ kScriptLexAboveEqual, Class::Operator::AboveE },
+	{ kScriptLexAnd, Class::Operator::And },
+	{ kScriptLexOr, Class::Operator::Or },
+	{ kScriptLexIncrement, Class::Operator::Inc },
+	{ kScriptLexDecrement, Class::Operator::Dec },
+	{ kScriptLexSizeof, Class::Operator::Sizeof },
+	{ kScriptLexBitNot, Class::Operator::BitNot },
+	{ kScriptLexNot, Class::Operator::Not }
+};
 
-	this->builder_ = builder;
+static Bool _MoveNode(NodePtr node) {
 
-	for (ScriptNodePtr node : builder->rootNode_->blockList) {
-		if (node->id == kScriptNodeClass) {
-			this->_Declare(node);
-		}
-	}
+	Bool result = FALSE;
 
-	this->_Evaluate(&builder->rootNode_->FindBlock("do")->blockList);
-}
+	/* Get last element in stack. Now we're going to swap
+	arguments parent with argument expression, it will help us
+	to prevent different unsuitable situations in future, when we'll
+	perform code. For example, if we have expression 'if(1)', then
+	we have to cut it into 2 expressions and apply shunting yard for every,
+	whereupon we'll swap our expressions and push in one stack. Final
+	view should be : '1 if'. We've saved count of arguments in node 'new' */
 
-Void ScriptPerformer::Trace(Void) {
+	if (node->parent != NULL && node->parent->blockList.size() > 0 &&
+		node->argList.size() > 0 && node->id != kScriptNodeFunction
+	) {
+		/* Get element from parent's stack */
+		auto position = std::find(
+			node->parent->blockList.begin(),
+			node->parent->blockList.end(), node);
 
-	puts("\n------------");
-	printf("- COMMANDS -\n");
-	puts("------------");
-
-	for (BufferRefC b : this->cmdList_) {
-		printf("%s ", b.data());
-	}
-
-	this->traceDepth_ = 0;
-
-	puts("\n---------");
-	printf("- TRACE -\n");
-	puts("---------");
-
-	for (auto& vm : this->manager_.varMapQueue) {
-		for (auto i = vm.begin(); i != vm.end(); i++) {
-			if (i->second->IsType()) {
-				printf("%s\n", i->first.data());
-			}
-		}
-	}
-
-	puts("");
-	for (auto& vm : this->manager_.varMapQueue) {
-		for (auto i = vm.begin(); i != vm.end(); i++) {
-			if (i->second->IsFinal()) {
-				printf("%s %s = ", i->second->typeName.data(), i->first.data());
-				if (i->second->IsFunction()) {
-					printf("Function");
-				}
-				else {
-					switch (i->second->type) {
-					case kScriptTypeBool:
-						printf("%s", i->second->intValue ? "True" : "False");
-						break;
-					case kScriptTypeFloat:
-						printf("%.2f", i->second->floatValue);
-						break;
-					case kScriptTypeFunction:
-						printf("Function");
-						break;
-					case kScriptTypeInt:
-						printf("%lld", i->second->intValue);
-						break;
-					case kScriptTypeString:
-						printf("\"%s\"", i->second->stringValue.data());
-						break;
-					case kScriptTypeAuto:
-						printf("Undeclared");
-						break;
-					case kScriptTypeClass:
-						if (i->second->classValue) {
-							printf("{\n");
-							this->_Trace(&*i->second->classValue);
-							printf("}\n");
-						}
-						else {
-							printf("Null");
-						}
-						break;
-					default:
-						break;
-					}
-				}
-				puts("");
-			}
-		}
-	}
-
-	puts("");
-	for (auto& vm : this->manager_.varMapQueue) {
-		for (auto i = vm.begin(); i != vm.end(); i++) {
-			if (!i->second->IsType() && !i->second->IsFinal()) {
-				printf("%s %s = ", i->second->typeName.data(), i->first.data());
-				if (i->second->IsFunction()) {
-					printf("Function");
-				}
-				else {
-					switch (i->second->type) {
-					case kScriptTypeBool:
-						printf("%s", i->second->intValue ? "True" : "False");
-						break;
-					case kScriptTypeFloat:
-						printf("%.2f", i->second->floatValue);
-						break;
-					case kScriptTypeFunction:
-						printf("Function");
-						break;
-					case kScriptTypeInt:
-						printf("%lld", i->second->intValue);
-						break;
-					case kScriptTypeString:
-						printf("\"%s\"", i->second->stringValue.data());
-						break;
-					case kScriptTypeAuto:
-						printf("Undeclared");
-						break;
-					case kScriptTypeClass:
-						if (i->second->classValue) {
-							printf("{\n");
-							this->_Trace(&*i->second->classValue);
-							printf("}\n");
-						}
-						else {
-							printf("Null");
-						}
-						break;
-					default:
-						break;
-					}
-				}
-				puts("");
-			}
-		}
-	}
-}
-
-Void ScriptPerformer::_Trace(ScriptNodePtr node) {
-
-	++this->traceDepth_;
-	for (ScriptNodePtr n : node->childList) {
-		if (n->id == kScriptNodeClass) {
-			this->_Trace(n);
+		/* Push argument list in parent's block stack */
+		if (node->id != kScriptNodeVariable) {
+			node->parent->blockList.insert(position,
+				node->argList.begin(), node->argList.end());
 		}
 		else {
-			for (Uint32 i = 0; i < this->traceDepth_; i++) {
-				printf("  ");
-			}
-			printf("%s %s = ", n->typeName.data(), n->var->name.data());
-			if (n->var->IsFunction()) {
-				printf("Function");
-			}
-			else {
-				switch (n->var->type) {
-				case kScriptTypeBool:
-					printf("%s", n->var->intValue ? "True" : "False");
-					break;
-				case kScriptTypeFloat:
-					printf("%.2f", n->var->floatValue);
-					break;
-				case kScriptTypeFunction:
-					printf("Function");
-					break;
-				case kScriptTypeInt:
-					printf("%lld", n->var->intValue);
-					break;
-				case kScriptTypeString:
-					printf("\"%s\"", n->var->stringValue.data());
-					break;
-				case kScriptTypeAuto:
-					printf("Undeclared");
-					break;
-				case kScriptTypeClass:
-					if (n->var->classValue) {
-						if (&*n->var->classValue == n) {
-							printf("new %s", n->var->name.data());
-						}
-						else {
-							printf("{\n");
-							this->_Trace(&*n->var->classValue);
-							for (Uint32 i = 0; i < this->traceDepth_; i++) {
-								printf("  ");
-							}
-							printf("}");
-						}
-					}
-					else {
-						printf("Null");
-					}
-					break;
-				default:
-					printf("Function");
-					break;
-				}
-			}
+			node->parent->blockList.insert(position + 1,
+				node->argList.begin(), node->argList.end());
 		}
-		puts("");
+
+		node->argList.clear();
+
+		result = TRUE;
 	}
-	--this->traceDepth_;
+
+_Again:
+	for (NodePtr n : node->blockList) {
+		if (_MoveNode(n)) {
+			goto _Again;
+		}
+	}
+
+	return result;
 }
 
-Void ScriptPerformer::_Declare(ScriptNodePtr node) {
+Void NodePerformer::Perform(NodeBuilderPtr builder) {
 
-	ScriptVarPtr typeVar;
-	Bool isVar;
-	Vector<ScriptNodePtr> result;
-	ScriptVarPtr resultVar;
-
-	if (node->id == kScriptNodeClass) {
-		goto __DeclareClass;
+	if (!builder) {
+		throw InvalidArgumentException("Builder mustn't be NULL");
 	}
 
-__DeclareVariable:
+	this->builder = builder;
 
-	if (!(typeVar = this->manager_.Find(node->typeName))) {
-		PostSyntaxError(node->lex->line, "Undeclared type (%s)", node->typeName.data());
-	}
+	_MoveNode(this->builder->GetRootNode());
 
-	node->var = new ScriptVar(*typeVar);
-	node->var->name = node->word;
-	node->var->flags &= ~kScriptFlagType & ~kScriptFlagTemp;
-	node->var->flags |= node->modificators;
-	isVar = node->id == kScriptNodeVariable;
-	this->varList_.push_back(node->var);
-
-	node->MakeDefault();
-
-	if (typeVar->type == kScriptTypeClass) {
-		node->var->classValue.reset();
-	}
-
-	if (isVar && node->blockList.size()) {
-		this->_Evaluate(&node->blockList, &result);
-		if (!result.size()) {
-			PostSyntaxError(node->lex->line, "Result of variable's expression must be something except nothing", 1);
-		}
-		resultVar = result.back()->var;
-		if (!resultVar) {
-			PostSyntaxError(node->lex->line, "Result of variable's expression must be something except nothing", 1);
-		}
-		resultVar->flags |= node->modificators;
-		if (!resultVar) {
-			PostSyntaxError(node->lex->line, "The result of variable's expression isn't variable or constant", 1);
-		}
-		resultVar = this->_CreateTemp(resultVar)->var;
-		resultVar->Convert(node->var);
-		resultVar->Clone(node->var);
-	}
-
-	if (!this->manager_.Declare(node->var)) {
-		PostSyntaxError(node->lex->line, "Variable redeclaration (%s)", node->var->name.data());
-	}
-
-	goto __ExitDeclaration;
-__DeclareClass:
-
-	LAME_BLOCK {
-
-		ScriptVar classVar(kScriptTypeClass, node->typeName, node->typeName, node->lex->line);
-		ScriptVarPtr refVar;
-
-		refVar = this->manager_.Find(node->typeName);
-
-		if (refVar && refVar->classValue) {
-			PostSyntaxError(node->lex->line, "Class (%s) has already implemented", node->typeName.data());
+	this->_ForEachNode([](NodePtr n) {
+		if (n->lex->args && n->lex->args != n->lex->lex->args) {
+			printf("%s(%d) ", n->word.data(), n->lex->args);
 		}
 		else {
-			refVar = &classVar;
+			printf("%s ", n->word.data());
 		}
+	});
 
-		refVar->classValue.reset(new ScriptNode(*node));
+	this->_ForEachNode(_ForEachClassPrototype, kScriptNodeClass);
+	this->_ForEachNode(_ForEachInterfacePrototype, kScriptNodeInterface);
+	this->_ForEachNode(_ForEachInterfaceDeclare, kScriptNodeInterface);
+	this->_ForEachNode(_ForEachClassDeclare, kScriptNodeClass);
+	this->_ForEachNode(_ForEachConstDeclare, kScriptNodeDefault);
+	this->_ForEachNode(_ForEachVariableDeclare, kScriptNodeVariable);
+	this->_ForEachNode(_ForEachClassInherit, kScriptNodeClass);
+	this->_ForEachNode(_ForEachInterfaceInherit, kScriptNodeInterface);
 
-		for (ScriptNodePtr node : refVar->classValue->blockList) {
-
-			ScriptNodePtr newNode(new ScriptNode(*node));
-
-			if (!(typeVar = this->manager_.Find(node->typeName))) {
-				PostSyntaxError(newNode->lex->line, "Undeclared type (%s)", newNode->typeName.data());
+	this->_ForEachNode([](NodePtr n) {
+		if (n->var) {
+			if ((n->modificators & kScriptFlagFinal) != 0) {
+				n->var->SetModificator(Class::Modificator::Final);
 			}
-
-			refVar->classValue->childList.push_back(newNode);
-
-			newNode->var = new ScriptVar(*typeVar);
-			newNode->var->name = newNode->word;
-			newNode->var->flags &= ~kScriptFlagType & ~kScriptFlagTemp;
-			newNode->var->flags |= newNode->modificators;
-			isVar = newNode->id == kScriptNodeVariable;
-
-			newNode->MakeDefault();
-
-			if (typeVar->type == kScriptTypeClass) {
-				newNode->var->classValue.reset();
+			if ((n->modificators & kScriptFlagPublic) != 0) {
+				n->var->SetModificator(Class::Modificator::Public);
 			}
-
-			if (isVar && newNode->blockList.size()) {
-				this->_Evaluate(&newNode->blockList, &result);
-				if (!result.size()) {
-					PostSyntaxError(newNode->lex->line, "The result of variable's expression isn't variable or constant", 1);
-				}
-				resultVar = result.back()->var;
-				resultVar->flags |= newNode->modificators;
-				if (!resultVar) {
-					PostSyntaxError(newNode->lex->line, "The result of variable's expression isn't variable or constant", 1);
-				}
-				resultVar = this->_CreateTemp(resultVar)->var;
-				resultVar->Convert(newNode->var);
-				resultVar->Clone(newNode->var);
+			if ((n->modificators & kScriptFlagPrivate) != 0) {
+				n->var->SetModificator(Class::Modificator::Private);
+			}
+			if ((n->modificators & kScriptFlagProtected) != 0) {
+				n->var->SetModificator(Class::Modificator::Protected);
+			}
+			if ((n->modificators & kScriptFlagStatic) != 0) {
+				n->var->SetModificator(Class::Modificator::Static);
+			}
+			if ((n->modificators & kScriptFlagNative) != 0) {
+				n->var->SetModificator(Class::Modificator::Native);
 			}
 		}
+	});
 
-		if (!this->manager_.Declare(&classVar)) {
-			PostSyntaxError(node->lex->line, "Class redeclaration (%s)", node->typeName.data());
-		}
-	}
-
-	goto __ExitDeclaration;
-__ExitDeclaration:
-	;
+	this->Evaluate(this->builder->GetRootNode()->blockList);
 }
 
-ScriptVarPtr ScriptPerformer::_Find(BufferRefC name, ScriptNodePtr node) {
+Bool NodePerformer::Evaluate(NodeListRef nodeList) {
 
-	ScriptVarPtr var = this->manager_.Find(name);
+	VarList varStack;
 
-	if (!var) {
-		PostSyntaxError(node->lex->line, "Undeclared variable or type (%s)", name.data());
+	if (!this->builder) {
+		return FALSE;
 	}
 
-	return var;
+	NodeList::iterator i = nodeList.begin();
+
+	while (i != nodeList.end()) {
+
+		NodePtr n = *i;
+
+		if (n->id == kScriptNodeClass ||
+			n->id == kScriptNodeInterface
+		) {
+			goto _Continue;
+		}
+
+		//if (n->id == kScriptNodeAlloc) {
+		//	if (!n->argList.size()) {
+		//		PostSyntaxError(n->lex->line, "Empty array's index", 0);
+		//	}
+		//	varStack.clear();
+		//	this->Evaluate(n->argList, varStack);
+		//	if (varStack.size() > 1) {
+		//		PostSyntaxError(n->lex->line, "Unexcepted token in expression", 0);
+		//	}
+		//	else if (varStack.size() == 0) {
+		//		PostSyntaxError(n->lex->line, "Invalid variable's expression", 0);
+		//	}
+		//	nodeStack.push_back({ n, varStack.back() });
+		//}
+
+		if (n->id == kScriptNodeInvoke ||
+			n->id == kScriptNodeAlloc
+		) {
+			this->methodHash = 0;
+			for (Uint32 i = 0; i < n->lex->args; i++) {
+				n->argList.push_back(this->nodeStack.back().node);
+				this->nodeStack.pop_back();
+			}
+		}
+		
+		if (n->lex->lex->IsUnknown() ||
+			n->lex->lex->IsConst()
+		) {
+			nodeStack.push_back({ n, n->var });
+		}
+		else if (n->lex->lex->id == kScriptLexNew) {
+			this->_EvaluateNew(n);
+		}
+		else if (
+			n->lex->lex->IsMath() ||
+			n->lex->lex->IsBool() ||
+			n->lex->lex->id == kScriptLexDirected ||
+			n->lex->lex->id == kScriptLexMediated
+		) {
+			if (n->lex->args == 1) {
+				this->_EvaluateExpression1(n);
+			} else if (n->lex->args == 2) {
+				this->_EvaluateExpression2(n);
+			} else {
+				this->_EvaluateExpression0(n);
+			}
+		}
+
+	_Continue:
+		++i;
+	}
+
+	if (nodeStack.size() > 1 && 0) {
+		PostSyntaxError(nodeStack.back().node->lex->line, "Unexcepted expression (%s)", nodeStack.back().node->word.data());
+	}
+
+	for (VarNode& n : nodeStack) {
+		if (!n.var) {
+			n.var = n.node->parent->GetScope()->GetVarScope()->Find(n.node->word);
+			if (!n.var) {
+				PostSyntaxError(n.node->lex->line, "Undeclared variable (%s)", n.node->word.data());
+			}
+			n.node->var = n.var;
+		}
+	}
+
+	return TRUE;
 }
 
-Void ScriptPerformer::_RegisterConstant(ScriptNodePtr node) {
+Void NodePerformer::_EvaluateNew(NodePtr node) {
 
-	switch (node->lex->lex->id) {
-	case kScriptLexInt:
-		node->var = new ScriptVar(kScriptTypeInt, node->word, "Int", node->lex->line);
-		node->var->intValue = ParseIntValue(node->word.data());
-		break;
-	case kScriptLexFloat:
-		node->var = new ScriptVar(kScriptTypeFloat, node->word, "Float", node->lex->line);
-		node->var->floatValue = ParseFloatValue(node->word.data());
-		break;
-	case kScriptLexString:
-		node->var = new ScriptVar(kScriptTypeString, node->word, "String", node->lex->line);
-		node->var->stringValue = ParseStringValue(node->word.data());
-		break;
-	default:
-		break;
-	}
+	ObjectPtr type;
+	ObjectPtr result;
 
-	if (node->var) {
-		this->varList_.push_back(node->var);
-	}
-}
+	this->_ReadArguments(node);
 
-Void ScriptPerformer::_Evaluate(Vector<ScriptNodePtr>* list) {
+	type = FindClass(
+		this->argsArray[0].node->parent,
+		this->argsArray[0].node->word);
 
-	Vector<ScriptNodePtr> result;
-	this->_Evaluate(list, &result);
-	result.clear();
-}
+	if (type->CheckModificator(Class::Modificator::Primitive)) {
 
-Void ScriptPerformer::_Evaluate(Vector<ScriptNodePtr>* list, Vector<ScriptNodePtr>* result) {
+		VariablePtr var = this->argsArray[0].var->GetVariable();
 
-	ScriptNodePtr expNode = 0;
-	ScriptNodePtr left = 0;
-	ScriptNodePtr right = 0;
-	Uint32 arguments = 0;
-	ScriptVarPtr typeVar = 0;
-	ScriptVarPtr classVar = 0;
-	ScriptNodePtr invokeNode = 0;
-
-	// clear stack
-	result->clear();
-
-	for (ScriptNodePtr node : *list) {
-
-		// skip semicolons
-		if (node->lex->lex->id == kScriptLexSemicolon) {
-			//this->tempList_.clear();
-		}
-        
-		// save current command in stack with commands (for trace)
-		this->cmdList_.push_back(node->word);
-
-		// if out node hasn't variable (every node hasn't variable) and
-		// was defined as const then register it's variable
-		if (node->lex->lex->IsConst() && !node->var) {
-			this->_RegisterConstant(node);
-		}
-
-		// if our node is type or variable. it look like
-		// function invoke but like as cast for examepl
-		// int("0x7b") we'll get integer with value 123
-		if ((typeVar = this->manager_.Find(node->word))) {
-
-			// if found variable - type
-			if (typeVar->IsType()) {
-
-				// if it has variable so ... it might be variable with operator? (strange condition)
-				if (node->var) {
-					PostSyntaxError(node->lex->line, "You can't use variable (%s) as operator", node->word.data());
-				}
-
-				// save found type's var
-				node->var = typeVar;
-
-				// look though all fields in node's list
-				// to declare it's constants
-				for (ScriptNodePtr n : node->argList) {
-					if (!n->var && n->lex->lex->IsConst()) {
-						this->_RegisterConstant(n);
-					}
-				}
-
-				// now we have to evaluate this list
-				// and write changes in our variable
-				// last object in result stack will be
-				// result of our expression
-				this->_Evaluate(&node->argList, result);
-
-				// now we can evaluate current node's lex
-				// if count of arguments was above then 0
-				if (node->argList.size()) {
-					goto __EvaluateOperator;
-				}
-			}
-
-			// if our found type - class then save its var
-			if (typeVar->IsClass()) {
-				node->var = typeVar;
-			}
-            else {
-                node->var = typeVar;
-            }
-
-			typeVar = LAME_NULL;
-		}
-
-		// if node's id not equal with default
-		// then it might be something more then normal
-		// variable or type, for example declaration
-		// of variable, function, class or condition block
-		// like while, for, if, else etc
-		if (node->id != kScriptNodeDefault) {
-			if (node->id == kScriptNodeFunction) {
-				// if our node - function, so fuck it
-			}
-			else if (
-				node->id == kScriptNodeVariable ||
-				node->id == kScriptNodeClass
-			) {
-				this->_Declare(node);
-			}
-			else if (node->id == kScriptNodeCondition) {
-				this->_EvaluateCondition(node);
-			}
-			else if (node->id == kScriptNodeInvoke) {
-
-				// save object in stack and copy node's pointer
-				// to invokeNode, cuz now we havn't arguments
-				// in stack and we'll invoke it later
-				result->push_back(node);
-				invokeNode = node;
-			}
-		}
-		else {
-
-			// if our lex const or unknown then push in stack
-			if (node->lex->lex->IsConst() ||
-				node->lex->lex->IsUnknown()
-			) {
-				result->push_back(node);
-			}
-			else {
-			__EvaluateOperator:
-
-				// if out lex has unknown id and isn't variable
-				if (node->lex->lex->id == kScriptLexDefault && !typeVar) {
-					result->push_back(node); continue;
-				}
-
-				// if we have unknown count of operands in lex then we have unknown lex, so have to throw an exception
-				if ((arguments = node->lex->lex->args) == -1) {
-					PostSyntaxError(node->lex->line, "Lex (%s) isn't as operation", node->lex->word.data());
-				}
-
-				// if count of stack's arguments bellow then lex's arguments throw an exception
-				if (result->size() < arguments) {
-					PostSyntaxError(node->lex->line, "Invalid parameters, (%s) needs (%d) arguments", node->lex->word.data(), arguments);
-				}
-
-				// one argument for single expression
-				if (arguments == 1) {
-
-					// get left variable from stack
-					left = result->back();
-					result->pop_back();
-
-					// if we havn't left variable or have, but its not temporary and has unknown lex
-					if (left->lex && left->lex->lex->IsUnknown() && left->var && !left->var->IsTemp()) {
-						// if parent's id isn't class, its mean that variable isn't class's field
-						if (left->parent->id != kScriptNodeClass) {
-							left->var = this->_Find(left->word, node);
-						}
-					}
-
-					// if left variable type then throw an exception
-					if ((left->var->IsType() || left->var->IsFinal()) && node->lex->lex->IsLeft()) {
-						PostSyntaxError(node->lex->line, "You can't change final variables", 1);
-					}
-
-					// if left variable has private/protected
-					// modificators then we must throw an exception, but
-					if (left->var->IsPrivate() || left->var->IsProtected()) {
-
-						// only if we're right's parent's parent are not equal
-						// with left's parent, its mean that right object
-						// is local and has method parent, and method has
-						// same parent as field's parent - its a class
-						if (right->parent->parent != left->parent) {
-							PostSyntaxError(node->lex->line, "You can't change private/protected variables from non-class scope", 1);
-						}
-					}
-
-					// if node's lex is new, then evaluate new lex
-					if (node->lex->lex->id == kScriptLexNew) {
-						this->_EvaluateNew(node, left, classVar);
-					}
-					// if node's lex is return, then evaluate return lex
-					else if (node->lex->lex->id == kScriptLexReturn) {
-						this->_EvaluateReturn(node, left);
-					}
-					// else evaluate single expression
-					else {
-						this->_EvaluateSingle(node, left);
-					}
-				}
-
-				// two arguments for double expression
-				else if (arguments == 2) {
-
-					// get right and left variables from stack
-					right = result->back();
-					result->pop_back();
-					left = result->back();
-					result->pop_back();
-
-					// i have no idea what it is
-					if (right->var && right->parent && right->parent->args) {
-						right->var = 0;
-					}
-
-					// if we havn't left variable or have, but its not temporary and has unknown lex
-					if (!left->var || (left->lex && left->lex->lex->IsUnknown() && left->var && !left->var->IsTemp())) {
-						// if parent's id isn't class, its mean that variable isn't class's field
-						if (left->parent->id != kScriptNodeClass) {
-							left->var = this->_Find(left->word, node);
-						}
-					}
-
-					// if we havn't right variable and lex is selection then create temp
-					if (!right->var || (right->var && !right->var->IsTemp() && !right->lex->lex->IsConst())) {
-						if (node->lex->lex->id != kScriptLexDirected && node->lex->lex->id != kScriptLexMediated) {
-							right->var = this->_CreateTemp(this->_Find(right->word, node))->var;
-						}
-					}
-
-					// if operator right associated then create temporary var
-					if (node->lex->lex->IsRight()) {
-						left->var = this->_CreateTemp(left->var)->var;
-					}
-
-					// if left variable has auto type, then copy right's var name
-					if (left->var && left->var->type == kScriptTypeAuto) {
-						left->var->typeName = right->var->typeName;
-					}
-
-					// if we have left and right variables then convert right to left
-					if (right->var && left->var) {
-						right->var->Convert(&*left->var);
-					}
-
-					// if left variable type then throw an exception
-					if ((left->var->IsType() || left->var->IsFinal()) && node->lex->lex->IsLeft()) {
-						PostSyntaxError(node->lex->line, "You can't change final variables", 1);
-					}
-
-					// if we have result from double expression then swap left with result
-					if ((expNode = left->var->_EvaluateDouble(right, node->lex->lex))) {
-						std::swap(left, expNode);
-					}
-
-					if (right->parent && right->parent->parent == left->parent) {
-						if ((right->parent->modificators & kScriptFlagStatic) != 0) {
-							PostSyntaxError(node->lex->line, "You can't address to this in static method", 1);
-						}
-					}
-
-					// if left variable has private/protected
-					// modificators then we must throw an exception, but
-					if (left->var->IsPrivate() || left->var->IsProtected() ||
-						(right->var && (
-						right->var->IsPrivate() ||
-						right->var->IsProtected()))
-					) {
-
-						// only if we're right's parent's parent and are not equal
-						// with left's parent, its mean that right object
-						// is local and has method parent, and method has
-						// same parent as field's parent - its a class
-						if (right->parent && right->parent->parent != left->parent) {
-							PostSyntaxError(node->lex->line, "You can't change private/protected variables from non-class scope", 1);
-						}
-					}
-				}
-
-				// if count of arguments above then 0
-				// its mean that we poppped arguments from
-				// stack and have to push result
-				if (arguments) {
-
-					// but, if we have invokeNode then we have all
-					// nessesary information to invoke method
-					if (invokeNode) {
-						left = this->_InvokeMethod(node, expNode, invokeNode, left);
-					}
-
-					// remove invoke node and save left variable
-					invokeNode = LAME_NULL;
-					result->push_back(left);
-				}
-			}
-		}
-	}
-}
-
-Void ScriptPerformer::_EvaluateNew(ScriptNodePtr node, ScriptNodePtr left, ScriptVarPtr var) {
-
-	// if found type non-implemented then throw an exception
-	if (!(var = this->_Find(left->word, node))->classValue) {
-		PostSyntaxError(left->lex->line, "Non-Implemented class (%s)", left->word.data());
-	}
-
-	// creating copy of current variable
-	// from class type to temporary variable
-	left->var = new ScriptVar(*var);
-	this->newList_.push_back(left->var);
-
-	// reset class's value with new node
-	left->var->classValue.reset(new ScriptNode(*left));
-	left->var->classValue->childList.clear();
-	left->var->classValue->var = left->var;
-
-	// create copy of all fields and move to new temp class object
-	// we'll move all variables and nodes from type object to new
-	// and save it to new object's child list
-	for (ScriptNodePtr n : var->classValue->childList) {
-		if (!n->var->IsStatic() && !n->var->IsFunction()) {
-			ScriptNodePtr node = new ScriptNode(*n);
-			node->var = new ScriptVar(*n->var);
-			left->var->classValue->childList.push_back(node);
-		}
-		else {
-			left->var->classValue->childList.push_back(n);
-		}
-	}
-}
-
-Void ScriptPerformer::_EvaluateSingle(ScriptNodePtr node, ScriptNodePtr left) {
-
-	// if we havn't left variable we have to find it
-	if (!left->var) {
-		left->var = this->_Find(left->word, node);
-	}
-
-	// if our lex has unknown token ... we have to
-	// convert left variable to found token's word? Wut?
-	// anyway, else we can evaluate single expression
-	if (node->lex->lex->IsUnknown()) {
-		left->var->Convert(this->_Find(node->word, node));
+		result = node->parent->GetScope()->GetTempScope()
+			->Add(new Array("", node, type->GetClass(), var->GetInteger()));
 	}
 	else {
-		left->var->_EvaluateSingle(node->lex->lex);
-	}
-}
+		result = node->parent->GetScope()->GetTempScope()
+			->Add(new Variable("", type));
 
-Void ScriptPerformer::_EvaluateReturn(ScriptNodePtr node, ScriptNodePtr left) {
+		type->GetClass()->New(result);
 
-	// if we havn't variable, we'll find it
-	// in current scope
-	if (!left->var) {
-		left->var = this->_Find(left->word, node);
-	}
+		NodePtr n;
 
-	// find this var in scope and set return var
-	this->_Find("this", node)->classValue->returnVar = left->var;
-}
+		if ((n = result->GetClass()->GetNode()) != NULL) {
 
-ScriptNodePtr ScriptPerformer::_InvokeMethod(ScriptNodePtr node, ScriptNodePtr expNode, ScriptNodePtr invokeNode, ScriptNodePtr left) {
+			n->var = result->GetVariable()->GetObject();
 
-	// if left variable has private/protected
-	// modificators then we must throw an exception, but
-	if (left->var->IsPrivate() || left->var->IsProtected()) {
-
-		// ...
-		if (expNode->word != "this") {
-			PostSyntaxError(node->lex->line, "You can't invoke private/protected methods from non-class scope", 1);
-		}
-	}
-
-	// in left variable we have our method
-	// with all information (name, arguments, types)
-	// so we must set function modificator flag
-	if (left->var->type != kScriptTypeClass) {
-		left->var->MakeFunction();
-	}
-
-	// throw an exception if we have different
-	// count of arguments
-	if (invokeNode->args != left->args) {
-		PostSyntaxError(node->lex->line, "Method (%s.%s) requires (%d) arguments", left->parent->typeName.data(), left->word.data(), left->args);
-	}
-
-	// result of node's expression
-	Vector<ScriptNodePtr> result;
-
-	// we gonna to evaluate list with arguments in expression 
-	if (invokeNode->argList.size()) {
-		this->_Evaluate(&invokeNode->argList, &result);
-	}
-
-	// if we have different arguments count in
-	// expression's result and method
-	if (result.size() != left->args) {
-		PostSyntaxError(node->lex->line, "Invalid expression, method (%s.%s) requires (%d) arguments", left->parent->typeName.data(), left->word.data(), left->args);
-	}
-
-	// if our method (in class) has body
-	if (left->blockList.size() || left->var->IsNative()) {
-
-		// save current scope
-		this->manager_.Push();
-
-		// get first argument in invoke list
-		auto i = result.begin();
-
-		// copy all arguments with converted variables
-		for (ScriptNodePtr n : left->argList) {
-
-			ScriptVarPtr left;
-
-			// now we have to declare new variable
-			// in this scope, get it, convert to
-			// right's variable and clone
-			this->_Declare(n);
-			left = this->_Find(n->word, node);
-			left->Convert((*i)->var);
-			left->_EvaluateMath((*i)->var, kScriptLexSet);
-			++i;
-		}
-
-		// create 'this' node
-		ScriptNode thisNode("this", kScriptNodeVariable, NULL, left->parent, NULL); // ScriptParser::Find(node->lex, kScriptLexDefault), left->parent, LAME_NULL);
-
-		// if it has same names, that its constructor
-		// and save left's word
-		if (invokeNode->word == left->word) {
-			thisNode.typeName = expNode->word;
-		}
-		// else get type's name from class value
-		else {
-			thisNode.typeName = expNode->var->classValue->word;
-		}
-
-		ScriptVarPtr thisVar;
-
-		// deaclare 'this' node in current scope,
-		// find it and copy class value from left node
-		// and we can succesfully evaluate our method
-		this->_Declare(&thisNode);
-		(thisVar = this->_Find("this", node))->classValue = expNode->var->classValue;
-
-		if (left->var->IsNative()) {
-			if (!left->var->callback) {
-				PostSyntaxError(node->lex->line, "Undeclared native method (%s.%s)", expNode->word.data(), left->word.data());
-			}
-			left->var->callback(left, &this->manager_, thisVar);
-		}
-		else {
-			this->_Evaluate(&left->blockList);
-		}
-
-		// if method has final modificator then change this
-		// to final
-		if (left->var->IsFinal()) {
-			thisVar->MakeFinal();
-		}
-
-		// if method's return type - void
-		if (left->var->type == kScriptTypeVoid) {
-			// but we have returned variable .. its a mistake
-			if (thisVar->classValue->returnVar) {
-				PostSyntaxError(node->lex->line, "You can return variable only in non-void methods", 1);
-			}
-		}
-		else {
-			if (!thisVar->classValue->returnVar) {
-				PostSyntaxError(node->lex->line, "Non-void methods must return something (%s.%s)", thisVar->typeName.data(), left->var->name.data());
-			}
-
-			// now we'll try to convert returned variable to method's return type
-			thisVar->classValue->returnVar->Convert(left->var);
-
-			// if everything is ok, we wont throw an exception, but
-			// now we have to create its copy and push to temporary stack
-			// cuz we'll pop current scope and all local variables
-			// we'll be removed
-			left = this->_CreateTemp(thisVar->classValue->returnVar);
-
-			// when we make a copy of our return variable
-			// we'll have function flags there, so we have to
-			// remove it from temporary result
-			left->var->flags &= ~kScriptFlagFunction;
-
-			// reset return var to avoid mistakes in future
-			// with void methods
-			thisVar->classValue->returnVar = LAME_NULL;
-		}
-
-		// finally pop current scope from stack
-		this->manager_.Pop();
-	}
-
-	return left;
-}
-
-ScriptNodePtr ScriptPerformer::_CreateTemp(ScriptVarPtr var) {
-	this->tempList_.push_back({ ScriptNode("TEMP", kScriptNodeDefault, LAME_NULL, LAME_NULL, LAME_NULL), *var });
-	this->tempList_.back().var.MakeTemp();
-	this->tempList_.back().node.var = &this->tempList_.back().var;
-	return &this->tempList_.back().node;
-}
-
-ScriptNodePtr ScriptPerformer::_CreateTemp(ScriptNodePtr node) {
-	return this->_CreateTemp(node->var);
-}
-
-Void ScriptPerformer::_EvaluateCondition(ScriptNodePtr node) {
-
-	Vector<ScriptNodePtr> result;
-
-	this->manager_.Push();
-
-	switch (node->lex->lex->id) {
-	case kScriptLexIf:
-
-		this->_Evaluate(&node->argList, &result);
-
-		if (result.size() != 1) {
-			PostSyntaxError(node->lex->line, "Invalid condition expression, the result of condition isn't 1 argument", 1);
-		}
-		node->result = result.back()->var->Boolean();
-
-		if (node->result) {
-			this->_Evaluate(&node->blockList, &result);
-		}
-
-		break;
-	case kScriptLexElse:
-
-		if (!node->prev || node->prev->lex->lex->id != kScriptLexIf) {
-			PostSyntaxError(node->lex->line, "Else construction must have 'if' node", 1);
-		}
-
-		if (!node->prev->result) {
-			if (node->blockList.size()) {
-				this->_Evaluate(&node->blockList, &result);
-			}
-		}
-
-		break;
-	case kScriptLexWhile:
-
-		this->_Evaluate(&node->argList, &result);
-
-		if (result.size() != 1) {
-			PostSyntaxError(node->lex->line, "Invalid condition expression, the result of condition isn't 1 argument", 1);
-		}
-
-		node->result = result.back()->var->Boolean();
-		result.clear();
-
-		if (node->prev->lex->lex->id == kScriptLexDo && node->prev->parent->parent) {
-			if (node->prev->blockList.size()) {
-				this->_Evaluate(&node->prev->blockList, &result);
-				result.clear();
-			}
-		}
-
-		if (!node->result) {
-			break;
-		}
-
-		if (node->prev && node->prev->lex->lex->id == kScriptLexDo && node->prev->parent->parent) {
-			if (!node->prev->blockList.size()) {
-				break;
-			}
-			do {
-				result.clear();
-				if (node->prev->blockList.size()) {
-					this->_Evaluate(&node->prev->blockList, &result);
+			for (NodePtr n : n->blockList) {
+				if (n->id == kScriptNodeVariable && n->blockList.size()) {
+					this->Evaluate(n->blockList);
 				}
-				this->_Evaluate(&node->argList, &result);
-				node->result = result.back()->var->Boolean();
-			} while (node->result);
-		}
-		else {
-			if (!node->blockList.size() && node->argList.size() == 1 && node->argList.back()->lex->lex->IsConst() && node->argList.back()->var->Boolean()) {
-				PostSyntaxError(node->lex->line, "Infinite loop, non-zero constant expression in while without body", 1);
-			}
-			while (node->result) {
-				if (node->blockList.size()) {
-					this->_Evaluate(&node->blockList, &result);
-					result.clear();
-				}
-				this->_Evaluate(&node->argList, &result);
-				node->result = result.back()->var->Boolean();
-				result.clear();
 			}
 		}
-
-		break;
-	default:
-		break;
 	}
 
-	this->manager_.Pop();
+	nodeStack.push_back({ node, result });
 }
 
-ScriptPerformer::~ScriptPerformer() {
+Void NodePerformer::_EvaluateExpression0(NodePtr n) {
 
-	//for (ScriptVarPtr v : this->newList_) {
-	//	if (v->classValue) {
-	//		v->classValue.reset();
-	//	}
-	//	delete v;
-	//}
+}
 
-	//for (ScriptVarPtr v : this->varList_) {
-	//	if (v->classValue) {
-	//		v->classValue.reset();
-	//	}
-	//	delete v;
-	//}
+Void NodePerformer::_EvaluateExpression1(NodePtr node) {
 
-	this->varList_.clear();
-	this->cmdList_.clear();
-	this->tempList_.clear();
+}
+
+Void NodePerformer::_EvaluateExpression2(NodePtr n) {
+
+	VarNodePtr r;
+	VarNodePtr l;
+
+	this->_ReadArguments(n);
+
+	r = &this->argsArray[0];
+	l = &this->argsArray[1];
+
+	NodePtr right = r->node;
+	NodePtr left = l->node;
+
+	if (r->var) {
+		right->var = r->var;
+	}
+	if (l->var) {
+		left->var = l->var;
+	}
+
+	if (n->lex->lex->id == kScriptLexDirected ||
+		n->lex->lex->id == kScriptLexMediated
+	) {
+		if (!left->var) {
+			if (!(left->var = left->parent->GetScope()->GetVarScope()->Find(left->word))) {
+				if (!(left->var = left->parent->GetScope()->GetClassScope()->Find(left->word))) {
+					PostSyntaxError(left->lex->line, "Undeclared variable or class (%s)", left->word.data());
+				}
+			}
+		}
+		if (!left->var->CheckType(Class::Type::Variable)) {
+			PostSyntaxError(left->lex->line, "Unable to apply directed selection to non-variable object (%s)", left->word.data());
+		}
+	}
+	else {
+		if (!left->var) {
+			if (!(left->var = left->parent->GetScope()->GetVarScope()->Find(left->word))) {
+				PostSyntaxError(left->lex->line, "Undeclared variable (%s)", left->word.data());
+			}
+		}
+		if (!right->var) {
+			if (!(right->var = right->parent->GetScope()->GetVarScope()->Find(right->word))) {
+				PostSyntaxError(right->lex->line, "Undeclared variable (%s)", right->word.data());
+			}
+		}
+	}
+
+	ObjectPtr result = left->var;
+	ObjectPtr with = right->var;
+
+	if (n->lex->lex->id == kScriptLexDirected ||
+		n->lex->lex->id == kScriptLexMediated
+	) {
+		Uint32 methodHash = 0;
+		ClassPtr varClass;
+
+		varClass = left->var->GetVariable()->GetObject();
+
+		if (right->id == kScriptNodeInvoke ||
+			right->id == kScriptNodeAlloc
+		) {
+			Vector<VariablePtr> varList;
+			for (NodePtr n : right->argList) {
+				varList.push_back(n->var->GetVariable());
+			}
+			methodHash = Method::ComputeInvokeHash(varList);
+			result = varClass->FindMethod(right->word, methodHash);
+			if (!result) {
+				PostSyntaxError(n->lex->line, "Undeclared method (%s)", right->word.data());
+			}
+			result->GetMethod()->Invoke(this, varList);
+		}
+		else {
+			if (!varClass) {
+				PostSyntaxError(n->lex->line, "Null pointer (%s)", result->GetName().data());
+			}
+			result = varClass->FindVariable(right->word);
+			if (!result) {
+				PostSyntaxError(n->lex->line, "Undeclared field (%s)", right->word.data());
+			}
+		}
+
+		if (result->CheckModificator(Class::Modificator::Private) ||
+			result->CheckModificator(Class::Modificator::Protected)
+		) {
+			int a = 0;
+			//PostSyntaxError(n->lex->line, "You can't get access to private/protected objects from this scope (%s)", right->word.data());
+		}
+
+		left->var = result;
+
+		goto _SaveNode;
+	}
+	else {
+		if (n->lex->lex->IsRight() && result->CheckType(Class::Type::Variable)) {
+
+			result = left->parent->GetScope()->GetTempScope()
+				->Add(new Variable("", left->var->GetClass(), left));
+
+			left->var->Clone(result);
+		}
+
+		//if (right->var->GetName().length() > 0) {
+		//	with = right->parent->GetScope()->GetTempScope()
+		//		->Add(new Variable("", right->var->GetClass(), right));
+		//	right->var->Clone(with);
+		//}
+	}
+
+	try {
+		Error e = left->var->GetClass()->Evaluate(operatorMap[n->lex->lex->id], result, with);
+
+		if (e != Error::NoError) {
+			PostSyntaxError(n->lex->line, "%s (%s)", e.GetDescription(), left->var->GetClass()->GetName().data());
+		}
+	}
+	catch (ClassInvalidCastException) {
+
+		PostSyntaxError(n->lex->line, "Unable to cast from (%s) to (%s)",
+			result->GetClass()->GetName().data(),
+			with->GetClass()->GetName().data());
+	}
+
+_SaveNode:
+	if (n->lex->lex->IsRight()) {
+		nodeStack.push_back({ left, result });
+	}
+}
+
+Void NodePerformer::_ForEachNode(ForEachNode callback, NodeID id) {
+	_ForEachNode(this->builder->GetRootNode(), callback, id);
+}
+
+Void NodePerformer::_ReadArguments(NodePtr node) {
+
+	if (nodeStack.size() < node->lex->args) {
+		PostSyntaxError(node->lex->line, "Operator \"%s\" requires %d arguments", node->word.data(), node->lex->args);
+	}
+
+	argsArray.clear();
+
+	for (Uint32 i = 0; i < node->lex->args; i++) {
+		this->argsArray.push_back(nodeStack.back());
+		nodeStack.pop_back();
+	}
+}
+
+Void NodePerformer::_ForEachClassPrototype(NodePtr n) {
+
+	ScopeControllerPtr scope;
+
+	if ((scope = n->parent->GetScope()) != NULL) {
+		n->var = scope->GetClassScope()->Add(new Class(n->typeName, n));
+		if (!n->var) {
+			PostSyntaxError(n->lex->line, "Class redeclaration (%s)", n->typeName.data());
+		}
+	}
+	else {
+		PostSyntaxError(n->lex->line, "Unable to declare class (%s) in that place", n->typeName.data());
+	}
+}
+
+Void NodePerformer::_ForEachInterfacePrototype(NodePtr n) {
+
+	ScopeControllerPtr scope;
+
+	if ((scope = n->parent->GetScope()) != NULL) {
+		n->var = scope->GetClassScope()->Add(new Interface(n->typeName, n));
+		if (!n->var) {
+			PostSyntaxError(n->lex->line, "Interface redeclaration (%s)", n->typeName.data());
+		}
+	}
+	else {
+		PostSyntaxError(n->lex->line, "Unable to declare class (%s) in that place", n->typeName.data());
+	}
+}
+
+Void NodePerformer::_ForEachClassDeclare(NodePtr n) {
+
+	ScopeControllerPtr scope;
+
+	if ((scope = n->parent->GetScope()) != NULL) {
+		n->var = scope->GetClassScope()->Find(n->typeName);
+		if (!n->var) {
+			PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->typeName.data());
+		}
+	}
+	else {
+		PostSyntaxError(n->lex->line, "Unable to find class (%s) in that place", n->typeName.data());
+	}
+
+	for (NodePtr m : n->blockList) {
+
+		ObjectPtr typeClass =
+			NodePerformer::FindClass(n, m->typeName);
+
+		if (!typeClass) {
+			PostSyntaxError(m->lex->line, "Undeclared type (%s)", m->typeName.data());
+		}
+
+		if (m->id == kScriptNodeFunction) {
+
+			Vector<ClassPtr> methodParameters;
+
+			for (NodePtr n : m->argList) {
+
+				ObjectPtr parameterClass = 
+					NodePerformer::FindClass(m->parent, n->typeName);
+
+				if (!parameterClass) {
+					PostSyntaxError(n->lex->line, "Undeclared type (%s)", n->typeName.data());
+				}
+
+				methodParameters.push_back(parameterClass->GetClass());
+			}
+
+			m->var = n->GetScope()->GetMethodScope()->Add(
+				new Method(m->word, m, n->var, typeClass, methodParameters));
+
+			if (!m->var) {
+				PostSyntaxError(m->lex->line, "Method redeclaration (%s)", m->word.data());
+			}
+
+			if (m->isMethodImpl) {
+				m->var->GetMethod()->SetRootNode(m);
+			}
+
+			NodePerformer::_ForEachNode(m, [](NodePtr n) {
+
+				ObjectPtr typeClass =
+					NodePerformer::FindClass(n->parent, n->typeName);
+
+				if (!typeClass) {
+					PostSyntaxError(n->lex->line, "Undeclared type (%s)", n->word.data());
+				}
+				else if (!n->parent->GetScope()->GetVarScope()->Add(new Variable(n->word, typeClass, n))) {
+					PostSyntaxError(n->lex->line, "Variable redeclaration (%s)", n->word.data());
+				}
+
+			}, kScriptNodeVariable);
+		}
+		else if (m->id == kScriptNodeVariable) {
+
+			m->var = n->GetScope()->GetVarScope()->Add(
+				new Variable(m->word, typeClass, m));
+
+			if (!m->var) {
+				PostSyntaxError(m->lex->line, "Variable redeclaration (%s)", m->word.data());
+			}
+		}
+	}
+}
+
+Void NodePerformer::_ForEachInterfaceDeclare(NodePtr n) {
+
+	ScopeControllerPtr scope;
+
+	if ((scope = n->parent->GetScope()) != NULL) {
+		n->var = scope->GetClassScope()->Find(n->typeName);
+		if (!n->var) {
+			PostSyntaxError(n->lex->line, "Undeclared interface (%s)", n->word.data());
+		}
+	}
+	else {
+		PostSyntaxError(n->lex->line, "Unable to find interface (%s) in that place", n->typeName.data());
+	}
+
+	for (NodePtr m : n->blockList) {
+
+		ObjectPtr typeClass =
+			NodePerformer::FindClass(n, m->typeName);
+
+		if (!typeClass) {
+			PostSyntaxError(m->lex->line, "Undeclared type (%s)", m->word.data());
+		}
+
+		if (m->id == kScriptNodeFunction) {
+
+			Vector<ClassPtr> methodParameters;
+
+			for (NodePtr n : m->argList) {
+
+				ObjectPtr parameterClass =
+					NodePerformer::FindClass(m->parent, n->typeName);
+
+				if (!parameterClass) {
+					PostSyntaxError(n->lex->line, "Undeclared type (%s)", n->typeName.data());
+				}
+
+				methodParameters.push_back(parameterClass->GetClass());
+			}
+
+			m->var = n->GetScope()->GetMethodScope()->Add(
+				new Method(m->word, m, n->var, typeClass, methodParameters));
+
+			if (!m->var) {
+				PostSyntaxError(m->lex->line, "Method redeclaration (%s)", m->word.data());
+			}
+			else if (m->isMethodImpl) {
+				PostSyntaxError(m->lex->line, "Interfaces mustn't have implemented methods (%s)", m->word.data());
+			}
+		}
+		else if (m->id == kScriptNodeVariable) {
+			PostSyntaxError(m->lex->line, "You can't store variables in interfaces", m->word.data());
+		}
+	}
+}
+
+Void NodePerformer::_ForEachClassInherit(NodePtr n) {
+
+	Error error;
+	ObjectPtr typeClass;
+
+	if (n->extends.size() > 0) {
+		if (!(typeClass = NodePerformer::FindClass(n->parent, n->extends))) {
+			PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->extends.data());
+		}
+		n->var->GetClass()->Extend(typeClass->GetClass());
+	}
+	else {
+		n->var->GetClass()->Extend(GlobalScope::classObject);
+	}
+
+	for (BufferRefC b : n->implements) {
+		if (!(typeClass = NodePerformer::FindClass(n->parent, b))) {
+			PostSyntaxError(n->lex->line, "Undeclared interface (%s)", b.data());
+		}
+		if ((error = n->var->GetClass()->Implement(typeClass->GetInterface())) != Error::NoError) {
+			PostSyntaxError(n->lex->line, "%s (%s)", error.GetDescription(), b.data());
+		}
+	}
+}
+
+Void NodePerformer::_ForEachInterfaceInherit(NodePtr n) {
+
+	ObjectPtr typeClass;
+
+	if (n->extends.size() > 0) {
+		PostSyntaxError(n->lex->line, "Interfaces can't extend classes (%s)", n->extends.data());
+	}
+
+	n->var->GetInterface()->Extend(GlobalScope::classObject);
+
+	for (BufferRefC b : n->implements) {
+		if (!(typeClass = NodePerformer::FindClass(n->parent, n->extends))) {
+			PostSyntaxError(n->lex->line, "Undeclared interface (%s)", b.data());
+		}
+		n->var->GetClass()->Implement(typeClass->GetInterface());
+	}
+}
+
+Void NodePerformer::_ForEachConstDeclare(NodePtr n) {
+
+	if (n->lex->lex->IsConst()) {
+		NodePerformer::_DeclareConstant(n);
+	}
+}
+
+Void NodePerformer::_ForEachVariableDeclare(NodePtr n) {
+
+	if (n->parent->id != kScriptNodeEntry) {
+		return;
+	}
+
+	ObjectPtr typeClass =
+		NodePerformer::FindClass(n->parent, n->typeName);
+
+	if (!typeClass) {
+		PostSyntaxError(n->lex->line, "Undeclared type (%s)", n->word.data());
+	}
+
+	if (n->isArray) {
+		n->var = n->parent->GetScope()->GetVarScope()->Add(
+			new Array(n->word, n, typeClass));
+	}
+	else {
+		n->var = n->parent->GetScope()->GetVarScope()->Add(
+			new Variable(n->word, typeClass, n));
+	}
+
+	if (!n->var) {
+		PostSyntaxError(n->lex->line, "Variable redeclaration (%s)", n->word.data());
+	}
+}
+
+ObjectPtr NodePerformer::_Find(Object::Type type, NodePtr node, BufferRefC name) {
+
+	NodePtr savedNode;
+	ObjectPtr object;
+
+	savedNode = node;
+
+	if (node->var == NULL && node->id != kScriptNodeEntry) {
+		goto __ClassNotFound;
+	}
+
+	while (node != NULL) {
+
+		ScopeControllerPtr scope = node->GetScope();
+
+		if (scope == NULL) {
+			PostSyntaxError(node->lex->line, "Node (%s) hasn't scope, its impossible", node->word.data());
+		}
+
+		if ((object = scope->Find(type, name.data())) != NULL) {
+			return object;
+		}
+
+		node = node->parent;
+	}
+
+__ClassNotFound:
+	PostSyntaxError(savedNode->lex->line, "Undeclared class, variable or method (%s)", name.data());
+
+	return NULL;
+}
+
+Void NodePerformer::_DeclareConstant(NodePtr node) {
+
+	GlobalScope globalScope;
+
+	if ((node->var = globalScope->GetTempScope()->Find(node->word))) {
+		return;
+	}
+
+	if (node->lex->lex->id == kScriptLexInt) {
+
+		node->var = globalScope->GetTempScope()->Add(
+			new Variable(node->word, GlobalScope::classInt));
+
+		node->var->GetVariable()->SetInteger(ParseIntValue(node->word.data()))
+			->SetModificator(Class::Modificator::Final);
+	}
+	else if (node->lex->lex->id == kScriptLexFloat) {
+
+		node->var = globalScope->GetTempScope()->Add(
+			new Variable(node->word, GlobalScope::classFloat));
+
+		node->var->GetVariable()->SetFloat(ParseFloatValue(node->word.data()))
+			->SetModificator(Class::Modificator::Final);
+	}
+	else if (node->lex->lex->id == kScriptLexString) {
+
+		node->var = globalScope->GetTempScope()->Add(
+			new Variable(node->word, GlobalScope::classString));
+
+		node->var->GetVariable()->SetString(ParseStringValue(node->word.data()))
+			->SetModificator(Class::Modificator::Final);
+	}
+}
+
+Void NodePerformer::_ForEachNode(NodePtr node, ForEachNode callback, NodeID id) {
+
+	if (id == kScriptNodeUnknown || id != kScriptNodeUnknown && node->id == id) {
+		callback(node);
+	}
+
+	for (NodePtr n : node->argList) {
+		_ForEachNode(n, callback, id);
+	}
+
+	for (NodePtr n : node->blockList) {
+		_ForEachNode(n, callback, id);
+	}
 }
 
 LAME_END2

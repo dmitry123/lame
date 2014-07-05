@@ -2,76 +2,48 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="source">
-      <UniqueIdentifier>{bad10f7a-baa5-4f9e-942b-5e8a28d1f8e2}</UniqueIdentifier>
+      <UniqueIdentifier>{a515a362-390a-4396-97f5-090aed69fa6b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\source\Script\Builder.h">
+    <ClCompile Include="..\..\source\Script\Script.cpp" />
+    <ClCompile Include="..\..\source\Script\Node.cpp">
       <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Script\Define.h">
+    </ClCompile>
+    <ClCompile Include="..\..\source\Script\NodeBuilder.cpp">
       <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Script\Exception.h">
+    </ClCompile>
+    <ClCompile Include="..\..\source\Script\Abstract.cpp">
       <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Script\Internal.h">
+    </ClCompile>
+    <ClCompile Include="..\..\source\Script\Array.cpp">
       <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Script\Parser.h">
+    </ClCompile>
+    <ClCompile Include="..\..\source\Script\Class.cpp">
       <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Script\Script.h">
+    </ClCompile>
+    <ClCompile Include="..\..\source\Script\Define.cpp">
       <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Script\Scope.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Script\ScopeController.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Script\Object.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Script\Class.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Script\Variable.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Script\GlobalScope.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Script\Method.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Script\Error.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Script\Interface.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Script\Abstract.h">
-      <Filter>source</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\source\Script\Builder.cpp">
+    </ClCompile>
+    <ClCompile Include="..\..\source\Script\Error.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\Script\Exception.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\Script\Node.cpp">
+    <ClCompile Include="..\..\source\Script\GlobalScope.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\Script\Parser.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\Script\Variable.cpp">
+    <ClCompile Include="..\..\source\Script\Interface.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\Script\Internal.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Script\Method.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Script\Object.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\Script\Scope.cpp">
@@ -80,32 +52,95 @@
     <ClCompile Include="..\..\source\Script\ScopeController.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\Script\Object.cpp">
+    <ClCompile Include="..\..\source\Script\Segment.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\Script\Script.cpp">
+    <ClCompile Include="..\..\source\Script\SegmentLinker.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\Script\Define.cpp">
+    <ClCompile Include="..\..\source\Script\Variable.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\Script\Class.cpp">
+    <ClCompile Include="..\..\source\Script\FileParser.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\Script\GlobalScope.cpp">
+    <ClCompile Include="..\..\source\Script\Lex.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\Script\Method.cpp">
+    <ClCompile Include="..\..\source\Script\LexNode.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\Script\Error.cpp">
+    <ClCompile Include="..\..\source\Script\Performer.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\Script\Interface.cpp">
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\source\Script\Script.h" />
+    <ClInclude Include="..\..\source\Script\Node.h">
       <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\Script\Abstract.cpp">
+    </ClInclude>
+    <ClInclude Include="..\..\source\Script\NodeBuilder.h">
       <Filter>source</Filter>
-    </ClCompile>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Script\Abstract.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Script\Array.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Script\Class.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Script\Define.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Script\Error.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Script\Exception.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Script\GlobalScope.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Script\Interface.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Script\Internal.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Script\Method.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Script\Object.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Script\Scope.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Script\ScopeController.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Script\Segment.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Script\SegmentLinker.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Script\Variable.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Script\FileParser.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Script\Lex.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Script\LexNode.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Script\Performer.h">
+      <Filter>source</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

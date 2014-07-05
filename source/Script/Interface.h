@@ -2,32 +2,32 @@
 #define __LAME_SCRIPT__INTERFACE__
 
 #include "Object.h"
+#include "Class.h"
 
 LAME_BEGIN2(Script)
 
-class LAME_API ScriptInterface : public ScriptObject {
+class LAME_API Interface : public Class {
 public:
-	ScriptInterface(BufferRefC name) : ScriptObject(name, Type::Interface),
+	Interface(BufferRefC name, NodePtr node = NULL) : Class(name, Type::Interface, node),
 		inheritor(0)
 	{
-		this->EnableScopeController();
 	}
 public:
-	ScriptError Implement(ScriptInterfacePtr object);
+	Error Implement(InterfacePtr object);
 	Void Trace(Uint32 offset) override;
 public:
-	inline Void SetInheritor(ScriptClassPtr inheritor) {
+	inline Void SetInheritor(ClassPtr inheritor) {
 		this->inheritor = inheritor;
 	}
-	inline ScriptClassPtr GetInheritor() {
+	inline ClassPtr GetInheritor() {
 		return this->inheritor;
 	}
-	inline ScriptInterfacePtr GetInterface() {
+	inline InterfacePtr GetInterface() {
 		return this;
 	}
 private:
-	ScriptClassPtr inheritor;
-	Vector<ScriptInterfacePtr> implemented;
+	ClassPtr inheritor;
+	Vector<InterfacePtr> implemented;
 };
 
 LAME_END2

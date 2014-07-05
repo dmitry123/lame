@@ -6,7 +6,7 @@
 #include "Utility.h"
 #include "Timer.h"
 
-LAME_BEGIN
+LAME_BEGIN2(Core)
 
 typedef char FileSignature[LAME_SIGNATURE_MAX];
 typedef char FileName[LAME_FILENAME_MAX];
@@ -97,6 +97,6 @@ List <Buffer> LAME_API FindFilesAtPathWithDeep(StringC path, StringC name, Strin
 List <Buffer> LAME_API FindContainingFilesAtPath(StringC path, StringC name, StringC extensions = LAME_NULL);
 List <Buffer> LAME_API FindContainingFilesAtPathWithDeep(StringC path, StringC name, StringC extensions = LAME_NULL);
 
-LAME_END
+LAME_END2
 
 #endif // ~__LAME_CORE__FILE_SYSTEM__

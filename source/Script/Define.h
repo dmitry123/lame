@@ -17,37 +17,35 @@
 #  define LAME_API
 #endif
 
-#if 0
-#  define printf __noop
-#  define puts __noop
-#endif
+using namespace ::Lame::Core;
+
+/* Core Types */
 
 LAME_BEGIN2(Script)
 
-using namespace Core;
-
-typedef class ScriptError *ScriptErrorPtr, *const ScriptErrorPtrC;
-typedef class ScriptLex *ScriptLexPtr, *const ScriptLexPtrC;
-typedef class ScriptLexNode *ScriptLexNodePtr, *const ScriptLexNodePtrC;
-typedef class ScriptParser *ScriptParserPtr, *const ScriptParserPtrC;
-typedef class ScriptNode *ScriptNodePtr, *const ScriptNodePtrC;
-typedef class ScriptBuilder *ScriptBuilderPtr, *const ScriptBuilderPtrC;
-typedef class ScriptScope *ScriptScopePtr, *const ScriptScopePtrC;
-typedef class ScriptObject *ScriptObjectPtr, *const ScriptObjectPtrC;
-typedef class ScriptClass *ScriptClassPtr, *const ScriptClassPtrC;
-typedef class ScriptAbstract *ScriptAbstractPtr, *const ScriptAbstractPtrC;
-typedef class ScriptInterface *ScriptInterfacePtr, *const ScriptInterfacePtrC;
-typedef class ScriptVar *ScriptVarPtr, *const ScriptVarPtrC;
-typedef class ScriptMethod *ScriptMethodPtr, *const ScriptMethodPtrC;
-typedef class ScriptScope *ScriptScopePtr, *const ScriptScopePtrC;
-typedef class ScriptScopeController *ScriptScopeControllerPtr, *const ScriptScopeControllerPtrC;
+typedef class Lex *LexPtr, *const LexPtrC;
+typedef class LexNode *LexNodePtr, *const LexNodePtrC;
+typedef class FileParser *FileParserPtr, *const FileParserPtrC;
+typedef class Node *NodePtr, *const NodePtrC;
+typedef class NodeBuilder *NodeBuilderPtr, *const NodeBuilderPtrC;
+typedef class NodePerformer *NodePerformerPtr, *const NodePerformerPtrC;
+typedef class Abstract *AbstractPtr, *const AbstractPtrC;
+typedef class Array *ArrayPtr, *const ArrayPtrC;
+typedef class Class *ClassPtr, *const ClassPtrC;
+typedef class Error *ErrorPtr, *const ErrorPtrC;
+typedef class GlobalScope *GlobalScopePtr, *const GlobalScopePtrC;
+typedef class Interface *InterfacePtr, *const InterfacePtrC;
+typedef class Method *MethodPtr, *const MethodPtrC;
+typedef class Object *ObjectPtr, *const ObjectPtrC;
+typedef class Scope *ScopePtr, *const ScopePtrC;
+typedef class ScopeController *ScopeControllerPtr, *const ScopeControllerPtrC;
+typedef class Variable *VariablePtr, *const VariablePtrC;
+typedef class Segment *SegmentPtr, *const SegmentPtrC;
 
 typedef Buffer ScriptNativeString;
 typedef Sint32 ScriptNativeInt;
 typedef Float32 ScriptNativeFloat;
 typedef Bool ScriptNativeBool;
-
-typedef const Buffer& BufferRefC;
 
 LAME_END2
 

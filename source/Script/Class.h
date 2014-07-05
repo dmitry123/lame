@@ -6,76 +6,77 @@
 
 LAME_BEGIN2(Script)
 
-class LAME_API ScriptClass : public ScriptObject {
-	friend class ScriptVar;
-	friend class ScriptAbstract;
+class LAME_API Class : public Object {
+	friend class Variable;
+	friend class Abstract;
+	friend class Interface;
 public:
 	typedef Void(*OperatorCallback)(
-		ScriptVarPtr left,
-		ScriptVarPtr right);
+		VariablePtr left,
+		VariablePtr right);
 public:
 	enum class Operator : Uint32 {
 		Unkown, Add,     Sub,    Mul,    Div,
 		Mod,    Above,   Bellow, Equal,  NotEqual,
 		Move,   ShiftR,  ShiftL, BitAnd, BitOr,
 		BitXor, BellowE, AboveE, And,    Or,
-		Inc,    Dec,     Sizeof, BitNot, Not
+		Inc,    Dec,     Sizeof, BitNot, Not,
+		Cast
 	};
 private:
 	enum {
-		OPERATOR_AMOUNT = 25
+		OPERATOR_AMOUNT = 26
 	};
 private:
-	ScriptClass(BufferRefC name, Type type) : ScriptObject(name, type),
-		extended(0),
-		references(0)
+	Class(BufferRefC name, Type type, NodePtr node = NULL) : Object(name, type, node),
+		extended(0)
 	{
+		this->references = new Uint32(0);
 		this->EnableScopeController();
-		references = new Uint32(1);
 	}
 public:
-	ScriptClass(BufferRefC name) : ScriptObject(name, Type::Class),
-		extended(0),
-		references(0)
+	Class(BufferRefC name, NodePtr node = NULL) : Object(name, Type::Class, node),
+		extended(0)
 	{
+		this->references = new Uint32(0);
 		this->EnableScopeController();
-		references = new Uint32(1);
 	}
 public:
-	~ScriptClass() {
-		if (this->references && !(*this->references)) {
+	~Class() {
+		if (!(*this->references)) {
 			delete this->references;
 		}
 	}
 public:
-	ScriptError Clone(ScriptObjectPtrC object) override;
-	ScriptError Cast(ScriptObjectPtrC object) override;
+	Error Clone(ObjectPtrC object) override;
 	Void Trace(Uint32 offset) override;
+	Void Write(Uint8P buffer, Uint32P offset) override;
 public:
-	inline ScriptVarPtr FindVariable(BufferRefC name) {
-		return (ScriptVarPtr) this->GetScopeController()->GetVarScope()->Find(name);
+	inline VariablePtr FindVariable(BufferRefC name) {
+		return (VariablePtr) this->GetScopeController()->GetVarScope()->Find(name);
 	}
-	inline ScriptVarPtr FindVariable(Uint32 hash) {
-		return (ScriptVarPtr) this->GetScopeController()->GetVarScope()->Find(hash);
+	inline VariablePtr FindVariable(Uint32 hash) {
+		return (VariablePtr) this->GetScopeController()->GetVarScope()->Find(hash);
 	}
-	inline ScriptClassPtr FindClass(BufferRefC name) {
-		return (ScriptClassPtr) this->GetScopeController()->GetClassScope()->Find(name);
+	inline ClassPtr FindClass(BufferRefC name) {
+		return (ClassPtr) this->GetScopeController()->GetClassScope()->Find(name);
 	}
-	inline ScriptClassPtr FindClass(Uint32 hash) {
-		return (ScriptClassPtr) this->GetScopeController()->GetClassScope()->Find(hash);
+	inline ClassPtr FindClass(Uint32 hash) {
+		return (ClassPtr) this->GetScopeController()->GetClassScope()->Find(hash);
 	}
-	inline ScriptMethodPtr FindMethod(BufferRefC name) {
-		return (ScriptMethodPtr) this->GetScopeController()->GetMethodScope()->Find(name);
+	inline MethodPtr FindMethod(BufferRefC name, Uint32 invokeHash = -1) {
+		return (MethodPtr) this->GetScopeController()->GetMethodScope()->Find(name, invokeHash);
 	}
-	inline ScriptMethodPtr FindMethod(Uint32 hash) {
-		return (ScriptMethodPtr) this->GetScopeController()->GetMethodScope()->Find(hash);
+	inline MethodPtr FindMethod(Uint32 hash) {
+		return (MethodPtr) this->GetScopeController()->GetMethodScope()->Find(hash);
 	}
 public:
 	inline Uint32 GetReferences() { return *this->references; }
-	inline ScriptClassPtr GetExtended() { return this->extended; }
-	inline ScriptClassPtr GetClass() { return this; }
+	inline ClassPtr GetExtended() { return this->extended; }
+	inline ClassPtr GetClass() { return this; }
+	inline Vector<InterfacePtr>& GetImplements() { return this->implemented; }
 public:
-	ScriptError New(ScriptObjectPtr object);
+	Error New(ObjectPtr object);
 public:
 	inline Bool DecRef(Void) {
 		return --(*this->references) == 0;
@@ -84,13 +85,14 @@ public:
 		++(*this->references);
 	}
 public:
-	ScriptError Extend(ScriptClassPtr object);
-	ScriptError Implement(ScriptInterfacePtr object);
-	ScriptError Overload(Operator op, OperatorCallback callback);
-	ScriptError Evaluate(Operator op, ScriptObjectPtr left, ScriptObjectPtr right);
+	Error Extend(ClassPtr object);
+	Error Implement(InterfacePtr object);
+	Error Overload(Operator op, OperatorCallback callback);
+	Error Evaluate(Operator op, ObjectPtr left, ObjectPtr right);
+	Void ComputeSizeOf(Void);
 private:
-	ScriptClassPtr extended;
-	Vector<ScriptInterfacePtr> implemented;
+	ClassPtr extended;
+	Vector<InterfacePtr> implemented;
 	Uint32P references;
 	Vector<OperatorCallback> operators;
 };

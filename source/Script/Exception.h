@@ -5,7 +5,7 @@
 
 LAME_BEGIN2(Script)
 
-class LAME_API SyntaxException : public Exception {
+class LAME_API SyntaxException : public ::LAME_NAMESPACE::Core::Exception {
 public:
 	SyntaxException(
 		Uint32 line,
@@ -31,6 +31,9 @@ protected:
 	Uint32 line_;
     Uint32 where_;
 };
+
+typedef ::Lame::Core::Exception ClassInvalidCastException;
+typedef ::Lame::Core::Exception ArrayOutOfBoundsException ;
 
 #define PostSyntaxError(_line, _message, ...) \
 	throw SyntaxException(_line, __LINE__, _message, __VA_ARGS__)

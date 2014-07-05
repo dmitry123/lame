@@ -23,7 +23,7 @@ template <class T> class EventQueue {
 public:
 	typedef Event <T> Proc;
 public:
-	template <class T, typename... Args> Void Invoke(Args... args) {
+	template <typename... Args> Void Invoke(Args... args) {
 		for (Proc p : this->queue_) {
 			p(args...);
 		}

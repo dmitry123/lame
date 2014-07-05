@@ -95,7 +95,6 @@
 #else
 #  define LAME_NAMESPACE
 #  define LAME_BEGIN
-#  define LAME_BEGIN2(Core)
 #  define LAME_END
 #  define LAME_BEGIN2
 #  define LAME_END2

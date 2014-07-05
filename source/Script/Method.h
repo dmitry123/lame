@@ -3,53 +3,67 @@
 
 #include "Object.h"
 #include "Error.h"
+#include "Node.h"
 
 LAME_BEGIN2(Script)
 
-class LAME_API ScriptMethod : public ScriptObject {
-	friend class ScriptClass;
+class LAME_API Method : public Object {
+	friend class Class;
 public:
-	typedef Void(*NativeMethod)(ScriptMethodPtr method);
+	typedef Void(*NativeMethod)(MethodPtr method);
 public:
-	ScriptMethod(
+	Method(
 		BufferRefC methodName,
-		ScriptObjectPtr thisClass,
-		ScriptObjectPtr returnClass,
-		Vector<Uint32> attributes = {});
+		NodePtr node,
+		ObjectPtr thisClass,
+		ObjectPtr returnClass,
+		Vector<ClassPtr> attributes = {});
 public:
-	ScriptClassPtr GetClass() override;
+	ClassPtr GetClass() override;
 public:
-	inline ScriptMethodPtr GetMethod() override {
+	inline MethodPtr GetMethod() override {
 		return this;
 	}
 public:
 	Void Trace(Uint32 offset) override;
+	Uint64 Hash(Void) const override;
 public:
-	ScriptError SetNativeMethod(NativeMethod method);
-	ScriptError Invoke(Vector<ScriptVarPtr> attributes = {});
+	Error SetNativeMethod(NativeMethod method);
+	Error Invoke(NodePerformerPtr performer, Vector<VariablePtr> attributes = {});
+	Bool CompareArguments(MethodPtr method);
 private:
-	Void SetThis(ScriptVarPtr thisClass) {
+	Void SetThis(VariablePtr thisClass) {
 		this->thisClass = thisClass;
 	}
-	Void SetReturnType(ScriptClassPtr returnClass) {
+	Void SetReturnType(ClassPtr returnClass) {
 		this->returnClass = returnClass;
 	}
 public:
-	inline ScriptNodePtr GetRootNode() {
+	inline Void SetRootNode(NodePtr node) {
+		this->rootNode = node;
+	}
+	inline NodePtr GetRootNode() {
 		return this->rootNode;
 	}
-	inline ScriptVarPtr GetThis() {
+	inline VariablePtr GetThis() {
 		return this->thisClass;
 	}
 	inline NativeMethod GetNativeMethod() {
 		return this->nativeMethod;
 	}
+	inline Uint32 GetInvokeHash() {
+		return this->invokeHash;
+	}
+public:
+	static Uint32 ComputeInvokeHash(Vector<ClassPtr>& classList);
+	static Uint32 ComputeInvokeHash(Vector<VariablePtr>& classList);
 private:
-	Vector<Uint32> attributesHash;
-	ScriptClassPtr returnClass;
-	ScriptVarPtr thisClass;
+	Vector<ClassPtr> attributesHash;
+	ClassPtr returnClass;
+	VariablePtr thisClass;
 	NativeMethod nativeMethod;
-	ScriptNodePtr rootNode;
+	NodePtr rootNode;
+	Uint32 invokeHash;
 };
 
 LAME_END2

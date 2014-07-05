@@ -1,47 +1,72 @@
-#ifndef __LAME_SCRIPT__PERFORMER__
-#define __LAME_SCRIPT__PERFORMER__
+#ifndef __LAME_SCRIPT__PERFORMER_PERFORMER__
+#define __LAME_SCRIPT__PERFORMER_PERFORMER__
 
-#include "Define.h"
-#include "Exception.h"
-#include "Builder.h"
+#include "NodeBuilder.h"
+#include "Object.h"
 
 LAME_BEGIN2(Script)
 
-class LAME_API ScriptPerformer {
+class LAME_API NodePerformer {
 public:
-	Void Evaluate(ScriptBuilderPtr builder);
-	Void Trace(Void);
-private:
-	Void _Trace(ScriptNodePtr node);
-	Void _Declare(ScriptNodePtr node);
-	ScriptVarPtr _Find(BufferRefC name, ScriptNodePtr node);
-	Void _RegisterConstant(ScriptNodePtr node);
-	Void _Evaluate(Vector<ScriptNodePtr>* list);
-	Void _Evaluate(Vector<ScriptNodePtr>* list, Vector<ScriptNodePtr>* result);
-    Void _EvaluateNew(ScriptNodePtr node, ScriptNodePtr left, ScriptVarPtr var);
-    Void _EvaluateSingle(ScriptNodePtr node, ScriptNodePtr left);
-    Void _EvaluateReturn(ScriptNodePtr node, ScriptNodePtr left);
-	ScriptNodePtr _InvokeMethod(ScriptNodePtr node, ScriptNodePtr expNode, ScriptNodePtr invokeNode, ScriptNodePtr left);
-	ScriptNodePtr _CreateTemp(ScriptVarPtr var);
-	ScriptNodePtr _CreateTemp(ScriptNodePtr node);
-	Void _EvaluateCondition(ScriptNodePtr node);
+	typedef Void(*ForEachNode)(NodePtr node);
+public:
+	typedef       Vector<NodePtr>  NodeList;
+	typedef       Vector<NodePtr>& NodeListRef;
+	typedef const Vector<NodePtr>& NodeListRefC;
+	typedef       Vector<ObjectPtr>  VarList;
+	typedef       Vector<ObjectPtr>& VarListRef;
+	typedef const Vector<ObjectPtr>& VarListRefC;
+public:
+	NodePerformer() :
+		builder(0)
+	{
+	}
+public:
+	~NodePerformer() {
+	}
+public:
+	Void Perform(NodeBuilderPtr builder);
+	Bool Evaluate(NodeListRef nodeList);
+public:
+	static inline ObjectPtr FindClass(NodePtr node, BufferRefC name) {
+		return _Find(Object::Type::Class, node, name);
+	}
+	static inline ObjectPtr FindVariable(NodePtr node, BufferRefC name) {
+		return _Find(Object::Type::Variable, node, name);
+	}
 private:
 	typedef struct {
-		ScriptNode node;
-		ScriptVar var;
-	} Temp;
+		NodePtr node;
+		ObjectPtr var;
+	} VarNode, *VarNodePtr;
 private:
-	Vector<Buffer> cmdList_;
-	List<Temp> tempList_;
-	ScriptBuilderPtr builder_;
-	ScriptManager manager_;
-	Uint32 traceDepth_ = 0;
-	Vector<ScriptVarPtr> varList_;
-	Vector<ScriptVarPtr> newList_;
-public:
-	~ScriptPerformer();
+	Void _EvaluateNew(NodePtr node);
+	Void _EvaluateExpression0(NodePtr node);
+	Void _EvaluateExpression1(NodePtr node);
+	Void _EvaluateExpression2(NodePtr node);
+	Void _ForEachNode(ForEachNode callback, NodeID id = kScriptNodeUnknown);
+	Void _ReadArguments(NodePtr node);
+private:
+	static Void _ForEachClassPrototype(NodePtr n);
+	static Void _ForEachInterfacePrototype(NodePtr n);
+	static Void _ForEachClassDeclare(NodePtr n);
+	static Void _ForEachInterfaceDeclare(NodePtr n);
+	static Void _ForEachClassInherit(NodePtr n);
+	static Void _ForEachInterfaceInherit(NodePtr n);
+	static Void _ForEachConstDeclare(NodePtr n);
+	static Void _ForEachVariableDeclare(NodePtr n);
+private:
+	static ObjectPtr _Find(Object::Type type, NodePtr node, BufferRefC name);
+	static Void _DeclareConstant(NodePtr node);
+	static Void _ForEachNode(NodePtr node, ForEachNode callback, NodeID id = kScriptNodeUnknown);
+private:
+	Vector<VarNode> nodeStack;
+	NodeBuilderPtr builder;
+	Vector<VarNode> argsArray;
+	Uint32 methodHash;
 };
+
 
 LAME_END2
 
-#endif // ~__LAME_SCRIPT__PERFORMER__
+#endif // ~__LAME_SCRIPT__PERFORMER_PERFORMER__
