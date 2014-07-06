@@ -72,6 +72,14 @@ Map<LexID, Lex> Lex::lexMap = {
 			{ "--", P(2, 0), kScriptLexDecrement, 1,
 				kScriptLexFlagLeft | kScriptLexFlagMath }
 		},
+		{ kScriptLexPrefixIncrement,
+			{ "++", P(3, 1), kScriptLexPrefixIncrement, 1,
+				kScriptLexFlagLeft | kScriptLexFlagMath }
+		},
+		{ kScriptLexPrefixDecrement,
+			{ "--", P(3, 1), kScriptLexPrefixDecrement, 1,
+				kScriptLexFlagLeft | kScriptLexFlagMath }
+		},
 		{ kScriptLexSizeof,
 			{ "sizeof", P(3, 0), kScriptLexSizeof, 1,
 				kScriptLexFlagRight }
@@ -89,11 +97,11 @@ Map<LexID, Lex> Lex::lexMap = {
 				kScriptLexFlagRight | kScriptLexFlagMath }
 		},
 		{ kScriptLexUnaryMinus,
-			{ "/-", P(3, 1), kScriptLexUnaryMinus, 1,
+			{ "#", P(3, 1), kScriptLexUnaryMinus, 1,
 				kScriptLexFlagRight | kScriptLexFlagMath }
 		},
 		{ kScriptLexUnaryPlus,
-			{ "/+", P(3, 1), kScriptLexUnaryPlus, 1,
+			{ "#", P(3, 1), kScriptLexUnaryPlus, 1,
 				kScriptLexFlagRight | kScriptLexFlagMath }	
 		},
 		{ kScriptLexNew,

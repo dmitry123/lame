@@ -82,9 +82,15 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\source\VirtualMachine\Assembler.h" />
+    <ClInclude Include="..\..\source\VirtualMachine\ByteCodePrinter.h" />
+    <ClInclude Include="..\..\source\VirtualMachine\Define.h" />
     <ClInclude Include="..\..\source\VirtualMachine\VirtualMachine.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\source\VirtualMachine\Assembler.cpp" />
+    <ClCompile Include="..\..\source\VirtualMachine\ByteCodePrinter.cpp" />
+    <ClCompile Include="..\..\source\VirtualMachine\Define.cpp" />
     <ClCompile Include="..\..\source\VirtualMachine\VirtualMachine.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

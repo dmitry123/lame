@@ -25,6 +25,8 @@ typedef enum {
 	// single-argument
 	kScriptLexIncrement,
 	kScriptLexDecrement,
+	kScriptLexPrefixIncrement,
+	kScriptLexPrefixDecrement,
 	kScriptLexSizeof,
 	kScriptLexReturn,
 	kScriptLexBitNot,

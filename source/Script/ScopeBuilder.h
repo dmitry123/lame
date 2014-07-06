@@ -21,6 +21,7 @@ private:
 	static Void _ForEachInterfaceInherit(NodePtr n);
 	static Void _ForEachConstDeclare(NodePtr n);
 	static Void _ForEachVariableDeclare(NodePtr n);
+	static Void _ForEachVariableRegister(NodePtr n);
 private:
 	static ObjectPtr _FindClass(NodePtr node, BufferRefC name);
 	static ObjectPtr _FindVariable(NodePtr node, BufferRefC name);

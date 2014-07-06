@@ -72,7 +72,7 @@ public:
 	inline virtual ArrayPtr GetArray() { return NULL; }
 public:
 	ObjectPtr SetModificator(Modificator modificator, Bool state = TRUE);
-	Void SetSegment(SegmentPtr segment, Uint32 address, Uint32 size);
+	Void SetSegment(SegmentPtr segment, Uint32P address, Uint32 size);
 	Void PrintModificators(Void);
 public:
 	inline Void SetSizeOf(Uint32 sizeOf) {
@@ -98,6 +98,8 @@ public:
 	inline Uint32 GetSizeOf() const { return this->sizeOf_; }
 	inline NodePtr GetNode() const { return this->node; }
 	inline SegmentPtr GetSegment() const { return this->segment_; }
+	inline Uint32 GetAddress() const { return *this->address_; }
+	inline Uint32 GetSize() const { return this->size_; }
 public:
 	inline ScopeControllerPtr GetScopeController() {
 		return scopeController_;
@@ -115,7 +117,7 @@ private:
 	Bool isScopeControllerEnabled_;
 	Uint32 countOfArguments_;
 	SegmentPtr segment_;
-	Uint32 address_;
+	Uint32P address_;
 	Uint32 size_;
 };
 

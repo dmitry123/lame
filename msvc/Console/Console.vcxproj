@@ -92,6 +92,9 @@
     <ProjectReference Include="..\Script\Script.vcxproj">
       <Project>{9847b55a-6304-4111-a214-caceb4df9b4c}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\VirtualMachine\VirtualMachine.vcxproj">
+      <Project>{a6933c80-d4b7-4e85-9e91-4e87864306bb}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

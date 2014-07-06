@@ -32,8 +32,8 @@ protected:
     Uint32 where_;
 };
 
-typedef ::Lame::Core::Exception ClassInvalidCastException;
-typedef ::Lame::Core::Exception ArrayOutOfBoundsException ;
+class ClassInvalidCastException {};
+class ArrayOutOfBoundsException {};
 
 #define PostSyntaxError(_line, _message, ...) \
 	throw SyntaxException(_line, __LINE__, _message, __VA_ARGS__)

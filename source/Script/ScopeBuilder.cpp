@@ -69,8 +69,7 @@ Void ScopeBuilder::Build(NodeBuilderPtr nodeBuilder, ScopeControllerPtr scopeCon
 	this->_ForEachNode(rootNode, [](NodePtr n) {
 		if (n->lex->args && n->lex->args != n->lex->lex->args) {
 			printf("%s(%d) ", n->word.data(), n->lex->args);
-		}
-		else {
+		} else {
 			printf("%s ", n->word.data());
 		}
 	}, kScriptNodeUnknown);
@@ -83,6 +82,7 @@ Void ScopeBuilder::Build(NodeBuilderPtr nodeBuilder, ScopeControllerPtr scopeCon
 	this->_ForEachNode(rootNode, _ForEachVariableDeclare, kScriptNodeVariable);
 	this->_ForEachNode(rootNode, _ForEachClassInherit, kScriptNodeClass);
 	this->_ForEachNode(rootNode, _ForEachInterfaceInherit, kScriptNodeInterface);
+	this->_ForEachNode(rootNode, _ForEachVariableRegister, kScriptNodeDefault);
 
 	this->_ForEachNode(rootNode, [](NodePtr n) {
 		if (n->var) {
@@ -343,6 +343,18 @@ Void ScopeBuilder::_ForEachVariableDeclare(NodePtr n) {
 
 	if (!n->var) {
 		PostSyntaxError(n->lex->line, "Variable redeclaration (%s)", n->word.data());
+	}
+}
+
+Void ScopeBuilder::_ForEachVariableRegister(NodePtr n) {
+
+	if (!n->var && n->lex->lex->id == kScriptLexDefault) {
+
+		n->var = _FindVariable(n->parent, n->word);
+
+		if (!n->var) {
+			PostSyntaxError(n->lex->line, "Undeclared variable (%s)", n->word.data());
+		}
 	}
 }
 

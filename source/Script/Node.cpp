@@ -41,6 +41,7 @@ public:
 						this->resultStack.push(top);
 						this->opStack.pop();
 					}
+					this->resultStack.push(node);
 				}
 				else if (
 					node->lex->lex->id == kScriptLexParentheseL ||

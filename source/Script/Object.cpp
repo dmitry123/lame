@@ -14,6 +14,7 @@ Object::Object(Object& object) : Object(object.name, object.type, object.GetNode
 	}
 
 	this->countOfArguments_ = 0;
+	this->size_ = 0;
 }
 
 Object::~Object() {
@@ -55,7 +56,7 @@ ObjectPtr Object::SetModificator(Modificator modificator, Bool state) {
 	return this;
 }
 
-Void Object::SetSegment(SegmentPtr segment, Uint32 address, Uint32 size) {
+Void Object::SetSegment(SegmentPtr segment, Uint32P address, Uint32 size) {
 
 	this->address_ = address;
 	this->size_ = size;

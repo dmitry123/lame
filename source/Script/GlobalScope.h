@@ -18,12 +18,16 @@ public:
     }
 public:
 	inline static ScopeControllerPtr GetInstance() {
-
 		if (!isGlobalScopeInitialized_) {
 			_InitializeGlobalScope();
 		}
-
 		return globalScope_;
+	}
+	inline static SegmentPtr GetCodeSegment() {
+		return codeSegment_;
+	}
+	inline static Void SetCodeSegment(SegmentPtr codeSegment) {
+		codeSegment_ = codeSegment;
 	}
 public:
     static ClassPtr classChar;
@@ -66,9 +70,6 @@ public:
 	static VariablePtr f7;
 	static VariablePtr f8;
 	static VariablePtr f9;
-public:
-	static Vector<VariablePtr> rList;
-	static Vector<VariablePtr> fList;
 private:
     static Void _InitializeGlobalScope(Void);
     static Void _InitializeCharClass(Void);
@@ -86,6 +87,7 @@ private:
 private:
     static Bool isGlobalScopeInitialized_;
 	static ScopeControllerPtr globalScope_;
+	static SegmentPtr codeSegment_;
 };
 
 LAME_END2

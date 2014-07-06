@@ -11,184 +11,6 @@
 
 LAME_BEGIN2(Script)
 
-Void DeclareIntOperators(ClassPtr intClass) {
-
-	intClass->Overload(Class::Operator::Move, [](VariablePtr left, VariablePtr right) {
-		if (left->CheckType(Class::Type::Variable)) {
-			left->v.intValue = right->v.intValue;
-		} else {
-			right->Clone(left);
-		}
-	});
-
-	intClass->Overload(Class::Operator::Add, [](VariablePtr left, VariablePtr right) {
-		left->v.intValue += right->v.intValue;
-	});
-
-	//OVERLOAD(Add, intClass, {
-	//	left->v.intValue += right->v.intValue;
-	//});
-
-	OVERLOAD(Sub, intClass, {
-		left->v.intValue -= right->v.intValue;
-	});
-
-	OVERLOAD(Mul, intClass, {
-		left->v.intValue *= right->v.intValue;
-	});
-
-	OVERLOAD(Div, intClass, {
-		left->v.intValue /= right->v.intValue;
-	});
-
-	OVERLOAD(Mod, intClass, {
-		left->v.intValue %= right->v.intValue;
-	});
-
-	OVERLOAD(ShiftL, intClass, {
-		left->v.intValue <<= right->v.intValue;
-	});
-
-	OVERLOAD(ShiftR, intClass, {
-		left->v.intValue >>= right->v.intValue;
-	});
-
-	OVERLOAD(Above, intClass, {
-		left->v.intValue = left->v.intValue > right->v.intValue;
-	});
-
-	OVERLOAD(Bellow, intClass, {
-		left->v.intValue = left->v.intValue <= right->v.intValue;
-	});
-
-	OVERLOAD(AboveE, intClass, {
-		left->v.intValue = left->v.intValue >= right->v.intValue;
-	});
-
-	OVERLOAD(BellowE, intClass, {
-		left->v.intValue = left->v.intValue <= right->v.intValue;
-	});
-
-	OVERLOAD(Equal, intClass, {
-		left->v.intValue = left->v.intValue == right->v.intValue;
-	});
-
-	OVERLOAD(NotEqual, intClass, {
-		left->v.intValue = left->v.intValue != right->v.intValue;
-	});
-
-	OVERLOAD(And, intClass, {
-		left->v.intValue = left->v.intValue && right->v.intValue;
-	});
-
-	OVERLOAD(Or, intClass, {
-		left->v.intValue = left->v.intValue || right->v.intValue;
-	});
-
-	OVERLOAD(BitAnd, intClass, {
-		left->v.intValue = left->v.intValue & right->v.intValue;
-	});
-
-	OVERLOAD(BitOr, intClass, {
-		left->v.intValue = left->v.intValue | right->v.intValue;
-	});
-
-	OVERLOAD(BitXor, intClass, {
-		left->v.intValue = left->v.intValue ^ right->v.intValue;
-	});
-
-	OVERLOAD(Inc, intClass, {
-		++left->v.intValue;
-	});
-
-	OVERLOAD(Dec, intClass, {
-		--left->v.intValue;
-	});
-
-	OVERLOAD(Sizeof, intClass, {
-		left->v.intValue = left->GetClass()->GetSizeOf();
-	});
-
-	OVERLOAD(BitNot, intClass, {
-		left->v.intValue = ~left->v.intValue;
-	});
-
-	OVERLOAD(Not, intClass, {
-		left->v.intValue = !left->v.intValue;
-	});
-
-	OVERLOAD(Cast, intClass, {
-		left->SetInteger(left->GetInteger());
-	});
-}
-
-Void DeclareFloatOperators(ClassPtr floatClass) {
-    
-	OVERLOAD(Move, floatClass, {
-		left->v.floatValue = right->v.floatValue;
-	});
-
-	OVERLOAD(Add, floatClass, {
-		left->v.floatValue += right->v.floatValue;
-	});
-
-	OVERLOAD(Sub, floatClass, {
-		left->v.floatValue -= right->v.floatValue;
-	});
-
-	OVERLOAD(Mul, floatClass, {
-		left->v.floatValue *= right->v.floatValue;
-	});
-
-	OVERLOAD(Div, floatClass, {
-		left->v.floatValue /= right->v.floatValue;
-	});
-
-	OVERLOAD(Above, floatClass, {
-		left->v.intValue = left->v.floatValue > right->v.floatValue;
-	});
-
-	OVERLOAD(Bellow, floatClass, {
-		left->v.intValue = left->v.floatValue < right->v.floatValue;
-	});
-
-	OVERLOAD(AboveE, floatClass, {
-		left->v.intValue = left->v.floatValue >= right->v.floatValue;
-	});
-
-	OVERLOAD(BellowE, floatClass, {
-		left->v.intValue = left->v.floatValue <= right->v.floatValue;
-	});
-
-	OVERLOAD(Equal, floatClass, {
-		left->v.intValue = left->v.floatValue == right->v.floatValue;
-	});
-
-	OVERLOAD(NotEqual, floatClass, {
-		left->v.intValue = left->v.floatValue != right->v.floatValue;
-	});
-
-	OVERLOAD(And, floatClass, {
-		left->v.intValue = left->v.floatValue && right->v.floatValue;
-	});
-
-	OVERLOAD(Or, floatClass, {
-		left->v.intValue = left->v.floatValue || right->v.floatValue;
-	});
-
-	OVERLOAD(Or, floatClass, {
-		left->v.intValue = left->GetClass()->GetSizeOf();
-	});
-
-	OVERLOAD(Or, floatClass, {
-		left->v.floatValue = !left->v.floatValue;
-	});
-
-	OVERLOAD(Cast, floatClass, {
-		left->SetFloat(left->GetFloat());
-	});
-}
-
 ObjectPtr DeclareInt(StringC intName, Uint32 sizeOf) {
     
 	ObjectPtr intClass = GlobalScope()->GetClassScope()->Add(new Class(intName))
@@ -197,7 +19,6 @@ ObjectPtr DeclareInt(StringC intName, Uint32 sizeOf) {
         ->SetModificator(Class::Modificator::Public)
         ->SetModificator(Class::Modificator::Primitive);
     
-	DeclareIntOperators(intClass->GetClass());
 	intClass->SetSizeOf(sizeOf);
     
 	return intClass;
@@ -211,7 +32,6 @@ ObjectPtr DeclareFloat(StringC floatName, Uint32 sizeOf) {
         ->SetModificator(Class::Modificator::Public)
         ->SetModificator(Class::Modificator::Primitive);
     
-	DeclareFloatOperators(floatClass->GetClass());
 	floatClass->SetSizeOf(sizeOf);
     
 	return floatClass;
@@ -221,7 +41,7 @@ Void GlobalScope::_InitializeGlobalScope(Void) {
     
     isGlobalScopeInitialized_ = TRUE;
     
-	/* Initrialize Global Scope & Language Classes */
+	/* Initialize Global Scope & Language Classes */
 
 	_InitializeCharClass();
 	_InitializeByteClass();
@@ -235,7 +55,7 @@ Void GlobalScope::_InitializeGlobalScope(Void) {
 	_InitializeStringClass();
 	_InitializeObjectClass();
 	_InitializeClassClass();
-	
+
 	/* Base Registers */
 
 	r0 = globalScope_->GetVarScope()->Add(new Variable("r0", classInt))
@@ -299,30 +119,6 @@ Void GlobalScope::_InitializeGlobalScope(Void) {
 
 	f9 = globalScope_->GetVarScope()->Add(new Variable("f9", classFloat))
 		->SetModificator(Class::Modificator::Register)->GetVariable();
-
-	/* Lists with Registers */
-
-	rList.push_back(r0);
-	rList.push_back(r1);
-	rList.push_back(r2);
-	rList.push_back(r3);
-	rList.push_back(r4);
-	rList.push_back(r5);
-	rList.push_back(r6);
-	rList.push_back(r7);
-	rList.push_back(r8);
-	rList.push_back(r9);
-
-	fList.push_back(f0);
-	fList.push_back(f1);
-	fList.push_back(f2);
-	fList.push_back(f3);
-	fList.push_back(f4);
-	fList.push_back(f5);
-	fList.push_back(f6);
-	fList.push_back(f7);
-	fList.push_back(f8);
-	fList.push_back(f9);
 }
 
 Void GlobalScope::_InitializeCharClass(Void) {
@@ -369,7 +165,7 @@ Void GlobalScope::_InitializeObjectClass(Void) {
 		->Add(new Method("toString", NULL, classObject, classString));
 
 	toString->GetMethod()->SetNativeMethod([](MethodPtr m){
-		r9->GetVariable()->SetString(m->GetThis()->GetName());
+		//r9->GetVariable()->SetString(m->GetThis()->GetName());
 	});
 
 	OVERLOAD(Move, classObject, {
@@ -472,15 +268,13 @@ VariablePtr GlobalScope::f7 = NULL;
 VariablePtr GlobalScope::f8 = NULL;
 VariablePtr GlobalScope::f9 = NULL;
 
-Vector<VariablePtr> GlobalScope::rList;
-Vector<VariablePtr> GlobalScope::fList;
-
 Bool GlobalScope::isGlobalScopeInitialized_
-    = FALSE;
+	= FALSE;
 
 ScopeControllerPtr GlobalScope::globalScope_
 	= new ScopeController();
 
+SegmentPtr GlobalScope::codeSegment_;
 static GlobalScope globalScope;
 
 LAME_END2

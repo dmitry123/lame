@@ -32,10 +32,11 @@ Void Segment::Write(VoidP block, Uint32 size) {
 
 	memcpy(this->data + this->position, block, size);
 
+	this->lastSize = size;
 	this->position += size;
 }
 
-Uint32 Segment::Write(VariablePtr var) {
+Uint32P Segment::Write(VariablePtr var) {
 
 	VoidP copyBuffer = 0;
 	Uint32 bufferSize = 0;
@@ -65,10 +66,10 @@ Uint32 Segment::Write(VariablePtr var) {
 		this->position += bufferSize;
 	}
 
-	return bufferSize;
+	return &this->history.back().offset;
 }
 
-Uint32 Segment::Write(MethodPtr method) {
+Uint32P Segment::Write(MethodPtr method) {
 
 	this->history.push_back({ method->GetName().data(),
 		position, Object::SizeOf, &ZeroByte32
@@ -76,7 +77,7 @@ Uint32 Segment::Write(MethodPtr method) {
 
 	this->Write(&ZeroByte32, Object::SizeOf);
 
-	return Object::SizeOf;
+	return &this->history.back().offset;
 }
 
 Void Segment::Trace(Uint32 columns) {
@@ -87,7 +88,7 @@ Void Segment::Trace(Uint32 columns) {
 		return;
 	}
 
-	puts("\n-----------------------------");
+	puts("-----------------------------");
 	printf("| Segment \"%s\" : %d bytes |", this->name.data(), this->size);
 	puts("\n-----------------------------");
 	printf("| name   | address  | size  |");
@@ -147,7 +148,7 @@ Void Segment::Trace(Uint32 columns) {
 		printf("%.2X ", Uint8P(this->data)[i]);
 	}
 
-	puts("\n-----------------------------\n");
+	puts("\n-----------------------------");
 }
 
 Void Segment::Allocate(Uint32 size) {
@@ -177,6 +178,10 @@ Void Segment::Grow(Uint32 size) {
 
 Void Segment::Flush(Void) {
 	this->size = this->position;
+}
+
+Uint8P Segment::GetBlockAt(Uint32 offset) {
+	return this->data + offset;
 }
 
 LAME_END2

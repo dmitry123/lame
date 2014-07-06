@@ -26,8 +26,11 @@ public:
 		Uint32 nameLength;
 	} SegmentInfo;
 public:
-	Vector<SegmentPtr>& GetSegmentList() {
+	inline Vector<SegmentPtr>& GetSegmentList() {
 		return this->segmentList;
+	}
+	inline Uint32 GetPosition() {
+		return this->position;
 	}
 private:
 	Uint32 position;

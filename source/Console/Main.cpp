@@ -11,7 +11,7 @@ int main(int argc, char** argv) {
 #ifdef LAME_VLD
 	puts("");
 #endif
-    
+
 	StringC fileName;
 	Clock time;
 	ScopeControllerPtr g;
@@ -62,9 +62,18 @@ _AvoidTrace:
 		segmentLinker.Add(
 			segmentBuilder.BuildCodeSegment());
 
+		GlobalScope::SetCodeSegment(
+			segmentBuilder.GetCodeSegment());
+
+		segmentBuilder.GetCodeSegment()->SetOffset(
+			segmentLinker.GetPosition());
+
+		VirtualMachine::ByteCodePrinter::GetInstance()
+			->SetPosition(segmentLinker.GetPosition());
+
 		nodePerformer.Perform(&nodeBuilder);
 
-		segmentBuilder.GetDataSegment()->Trace();
+		//segmentBuilder.GetDataSegment()->Trace();
 		segmentBuilder.GetTextSegment()->Trace();
 		//segmentBuilder.GetCodeSegment()->Trace();
 
