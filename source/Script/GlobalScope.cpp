@@ -56,6 +56,19 @@ Void GlobalScope::_InitializeGlobalScope(Void) {
 	_InitializeObjectClass();
 	_InitializeClassClass();
 
+	classBoolean->SetPriority(0);
+	classChar->SetPriority(1);
+	classByte->SetPriority(2);
+	classShort->SetPriority(3);
+	classInt->SetPriority(4);
+	classLong->SetPriority(5);
+	classFloat->SetPriority(6);
+	classDouble->SetPriority(7);
+	classString->SetPriority(8);
+	classObject->SetPriority(0);
+	classClass->SetPriority(0);
+	classVoid->SetPriority(0);
+
 	/* Base Registers */
 
 	r0 = globalScope_->GetVarScope()->Add(new Variable("r0", classInt))
@@ -166,32 +179,6 @@ Void GlobalScope::_InitializeObjectClass(Void) {
 
 	toString->GetMethod()->SetNativeMethod([](MethodPtr m){
 		//r9->GetVariable()->SetString(m->GetThis()->GetName());
-	});
-
-	OVERLOAD(Move, classObject, {
-		right->Clone(left);
-	});
-
-	classObject->Overload(Class::Operator::Cast, [](VariablePtr left, VariablePtr right) {
-
-		if (right->GetClass() == left->GetClass()) {
-			goto __AllowCast;
-		}
-
-		if (left->GetClass()->GetExtended() == right->GetClass()) {
-			goto __AllowCast;
-		}
-
-		for (InterfacePtr i : left->GetClass()->GetImplements()) {
-			if (right->GetClass() == i->GetClass()) {
-				goto __AllowCast;
-			}
-		}
-
-		throw ClassInvalidCastException();
-
-	__AllowCast:
-		;
 	});
 }
 

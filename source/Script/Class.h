@@ -29,14 +29,16 @@ private:
 	};
 private:
 	Class(BufferRefC name, Type type, NodePtr node = NULL) : Object(name, type, node),
-		extended(0)
+		extended(0),
+		priority(0)
 	{
 		this->references = new Uint32(0);
 		this->EnableScopeController();
 	}
 public:
 	Class(BufferRefC name, NodePtr node = NULL) : Object(name, Type::Class, node),
-		extended(0)
+		extended(0),
+		priority(0)
 	{
 		this->references = new Uint32(0);
 		this->EnableScopeController();
@@ -83,17 +85,21 @@ public:
 	inline Void IncRef(Void) {
 		++(*this->references);
 	}
+	inline Void SetPriority(Uint32 priority) {
+		this->priority = priority;
+	}
 public:
 	Error Extend(ClassPtr object);
 	Error Implement(InterfacePtr object);
 	Error Overload(Operator op, OperatorCallback callback);
-	Error Evaluate(Operator op, ObjectPtr left, ObjectPtr right);
+	Error Evaluate(Operator op, ObjectPtr left, ObjectPtr right, LexPtrC lex);
 	Void ComputeSizeOf(Void);
 private:
 	ClassPtr extended;
 	Vector<InterfacePtr> implemented;
 	Uint32P references;
 	Vector<OperatorCallback> operators;
+	Uint32 priority;
 };
 
 LAME_END2

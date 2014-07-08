@@ -53,6 +53,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;SCRIPT_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -101,7 +102,6 @@
     <ClCompile Include="..\..\source\Script\Node.cpp" />
     <ClCompile Include="..\..\source\Script\Object.cpp" />
     <ClCompile Include="..\..\source\Script\FileParser.cpp" />
-    <ClCompile Include="..\..\source\Script\Translator.cpp" />
     <ClCompile Include="..\..\source\Script\Scope.cpp" />
     <ClCompile Include="..\..\source\Script\ScopeBuilder.cpp" />
     <ClCompile Include="..\..\source\Script\ScopeController.cpp" />
@@ -128,7 +128,6 @@
     <ClInclude Include="..\..\source\Script\Node.h" />
     <ClInclude Include="..\..\source\Script\Object.h" />
     <ClInclude Include="..\..\source\Script\FileParser.h" />
-    <ClInclude Include="..\..\source\Script\Translator.h" />
     <ClInclude Include="..\..\source\Script\Scope.h" />
     <ClInclude Include="..\..\source\Script\ScopeBuilder.h" />
     <ClInclude Include="..\..\source\Script\ScopeController.h" />

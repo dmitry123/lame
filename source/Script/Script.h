@@ -16,7 +16,6 @@
 #include "Node.h"
 #include "NodeBuilder.h"
 #include "Object.h"
-#include "Translator.h"
 #include "Scope.h"
 #include "ScopeController.h"
 #include "ScopeBuilder.h"

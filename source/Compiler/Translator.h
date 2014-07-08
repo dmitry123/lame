@@ -1,10 +1,11 @@
 #ifndef __LAME_SCRIPT__PERFORMER_PERFORMER__
 #define __LAME_SCRIPT__PERFORMER_PERFORMER__
 
-#include "NodeBuilder.h"
-#include "Object.h"
+#include "Define.h"
 
-LAME_BEGIN2(Script)
+LAME_BEGIN2(Compiler)
+
+using namespace Script;
 
 class LAME_API NodePerformer {
 public:
@@ -25,6 +26,7 @@ public:
 	~NodePerformer() {
 	}
 public:
+	Void Overload(Void);
 	Void Perform(NodeBuilderPtr builder);
 	Bool Evaluate(NodeListRef nodeList);
 private:
@@ -33,10 +35,11 @@ private:
 		ObjectPtr var;
 	} VarNode, *VarNodePtr;
 private:
-	Void _EvaluateNew(NodePtr node);
-	Void _EvaluateExpression0(NodePtr node);
-	Void _EvaluateExpression1(NodePtr node);
-	Void _EvaluateExpression2(NodePtr node);
+	Void _TranslateNew(NodePtr node);
+	Void _TranslateCondition(NodePtr node);
+	Void _Translate0(NodePtr node);
+	Void _Translate1(NodePtr node);
+	Void _Translate2(NodePtr node);
 	Void _ReadArguments(NodePtr node);
 private:
 	Vector<VarNode> nodeStack;

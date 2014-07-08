@@ -1,12 +1,13 @@
 #include "Object.h"
 #include "ScopeController.h"
+#include "Segment.h"
 
 LAME_BEGIN2(Script)
 
 Object::Object(Object& object) : Object(object.name, object.type, object.GetNode()) {
 
 	this->modificators_ = object.modificators_;
-	this->sizeOf_ = object.modificators_;
+	this->sizeOf_ = object.sizeOf_;
 
 	if (object.scopeController_) {
 		this->EnableScopeController();
@@ -56,10 +57,10 @@ ObjectPtr Object::SetModificator(Modificator modificator, Bool state) {
 	return this;
 }
 
-Void Object::SetSegment(SegmentPtr segment, Uint32P address, Uint32 size) {
+Void Object::SetSegment(SegmentPtr segment, Uint32P address) {
 
 	this->address_ = address;
-	this->size_ = size;
+	this->size_ = segment->GetLastSize();;
 	this->segment_ = segment;
 }
 

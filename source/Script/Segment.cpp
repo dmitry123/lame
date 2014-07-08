@@ -11,6 +11,7 @@ Segment::Segment(StringC name) :
 {
 	this->size = 0;
 	this->data = 0;
+	this->lastSize = 0;
 }
 
 Segment::~Segment(Void) {

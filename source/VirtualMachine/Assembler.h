@@ -72,7 +72,8 @@ enum Asm {
 	FRND = 0x41,
 	TEST = 0x42,
 	FTST = 0x43,
-	INT = 0x44
+	INT = 0x44,
+	JCMP = 0x45
 };
 
 typedef Void(*AsmProc0)(Void);

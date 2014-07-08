@@ -16,7 +16,7 @@ SegmentPtr SegmentBuilder::BuildDataSegment(Void) {
 	this->dataSegment->Allocate();
 
 	_ForEachScopeObject([](SegmentPtr segment, VariablePtr object) {
-		object->SetSegment(segment, segment->Write(object), segment->GetLastSize());
+		object->SetSegment(segment, segment->Write(object));
 	}, this->dataSegment, NULL);
 
 	this->dataSegment->Flush();
@@ -38,7 +38,7 @@ SegmentPtr SegmentBuilder::BuildCodeSegment(Void) {
 	this->codeSegment->Allocate();
 
 	_ForEachScopeMethod([](SegmentPtr segment, MethodPtr object) {
-		object->SetSegment(segment, segment->Write(object), segment->GetLastSize());
+		object->SetSegment(segment, segment->Write(object));
 	}, this->codeSegment, NULL);
 
 	this->codeSegment->Flush();
@@ -58,7 +58,7 @@ SegmentPtr SegmentBuilder::BuildTextSegment(Void) {
 	this->textSegment->Allocate();
 
 	_ForEachScopeTemp([](SegmentPtr segment, VariablePtr object) {
-		object->SetSegment(segment, segment->Write(object), segment->GetLastSize());
+		object->SetSegment(segment, segment->Write(object));
 	}, this->textSegment, NULL);
 
 	this->textSegment->Flush();

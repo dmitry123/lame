@@ -1,18 +1,8 @@
 #include "Translator.h"
-#include "Exception.h"
-#include "Class.h"
-#include "Method.h"
-#include "Variable.h"
-#include "Interface.h"
-#include "GlobalScope.h"
-#include "Internal.h"
-#include "Array.h"
-#include "ScopeBuilder.h"
-#include "Segment.h"
 
 #include <VirtualMachine/VirtualMachine.h>
 
-LAME_BEGIN2(Script)
+LAME_BEGIN2(Compiler)
 
 using namespace VirtualMachine;
 
@@ -72,7 +62,7 @@ typedef struct {
 	Bool isAvailable;
 } AvailableRegister;
 
-static AvailableRegister isRegisterAvailable[REGISTERS_COUNT] = {
+static AvailableRegister isRegisterAvailableL[REGISTERS_COUNT] = {
 		{ GlobalScope::r0, TRUE },
 		{ GlobalScope::r1, TRUE },
 		{ GlobalScope::r2, TRUE },
@@ -85,21 +75,45 @@ static AvailableRegister isRegisterAvailable[REGISTERS_COUNT] = {
 		{ GlobalScope::r9, TRUE }
 };
 
+static AvailableRegister isRegisterAvailableF[REGISTERS_COUNT] = {
+		{ GlobalScope::f0, TRUE },
+		{ GlobalScope::f1, TRUE },
+		{ GlobalScope::f2, TRUE },
+		{ GlobalScope::f3, TRUE },
+		{ GlobalScope::f4, TRUE },
+		{ GlobalScope::f5, TRUE },
+		{ GlobalScope::f6, TRUE },
+		{ GlobalScope::f7, TRUE },
+		{ GlobalScope::f8, TRUE },
+		{ GlobalScope::f9, TRUE }
+};
+
 static Void _ClearAvailableRegisters() {
 	
-	for (Uint32 i = 1; i < REGISTERS_COUNT; i++) {
-		isRegisterAvailable[i].isAvailable = TRUE;
+	for (Uint32 i = 0; i < REGISTERS_COUNT; i++) {
+		isRegisterAvailableL[i].isAvailable = TRUE;
+		isRegisterAvailableF[i].isAvailable = TRUE;
 	}
-
-	isRegisterAvailable[0].isAvailable = FALSE;
 }
 
 static VariablePtr _FindAvailableRegister() {
 
-	for (Uint32 i = 1; i < REGISTERS_COUNT; i++) {
-		if (isRegisterAvailable[i].isAvailable) {
-			isRegisterAvailable[i].isAvailable = FALSE;
-			return isRegisterAvailable[i].registerVar;
+	for (Uint32 i = 0; i < REGISTERS_COUNT; i++) {
+		if (isRegisterAvailableL[i].isAvailable) {
+			isRegisterAvailableL[i].isAvailable = FALSE;
+			return isRegisterAvailableL[i].registerVar;
+		}
+	}
+
+	__asm int 3
+}
+
+static VariablePtr _FindAvailableRegisterF() {
+
+	for (Uint32 i = 0; i < REGISTERS_COUNT; i++) {
+		if (isRegisterAvailableF[i].isAvailable) {
+			isRegisterAvailableF[i].isAvailable = FALSE;
+			return isRegisterAvailableF[i].registerVar;
 		}
 	}
 
@@ -109,7 +123,12 @@ static VariablePtr _FindAvailableRegister() {
 static Void _ReleaseRegister(VariablePtr var) {
 
 	if (var->CheckModificator(Class::Modificator::Register)) {
-		isRegisterAvailable[var->GetName()[1] - '0'].isAvailable = TRUE;
+
+		if (var->GetName()[0] == 'r') {
+			isRegisterAvailableL[var->GetName()[1] - '0'].isAvailable = TRUE;
+		} else if (var->GetName()[0] == 'f') {
+			isRegisterAvailableF[var->GetName()[1] - '0'].isAvailable = TRUE;
+		}
 	}
 }
 
@@ -178,7 +197,15 @@ static Void _Return(VariablePtr var) {
 	registerStack.push_back(var);
 }
 
-static Void _TranslateMov(Uint32 command, VariablePtr left, VariablePtr right) {
+static Void _TranslateMov(Uint32 command, VariablePtr left, VariablePtr right, Bool isFloat = FALSE) {
+
+	VariablePtr r;
+
+	if (isFloat) {
+		r = _FindAvailableRegisterF();
+	} else {
+		r = _FindAvailableRegister();
+	}
 
 	switch (command) {
 	case MOV: 
@@ -189,22 +216,17 @@ static Void _TranslateMov(Uint32 command, VariablePtr left, VariablePtr right) {
 	_New(command);
 	_Write(left);
 	_Write(right);
-	_Return(GlobalScope::r1);
+	_Return(r);
 }
 
-static Void _TranslateMath(Uint32 command, VariablePtr left, VariablePtr right) {
+static Void _TranslateMath(Uint32 command, VariablePtr left, VariablePtr right, Bool isFloat = FALSE) {
 
-	VariablePtr r = _FindAvailableRegister();
+	VariablePtr r;
 
-	switch (command) {
-	case ADD:
-		break;
-	case SUB:
-		break;
-	case MUL:
-		break;
-	case DIV:
-		break;
+	if (isFloat) {
+		r = _FindAvailableRegisterF();
+	} else {
+		r = _FindAvailableRegister();
 	}
 
 	_Read2(&left, &right);
@@ -213,43 +235,40 @@ static Void _TranslateMath(Uint32 command, VariablePtr left, VariablePtr right) 
 	_Write(left);
 	_Write(right);
 	_Return(r);
+
+	switch (command) {
+		case ADD: r->v.intValue = left->v.intValue + right->v.intValue; break;
+		case SUB: r->v.intValue = left->v.intValue - right->v.intValue; break;
+		case MUL: r->v.intValue = left->v.intValue * right->v.intValue; break;
+		case DIV: r->v.intValue = left->v.intValue / right->v.intValue; break;
+		case FADD: r->v.floatValue = left->v.floatValue + right->v.floatValue; break;
+		case FSUB: r->v.floatValue = left->v.floatValue - right->v.floatValue; break;
+		case FMUL: r->v.floatValue = left->v.floatValue * right->v.floatValue; break;
+		case FDIV: r->v.floatValue = left->v.floatValue / right->v.floatValue; break;
+	}
 }
 
-static Void _TranslateCondition(Uint32 command, VariablePtr left, VariablePtr right) {
+static Void _TranslateCondition(Uint32 cmp, Uint32 command, VariablePtr left, VariablePtr right) {
+
+	VariablePtr r;
+
+	r = _FindAvailableRegister();
 
 	_Read2(&left, &right);
-	_New(CMP);
+	_New(cmp);
 	_Write(left);
 	_Write(right);
 	_New(command);
 	_WriteJump(bcp->GetPosition() + 19);
 	_New(MOV);
-	_Write(GlobalScope::r1);
+	_Write(r);
 	_WriteConst(1);
 	_New(JMP);
 	_WriteJump(bcp->GetPosition() + 14);
-	_New(XOR);
-	_Write(GlobalScope::r1);
-	_Write(GlobalScope::r1);
-	if (!isLastCmp) {
-		_New(MOV);
-		_Write(GlobalScope::r4);
-		_Write(GlobalScope::r1);
-	}
-	_Return(GlobalScope::r4);
-	isLastCmp = TRUE;
-}
-
-static Void _TranslateLogic(Uint32 command, VariablePtr left, VariablePtr right) {
-
-	if (isLastCmp) {
-		registerStack.pop_back();
-	}
-	_Read2(&left, &right);
-	_New(command);
-	_Write(left);
-	_Write(right);
-	_Return(GlobalScope::r1);
+	_New(MOV);
+	_Write(r);
+	_WriteConst(0);
+	_Return(r);
 }
 
 static Void _TranslateSingle(Uint32 command, VariablePtr left, VariablePtr right) {
@@ -257,7 +276,7 @@ static Void _TranslateSingle(Uint32 command, VariablePtr left, VariablePtr right
 	_Read1(&left);
 	_New(command);
 	_Write(left);
-	_Return(GlobalScope::r1);
+	_Return(left);
 }
 
 Void OverloadInteger(ClassPtr intClass) {
@@ -287,37 +306,37 @@ Void OverloadInteger(ClassPtr intClass) {
 		_TranslateMath(SHR, left, right);
 	});
 	intClass->Overload(Class::Operator::Above, [](VariablePtr left, VariablePtr right) {
-		_TranslateCondition(JNA, left, right);
+		_TranslateCondition(CMP, JNA, left, right);
 	});
 	intClass->Overload(Class::Operator::Bellow, [](VariablePtr left, VariablePtr right) {
-		_TranslateCondition(JNB, left, right);
+		_TranslateCondition(CMP, JNB, left, right);
 	});
 	intClass->Overload(Class::Operator::AboveE, [](VariablePtr left, VariablePtr right) {
-		_TranslateCondition(JNAE, left, right);
+		_TranslateCondition(CMP, JNAE, left, right);
 	});
 	intClass->Overload(Class::Operator::BellowE, [](VariablePtr left, VariablePtr right) {
-		_TranslateCondition(JNBE, left, right);
+		_TranslateCondition(CMP, JNBE, left, right);
 	});
 	intClass->Overload(Class::Operator::Equal, [](VariablePtr left, VariablePtr right) {
-		_TranslateCondition(JNE, left, right);
+		_TranslateCondition(CMP, JNE, left, right);
 	});
 	intClass->Overload(Class::Operator::NotEqual, [](VariablePtr left, VariablePtr right) {
-		_TranslateCondition(JE, left, right);
+		_TranslateCondition(CMP, JE, left, right);
 	});
 	intClass->Overload(Class::Operator::And, [](VariablePtr left, VariablePtr right) {
-		_TranslateLogic(AND, left, right);
+		_TranslateMath(AND, left, right);
 	});
 	intClass->Overload(Class::Operator::Or, [](VariablePtr left, VariablePtr right) {
-		_TranslateLogic(OR, left, right);
+		_TranslateMath(OR, left, right);
 	});
 	intClass->Overload(Class::Operator::BitAnd, [](VariablePtr left, VariablePtr right) {
-		_TranslateLogic(AND, left, right);
+		_TranslateMath(AND, left, right);
 	});
 	intClass->Overload(Class::Operator::BitOr, [](VariablePtr left, VariablePtr right) {
-		_TranslateLogic(OR, left, right);
+		_TranslateMath(OR, left, right);
 	});
 	intClass->Overload(Class::Operator::BitXor, [](VariablePtr left, VariablePtr right) {
-		_TranslateLogic(XOR, left, right);
+		_TranslateMath(XOR, left, right);
 	});
 	intClass->Overload(Class::Operator::Inc, [](VariablePtr left, VariablePtr right) {
 		_TranslateSingle(INC, left, right);
@@ -334,15 +353,42 @@ Void OverloadInteger(ClassPtr intClass) {
 
 	intClass->Overload(Class::Operator::Cast, [](VariablePtr left, VariablePtr right) {
 
-		_Read1(&left);
+		VariablePtr r;
 
-		if (left->GetVarType() != Variable::Var::Integer) {
+		_Read1(&right);
 
-			_New(FTI);
-			_Write(GlobalScope::r1);
-			_Write(left);
-			_Return(GlobalScope::r1);
-			_Return(right);
+		switch (left->GetType()) {
+			case Class::Type::Class:
+			case Class::Type::Method:
+			case Class::Type::Interface:
+			case Class::Type::Abstract:
+				throw ClassInvalidCastException();
+			case Class::Type::Array:
+				if (left->GetClass() != right->GetClass()) {
+					throw ClassInvalidCastException();
+				}
+			case Class::Type::Variable:
+				break;
+		}
+
+		if (left->GetVarType() != Variable::Var::Integer &&
+			left->GetVarType() != Variable::Var::IntegerPtr
+		) {
+
+			r = _FindAvailableRegister();
+			registerStack.pop_back();
+
+			if (left->GetVarType() == Variable::Var::Float) {
+
+				_New(FTI);
+				_Write(r);
+				_Write(left);
+				_Return(r);
+				_Return(right);
+
+			} else {
+				throw ClassInvalidCastException();
+			}
 		} else {
 			_Return(left);
 		}
@@ -352,122 +398,146 @@ Void OverloadInteger(ClassPtr intClass) {
 Void OverloadFloat(ClassPtr floatClass) {
 
 	floatClass->Overload(Class::Operator::Move, [](VariablePtr left, VariablePtr right) {
-
-		if (left == right) {
-			return;
-		}
-
-		bcp->New(VirtualMachine::FMOV);
-
-		if (left->CheckModificator(Class::Modificator::Register)) {
-			bcp->Write(left->GetName());
-		} else {
-			bcp->Write(left->GetAddress());
-		}
-
-		if (right->CheckModificator(Class::Modificator::Register)) {
-			bcp->Write(right->GetName());
-		} else {
-			bcp->Write(right->GetAddress());
-		}
+		_TranslateMov(FMOV, left, right, TRUE);
 	});
-
 	floatClass->Overload(Class::Operator::Add, [](VariablePtr left, VariablePtr right) {
-
-		_Read2(&left, &right);
-
-		bcp->New(VirtualMachine::FADD)
-			->Write(GlobalScope::f1->GetName())
-			->Write(left->GetName())
-			->Write(right->GetName());
-
-		registerStack.push_back(GlobalScope::f1);
+		_TranslateMath(FADD, left, right, TRUE);
 	});
-
 	floatClass->Overload(Class::Operator::Sub, [](VariablePtr left, VariablePtr right) {
-
-		_Read2(&left, &right);
-
-		bcp->New(VirtualMachine::FSUB)
-			->Write(GlobalScope::f1->GetName())
-			->Write(left->GetName())
-			->Write(right->GetName());
-
-		registerStack.push_back(GlobalScope::f1);
+		_TranslateMath(FSUB, left, right, TRUE);
 	});
-
 	floatClass->Overload(Class::Operator::Mul, [](VariablePtr left, VariablePtr right) {
-
-		_Read2(&left, &right);
-
-		bcp->New(VirtualMachine::FMUL)
-			->Write(GlobalScope::f1->GetName())
-			->Write(left->GetName())
-			->Write(right->GetName());
-
-		registerStack.push_back(GlobalScope::f1);
+		_TranslateMath(FMUL, left, right, TRUE);
 	});
-
 	floatClass->Overload(Class::Operator::Div, [](VariablePtr left, VariablePtr right) {
-
-		_Read2(&left, &right);
-
-		bcp->New(VirtualMachine::FDIV)
-			->Write(GlobalScope::f1->GetName())
-			->Write(left->GetName())
-			->Write(right->GetName());
-
-		registerStack.push_back(GlobalScope::f1);
+		_TranslateMath(FDIV, left, right, TRUE);
 	});
-
-	OVERLOAD(Above, floatClass, {
-		left->v.intValue = left->v.floatValue > right->v.floatValue;
+	floatClass->Overload(Class::Operator::Above, [](VariablePtr left, VariablePtr right) {
+		_TranslateCondition(JCMP, JNA, left, right);
 	});
-
-	OVERLOAD(Bellow, floatClass, {
-		left->v.intValue = left->v.floatValue < right->v.floatValue;
+	floatClass->Overload(Class::Operator::Bellow, [](VariablePtr left, VariablePtr right) {
+		_TranslateCondition(JCMP, JNB, left, right);
 	});
-
-	OVERLOAD(AboveE, floatClass, {
-		left->v.intValue = left->v.floatValue >= right->v.floatValue;
+	floatClass->Overload(Class::Operator::AboveE, [](VariablePtr left, VariablePtr right) {
+		_TranslateCondition(JCMP, JNAE, left, right);
 	});
-
-	OVERLOAD(BellowE, floatClass, {
-		left->v.intValue = left->v.floatValue <= right->v.floatValue;
+	floatClass->Overload(Class::Operator::BellowE, [](VariablePtr left, VariablePtr right) {
+		_TranslateCondition(JCMP, JNBE, left, right);
 	});
-
-	OVERLOAD(Equal, floatClass, {
-		left->v.intValue = left->v.floatValue == right->v.floatValue;
+	floatClass->Overload(Class::Operator::Equal, [](VariablePtr left, VariablePtr right) {
+		_TranslateCondition(JCMP, JNE, left, right);
 	});
-
-	OVERLOAD(NotEqual, floatClass, {
-		left->v.intValue = left->v.floatValue != right->v.floatValue;
-	});
-
-	OVERLOAD(And, floatClass, {
-		left->v.intValue = left->v.floatValue && right->v.floatValue;
-	});
-
-	OVERLOAD(Or, floatClass, {
-		left->v.intValue = left->v.floatValue || right->v.floatValue;
-	});
-
-	OVERLOAD(Or, floatClass, {
-		left->v.intValue = left->GetClass()->GetSizeOf();
-	});
-
-	OVERLOAD(Or, floatClass, {
-		left->v.floatValue = !left->v.floatValue;
+	floatClass->Overload(Class::Operator::NotEqual, [](VariablePtr left, VariablePtr right) {
+		_TranslateCondition(JCMP, JE, left, right);
 	});
 
 	floatClass->Overload(Class::Operator::Cast, [](VariablePtr left, VariablePtr right) {
-		__asm int 3
+
+		VariablePtr r;
+
+		_Read1(&right);
+
+		switch (left->GetType()) {
+			case Class::Type::Class:
+			case Class::Type::Method:
+			case Class::Type::Interface:
+			case Class::Type::Abstract:
+			case Class::Type::Array:
+				throw ClassInvalidCastException();
+			case Class::Type::Variable:
+				break;
+		}
+
+		if (left->GetVarType() != Variable::Var::Float &&
+			left->GetVarType() != Variable::Var::FloatPtr
+		) {
+
+			r = _FindAvailableRegisterF();
+			registerStack.pop_back();
+
+			if (left->GetVarType() == Variable::Var::Integer) {
+
+				_New(ITF);
+				_Write(r);
+				_Write(left);
+				_Return(r);
+				_Return(right);
+
+			} else {
+				throw ClassInvalidCastException();
+			}
+		} else {
+			_Return(left);
+		}
 	});
 }
 
-Void NodePerformer::Perform(NodeBuilderPtr builder) {
+static Void OverloadString(ClassPtr stringClass) {
 
-	this->builder = builder;
+	stringClass->Overload(Class::Operator::Move, [](VariablePtr left, VariablePtr right) {
+
+	});
+	stringClass->Overload(Class::Operator::Add, [](VariablePtr left, VariablePtr right) {
+
+	});
+	stringClass->Overload(Class::Operator::Above, [](VariablePtr left, VariablePtr right) {
+
+	});
+	stringClass->Overload(Class::Operator::Bellow, [](VariablePtr left, VariablePtr right) {
+
+	});
+	stringClass->Overload(Class::Operator::AboveE, [](VariablePtr left, VariablePtr right) {
+
+	});
+	stringClass->Overload(Class::Operator::BellowE, [](VariablePtr left, VariablePtr right) {
+
+	});
+	stringClass->Overload(Class::Operator::Equal, [](VariablePtr left, VariablePtr right) {
+
+	});
+	stringClass->Overload(Class::Operator::NotEqual, [](VariablePtr left, VariablePtr right) {
+
+	});
+	stringClass->Overload(Class::Operator::Cast, [](VariablePtr left, VariablePtr right) {
+
+	});
+}
+
+static Void OverloadObject(ClassPtr objectClass) {
+
+	objectClass->Overload(Class::Operator::Move, [](VariablePtr left, VariablePtr right) {
+
+		_Read2(&left, &right);
+		_New(MOV);
+		_Write(left);
+		_Write(right);
+		_Return(left);
+	});
+
+	objectClass->Overload(Class::Operator::Cast, [](VariablePtr left, VariablePtr right) {
+
+		if (right->GetClass() == left->GetClass()) {
+			goto __AllowCast;
+		}
+
+		if (left->GetClass()->GetExtended() == right->GetClass()) {
+			goto __AllowCast;
+		}
+
+		for (InterfacePtr i : left->GetClass()->GetImplements()) {
+			if (right->GetClass() == i->GetClass()) {
+				goto __AllowCast;
+			}
+		}
+
+		throw ClassInvalidCastException();
+
+	__AllowCast:
+		;
+	});
+}
+
+Void NodePerformer::Overload(Void) {
 
 	OverloadInteger(GlobalScope::classBoolean);
 	OverloadInteger(GlobalScope::classByte);
@@ -478,8 +548,19 @@ Void NodePerformer::Perform(NodeBuilderPtr builder) {
 
 	OverloadFloat(GlobalScope::classFloat);
 	OverloadFloat(GlobalScope::classDouble);
+
+	OverloadString(GlobalScope::classString);
+	OverloadObject(GlobalScope::classString);
+	OverloadObject(GlobalScope::classObject);
+	OverloadObject(GlobalScope::classClass);
+}
+
+Void NodePerformer::Perform(NodeBuilderPtr builder) {
+
+	this->builder = builder;
 	
-	this->Evaluate(builder->GetRootNode()->blockList);
+	this->Evaluate(
+		builder->GetRootNode()->blockList);
 }
 
 Bool NodePerformer::Evaluate(NodeListRef nodeList) {
@@ -514,11 +595,7 @@ Bool NodePerformer::Evaluate(NodeListRef nodeList) {
 		if (n->id == kScriptNodeInvoke ||
 			n->id == kScriptNodeAlloc
 		) {
-			this->methodHash = 0;
-			for (Uint32 i = 0; i < n->lex->args; i++) {
-				n->argList.push_back(this->nodeStack.back().node);
-				this->nodeStack.pop_back();
-			}
+			// ignore
 		}
 		
 		if (n->lex->lex->IsUnknown() ||
@@ -527,7 +604,7 @@ Bool NodePerformer::Evaluate(NodeListRef nodeList) {
 			nodeStack.push_back({ n, n->var });
 		}
 		else if (n->lex->lex->id == kScriptLexNew) {
-			this->_EvaluateNew(n);
+			this->_TranslateNew(n);
 		}
 		else if (
 			n->lex->lex->IsMath() ||
@@ -536,11 +613,11 @@ Bool NodePerformer::Evaluate(NodeListRef nodeList) {
 			n->lex->lex->id == kScriptLexMediated
 		) {
 			if (n->lex->args == 1) {
-				this->_EvaluateExpression1(n);
+				this->_Translate1(n);
 			} else if (n->lex->args == 2) {
-				this->_EvaluateExpression2(n);
+				this->_Translate2(n);
 			} else {
-				this->_EvaluateExpression0(n);
+				this->_Translate0(n);
 			}
 		}
 
@@ -555,52 +632,81 @@ Bool NodePerformer::Evaluate(NodeListRef nodeList) {
 	return TRUE;
 }
 
-Void NodePerformer::_EvaluateNew(NodePtr node) {
+Void NodePerformer::_TranslateNew(NodePtr node) {
 
 	ObjectPtr type;
-	ObjectPtr result;
+	NodePtr left;
+	VariablePtr countVar;
 
-	this->_ReadArguments(node);
+	_ReadArguments(node);
+	left = this->argsArray[0].node;
 
-	type = ScopeBuilder::_FindClass(
-		this->argsArray[0].node->parent,
-		this->argsArray[0].node->word);
+	type = ScopeBuilder::_FindClass(left->parent, left->word);
+
+	printf("  // %s %s\n", node->word.data(), left->word.data());
 
 	if (type->CheckModificator(Class::Modificator::Primitive)) {
 
-		VariablePtr var = this->argsArray[0].var->GetVariable();
+		_ReadArguments(node);
 
-		result = node->parent->GetScope()->GetTempScope()
-			->Add(new Array("", node, type->GetClass(), var->GetInteger()));
+		if (!(countVar = this->argsArray[0].var->GetVariable())) {
+			countVar = this->argsArray[0].node->var->GetVariable();
+		}
+
+		VariablePtr r = _FindAvailableRegister();
+		Uint32 classSize = type->GetSizeOf();
+
+		_New(VirtualMachine::NEW);
+		_Write(r);
+		_WriteJump(classSize * countVar->GetInteger());
+		_Return(r);
+
+		r->registerType = node->parent->GetScope()->GetTempScope()
+			->Add(new Array("", node, type->GetClass(), countVar->GetInteger()))->GetArray();
 	}
 	else {
-		result = node->parent->GetScope()->GetTempScope()
-			->Add(new Variable("", type));
 
-		type->GetClass()->New(result);
+		VariablePtr r = _FindAvailableRegister();
+		Uint32 classSize = type->GetSizeOf();
 
-		NodePtr n;
+		_New(VirtualMachine::NEW);
+		_Write(r);
+		_WriteJump(classSize);
+		_Return(r);
 
-		if ((n = result->GetClass()->GetNode()) != NULL) {
+		r->registerType = type->GetClass();
 
-			n->var = result->GetVariable()->GetObject();
+		//result = node->parent->GetScope()->GetTempScope()
+		//	->Add(new Variable("", type));
 
-			for (NodePtr n : n->blockList) {
-				if (n->id == kScriptNodeVariable && n->blockList.size()) {
-					this->Evaluate(n->blockList);
-				}
-			}
-		}
+		//type->GetClass()->New(result);
+
+		//NodePtr n;
+
+		//if ((n = result->GetClass()->GetNode()) != NULL) {
+
+		//	n->var = result->GetVariable()->GetObject();
+
+		//	for (NodePtr n : n->blockList) {
+		//		if (n->id == kScriptNodeVariable && n->blockList.size()) {
+		//			this->Evaluate(n->blockList);
+		//		}
+		//	}
+		//}
 	}
 
-	nodeStack.push_back({ node, result });
+	nodeStack.push_back({ left, registerStack.back() });
 }
 
-Void NodePerformer::_EvaluateExpression0(NodePtr n) {
+Void NodePerformer::_TranslateCondition(NodePtr node) {
 
 }
 
-Void NodePerformer::_EvaluateExpression1(NodePtr n) {
+Void NodePerformer::_Translate0(NodePtr n) {
+
+}
+
+Void NodePerformer::_Translate1(NodePtr n) {
 
 	VarNodePtr l;
 
@@ -617,10 +723,8 @@ Void NodePerformer::_EvaluateExpression1(NodePtr n) {
 
 	ObjectPtr result = left->var;
 
-	//_Print1(result->GetVariable());
-
 	Error e = left->var->GetClass()->Evaluate(
-		operatorMap[n->lex->lex->id], result, result);
+		operatorMap[n->lex->lex->id], result, result, n->lex->lex);
 
 	if (e != Error::NoError) {
 		PostSyntaxError(n->lex->line, "%s (%s)", e.GetDescription(), left->var->GetClass()->GetName().data());
@@ -629,21 +733,17 @@ Void NodePerformer::_EvaluateExpression1(NodePtr n) {
 	if (n->lex->lex->IsLeft()) {
 		if (left->var->GetVariable()->GetVarType() == Variable::Var::Integer) {
 			left->var->GetClass()->Evaluate(
-				operatorMap[kScriptLexSet], result, GlobalScope::r1);
+				operatorMap[kScriptLexSet], result, GlobalScope::r1, Lex::Find(kScriptLexSet));
 		} else {
 			left->var->GetClass()->Evaluate(
-				operatorMap[kScriptLexSet], result, GlobalScope::f1);
+				operatorMap[kScriptLexSet], result, GlobalScope::f1, Lex::Find(kScriptLexSet));
 		}
 	}
 
-	if (left->var->GetVariable()->GetVarType() == Variable::Var::Integer) {
-		nodeStack.push_back({ left, GlobalScope::r1 });
-	} else {
-		nodeStack.push_back({ left, GlobalScope::f1 });
-	}
+	nodeStack.push_back({ left, registerStack.back() });
 }
 
-Void NodePerformer::_EvaluateExpression2(NodePtr n) {
+Void NodePerformer::_Translate2(NodePtr n) {
 
 	VarNodePtr r;
 	VarNodePtr l;
@@ -655,13 +755,6 @@ Void NodePerformer::_EvaluateExpression2(NodePtr n) {
 
 	NodePtr right = r->node;
 	NodePtr left = l->node;
-
-	if (r->var) {
-		right->var = r->var;
-	}
-	if (l->var) {
-		left->var = l->var;
-	}
 
 	if (n->lex->lex->id == kScriptLexDirected ||
 		n->lex->lex->id == kScriptLexMediated
@@ -675,18 +768,6 @@ Void NodePerformer::_EvaluateExpression2(NodePtr n) {
 		}
 		if (!left->var->CheckType(Class::Type::Variable)) {
 			PostSyntaxError(left->lex->line, "Unable to apply directed selection to non-variable object (%s)", left->word.data());
-		}
-	}
-	else {
-		if (!left->var) {
-			if (!(left->var = left->parent->GetScope()->GetVarScope()->Find(left->word))) {
-				PostSyntaxError(left->lex->line, "Undeclared variable (%s)", left->word.data());
-			}
-		}
-		if (!right->var) {
-			if (!(right->var = right->parent->GetScope()->GetVarScope()->Find(right->word))) {
-				PostSyntaxError(right->lex->line, "Undeclared variable (%s)", right->word.data());
-			}
 		}
 	}
 
@@ -713,7 +794,7 @@ Void NodePerformer::_EvaluateExpression2(NodePtr n) {
 			if (!result) {
 				PostSyntaxError(n->lex->line, "Undeclared method (%s)", right->word.data());
 			}
-			result->GetMethod()->Invoke(this, varList);
+			result->GetMethod()->Invoke(varList);
 		}
 		else {
 			if (!varClass) {
@@ -736,24 +817,17 @@ Void NodePerformer::_EvaluateExpression2(NodePtr n) {
 		goto _SaveNode;
 	}
 
+	printf("  // %s %s %s\n", result->GetName().data(), n->word.data(), with->GetName().data());
+
+	if (with->CheckModificator(Class::Modificator::Register)) {
+		with->GetVariable()->registerType->SetSegment(result->GetSegment(), result->GetAddressPtr());
+	}
+
+	_Print2(result->GetVariable(), with->GetVariable());
+
 	try {
-		if (n->lex->lex->IsBool()) {
-			//_Print2(result->GetVariable(), with->GetVariable());
-		} else if (n->lex->lex->IsMath()) {
-			if (n->lex->lex->id != kScriptLexSet) {
-				//_Print2(result->GetVariable(), with->GetVariable());
-			} else {
-			}
-		}
-
-		_Print2(result->GetVariable(), with->GetVariable());
-
-		if (!n->lex->lex->IsBool()) {
-			isLastCmp = FALSE;
-		}
-
 		Error e = left->var->GetClass()->Evaluate(
-			operatorMap[n->lex->lex->id], result, with);
+			operatorMap[n->lex->lex->id], result, with, n->lex->lex);
 
 		if (e != Error::NoError) {
 			PostSyntaxError(n->lex->line, "%s (%s)", e.GetDescription(), left->var->GetClass()->GetName().data());
@@ -761,22 +835,20 @@ Void NodePerformer::_EvaluateExpression2(NodePtr n) {
 	}
 	catch (ClassInvalidCastException) {
 
-		PostSyntaxError(n->lex->line, "Unable to cast from (%s) to (%s)",
-			result->GetClass()->GetName().data(),
-			with->GetClass()->GetName().data());
+		if (with->CheckModificator(Class::Modificator::Register)) {
+			PostSyntaxError(n->lex->line, "Unable to cast from (%s) to (%s)", result->GetClass()->GetName().data(), with->GetVariable()->registerType->GetClass()->GetName().data());
+		} else {
+			PostSyntaxError(n->lex->line, "Unable to cast from (%s) to (%s)", result->GetClass()->GetName().data(), with->GetClass()->GetName().data());
+		}
 	}
 
 	if (n->lex->lex->IsLeft() && n->lex->lex->id != kScriptLexSet) {
 		left->var->GetClass()->Evaluate(
-			operatorMap[kScriptLexSet], result, GlobalScope::r1);
+			operatorMap[kScriptLexSet], result, GlobalScope::r1, Lex::Find(kScriptLexSet));
 	}
 
 _SaveNode:
-	if (left->var->GetVariable()->GetVarType() == Variable::Var::Integer) {
-		nodeStack.push_back({ left, GlobalScope::r1 });
-	} else {
-		nodeStack.push_back({ left, GlobalScope::f1 });
-	}
+	nodeStack.push_back({ left, registerStack.back() });
 }
 
 Void NodePerformer::_ReadArguments(NodePtr node) {

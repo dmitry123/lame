@@ -55,13 +55,13 @@ int main() {
 		lines = GetCountOfLines(&coreList);
 		totalLines += lines;
 		PrintCountOfLines("Core", lines);
-		
+
 		List<Buffer> scriptList = Directory::GetFilesAtPath(SCRIPT_LINK, EXTENSION_FILTER);
 
 		lines = GetCountOfLines(&scriptList);
 		totalLines += lines;
 		PrintCountOfLines("Script", lines);
-		
+
 		List<Buffer> consoleList = Directory::GetFilesAtPath(CONSOLE_LINK, EXTENSION_FILTER);
 
 		lines = GetCountOfLines(&consoleList);
@@ -79,6 +79,12 @@ int main() {
 		lines = GetCountOfLines(&rmList);
 		totalLines += lines;
 		PrintCountOfLines("ResourceManager", lines);
+
+		List<Buffer> compilerList = Directory::GetFilesAtPath(RM_LINK, EXTENSION_FILTER);
+
+		lines = GetCountOfLines(&compilerList);
+		totalLines += lines;
+		PrintCountOfLines("Compiler", lines);
 	}
 	catch (Exception& e) {
 		e.Debug();

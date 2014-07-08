@@ -10,7 +10,7 @@ class LAME_API Object {
 	friend class Scope;
 public:
 	enum {
-		SizeOf = 4
+		SizeOf = 8
 	};
 public:
 	enum class Type : Uint32 {
@@ -50,7 +50,7 @@ public:
 	{
 		this->scopeController_ = 0;
 		this->modificators_ = 0;
-		this->sizeOf_ = 0;
+		this->sizeOf_ = SizeOf;
 		this->segment_ = 0;
 		this->address_ = 0;
 		this->size_ = 0;
@@ -72,7 +72,7 @@ public:
 	inline virtual ArrayPtr GetArray() { return NULL; }
 public:
 	ObjectPtr SetModificator(Modificator modificator, Bool state = TRUE);
-	Void SetSegment(SegmentPtr segment, Uint32P address, Uint32 size);
+	Void SetSegment(SegmentPtr segment, Uint32P address);
 	Void PrintModificators(Void);
 public:
 	inline Void SetSizeOf(Uint32 sizeOf) {
@@ -100,6 +100,7 @@ public:
 	inline SegmentPtr GetSegment() const { return this->segment_; }
 	inline Uint32 GetAddress() const { return *this->address_; }
 	inline Uint32 GetSize() const { return this->size_; }
+	inline Uint32P GetAddressPtr() { return this->address_; }
 public:
 	inline ScopeControllerPtr GetScopeController() {
 		return scopeController_;

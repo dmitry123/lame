@@ -29,7 +29,7 @@ public:
 	Uint64 Hash(Void) const override;
 public:
 	Error SetNativeMethod(NativeMethod method);
-	Error Invoke(NodePerformerPtr performer, Vector<VariablePtr> attributes = {});
+	Error Invoke(Vector<VariablePtr> attributes = {});
 	Bool CompareArguments(MethodPtr method);
 private:
 	Void SetThis(VariablePtr thisClass) {

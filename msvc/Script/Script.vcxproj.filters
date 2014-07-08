@@ -55,9 +55,6 @@
     <ClCompile Include="..\..\source\Script\Object.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\Script\Translator.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\Script\Scope.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -131,9 +128,6 @@
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Script\Object.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Script\Translator.h">
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Script\Scope.h">

@@ -9,5 +9,6 @@
 #include <ResourceManager/ResourceManager.h>
 #include <Script/Script.h>
 #include <VirtualMachine/VirtualMachine.h>
+#include <Compiler/Compiler.h>
 
 #endif // ~__MAIN__

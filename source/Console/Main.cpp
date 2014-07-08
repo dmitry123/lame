@@ -1,6 +1,7 @@
 #include "Main.h"
 #include "Test.h"
 
+using namespace Lame::Compiler;
 using namespace Lame::Core;
 using namespace Lame::ResourceManager;
 using namespace Lame::Script;
@@ -31,6 +32,7 @@ int main(int argc, char** argv) {
 		time = Time::GetTime();
 		fileParser.Load(fileName);
 		nodeBuilder.Build(&fileParser);
+		nodePerformer.Overload();
 		scopeBuilder.Build(&nodeBuilder, g);
 		time = Time::GetTime() - time;
 	}
@@ -74,15 +76,22 @@ _AvoidTrace:
 		nodePerformer.Perform(&nodeBuilder);
 
 		//segmentBuilder.GetDataSegment()->Trace();
-		segmentBuilder.GetTextSegment()->Trace();
+		//segmentBuilder.GetTextSegment()->Trace();
 		//segmentBuilder.GetCodeSegment()->Trace();
 
 		Buffer fcName = File::GetFileNameWithoutExtension(fileName) + ".lc";
 
 		segmentLinker.Save(fcName);
 	}
-	catch (Exception e) {
+	catch (SyntaxException e) {
+		puts("-----------------------------");
 		e.Debug();
+		puts("");
+	}
+	catch (Exception e) {
+		puts("-----------------------------");
+		e.Debug();
+		puts("");
 	}
 
 #pragma push_macro("printf")

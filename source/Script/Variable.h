@@ -13,10 +13,15 @@ public:
 		Integer,
 		Float,
 		Object,
-		String
+		String,
+		IntegerPtr,
+		FloatPtr,
+		ObjectPtr,
+		StringPtr
 	};
 public:
 	const ClassPtr classType;
+	      ObjectPtr registerType;
 public:
 	Variable(BufferRefC name, ObjectPtrC classType, NodePtr node = NULL);
 	~Variable();
@@ -32,6 +37,7 @@ public:
 public:
 	Error Clone(ObjectPtrC object) override;
 	Void Trace(Uint32 offset) override;
+	Error Make(Class::Operator command, VariablePtr var);
 public:
 	inline ClassPtr GetClass() override { return this->classType; }
 	inline VariablePtr GetVariable() override { return this; }

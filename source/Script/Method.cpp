@@ -2,7 +2,6 @@
 #include "ScopeController.h"
 #include "Variable.h"
 #include "Class.h"
-#include "Translator.h"
 
 LAME_BEGIN2(Script)
 
@@ -82,7 +81,7 @@ Error Method::SetNativeMethod(NativeMethod method) {
 	return Error::NoError;
 }
 
-Error Method::Invoke(NodePerformerPtr performer, Vector<VariablePtr> attributes) {
+Error Method::Invoke(Vector<VariablePtr> attributes) {
 
 	if (attributes.size() != this->attributesHash.size()) {
 		return Error::Method_InvalidArguments;
@@ -121,8 +120,6 @@ Error Method::Invoke(NodePerformerPtr performer, Vector<VariablePtr> attributes)
 
 	if (this->nativeMethod != NULL) {
 		this->nativeMethod(this);
-	} else if (performer) {
-		performer->Evaluate(this->GetRootNode()->blockList);
 	}
 
 	return Error::NoError;

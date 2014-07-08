@@ -12,17 +12,15 @@ Variable::Variable(BufferRefC name, ObjectPtrC classType, Type type, NodePtr nod
 	classType((ClassPtrC)classType)
 {
 	this->objectValue = NULL;
+	this->registerType = NULL;
 
 	if (classType == GlobalScope::classString) {
 		this->SetString("");
-	}
-	else if (!classType->CheckModificator(Modificator::Primitive)) {
+	} else if (!classType->CheckModificator(Modificator::Primitive)) {
 		this->SetObject(NULL);
-	}
-	else if (classType == GlobalScope::classFloat) {
+	} else if (classType == GlobalScope::classFloat) {
 		this->SetFloat(0.0f);
-	}
-	else {
+	} else {
 		this->SetInteger(0);
 	}
 
@@ -33,6 +31,7 @@ Variable::Variable(BufferRefC name, ObjectPtrC classType, NodePtr node) : Object
 	classType((ClassPtrC)classType)
 {
 	this->objectValue = NULL;
+	this->registerType = NULL;
 
 	if (classType == GlobalScope::classString) {
 		this->SetString("");
@@ -225,6 +224,23 @@ Void Variable::Trace(Uint32 offset) {
 			}
 		}
 	}
+}
+
+Error Variable::Make(Class::Operator command, VariablePtr var) {
+
+	if (var->GetClass()->priority > this->GetClass()->priority) {
+		if (var->GetClass()->operators.empty() || !var->GetClass()->operators.at((Uint32)command)) {
+			return Error::Class_OperatorNotOverloaded;
+		}
+		var->GetClass()->operators.at((Uint32)command)(this, var);
+	} else {
+		if (this->GetClass()->operators.empty() || !this->GetClass()->operators.at((Uint32)command)) {
+			return Error::Class_OperatorNotOverloaded;
+		}
+		this->GetClass()->operators.at((Uint32)command)(var, this);
+	}
+
+	return Error::NoError;
 }
 
 Bool Variable::IsChar(Void) {

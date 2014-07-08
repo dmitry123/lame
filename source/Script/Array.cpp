@@ -1,5 +1,6 @@
 #include "Array.h"
 #include "Exception.h"
+#include "GlobalScope.h"
 
 LAME_BEGIN2(Script)
 
@@ -10,6 +11,18 @@ Array::Array(BufferRefC name, NodePtr node, ObjectPtr classType, Uint32 size) :
 
 	if (size > 0) {
 		this->arrayList.resize(size);
+	}
+
+	if (classType->CheckModificator(Modificator::Primitive)) {
+		if (classType == GlobalScope::classString) {
+			this->varType = Var::StringPtr;
+		} else if (classType == GlobalScope::classFloat) {
+			this->varType = Var::FloatPtr;
+		} else {
+			this->varType = Var::IntegerPtr;
+		}
+	} else {
+		this->varType = Var::ObjectPtr;
 	}
 }
 

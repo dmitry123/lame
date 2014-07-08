@@ -2,6 +2,7 @@
 #include "Variable.h"
 #include "Method.h"
 #include "Interface.h"
+#include "Exception.h"
 
 LAME_BEGIN2(Script)
 
@@ -249,7 +250,7 @@ Error Class::Overload(Operator op, OperatorCallback callback) {
 	return Error::NoError;
 }
 
-Error Class::Evaluate(Operator op, ObjectPtr left, ObjectPtr right) {
+Error Class::Evaluate(Operator op, ObjectPtr left, ObjectPtr right, LexPtrC lex) {
 
 	if (!left->CheckType(Type::Variable) && !left->CheckType(Type::Array) ||
 		!right->CheckType(Type::Variable) && !right->CheckType(Type::Array)
@@ -275,29 +276,45 @@ Error Class::Evaluate(Operator op, ObjectPtr left, ObjectPtr right) {
 	VariablePtr l = left->GetVariable();
 	VariablePtr r = right->GetVariable();
 
-	if (operators.size() > 0) {
+	if (r->CheckModificator(Modificator::Register) && r->registerType) {
+		r = r->registerType->GetVariable();
+	}
 
-		if (left->GetVariable()->GetVarType() != right->GetVariable()->GetVarType() ||
-			left->GetVariable()->GetVarType() == Variable::Var::Object
-		) {
-			if (!operators.at((Uint32)Operator::Cast)) {
-				return Error::Class_OperatorNotOverloaded;
-			}
-			operators.at((Uint32)Operator::Cast)(r, l);
-		}
-		
-		if (!operators.at((Uint32)op)) {
+	if (left->GetClass()->CheckModificator(Modificator::Primitive) && 
+		right->GetVariable() && left->GetVariable() && right->GetVariable()->registerType &&
+		right->GetVariable()->registerType->GetClass() != left->GetClass()
+	) {
+		throw ClassInvalidCastException();
+	}
+
+	if (left->GetVariable()->GetVarType() == Variable::Var::Object) {
+		if (!this->operators.at((Uint32)Operator::Cast)) {
 			return Error::Class_OperatorNotOverloaded;
 		}
-		operators.at((Uint32)op)(l, r);
+		this->operators.at((Uint32)Operator::Cast)(r, l);
+	}
+	else if (left->GetVariable()->GetVarType() != right->GetVariable()->GetVarType()) {
+		if (lex->IsRight()) {
+			l->Make(Operator::Cast, r);
+		} else {
+			if (!this->operators.at((Uint32)Operator::Cast)) {
+				return Error::Class_OperatorNotOverloaded;
+			}
+			this->operators.at((Uint32)Operator::Cast)(r, l);
+		}
+	}
+
+_AllowEval:
+	if (lex->IsRight()) {
+		l->Make(op, r);
+	} else {
+		if (!this->operators.at((Uint32)op)) {
+			return Error::Class_OperatorNotOverloaded;
+		}
+		this->operators.at((Uint32)op)(r, l);
 	}
 
 	return Error::NoError;
-}
-
-Void Class::ComputeSizeOf(Void) {
-
-
 }
 
 LAME_END2

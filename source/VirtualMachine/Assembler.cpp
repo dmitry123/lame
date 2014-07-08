@@ -350,6 +350,10 @@ static Void _Int(VoidP a0, VoidP a1, VoidP a2) {
 	__asm int 3
 }
 
+static Void _Jcmp(VoidP a0, VoidP a1, VoidP a2) {
+	__asm int 3
+}
+
 static Void _InitializeVirtualMachine() {
 
 	isVirtualMachineInitialized = TRUE;
@@ -393,9 +397,9 @@ static Void _InitializeVirtualMachine() {
 	_SetAsm(JS, "js", _Js, 1);
 	_SetAsm(JZ, "jz", _Jz, 1);
 	_SetAsm(XCHG, "xchg", _Xchg, 2);
-	_SetAsm(AND, "and", _And, 2);
-	_SetAsm(OR, "or", _Or, 2);
-	_SetAsm(XOR, "xor", _Xor, 2);
+	_SetAsm(AND, "and", _And, 3);
+	_SetAsm(OR, "or", _Or, 3);
+	_SetAsm(XOR, "xor", _Xor, 3);
 	_SetAsm(INC, "inc", _Inc, 1);
 	_SetAsm(DEC, "dec", _Dec, 1);
 	_SetAsm(LNOT, "lnot", _Lnot, 1);
@@ -404,7 +408,7 @@ static Void _InitializeVirtualMachine() {
 	_SetAsm(POP, "pop", _Pop, 1);
 	_SetAsm(LOOP, "loop", _Loop, 1);
 	_SetAsm(JMP, "jmp", _Jmp, 1);
-	_SetAsm(NEW, "new", _New, 1);
+	_SetAsm(NEW, "new", _New, 2);
 	_SetAsm(FREE, "free", _Free, 1);
 	_SetAsm(FMOV, "fmov", _Fmov, 2);
 	_SetAsm(FADD, "fadd", _Fadd, 3);
@@ -415,11 +419,12 @@ static Void _InitializeVirtualMachine() {
 	_SetAsm(FPUSH, "fpush", _Fpush, 1);
 	_SetAsm(FPOP, "fpop", _Fpop, 1);
 	_SetAsm(FTI, "fti", _Fti, 2);
-	_SetAsm(ITF, "ift", _Itf, 2);
+	_SetAsm(ITF, "itf", _Itf, 2);
 	_SetAsm(FRND, "frnd", _Frnd, 2);
 	_SetAsm(TEST, "test", _Test, 2);
 	_SetAsm(FTST, "ftst", _Ftst, 2);
 	_SetAsm(INT, "int", _Int, 1);
+	_SetAsm(JCMP, "jcmp", _Jcmp, 2);
 }
 
 Assembler::Assembler() {

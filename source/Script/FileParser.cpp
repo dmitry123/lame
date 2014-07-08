@@ -168,11 +168,12 @@ Void FileParser::Parse(StringC script) {
 			++line;
 
 			if (*(script - 1) == '\n' || *(script - 1) == '\r') {
-				continue;
+				++line; continue;
 			}
 			while (*script && *script != '\n') {
 				++script;
 			}
+
 			continue;
 		}
 

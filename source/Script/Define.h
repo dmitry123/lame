@@ -28,7 +28,6 @@ typedef class LexNode *LexNodePtr, *const LexNodePtrC;
 typedef class FileParser *FileParserPtr, *const FileParserPtrC;
 typedef class Node *NodePtr, *const NodePtrC;
 typedef class NodeBuilder *NodeBuilderPtr, *const NodeBuilderPtrC;
-typedef class NodePerformer *NodePerformerPtr, *const NodePerformerPtrC;
 typedef class Abstract *AbstractPtr, *const AbstractPtrC;
 typedef class Array *ArrayPtr, *const ArrayPtrC;
 typedef class Class *ClassPtr, *const ClassPtrC;
