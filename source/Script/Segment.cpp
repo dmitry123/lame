@@ -24,7 +24,7 @@ Segment::~Segment(Void) {
 Void Segment::Write(VoidP block, Uint32 size) {
 
 	if (!this->data) {
-		PostErrorMessage("Segment not allocated", 0);
+		throw SegmentException("Segment not allocated", 0);
 	}
 	if (this->position + size > this->size) {
 		this->data = (Uint8P) realloc(this->data, this->size + 64);

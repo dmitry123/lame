@@ -40,7 +40,7 @@ private:
 	const Buffer name;
 	const Uint32 hash;
 	const Type type;
-	const NodePtr node;
+	NodePtr node;
 public:
 	Object(BufferRefC name, Type type, NodePtr node) :
 		name(name),
@@ -54,6 +54,7 @@ public:
 		this->segment_ = 0;
 		this->address_ = 0;
 		this->size_ = 0;
+		this->templateClass = 0;
 	}
 public:
 	Object(Object& object);
@@ -91,12 +92,19 @@ public:
 	inline Bool CheckType(Type type) const {
 		return this->type == type;
 	}
+	inline Void SetTemplateClass(ClassPtr templateClass) {
+		this->templateClass = templateClass;
+	}
+	inline ClassPtr GetTemplateClass() {
+		return this->templateClass;
+	}
 public:
 	inline BufferRefC GetName() const { return this->name; }
 	inline Uint32 GetNameHash() const { return this->hash; }
 	inline Type GetType() const { return this->type; }
 	inline Uint32 GetSizeOf() const { return this->sizeOf_; }
 	inline NodePtr GetNode() const { return this->node; }
+	inline Void SetNode(NodePtr node) { this->node = node; }
 	inline SegmentPtr GetSegment() const { return this->segment_; }
 	inline Uint32 GetAddress() const { return *this->address_; }
 	inline Uint32 GetSize() const { return this->size_; }
@@ -120,6 +128,7 @@ private:
 	SegmentPtr segment_;
 	Uint32P address_;
 	Uint32 size_;
+	ClassPtr templateClass;
 };
 
 LAME_END2

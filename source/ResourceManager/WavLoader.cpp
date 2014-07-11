@@ -42,7 +42,7 @@ Bool WavLoader::Load(StringC fileName) {
 //	file = fopen(fileName, "rb");
 
 //	if (file == NULL) {
-//		PostErrorMessage("Failed to open file", 1);
+//		throw ResourceException("Failed to open file", 1);
 //	}
 
 	audioInfo->BuildFileInfo(fileName);
@@ -54,7 +54,7 @@ Bool WavLoader::Load(StringC fileName) {
 //	fread(type, 1, 4, file);
 
     if (stricmp(type, "riff")) {
-		PostErrorMessage("Not riff", 1);
+		throw ResourceException("Wave file hasn't riff", 1);
     }
 
     fileHandle.Read(&size, sizeof(dword));
@@ -64,14 +64,14 @@ Bool WavLoader::Load(StringC fileName) {
 //	fread(type, sizeof(byte), 4, file);
 
     if (stricmp(type, "wave")) {
-		PostErrorMessage("Not wave", 1);
+		throw ResourceException("Wave file hasn't wave", 1);
     }
 
     fileHandle.Read(type, 4);
 //	fread(type, sizeof(byte), 4, file);
 
     if (stricmp(type, "fmt ")) {
-		PostErrorMessage("Not fmt", 1);
+		throw ResourceException("Wave file hasn't fmt", 1);
     }
     
     fileHandle.Read(&audioInfo->audioChunkSize, sizeof(dword));
@@ -95,7 +95,7 @@ Bool WavLoader::Load(StringC fileName) {
 //	fread(type, sizeof(byte), 4, file);
     
     if (stricmp(type, "data")) {
-		PostErrorMessage("Missing data", 1);
+		throw ResourceException("Missing data in wave file", 1);
     }
 
     fileHandle.Read(&audioInfo->audioDataSize, sizeof(dword));
@@ -127,7 +127,7 @@ Bool WavLoader::Save(StringC fileName) {
     head.bitsPerSample = audioInfo->audioBitsPerSample;
     head.dataSize = audioInfo->audioDataSize;
     
-	PostErrorMessage("ResouceManager doesn't support WAV saving", 1);
+	throw ResourceException("ResouceManager doesn't support WAV saving", 1);
     
 	return LAME_FALSE;
 }

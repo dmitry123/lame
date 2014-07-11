@@ -5,7 +5,7 @@ LAME_BEGIN2(ResourceManager)
 ResourceContainer::Resource ResourceContainer::Load(StringC fileName, StringC tagName) {
 
 	if (this->resourceMap_.count(tagName)) {
-		PostErrorMessage("Resource with that name already exists (%s)", tagName);
+		throw ResourceException("Resource with that name already exists (%s)", tagName);
 	}
 
 	Resource resource(new ::LAME_NAMESPACE::ResourceManager::Resource());

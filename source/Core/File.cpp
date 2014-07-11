@@ -71,11 +71,11 @@ Void File::Open(StringC filename, Uint32 flags) {
 	Sint8 mode[4] = { 0 };
 
 	if (!filename) {
-		PostErrorMessage("filename mustn't be NULL", 1);
+		throw FileException("Filename mustn't be NULL", 1);
 	}
 
 	if (!flags) {
-		PostErrorMessage("flags mustn't be 0", 1);
+		throw FileException("Flags mustn't be 0", 1);
 	}
 
 	Stat st;
@@ -119,7 +119,7 @@ Void File::Open(StringC filename, Uint32 flags) {
 
 	// generate fopen binary/text mode
 	if (flags & kBinary && flags & kText) {
-		PostErrorMessage("Unable to open file with BINARY and TEXT flags", 1);
+		throw FileException("Unable to open file with BINARY and TEXT flags", 1);
 	} else if (flags & kText) {
 		mode[1] = 't';
 	} else {
@@ -135,7 +135,7 @@ Void File::Open(StringC filename, Uint32 flags) {
 	this->handle_ = fopen(filename, mode);
 
 	if (!this->handle_) {
-		PostErrorMessage("Unable to open file (%s)", this->filename_.data());
+		throw FileException("Unable to open file (%s)", this->filename_.data());
 	}
 
 	_fseeki64((FILE*)this->handle_, 0, SEEK_END);
@@ -146,11 +146,11 @@ Void File::Open(StringC filename, Uint32 flags) {
 Void File::Open(StringC filename, StringC mode) {
 
 	if (!filename) {
-		PostErrorMessage("filename mustn't be NULL", 1);
+		throw FileException("filename mustn't be NULL", 1);
 	}
 
 	if (!mode) {
-		PostErrorMessage("mode mustn't be NULL", 1);
+		throw FileException("mode mustn't be NULL", 1);
 	}
 
 	Stat st;
@@ -185,7 +185,7 @@ Void File::Open(StringC filename, StringC mode) {
 	this->handle_ = fopen(filename, mode);
 
 	if (!this->handle_) {
-		PostErrorMessage("Unable to open file (%s)", this->filename_.data());
+		throw FileException("Unable to open file (%s)", this->filename_.data());
 	}
 
 	_fseeki64((FILE*)this->handle_, 0, SEEK_END);
@@ -196,7 +196,7 @@ Void File::Open(StringC filename, StringC mode) {
 Uint32 File::Write(VoidP buffer, Uint32 length) {
 
 	if (!this->handle_) {
-		PostErrorMessage("Unable to write buffer to file with NULL handle", 1);
+		throw FileException("Unable to write buffer to file with NULL handle", 1);
 	}
 
 	return
@@ -208,7 +208,7 @@ Uint32 File::Read(VoidP buffer, Uint32 length) {
 	Uint32 position = this->GetPosition();
 
 	if (!this->handle_) {
-		PostErrorMessage("Unable to read buffer from file with NULL handle", 1);
+		throw FileException("Unable to read buffer from file with NULL handle", 1);
 	}
 
 	fread(buffer, length, 1, (FILE*)this->handle_);
@@ -220,7 +220,7 @@ Void File::Close(Void) {
 
 	if (this->handle_) {
 		if (fclose((FILE*)this->handle_) != 0) {
-			PostErrorMessage("Unable to close file (%s)", this->filename_.data());
+			throw FileException("Unable to close file (%s)", this->filename_.data());
 		}
 	}
 
@@ -242,11 +242,11 @@ Uint64 File::GetPosition64(Void) {
 	fpos_t _position;
 
 	if (!this->handle_) {
-		PostErrorMessage("Unable to get file's position with NULL handle", 1);
+		throw FileException("Unable to get file's position with NULL handle", 1);
 	}
 
 	if (fgetpos((FILE*)this->handle_, &_position) != 0) {
-		PostErrorMessage("Unable to get file's position", 1);
+		throw FileException("Unable to get file's position", 1);
 	}
 
 	return (Uint64)_position;
@@ -264,7 +264,7 @@ Uint64 File::SetPosition64(Uint64 position) {
 	fpos_t _position = position;
 
 	if (fsetpos((FILE*)this->handle_, &_position) != 0) {
-		PostErrorMessage("Unable to set file's position", 1);
+		throw FileException("Unable to set file's position", 1);
 	}
 
 	return _previous;
@@ -287,7 +287,7 @@ Time File::GetModificationDate(Void) {
 	Stat st;
 
 	if (stat(this->filename_.data(), &st)) {
-		PostErrorMessage("Unable to get file's modification date", 1);
+		throw FileException("Unable to get file's modification date", 1);
 	}
 
 	time.BuildForDate(st.st_mtime);
@@ -301,7 +301,7 @@ Time File::GetCreationDate(Void) {
 	Stat st;
 
 	if (stat(this->filename_.data(), &st)) {
-		PostErrorMessage("Unable to get file's modification date", 1);
+		throw FileException("Unable to get file's modification date", 1);
 	}
 
 	time.BuildForDate(st.st_ctime);
@@ -315,7 +315,7 @@ Time File::GetAccessDate(Void) {
 	Stat st;
 
 	if (stat(this->filename_.data(), &st) != 0) {
-		PostErrorMessage("Unable to get file's modification date", 1);
+		throw FileException("Unable to get file's modification date", 1);
 	}
 
 	time.BuildForDate(st.st_atime);
@@ -449,7 +449,7 @@ Bool File::CreateDirectoryTree(StringC tree) {
 		buffer += dir;
 
 		if (!CreateDirectory(buffer.data())) {
-			PostWarningMessage("Unable to create directory (%s)", buffer.data());
+			throw FileException("Unable to create directory (%s)", buffer.data());
 		}
 
 		buffer += LAME_SLASH;
@@ -665,6 +665,24 @@ Buffer File::GetPathWithoutEnd(StringC filename) {
 	}
 
 	return result;
+}
+
+Void FilePathInfo::Parse(StringC buffer) {
+
+	this->name = File::GetFileNameWithoutExtension(buffer);
+	this->extension = File::GetFileExtension(buffer);
+	this->path = File::GetPathWithoutEnd(buffer);
+	this->buffer = File::NormalizePath(buffer);
+}
+
+Void FilePathInfo::Create() {
+
+	this->buffer.clear();
+	this->buffer += this->path;
+	this->buffer += LAME_SLASH;
+	this->buffer += this->name;
+	this->buffer += '.';
+	this->buffer += this->extension;
 }
 
 LAME_END2

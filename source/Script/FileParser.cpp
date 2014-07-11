@@ -138,7 +138,9 @@ Void FileParser::Parse(StringC script) {
 		LexNodePtr node = new LexNode(lexWord, line, _ParseLex(&script, &lexWord));
 
 		if (!node->lex) {
-			delete(node); continue;
+			++line;
+			delete(node);
+			continue;
 		}
 
 		while (
@@ -165,10 +167,8 @@ Void FileParser::Parse(StringC script) {
 
 		if (node->lex->id == kScriptLexLineComment) {
 
-			++line;
-
 			if (*(script - 1) == '\n' || *(script - 1) == '\r') {
-				++line; continue;
+				continue;
 			}
 			while (*script && *script != '\n') {
 				++script;

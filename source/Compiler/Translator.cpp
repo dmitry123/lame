@@ -197,7 +197,7 @@ static Void _Return(VariablePtr var) {
 	registerStack.push_back(var);
 }
 
-static Void _TranslateMov(Uint32 command, VariablePtr left, VariablePtr right, Bool isFloat = FALSE) {
+static Void _TranslateMov(Uint32 command, VariablePtr source, VariablePtr left, VariablePtr right, Bool isFloat = FALSE) {
 
 	VariablePtr r;
 
@@ -208,8 +208,8 @@ static Void _TranslateMov(Uint32 command, VariablePtr left, VariablePtr right, B
 	}
 
 	switch (command) {
-	case MOV: 
-		break;
+		case MOV: r->v.intValue = right->v.intValue; break;
+		case FMOV: r->v.floatValue = right->v.floatValue; break;
 	}
 
 	_Read2(&left, &right);
@@ -219,7 +219,7 @@ static Void _TranslateMov(Uint32 command, VariablePtr left, VariablePtr right, B
 	_Return(r);
 }
 
-static Void _TranslateMath(Uint32 command, VariablePtr left, VariablePtr right, Bool isFloat = FALSE) {
+static Void _TranslateMath(Uint32 command, VariablePtr source, VariablePtr left, VariablePtr right, Bool isFloat = FALSE) {
 
 	VariablePtr r;
 
@@ -248,7 +248,7 @@ static Void _TranslateMath(Uint32 command, VariablePtr left, VariablePtr right, 
 	}
 }
 
-static Void _TranslateCondition(Uint32 cmp, Uint32 command, VariablePtr left, VariablePtr right) {
+static Void _TranslateCondition(Uint32 cmp, Uint32 command, VariablePtr source, VariablePtr left, VariablePtr right) {
 
 	VariablePtr r;
 
@@ -271,87 +271,87 @@ static Void _TranslateCondition(Uint32 cmp, Uint32 command, VariablePtr left, Va
 	_Return(r);
 }
 
-static Void _TranslateSingle(Uint32 command, VariablePtr left, VariablePtr right) {
+static Void _TranslateSingle(Uint32 command, VariablePtr source) {
 
-	_Read1(&left);
+	_Read1(&source);
 	_New(command);
-	_Write(left);
-	_Return(left);
+	_Write(source);
+	_Return(source);
 }
 
-Void OverloadInteger(ClassPtr intClass) {
+static Void OverloadInteger(ClassPtr intClass) {
 
-	intClass->Overload(Class::Operator::Move, [](VariablePtr left, VariablePtr right) {
-		_TranslateMov(MOV, left, right);
+	intClass->Overload(Class::Operator::Move, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateMov(MOV, source, left, right);
 	});
-	intClass->Overload(Class::Operator::Add, [](VariablePtr left, VariablePtr right) {
-		_TranslateMath(ADD, left, right);
+	intClass->Overload(Class::Operator::Add, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateMath(ADD, source, left, right);
 	});
-	intClass->Overload(Class::Operator::Sub, [](VariablePtr left, VariablePtr right) {
-		_TranslateMath(SUB, left, right);
+	intClass->Overload(Class::Operator::Sub, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateMath(SUB, source, left, right);
 	});
-	intClass->Overload(Class::Operator::Mul, [](VariablePtr left, VariablePtr right) {
-		_TranslateMath(MUL, left, right);
+	intClass->Overload(Class::Operator::Mul, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateMath(MUL, source, left, right);
 	});
-	intClass->Overload(Class::Operator::Div, [](VariablePtr left, VariablePtr right) {
-		_TranslateMath(DIV, left, right);
+	intClass->Overload(Class::Operator::Div, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateMath(DIV, source, left, right);
 	});
-	intClass->Overload(Class::Operator::Mod, [](VariablePtr left, VariablePtr right) {
-		_TranslateMath(MOD, left, right);
+	intClass->Overload(Class::Operator::Mod, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateMath(MOD, source, left, right);
 	});
-	intClass->Overload(Class::Operator::ShiftL, [](VariablePtr left, VariablePtr right) {
-		_TranslateMath(SHL, left, right);
+	intClass->Overload(Class::Operator::ShiftL, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateMath(SHL, source, left, right);
 	});
-	intClass->Overload(Class::Operator::ShiftR, [](VariablePtr left, VariablePtr right) {
-		_TranslateMath(SHR, left, right);
+	intClass->Overload(Class::Operator::ShiftR, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateMath(SHR, source, left, right);
 	});
-	intClass->Overload(Class::Operator::Above, [](VariablePtr left, VariablePtr right) {
-		_TranslateCondition(CMP, JNA, left, right);
+	intClass->Overload(Class::Operator::Above, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateCondition(CMP, JNA, source, left, right);
 	});
-	intClass->Overload(Class::Operator::Bellow, [](VariablePtr left, VariablePtr right) {
-		_TranslateCondition(CMP, JNB, left, right);
+	intClass->Overload(Class::Operator::Bellow, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateCondition(CMP, JNB, source, left, right);
 	});
-	intClass->Overload(Class::Operator::AboveE, [](VariablePtr left, VariablePtr right) {
-		_TranslateCondition(CMP, JNAE, left, right);
+	intClass->Overload(Class::Operator::AboveE, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateCondition(CMP, JNAE, source, left, right);
 	});
-	intClass->Overload(Class::Operator::BellowE, [](VariablePtr left, VariablePtr right) {
-		_TranslateCondition(CMP, JNBE, left, right);
+	intClass->Overload(Class::Operator::BellowE, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateCondition(CMP, JNBE, source, left, right);
 	});
-	intClass->Overload(Class::Operator::Equal, [](VariablePtr left, VariablePtr right) {
-		_TranslateCondition(CMP, JNE, left, right);
+	intClass->Overload(Class::Operator::Equal, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateCondition(CMP, JNE, source, left, right);
 	});
-	intClass->Overload(Class::Operator::NotEqual, [](VariablePtr left, VariablePtr right) {
-		_TranslateCondition(CMP, JE, left, right);
+	intClass->Overload(Class::Operator::NotEqual, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateCondition(CMP, JE, source, left, right);
 	});
-	intClass->Overload(Class::Operator::And, [](VariablePtr left, VariablePtr right) {
-		_TranslateMath(AND, left, right);
+	intClass->Overload(Class::Operator::And, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateMath(AND, source, left, right);
 	});
-	intClass->Overload(Class::Operator::Or, [](VariablePtr left, VariablePtr right) {
-		_TranslateMath(OR, left, right);
+	intClass->Overload(Class::Operator::Or, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateMath(OR, source, left, right);
 	});
-	intClass->Overload(Class::Operator::BitAnd, [](VariablePtr left, VariablePtr right) {
-		_TranslateMath(AND, left, right);
+	intClass->Overload(Class::Operator::BitAnd, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateMath(AND, source, left, right);
 	});
-	intClass->Overload(Class::Operator::BitOr, [](VariablePtr left, VariablePtr right) {
-		_TranslateMath(OR, left, right);
+	intClass->Overload(Class::Operator::BitOr, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateMath(OR, source, left, right);
 	});
-	intClass->Overload(Class::Operator::BitXor, [](VariablePtr left, VariablePtr right) {
-		_TranslateMath(XOR, left, right);
+	intClass->Overload(Class::Operator::BitXor, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateMath(XOR, source, left, right);
 	});
-	intClass->Overload(Class::Operator::Inc, [](VariablePtr left, VariablePtr right) {
-		_TranslateSingle(INC, left, right);
+	intClass->Overload(Class::Operator::Inc, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateSingle(INC, source);
 	});
-	intClass->Overload(Class::Operator::Dec, [](VariablePtr left, VariablePtr right) {
-		_TranslateSingle(INC, left, right);
+	intClass->Overload(Class::Operator::Dec, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateSingle(INC, source);
 	});
-	intClass->Overload(Class::Operator::BitNot, [](VariablePtr left, VariablePtr right) {
-		_TranslateSingle(LNOT, left, right);
+	intClass->Overload(Class::Operator::BitNot, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateSingle(LNOT, source);
 	});
-	intClass->Overload(Class::Operator::Not, [](VariablePtr left, VariablePtr right) {
-		_TranslateSingle(NOT, left, right);
+	intClass->Overload(Class::Operator::Not, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateSingle(NOT, source);
 	});
 
-	intClass->Overload(Class::Operator::Cast, [](VariablePtr left, VariablePtr right) {
+	intClass->Overload(Class::Operator::Cast, [](VariablePtr source, VariablePtr left, VariablePtr right) {
 
 		VariablePtr r;
 
@@ -395,43 +395,43 @@ Void OverloadInteger(ClassPtr intClass) {
 	});
 }
 
-Void OverloadFloat(ClassPtr floatClass) {
+static Void OverloadFloat(ClassPtr floatClass) {
 
-	floatClass->Overload(Class::Operator::Move, [](VariablePtr left, VariablePtr right) {
-		_TranslateMov(FMOV, left, right, TRUE);
+	floatClass->Overload(Class::Operator::Move, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateMov(FMOV, source, left, right, TRUE);
 	});
-	floatClass->Overload(Class::Operator::Add, [](VariablePtr left, VariablePtr right) {
-		_TranslateMath(FADD, left, right, TRUE);
+	floatClass->Overload(Class::Operator::Add, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateMath(FADD, source, left, right, TRUE);
 	});
-	floatClass->Overload(Class::Operator::Sub, [](VariablePtr left, VariablePtr right) {
-		_TranslateMath(FSUB, left, right, TRUE);
+	floatClass->Overload(Class::Operator::Sub, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateMath(FSUB, source, left, right, TRUE);
 	});
-	floatClass->Overload(Class::Operator::Mul, [](VariablePtr left, VariablePtr right) {
-		_TranslateMath(FMUL, left, right, TRUE);
+	floatClass->Overload(Class::Operator::Mul, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateMath(FMUL, source, left, right, TRUE);
 	});
-	floatClass->Overload(Class::Operator::Div, [](VariablePtr left, VariablePtr right) {
-		_TranslateMath(FDIV, left, right, TRUE);
+	floatClass->Overload(Class::Operator::Div, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateMath(FDIV, source, left, right, TRUE);
 	});
-	floatClass->Overload(Class::Operator::Above, [](VariablePtr left, VariablePtr right) {
-		_TranslateCondition(JCMP, JNA, left, right);
+	floatClass->Overload(Class::Operator::Above, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateCondition(JCMP, JNA, source, left, right);
 	});
-	floatClass->Overload(Class::Operator::Bellow, [](VariablePtr left, VariablePtr right) {
-		_TranslateCondition(JCMP, JNB, left, right);
+	floatClass->Overload(Class::Operator::Bellow, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateCondition(JCMP, JNB, source, left, right);
 	});
-	floatClass->Overload(Class::Operator::AboveE, [](VariablePtr left, VariablePtr right) {
-		_TranslateCondition(JCMP, JNAE, left, right);
+	floatClass->Overload(Class::Operator::AboveE, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateCondition(JCMP, JNAE, source, left, right);
 	});
-	floatClass->Overload(Class::Operator::BellowE, [](VariablePtr left, VariablePtr right) {
-		_TranslateCondition(JCMP, JNBE, left, right);
+	floatClass->Overload(Class::Operator::BellowE, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateCondition(JCMP, JNBE, source, left, right);
 	});
-	floatClass->Overload(Class::Operator::Equal, [](VariablePtr left, VariablePtr right) {
-		_TranslateCondition(JCMP, JNE, left, right);
+	floatClass->Overload(Class::Operator::Equal, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateCondition(JCMP, JNE, source, left, right);
 	});
-	floatClass->Overload(Class::Operator::NotEqual, [](VariablePtr left, VariablePtr right) {
-		_TranslateCondition(JCMP, JE, left, right);
+	floatClass->Overload(Class::Operator::NotEqual, [](VariablePtr source, VariablePtr left, VariablePtr right) {
+		_TranslateCondition(JCMP, JE, source, left, right);
 	});
 
-	floatClass->Overload(Class::Operator::Cast, [](VariablePtr left, VariablePtr right) {
+	floatClass->Overload(Class::Operator::Cast, [](VariablePtr source, VariablePtr left, VariablePtr right) {
 
 		VariablePtr r;
 
@@ -451,18 +451,14 @@ Void OverloadFloat(ClassPtr floatClass) {
 		if (left->GetVarType() != Variable::Var::Float &&
 			left->GetVarType() != Variable::Var::FloatPtr
 		) {
-
 			r = _FindAvailableRegisterF();
 			registerStack.pop_back();
-
 			if (left->GetVarType() == Variable::Var::Integer) {
-
 				_New(ITF);
 				_Write(r);
 				_Write(left);
 				_Return(r);
 				_Return(right);
-
 			} else {
 				throw ClassInvalidCastException();
 			}
@@ -474,38 +470,38 @@ Void OverloadFloat(ClassPtr floatClass) {
 
 static Void OverloadString(ClassPtr stringClass) {
 
-	stringClass->Overload(Class::Operator::Move, [](VariablePtr left, VariablePtr right) {
+	stringClass->Overload(Class::Operator::Move, [](VariablePtr source, VariablePtr left, VariablePtr right) {
 
 	});
-	stringClass->Overload(Class::Operator::Add, [](VariablePtr left, VariablePtr right) {
+	stringClass->Overload(Class::Operator::Add, [](VariablePtr source, VariablePtr left, VariablePtr right) {
 
 	});
-	stringClass->Overload(Class::Operator::Above, [](VariablePtr left, VariablePtr right) {
+	stringClass->Overload(Class::Operator::Above, [](VariablePtr source, VariablePtr left, VariablePtr right) {
 
 	});
-	stringClass->Overload(Class::Operator::Bellow, [](VariablePtr left, VariablePtr right) {
+	stringClass->Overload(Class::Operator::Bellow, [](VariablePtr source, VariablePtr left, VariablePtr right) {
 
 	});
-	stringClass->Overload(Class::Operator::AboveE, [](VariablePtr left, VariablePtr right) {
+	stringClass->Overload(Class::Operator::AboveE, [](VariablePtr source, VariablePtr left, VariablePtr right) {
 
 	});
-	stringClass->Overload(Class::Operator::BellowE, [](VariablePtr left, VariablePtr right) {
+	stringClass->Overload(Class::Operator::BellowE, [](VariablePtr source, VariablePtr left, VariablePtr right) {
 
 	});
-	stringClass->Overload(Class::Operator::Equal, [](VariablePtr left, VariablePtr right) {
+	stringClass->Overload(Class::Operator::Equal, [](VariablePtr source, VariablePtr left, VariablePtr right) {
 
 	});
-	stringClass->Overload(Class::Operator::NotEqual, [](VariablePtr left, VariablePtr right) {
+	stringClass->Overload(Class::Operator::NotEqual, [](VariablePtr source, VariablePtr left, VariablePtr right) {
 
 	});
-	stringClass->Overload(Class::Operator::Cast, [](VariablePtr left, VariablePtr right) {
+	stringClass->Overload(Class::Operator::Cast, [](VariablePtr source, VariablePtr left, VariablePtr right) {
 
 	});
 }
 
 static Void OverloadObject(ClassPtr objectClass) {
 
-	objectClass->Overload(Class::Operator::Move, [](VariablePtr left, VariablePtr right) {
+	objectClass->Overload(Class::Operator::Move, [](VariablePtr source, VariablePtr left, VariablePtr right) {
 
 		_Read2(&left, &right);
 		_New(MOV);
@@ -514,7 +510,7 @@ static Void OverloadObject(ClassPtr objectClass) {
 		_Return(left);
 	});
 
-	objectClass->Overload(Class::Operator::Cast, [](VariablePtr left, VariablePtr right) {
+	objectClass->Overload(Class::Operator::Cast, [](VariablePtr source, VariablePtr left, VariablePtr right) {
 
 		if (right->GetClass() == left->GetClass()) {
 			goto __AllowCast;
@@ -537,7 +533,7 @@ static Void OverloadObject(ClassPtr objectClass) {
 	});
 }
 
-Void NodePerformer::Overload(Void) {
+Void CodeTranslator::Overload(Void) {
 
 	OverloadInteger(GlobalScope::classBoolean);
 	OverloadInteger(GlobalScope::classByte);
@@ -555,7 +551,7 @@ Void NodePerformer::Overload(Void) {
 	OverloadObject(GlobalScope::classClass);
 }
 
-Void NodePerformer::Perform(NodeBuilderPtr builder) {
+Void CodeTranslator::Translate(NodeBuilderPtr builder) {
 
 	this->builder = builder;
 	
@@ -563,76 +559,12 @@ Void NodePerformer::Perform(NodeBuilderPtr builder) {
 		builder->GetRootNode()->blockList);
 }
 
-Bool NodePerformer::Evaluate(NodeListRef nodeList) {
-
-	VarList varStack;
-
-	if (!this->builder) {
-		return FALSE;
-	}
-
-	NodeList::iterator i = nodeList.begin();
-
-	while (i != nodeList.end()) {
-
-		NodePtr n = *i;
-
-		if (n->id == kScriptNodeClass ||
-			n->id == kScriptNodeInterface
-		) {
-			goto _Continue;
-		}
-
-		if (n->lex->lex->id == kScriptLexSemicolon) {
-			registerStack.clear();
-			nodeStack.clear();
-			_ClearAvailableRegisters();
-			goto _Continue;
-		}
-
-		lastNode = n;
-
-		if (n->id == kScriptNodeInvoke ||
-			n->id == kScriptNodeAlloc
-		) {
-			// ignore
-		}
-		
-		if (n->lex->lex->IsUnknown() ||
-			n->lex->lex->IsConst()
-		) {
-			nodeStack.push_back({ n, n->var });
-		}
-		else if (n->lex->lex->id == kScriptLexNew) {
-			this->_TranslateNew(n);
-		}
-		else if (
-			n->lex->lex->IsMath() ||
-			n->lex->lex->IsBool() ||
-			n->lex->lex->id == kScriptLexDirected ||
-			n->lex->lex->id == kScriptLexMediated
-		) {
-			if (n->lex->args == 1) {
-				this->_Translate1(n);
-			} else if (n->lex->args == 2) {
-				this->_Translate2(n);
-			} else {
-				this->_Translate0(n);
-			}
-		}
-
-	_Continue:
-		++i;
-	}
-
-	if (nodeStack.size() > 1) {
-		//PostSyntaxError(nodeStack.back().node->lex->line, "Unexcepted expression (%s)", nodeStack.back().node->word.data());
-	}
+Bool CodeTranslator::Evaluate(NodeListRef nodeList) {
 
 	return TRUE;
 }
 
-Void NodePerformer::_TranslateNew(NodePtr node) {
+Void CodeTranslator::_TranslateNew(NodePtr node) {
 
 	ObjectPtr type;
 	NodePtr left;
@@ -695,18 +627,18 @@ Void NodePerformer::_TranslateNew(NodePtr node) {
 		//}
 	}
 
-	nodeStack.push_back({ left, registerStack.back() });
+	varStack.push_back({ left, registerStack.back() });
 }
 
-Void NodePerformer::_TranslateCondition(NodePtr node) {
-
-}
-
-Void NodePerformer::_Translate0(NodePtr n) {
+Void CodeTranslator::_TranslateCondition(NodePtr node) {
 
 }
 
-Void NodePerformer::_Translate1(NodePtr n) {
+Void CodeTranslator::_Translate0(NodePtr n) {
+
+}
+
+Void CodeTranslator::_Translate1(NodePtr n) {
 
 	VarNodePtr l;
 
@@ -721,147 +653,137 @@ Void NodePerformer::_Translate1(NodePtr n) {
 		}
 	}
 
-	ObjectPtr result = left->var;
+	VariablePtr result = left->var->GetVariable();
 
 	Error e = left->var->GetClass()->Evaluate(
-		operatorMap[n->lex->lex->id], result, result, n->lex->lex);
+		operatorMap[n->lex->lex->id], result, result, result, n->lex->lex);
 
 	if (e != Error::NoError) {
 		PostSyntaxError(n->lex->line, "%s (%s)", e.GetDescription(), left->var->GetClass()->GetName().data());
 	}
 
-	if (n->lex->lex->IsLeft()) {
-		if (left->var->GetVariable()->GetVarType() == Variable::Var::Integer) {
-			left->var->GetClass()->Evaluate(
-				operatorMap[kScriptLexSet], result, GlobalScope::r1, Lex::Find(kScriptLexSet));
-		} else {
-			left->var->GetClass()->Evaluate(
-				operatorMap[kScriptLexSet], result, GlobalScope::f1, Lex::Find(kScriptLexSet));
-		}
-	}
-
-	nodeStack.push_back({ left, registerStack.back() });
+	varStack.push_back({ left, registerStack.back() });
 }
 
-Void NodePerformer::_Translate2(NodePtr n) {
+Void CodeTranslator::_Translate2(NodePtr n) {
 
-	VarNodePtr r;
-	VarNodePtr l;
-
-	this->_ReadArguments(n);
-
-	r = &this->argsArray[0];
-	l = &this->argsArray[1];
-
-	NodePtr right = r->node;
-	NodePtr left = l->node;
-
-	if (n->lex->lex->id == kScriptLexDirected ||
-		n->lex->lex->id == kScriptLexMediated
-	) {
-		if (!left->var) {
-			if (!(left->var = left->parent->GetScope()->GetVarScope()->Find(left->word))) {
-				if (!(left->var = left->parent->GetScope()->GetClassScope()->Find(left->word))) {
-					PostSyntaxError(left->lex->line, "Undeclared variable or class (%s)", left->word.data());
-				}
-			}
-		}
-		if (!left->var->CheckType(Class::Type::Variable)) {
-			PostSyntaxError(left->lex->line, "Unable to apply directed selection to non-variable object (%s)", left->word.data());
-		}
-	}
-
-	ObjectPtr result = left->var;
-	ObjectPtr with = right->var;
-
-	if (n->lex->lex->id == kScriptLexDirected ||
-		n->lex->lex->id == kScriptLexMediated
-	) {
-		Uint32 methodHash = 0;
-		ClassPtr varClass;
-
-		varClass = left->var->GetVariable()->GetObject();
-
-		if (right->id == kScriptNodeInvoke ||
-			right->id == kScriptNodeAlloc
-		) {
-			Vector<VariablePtr> varList;
-			for (NodePtr n : right->argList) {
-				varList.push_back(n->var->GetVariable());
-			}
-			methodHash = Method::ComputeInvokeHash(varList);
-			result = varClass->FindMethod(right->word, methodHash);
-			if (!result) {
-				PostSyntaxError(n->lex->line, "Undeclared method (%s)", right->word.data());
-			}
-			result->GetMethod()->Invoke(varList);
-		}
-		else {
-			if (!varClass) {
-				PostSyntaxError(n->lex->line, "Null pointer (%s)", result->GetName().data());
-			}
-			result = varClass->FindVariable(right->word);
-			if (!result) {
-				PostSyntaxError(n->lex->line, "Undeclared field (%s)", right->word.data());
-			}
-		}
-
-		if (result->CheckModificator(Class::Modificator::Private) ||
-			result->CheckModificator(Class::Modificator::Protected)
-		) {
-			PostSyntaxError(n->lex->line, "You can't get access to private/protected objects from this scope (%s)", right->word.data());
-		}
-
-		left->var = result;
-
-		goto _SaveNode;
-	}
-
-	printf("  // %s %s %s\n", result->GetName().data(), n->word.data(), with->GetName().data());
-
-	if (with->CheckModificator(Class::Modificator::Register)) {
-		with->GetVariable()->registerType->SetSegment(result->GetSegment(), result->GetAddressPtr());
-	}
-
-	_Print2(result->GetVariable(), with->GetVariable());
-
-	try {
-		Error e = left->var->GetClass()->Evaluate(
-			operatorMap[n->lex->lex->id], result, with, n->lex->lex);
-
-		if (e != Error::NoError) {
-			PostSyntaxError(n->lex->line, "%s (%s)", e.GetDescription(), left->var->GetClass()->GetName().data());
-		}
-	}
-	catch (ClassInvalidCastException) {
-
-		if (with->CheckModificator(Class::Modificator::Register)) {
-			PostSyntaxError(n->lex->line, "Unable to cast from (%s) to (%s)", result->GetClass()->GetName().data(), with->GetVariable()->registerType->GetClass()->GetName().data());
-		} else {
-			PostSyntaxError(n->lex->line, "Unable to cast from (%s) to (%s)", result->GetClass()->GetName().data(), with->GetClass()->GetName().data());
-		}
-	}
-
-	if (n->lex->lex->IsLeft() && n->lex->lex->id != kScriptLexSet) {
-		left->var->GetClass()->Evaluate(
-			operatorMap[kScriptLexSet], result, GlobalScope::r1, Lex::Find(kScriptLexSet));
-	}
-
-_SaveNode:
-	nodeStack.push_back({ left, registerStack.back() });
+//	VarNodePtr r;
+//	VarNodePtr l;
+//
+//	this->_ReadArguments(n);
+//
+//	r = &this->argsArray[0];
+//	l = &this->argsArray[1];
+//
+//	NodePtr right = r->node;
+//	NodePtr left = l->node;
+//
+//	if (n->lex->lex->id == kScriptLexDirected ||
+//		n->lex->lex->id == kScriptLexMediated
+//	) {
+//		if (!left->var) {
+//			if (!(left->var = left->parent->GetScope()->GetVarScope()->Find(left->word))) {
+//				if (!(left->var = left->parent->GetScope()->GetClassScope()->Find(left->word))) {
+//					PostSyntaxError(left->lex->line, "Undeclared variable or class (%s)", left->word.data());
+//				}
+//			}
+//		}
+//		if (!left->var->CheckType(Class::Type::Variable)) {
+//			PostSyntaxError(left->lex->line, "Unable to apply directed selection to non-variable object (%s)", left->word.data());
+//		}
+//	}
+//
+//	ObjectPtr result = left->var;
+//	ObjectPtr with = right->var;
+//
+//	if (n->lex->lex->id == kScriptLexDirected ||
+//		n->lex->lex->id == kScriptLexMediated
+//	) {
+//		Uint32 methodHash = 0;
+//		ClassPtr varClass;
+//
+//		varClass = left->var->GetVariable()->GetObject();
+//
+//		if (right->id == kScriptNodeInvoke ||
+//			right->id == kScriptNodeAlloc
+//		) {
+//			Vector<VariablePtr> varList;
+//			for (NodePtr n : right->argList) {
+//				varList.push_back(n->var->GetVariable());
+//			}
+//			methodHash = Method::ComputeInvokeHash(varList);
+//			result = varClass->FindMethod(right->word, methodHash);
+//			if (!result) {
+//				PostSyntaxError(n->lex->line, "Undeclared method (%s)", right->word.data());
+//			}
+//			result->GetMethod()->Invoke(varList);
+//		}
+//		else {
+//			if (!varClass) {
+//				PostSyntaxError(n->lex->line, "Null pointer (%s)", result->GetName().data());
+//			}
+//			result = varClass->FindVariable(right->word);
+//			if (!result) {
+//				PostSyntaxError(n->lex->line, "Undeclared field (%s)", right->word.data());
+//			}
+//		}
+//
+//		if (result->CheckModificator(Class::Modificator::Private) ||
+//			result->CheckModificator(Class::Modificator::Protected)
+//		) {
+//			PostSyntaxError(n->lex->line, "You can't get access to private/protected objects from this scope (%s)", right->word.data());
+//		}
+//
+//		left->var = result;
+//
+//		goto _SaveNode;
+//	}
+//
+//	printf("  // %s %s %s\n", result->GetName().data(), n->word.data(), with->GetName().data());
+//
+//	if (with->CheckModificator(Class::Modificator::Register)) {
+//		with->GetVariable()->registerType->SetSegment(result->GetSegment(), result->GetAddressPtr());
+//	}
+//
+//	_Print2(result->GetVariable(), with->GetVariable());
+//
+//	try {
+//		Error e = left->var->GetClass()->Evaluate(
+//			operatorMap[n->lex->lex->id], result, with, n->lex->lex);
+//
+//		if (e != Error::NoError) {
+//			PostSyntaxError(n->lex->line, "%s (%s)", e.GetDescription(), left->var->GetClass()->GetName().data());
+//		}
+//	}
+//	catch (ClassInvalidCastException) {
+//
+//		if (with->CheckModificator(Class::Modificator::Register)) {
+//			PostSyntaxError(n->lex->line, "Unable to cast from (%s) to (%s)", result->GetClass()->GetName().data(), with->GetVariable()->registerType->GetClass()->GetName().data());
+//		} else {
+//			PostSyntaxError(n->lex->line, "Unable to cast from (%s) to (%s)", result->GetClass()->GetName().data(), with->GetClass()->GetName().data());
+//		}
+//	}
+//
+//	if (n->lex->lex->IsLeft() && n->lex->lex->id != kScriptLexSet) {
+//		left->var->GetClass()->Evaluate(
+//			operatorMap[kScriptLexSet], result, GlobalScope::r1, Lex::Find(kScriptLexSet));
+//	}
+//
+//_SaveNode:
+//	varStack.push_back({ left, registerStack.back() });
 }
 
-Void NodePerformer::_ReadArguments(NodePtr node) {
+Void CodeTranslator::_ReadArguments(NodePtr node) {
 
-	if (nodeStack.size() < node->lex->args) {
+	if (varStack.size() < node->lex->args) {
 		PostSyntaxError(node->lex->line, "Operator \"%s\" requires %d arguments", node->word.data(), node->lex->args);
 	}
 
 	this->argsArray.clear();
 
 	for (Uint32 i = 0; i < node->lex->args; i++) {
-		this->argsArray.push_back(nodeStack.back());
-		nodeStack.pop_back();
+		this->argsArray.push_back(varStack.back());
+		varStack.pop_back();
 	}
 }
 

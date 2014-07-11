@@ -46,17 +46,17 @@ Bool SegmentLinker::Remove(SegmentPtr segment) {
 	return TRUE;
 }
 
-Void SegmentLinker::Load(BufferRefC fileName) {
+Void SegmentLinker::Load(StringC fileName) {
 
 	HeaderInfo header;
 	SegmentInfo segment;
 	File file;
 
-	file.Open(fileName.data(), "rb");
+	file.Open(fileName, "rb");
 	file.Read(&header, sizeof(HeaderInfo));
 
 	if (header.singature != Uint32(signature)) {
-		PostErrorMessage("File isn't LameScript class (%s)", fileName.data());
+		throw SegmentLinkerException("File isn't LameScript class (%s)", fileName);
 	}
 
 	for (Uint32 i = 0; i < header.segmentCount; i++) {
@@ -83,7 +83,7 @@ Void SegmentLinker::Load(BufferRefC fileName) {
 	isLoaded = TRUE;
 }
 
-Void SegmentLinker::Save(BufferRefC fileName) {
+Void SegmentLinker::Save(StringC fileName) {
 
 	HeaderInfo header = {
 		Uint32(signature),
@@ -94,7 +94,7 @@ Void SegmentLinker::Save(BufferRefC fileName) {
 	Uint32 positionOffset = sizeof(HeaderInfo) +
 		sizeof(SegmentInfo) * this->segmentList.size();
 
-	file.Open(fileName.data(), "wb");
+	file.Open(fileName, "wb");
 	file.Write(&header, sizeof(HeaderInfo));
 
 	for (SegmentPtr s : this->segmentList) {

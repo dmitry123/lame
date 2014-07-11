@@ -177,9 +177,11 @@ Void GlobalScope::_InitializeObjectClass(Void) {
 	toString = classObject->GetClass()->GetScopeController()->GetMethodScope()
 		->Add(new Method("toString", NULL, classObject, classString));
 
-	toString->GetMethod()->SetNativeMethod([](MethodPtr m){
-		//r9->GetVariable()->SetString(m->GetThis()->GetName());
-	});
+	classObjectT = globalScope_->GetClassScope()->Add(new Class("ObjectT"))
+		->SetModificator(Class::Modificator::Final)
+		->SetModificator(Class::Modificator::Internal)->GetClass();
+
+	classObjectT->Extend(classObject);
 }
 
 Void GlobalScope::_InitializeClassClass(Void) {
@@ -201,15 +203,15 @@ Void GlobalScope::_InitializeStringClass(Void) {
 		->SetModificator(Class::Modificator::Final)
 		->SetModificator(Class::Modificator::Internal)->GetClass();
 
-	classString->Overload(Class::Operator::Move, [] (VariablePtr left, VariablePtr right) {
+	classString->Overload(Class::Operator::Move, [](VariablePtr source, VariablePtr left, VariablePtr right) {
 		left->stringValue = right->stringValue;
 	});
 
-	classString->Overload(Class::Operator::Add, [](VariablePtr left, VariablePtr right) {
+	classString->Overload(Class::Operator::Add, [](VariablePtr source, VariablePtr left, VariablePtr right) {
 		left->stringValue.append(right->stringValue);
 	});
 
-	classString->Overload(Class::Operator::Cast, [](VariablePtr left, VariablePtr right) {
+	classString->Overload(Class::Operator::Cast, [](VariablePtr source, VariablePtr left, VariablePtr right) {
 		left->SetString(left->GetString());
 	});
 }
@@ -222,6 +224,7 @@ ClassPtr GlobalScope::classLong = NULL;
 ClassPtr GlobalScope::classFloat = NULL;
 ClassPtr GlobalScope::classDouble = NULL;
 ClassPtr GlobalScope::classObject = NULL;
+ClassPtr GlobalScope::classObjectT = NULL;
 ClassPtr GlobalScope::classClass = NULL;
 ClassPtr GlobalScope::classBoolean = NULL;
 ClassPtr GlobalScope::classVoid = NULL;

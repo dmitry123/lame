@@ -1,57 +1,40 @@
 #include "Timer.h"
+#include "WaitManager.h"
+#include "Time.h"
 
 LAME_BEGIN2(Core)
 
-Void Timer::Create(Callback callback, Clock interval) {
+Void Timer::Reset(Void) {
+	this->lastTime = 0;
+}
 
-	this->Reset();
-
-	this->callback_ = callback;
-	this->interval_ = interval;
+Void Timer::Terminate(Void) {
+	this->waitManager->Remove(this);
 }
 
 Bool Timer::Update(Void) {
 
-	Clock current = Time::GetTime();
+	Clock currentTime = Time::GetTime();
 
-	if (this->suspended_) {
-		return LAME_TRUE;
+	if (currentTime - this->lastTime >= this->timeInterval) {
+		this->lastTime = currentTime;
+		++this->repeats;
+		return TRUE;
 	}
 
-	if (current - this->last_ >= this->interval_) {
+	return FALSE;
+}
 
-		// save current time interval as last
-		this->last_ = current;
+Timer::Timer(Proc timerCallback, Clock timeInterval, WaitManagerPtr waitManager) {
 
-		// invoke callback
-		if (this->callback_) {
-			this->callback_(this);
-		}
+	if (!waitManager) {
+		waitManager = WaitManager::GetDefaultWaitManager();
 	}
-
-	return
-		this->interval_ > 0;
-}
-
-Void Timer::Terminate(Void) {
-
-	this->last_ = 0;
-	this->suspended_ = 0;
-	this->interval_ = 0;
-}
-
-Void Timer::Suspend(Void) {
-	this->suspended_ = LAME_TRUE;
-}
-
-Void Timer::Resume(Void) {
-	this->suspended_ = LAME_FALSE;
-}
-
-Void Timer::Reset(Void) {
-
-	this->last_ = 0;
-	this->suspended_ = 0;
+	this->callback = timerCallback;
+	this->timeInterval = timeInterval;
+	this->waitManager = waitManager;
+	this->waitManager->_Append(this);
+	this->repeats = 0;
 }
 
 LAME_END2

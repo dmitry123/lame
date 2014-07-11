@@ -1,36 +1,26 @@
 #include "Condition.h"
+#include "Mutex.h"
 
 #include <pthread.h>
 #include <errno.h>
 
-#ifdef LAME_MSVC
-#  ifdef LAME_X64
-#    pragma comment(lib, "x64/pthreadvc2.lib")
-#  else
-#    pragma comment(lib, "x86/pthreadvc2.lib")
-#  endif
-#endif
-
 LAME_BEGIN2(Core)
 
-Condition::Condition() {
+Condition::Condition(MutexPtr mutex) {
+	this->mutex = mutex;
 	pthread_cond_init((pthread_cond_t*)&this->condition_, NULL);
-	pthread_mutex_init((pthread_mutex_t*)&this->lock_, NULL);
 }
 
 Condition::~Condition() {
-	pthread_mutex_destroy((pthread_mutex_t*)&this->lock_);
 	pthread_cond_destroy((pthread_cond_t*)&this->condition_);
 }
 
-Bool Condition::Lock(Void) {
-	return pthread_mutex_lock(
-		(pthread_mutex_t*)&this->lock_) == 0;
+Void Condition::Lock(Void) {
+	this->mutex->Lock();
 }
 
-Bool Condition::UnLock(Void) {
-	return pthread_mutex_unlock(
-		(pthread_mutex_t*)&this->lock_) == 0;
+Void Condition::UnLock(Void) {
+	this->mutex->UnLock();
 }
 
 Bool Condition::Signal(Void) {
@@ -44,15 +34,20 @@ Bool Condition::Broadcast(Void) {
 }
 
 Bool Condition::Wait(Void) {
+
+	VoidP mutexHandle = this->mutex->GetHandle();
+
 	return pthread_cond_wait(
 			(pthread_cond_t*)&this->condition_,
-			(pthread_mutex_t*)&this->lock_) == 0;
+			(pthread_mutex_t*)&mutexHandle) == 0;
 }
 
 Bool Condition::TimedWait(Clock duration) {
 
 	Sint32 result;
 	timespec s;
+
+	VoidP mutexHandle = this->mutex->GetHandle();
 
 #ifdef LAME_WINDOWS
     s.tv_sec = time(NULL) + duration / 1000;
@@ -64,9 +59,15 @@ Bool Condition::TimedWait(Clock duration) {
 
 	result = pthread_cond_timedwait(
 		(pthread_cond_t*)&this->condition_,
-		(pthread_mutex_t*)&this->lock_, &s);
+		(pthread_mutex_t*)&mutexHandle, &s);
 
 	return result == ETIMEDOUT;
+}
+
+Void Condition::Release(Void) {
+
+	this->Broadcast();
+	delete this;
 }
 
 LAME_END2

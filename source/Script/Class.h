@@ -12,6 +12,7 @@ class LAME_API Class : public Object {
 	friend class Interface;
 public:
 	typedef Void(*OperatorCallback)(
+		VariablePtr source,
 		VariablePtr left,
 		VariablePtr right);
 public:
@@ -88,11 +89,17 @@ public:
 	inline Void SetPriority(Uint32 priority) {
 		this->priority = priority;
 	}
+	inline Uint32 GetPriority() {
+		return this->priority;
+	}
+	inline Vector<OperatorCallback>& GetOperators() {
+		return this->operators;
+	}
 public:
 	Error Extend(ClassPtr object);
 	Error Implement(InterfacePtr object);
 	Error Overload(Operator op, OperatorCallback callback);
-	Error Evaluate(Operator op, ObjectPtr left, ObjectPtr right, LexPtrC lex);
+	Error Evaluate(Operator op, VariablePtr source, VariablePtr left, VariablePtr right, LexPtrC lex);
 	Void ComputeSizeOf(Void);
 private:
 	ClassPtr extended;

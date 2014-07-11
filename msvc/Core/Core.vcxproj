@@ -5,9 +5,17 @@
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -22,7 +30,20 @@
     <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
@@ -35,7 +56,13 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
@@ -43,7 +70,15 @@
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>D:\code\C++\Projects\lame\source;$(IncludePath)</IncludePath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>D:\code\C++\Projects\lame\source;$(IncludePath)</IncludePath>
+    <ReferencePath>D:\code\C++\Projects\Lame\msvc\Library;$(ReferencePath)</ReferencePath>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -52,8 +87,22 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;CORE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;CORE_EXPORTS;PTW32_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;CORE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -77,26 +126,49 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;CORE_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\source\Core\Any.h" />
     <ClInclude Include="..\..\source\Core\Atomic.h" />
+    <ClInclude Include="..\..\source\Core\Buffer.h" />
     <ClInclude Include="..\..\source\Core\Condition.h" />
     <ClInclude Include="..\..\source\Core\Core.h" />
-    <ClInclude Include="..\..\source\Core\CriticalSection.h" />
-    <ClInclude Include="..\..\source\Core\Directory.h" />
-    <ClInclude Include="..\..\source\Core\Event.h" />
-    <ClInclude Include="..\..\source\Core\File.h" />
-    <ClInclude Include="..\..\source\Core\FilePathInfo.h" />
-    <ClInclude Include="..\..\source\Core\Key.h" />
-    <ClInclude Include="..\..\source\Core\Lock.h" />
-    <ClInclude Include="..\..\source\Core\Math.h" />
-    <ClInclude Include="..\..\source\Core\Mutex.h" />
-    <ClInclude Include="..\..\source\Core\RecursiveMutex.h" />
-    <ClInclude Include="..\..\source\Core\Thread.h" />
-    <ClInclude Include="..\..\source\Core\Timer.h" />
-    <ClInclude Include="..\..\source\Core\Utility.h" />
+    <ClInclude Include="..\..\source\Core\Console.h" />
     <ClInclude Include="..\..\source\Core\Define.h" />
+    <ClInclude Include="..\..\source\Core\Directory.h" />
+    <ClInclude Include="..\..\source\Core\Exception.h" />
+    <ClInclude Include="..\..\source\Core\File.h" />
+    <ClInclude Include="..\..\source\Core\Hashable.h" />
+    <ClInclude Include="..\..\source\Core\Math.h" />
+    <ClInclude Include="..\..\source\Core\Observable.h" />
+    <ClInclude Include="..\..\source\Core\SharedPtr.h" />
+    <ClInclude Include="..\..\source\Core\Stream.h" />
     <ClInclude Include="..\..\source\Core\List.h" />
+    <ClInclude Include="..\..\source\Core\Locker.h" />
+    <ClInclude Include="..\..\source\Core\Mutex.h" />
+    <ClInclude Include="..\..\source\Core\Thread.h" />
+    <ClInclude Include="..\..\source\Core\Throwable.h" />
+    <ClInclude Include="..\..\source\Core\ThrowableAdapter.h" />
+    <ClInclude Include="..\..\source\Core\Time.h" />
+    <ClInclude Include="..\..\source\Core\Timer.h" />
     <ClInclude Include="..\..\source\Core\Types.h" />
+    <ClInclude Include="..\..\source\Core\WaitManager.h" />
     <ClInclude Include="..\..\source\Core\zlib\crc32.h" />
     <ClInclude Include="..\..\source\Core\zlib\deflate.h" />
     <ClInclude Include="..\..\source\Core\zlib\gzguts.h" />
@@ -110,29 +182,31 @@
     <ClInclude Include="..\..\source\Core\zlib\zutil.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\source\Core\Any.cpp" />
     <ClCompile Include="..\..\source\Core\Atomic.cpp" />
+    <ClCompile Include="..\..\source\Core\Buffer.cpp" />
     <ClCompile Include="..\..\source\Core\Condition.cpp" />
     <ClCompile Include="..\..\source\Core\Core.cpp" />
-    <ClCompile Include="..\..\source\Core\CriticalSection.cpp" />
+    <ClCompile Include="..\..\source\Core\Console.cpp" />
     <ClCompile Include="..\..\source\Core\Define.cpp" />
     <ClCompile Include="..\..\source\Core\Directory.cpp" />
-    <ClCompile Include="..\..\source\Core\ElasticBox.cpp" />
-    <ClCompile Include="..\..\source\Core\Event.cpp" />
-    <ClCompile Include="..\..\source\Core\List.cpp" />
-    <ClCompile Include="..\..\source\Core\Lock.cpp" />
-    <ClCompile Include="..\..\source\Core\Types.cpp" />
-    <ClCompile Include="..\..\source\Core\Utility.Buffer.cpp" />
-    <ClCompile Include="..\..\source\Core\Utility.Exception.cpp" />
+    <ClCompile Include="..\..\source\Core\Exception.cpp" />
     <ClCompile Include="..\..\source\Core\File.cpp" />
-    <ClCompile Include="..\..\source\Core\FilePathInfo.cpp" />
-    <ClCompile Include="..\..\source\Core\Key.cpp" />
+    <ClCompile Include="..\..\source\Core\Hashable.cpp" />
     <ClCompile Include="..\..\source\Core\Math.cpp" />
+    <ClCompile Include="..\..\source\Core\Observable.cpp" />
+    <ClCompile Include="..\..\source\Core\SharedPtr.cpp" />
+    <ClCompile Include="..\..\source\Core\Stream.cpp" />
+    <ClCompile Include="..\..\source\Core\List.cpp" />
+    <ClCompile Include="..\..\source\Core\Locker.cpp" />
     <ClCompile Include="..\..\source\Core\Mutex.cpp" />
-    <ClCompile Include="..\..\source\Core\RecursiveMutex.cpp" />
     <ClCompile Include="..\..\source\Core\Thread.cpp" />
-    <ClCompile Include="..\..\source\Core\Timer.Time.cpp" />
+    <ClCompile Include="..\..\source\Core\Throwable.cpp" />
+    <ClCompile Include="..\..\source\Core\ThrowableAdapter.cpp" />
+    <ClCompile Include="..\..\source\Core\Time.cpp" />
     <ClCompile Include="..\..\source\Core\Timer.cpp" />
-    <ClCompile Include="..\..\source\Core\Utility.Zlib.cpp" />
+    <ClCompile Include="..\..\source\Core\Types.cpp" />
+    <ClCompile Include="..\..\source\Core\WaitManager.cpp" />
     <ClCompile Include="..\..\source\Core\zlib\adler32.c" />
     <ClCompile Include="..\..\source\Core\zlib\compress.c" />
     <ClCompile Include="..\..\source\Core\zlib\crc32.c" />

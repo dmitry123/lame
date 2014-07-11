@@ -2,7 +2,8 @@
 #define __LAME_CORE__FILE__
 
 #include "Types.h"
-#include "Timer.h"
+#include "Time.h"
+#include "Buffer.h"
 
 LAME_BEGIN2(Core)
 
@@ -105,6 +106,28 @@ private:
 	Uint32 flags_;
 	Permission permission_;
 	Type type_;
+};
+
+class LAME_API FilePathInfo {
+public:
+	FilePathInfo() {
+	}
+public:
+	FilePathInfo(StringC buffer) {
+		this->Parse(buffer);
+	}
+public:
+	Void Parse(StringC buffer);
+	Void Create(Void);
+public:
+	inline operator StringC() const {
+		return this->buffer.data();
+	}
+public:
+	Buffer buffer;
+	Buffer path;
+	Buffer name;
+	Buffer extension;
 };
 
 LAME_END2

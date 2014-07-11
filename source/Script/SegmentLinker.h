@@ -12,8 +12,8 @@ public:
 public:
 	Bool Add(SegmentPtr segment);
 	Bool Remove(SegmentPtr segment);
-	Void Load(BufferRefC fileName);
-	Void Save(BufferRefC fileName);
+	Void Load(StringC fileName);
+	Void Save(StringC fileName);
 public:
 	typedef struct {
 		Uint32 singature;

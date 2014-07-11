@@ -13,6 +13,7 @@ typedef enum {
 	kScriptLexInt,
 	kScriptLexFloat,
 	kScriptLexString,
+	kScriptLexCast,
 	// brackets
 	kScriptLexBracketL,
 	kScriptLexBracketR,
@@ -98,6 +99,8 @@ typedef enum {
 	kScriptLexNative,
 	kScriptLexFinal,
 	kScriptLexAbstract,
+	// special lex for builder
+	kScriptLexArguments,
 	// amount
 	kScriptLexAmount
 } LexID;

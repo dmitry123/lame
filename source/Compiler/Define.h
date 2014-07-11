@@ -19,7 +19,8 @@
 
 LAME_BEGIN2(Compiler)
 
-typedef class NodePerformer *NodePerformerPtr, *const NodePerformerPtrC;
+typedef class CodeTranslator *CodeTranslatorPtr, *const CodeTranslatorPtrC;
+typedef class CodeAnalizer *CodeAnalizerPtr, *const CodeAnalizerPtrC;
 
 LAME_END2
 

@@ -38,6 +38,7 @@ public:
     static ClassPtr classFloat;
     static ClassPtr classDouble;
     static ClassPtr classObject;
+	static ClassPtr classObjectT;
     static ClassPtr classClass;
     static ClassPtr classBoolean;
     static ClassPtr classVoid;

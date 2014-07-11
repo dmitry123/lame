@@ -47,6 +47,9 @@ public:
 	Vector<Buffer> implements;
 	Bool isMethodImpl;
 	Bool isArray;
+	VariablePtr thisVar;
+	Buffer templates;
+	Buffer templatesNew;
 public:
 	Vector<NodePtr> argList;
 	Vector<NodePtr> blockList;

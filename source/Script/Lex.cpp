@@ -27,6 +27,10 @@ Map<LexID, Lex> Lex::lexMap = {
 			"#", P(0, 1), kScriptLexString, 0,
 				kScriptLexFlagRight | kScriptLexFlagConst }
 		},
+		{ kScriptLexCast, {
+			"#", P(3, 1), kScriptLexCast, 0,
+				kScriptLexFlagRight | kScriptLexFlagUnknown }
+		},
 
 		/* Brackets */
 
@@ -54,7 +58,7 @@ Map<LexID, Lex> Lex::lexMap = {
 		/* Selection Directed/Mediated */
 
 		{ kScriptLexDirected,
-			{ ".", P(2, 1), kScriptLexDirected, 2,
+			{ ".", P(2, 0), kScriptLexDirected, 2,
 				kScriptLexFlagRight }
 		},
 		{ kScriptLexMediated,
@@ -89,11 +93,11 @@ Map<LexID, Lex> Lex::lexMap = {
 				kScriptLexFlagLanguage | kScriptLexFlagRight }
 		},
 		{ kScriptLexBitNot,
-			{ "~", P(3, 0), kScriptLexBitNot, 1,
+			{ "~", P(3, 1), kScriptLexBitNot, 1,
 				kScriptLexFlagRight | kScriptLexFlagMath }
 		},
 		{ kScriptLexNot,
-			{ "!", P(3, 0), kScriptLexNot, 1,
+			{ "!", P(3, 1), kScriptLexNot, 1,
 				kScriptLexFlagRight | kScriptLexFlagMath }
 		},
 		{ kScriptLexUnaryMinus,

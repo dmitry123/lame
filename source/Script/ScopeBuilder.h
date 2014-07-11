@@ -7,6 +7,7 @@
 LAME_BEGIN2(Script)
 
 class LAME_API ScopeBuilder {
+	friend class CodeAnalizer;
 private:
 	typedef Void(*ForEachNode)(NodePtr node);
 public:

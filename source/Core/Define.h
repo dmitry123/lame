@@ -110,14 +110,10 @@
 #  define LAME_DLL
 #endif
 
-#if defined(LAME_DLL)
-#  if defined(CORE_EXPORTS)
-#    define LAME_API __declspec(dllexport)
-#  else
-#    define LAME_API __declspec(dllimport)
-#  endif
+#if defined(CORE_EXPORTS)
+#  define LAME_API __declspec(dllexport)
 #else
-#  define LAME_API
+#  define LAME_API __declspec(dllimport)
 #endif
 
 #if defined(LAME_WINDOWS)
@@ -186,6 +182,14 @@
 
 #if defined(LAME_VLD) && defined(LAME_MSVC)
 #  include <vld.h>
+#endif
+
+#ifdef LAME_MSVC
+#  ifdef LAME_X64
+#    pragma comment(lib, "pthreadvc2.lib")
+#  else
+#    pragma comment(lib, "pthreadvc2.lib")
+#  endif
 #endif
 
 #endif // ~__LAME_CORE__DEFINE__

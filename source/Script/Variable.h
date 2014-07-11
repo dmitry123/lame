@@ -20,8 +20,8 @@ public:
 		StringPtr
 	};
 public:
-	const ClassPtr classType;
-	      ObjectPtr registerType;
+	ClassPtr classType;
+	ObjectPtr registerType;
 public:
 	Variable(BufferRefC name, ObjectPtrC classType, NodePtr node = NULL);
 	~Variable();
@@ -37,16 +37,32 @@ public:
 public:
 	Error Clone(ObjectPtrC object) override;
 	Void Trace(Uint32 offset) override;
-	Error Make(Class::Operator command, VariablePtr var);
+	Error Make(Class::Operator command, VariablePtr left, VariablePtr right);
 public:
-	inline ClassPtr GetClass() override { return this->classType; }
-	inline VariablePtr GetVariable() override { return this; }
+	inline ClassPtr GetClass() override {
+		if (this->objectValue) {
+			return this->objectValue;
+		}
+		return this->classType;
+	}
+	inline ClassPtr GetClassType() {
+		return this->classType;
+	}
+	inline VariablePtr GetVariable() override {
+		return this;
+	}
 public:
 	inline ClassPtr GetObject() {
 		return this->objectValue;
 	}
 	inline Var GetVarType() {
 		return varType;
+	}
+	inline Void SetClassType(ClassPtr classType) {
+		this->classType = classType;
+		if (classType) {
+			this->SetSizeOf(classType->GetSizeOf());
+		}
 	}
 public:
 	union {

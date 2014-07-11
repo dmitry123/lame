@@ -26,7 +26,12 @@ Void Class::Trace(Uint32 offset) {
 
 	this->PrintModificators();
 
-	printf("class %s ", this->GetName().data());
+	if (this->GetTemplateClass()) {
+		printf("class %s <%s> ", this->GetName().data(), this->GetTemplateClass()->GetName().data());
+	}
+	else {
+		printf("class %s ", this->GetName().data());
+	}
 
 	if (this->extended) {
 		printf("extends %s ", this->extended->GetName().data());
@@ -157,11 +162,11 @@ Error Class::Extend(ClassPtr object) {
 	// object
 	if (this->extended &&
 		this->extended->CheckModificator(Modificator::Abstract)
-	) {
+		) {
 		// walk though all methods
 		for (auto i : this->extended->GetScopeController()
 			->GetMethodScope()->GetStringMap()
-		) {
+			) {
 			MethodPtr m = i.second->GetMethod();
 
 			// if we met not abstract method, then ignore it
@@ -250,11 +255,11 @@ Error Class::Overload(Operator op, OperatorCallback callback) {
 	return Error::NoError;
 }
 
-Error Class::Evaluate(Operator op, ObjectPtr left, ObjectPtr right, LexPtrC lex) {
+Error Class::Evaluate(Operator op, VariablePtr source, VariablePtr left, VariablePtr right, LexPtrC lex) {
 
 	if (!left->CheckType(Type::Variable) && !left->CheckType(Type::Array) ||
 		!right->CheckType(Type::Variable) && !right->CheckType(Type::Array)
-	) {
+		) {
 		return Error::Class_ObjectNotVariable;
 	}
 
@@ -273,17 +278,14 @@ Error Class::Evaluate(Operator op, ObjectPtr left, ObjectPtr right, LexPtrC lex)
 		return Error::Class_WrongOperator;
 	}
 
-	VariablePtr l = left->GetVariable();
-	VariablePtr r = right->GetVariable();
-
-	if (r->CheckModificator(Modificator::Register) && r->registerType) {
-		r = r->registerType->GetVariable();
+	if (right->CheckModificator(Modificator::Register) && right->registerType) {
+		right = right->registerType->GetVariable();
 	}
 
-	if (left->GetClass()->CheckModificator(Modificator::Primitive) && 
+	if (left->GetClass()->CheckModificator(Modificator::Primitive) &&
 		right->GetVariable() && left->GetVariable() && right->GetVariable()->registerType &&
 		right->GetVariable()->registerType->GetClass() != left->GetClass()
-	) {
+		) {
 		throw ClassInvalidCastException();
 	}
 
@@ -291,27 +293,30 @@ Error Class::Evaluate(Operator op, ObjectPtr left, ObjectPtr right, LexPtrC lex)
 		if (!this->operators.at((Uint32)Operator::Cast)) {
 			return Error::Class_OperatorNotOverloaded;
 		}
-		this->operators.at((Uint32)Operator::Cast)(r, l);
+		this->operators.at((Uint32)Operator::Cast)(source, right, left);
 	}
 	else if (left->GetVariable()->GetVarType() != right->GetVariable()->GetVarType()) {
 		if (lex->IsRight()) {
-			l->Make(Operator::Cast, r);
-		} else {
+			source->Make(Operator::Cast, left, right);
+		}
+		else {
 			if (!this->operators.at((Uint32)Operator::Cast)) {
 				return Error::Class_OperatorNotOverloaded;
 			}
-			this->operators.at((Uint32)Operator::Cast)(r, l);
+			this->operators.at((Uint32)Operator::Cast)(source, left, right);
 		}
 	}
 
-_AllowEval:
-	if (lex->IsRight()) {
-		l->Make(op, r);
-	} else {
-		if (!this->operators.at((Uint32)op)) {
-			return Error::Class_OperatorNotOverloaded;
+	if (op != Operator::Cast) {
+		if (lex->IsRight()) {
+			source->Make(op, left, right);
 		}
-		this->operators.at((Uint32)op)(r, l);
+		else {
+			if (!this->operators.at((Uint32)op)) {
+				return Error::Class_OperatorNotOverloaded;
+			}
+			this->operators.at((Uint32)op)(source, right, left);
+		}
 	}
 
 	return Error::NoError;

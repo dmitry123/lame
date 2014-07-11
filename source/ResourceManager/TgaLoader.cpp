@@ -631,13 +631,13 @@ Bool TgaLoader::Load(StringC fileName) {
 	pixels = (TgaPixel*)malloc(header.width * header.height * sizeof(TgaPixel));
 
 	if (header.datatypecode != 2 && header.datatypecode != 10) {
-		PostErrorMessage("Can only handle image type 2 and 10", 1);
+		throw ResourceException("Can only handle image type 2 and 10", 1);
 	}
 	if (header.bitsperpixel != 16 && header.bitsperpixel != 24 && header.bitsperpixel != 32) {
-		PostErrorMessage("Can only handle pixel depths of 16, 24, and 32", 1);
+		throw ResourceException("Can only handle pixel depths of 16, 24, and 32", 1);
 	}
 	if (header.colourmaptype != 0 && header.colourmaptype != 1) {
-		PostErrorMessage("Can only handle colour map types of 0 and 1", 1);
+		throw ResourceException("Can only handle colour map types of 0 and 1", 1);
 	}
 
 	skipOver += header.idlength;
@@ -649,14 +649,14 @@ Bool TgaLoader::Load(StringC fileName) {
 	while (n < (Uint32)header.width * header.height) {
 		if (header.datatypecode == 2) {                     /* Uncompressed */
 			if (fread(p, 1, bytes2read, (FILE*)file.GetHandle()) != bytes2read) {
-				PostErrorMessage("Unexpected end of file at pixel %d\n", i);
+				throw ResourceException("Unexpected end of file at pixel %d\n", i);
 			}
 			__MergeBytes(&(pixels[n]), p, bytes2read);
 			n++;
 		}
 		else if (header.datatypecode == 10) {             /* Compressed */
 			if (fread(p, 1, bytes2read + 1, (FILE*)file.GetHandle()) != bytes2read + 1) {
-				PostErrorMessage("Unexpected end of file at pixel %d\n", i);
+				throw ResourceException("Unexpected end of file at pixel %d\n", i);
 			}
 			j = p[0] & 0x7f;
 			__MergeBytes(&(pixels[n]), &(p[1]), bytes2read);
@@ -670,7 +670,7 @@ Bool TgaLoader::Load(StringC fileName) {
 			else {                   /* Normal chunk */
 				for (i = 0; i<j; i++) {
 					if (fread(p, 1, bytes2read, (FILE*)file.GetHandle()) != bytes2read) {
-						PostErrorMessage("Unexpected end of file at pixel %d\n", i);
+						throw ResourceException("Unexpected end of file at pixel %d\n", i);
 					}
 					__MergeBytes(&(pixels[n]), p, bytes2read);
 					n++;

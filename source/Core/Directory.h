@@ -2,7 +2,10 @@
 #define __LAME_CORE__DIRECTORY__
 
 #include "Types.h"
-#include "Utility.h"
+#include "SharedPtr.h"
+#include "List.h"
+#include "Exception.h"
+#include "Buffer.h"
 
 LAME_BEGIN2(Core)
 

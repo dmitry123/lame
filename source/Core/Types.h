@@ -3,6 +3,8 @@
 
 #include "Define.h"
 
+#include <string.h>
+#include <memory.h>
 #include <stdarg.h>
 
 LAME_BEGIN
@@ -84,13 +86,23 @@ typedef struct {
 
 LAME_END
 
+#define LAME_CLASS(_name) \
+	typedef class _name *_name##Ptr, *const _name##PtrC
+
 LAME_BEGIN2(Core)
 
-typedef class CriticalSection CriticalSection, *CriticalSectionPtr;
-typedef class Mutex Mutex, *MutexPtr;
-typedef class RecursiveMutex RecursiveMutex, *RecursiveMutexPtr;
-typedef class Thread Thread, *ThreadPtr;
-typedef class Condition Condition, *ConditionPtr;
+LAME_CLASS(Stream);
+LAME_CLASS(InputStream);
+LAME_CLASS(OutputStream);
+LAME_CLASS(PrintStream);
+LAME_CLASS(ConsolePrinter);
+LAME_CLASS(Condition);
+LAME_CLASS(Locker);
+LAME_CLASS(Mutex);
+LAME_CLASS(Thread);
+LAME_CLASS(Timer);
+LAME_CLASS(WaitManager);
+LAME_CLASS(Console);
 
 LAME_END2
 

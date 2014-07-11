@@ -11,6 +11,7 @@
 #define RM_LINK SOURCE_LINK "ResourceManager"
 #define CONSOLE_LINK SOURCE_LINK "Console"
 #define COUNTER_LINK SOURCE_LINK "Counter"
+#define COMPILER_LINK SOURCE_LINK "Compiler"
 #define EXTENSION_FILTER "cpp&h&c"
 
 using namespace Lame::Core;
@@ -80,14 +81,14 @@ int main() {
 		totalLines += lines;
 		PrintCountOfLines("ResourceManager", lines);
 
-		List<Buffer> compilerList = Directory::GetFilesAtPath(RM_LINK, EXTENSION_FILTER);
+		List<Buffer> compilerList = Directory::GetFilesAtPath(COMPILER_LINK, EXTENSION_FILTER);
 
 		lines = GetCountOfLines(&compilerList);
 		totalLines += lines;
 		PrintCountOfLines("Compiler", lines);
 	}
 	catch (Exception& e) {
-		e.Debug();
+		e.Debug(Console::GetInstance());
 	}
 
 	PrintCountOfLines("Total", totalLines);

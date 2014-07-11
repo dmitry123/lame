@@ -60,7 +60,7 @@ Void Scope::Remove(ObjectPtr var) {
 	) {
 		ClassPtr clss = object->GetVariable()->GetObject();
 
-		if (clss->DecRef()) {
+		if (clss && clss->DecRef()) {
 			if (isOwner_) {
 				delete object;
 			}
@@ -77,7 +77,7 @@ Void Scope::Remove(ObjectPtr var) {
 }
 
 ObjectPtr Scope::Find(StringC name, Uint32 rightHash) {
-	return this->Find(Buffer::GetHash(name), rightHash);
+	return this->Find(Buffer::GetHash32(name), rightHash);
 }
 
 ObjectPtr Scope::Find(Uint32 hash, Uint32 rightHash) {
@@ -112,7 +112,7 @@ static void _CloneObject(ScopePtr scope, ObjectPtr i) {
 			scope->Add(new Interface(*InterfacePtr(i)));
 		}
 		else if (i->CheckType(Object::Type::Method)) {
-			scope->Add(i);
+			scope->Add(new Method(*MethodPtr(i)));
 		}
 		else if (i->CheckType(Object::Type::Variable)) {
 			scope->Add(new Variable(*(VariablePtr)i));

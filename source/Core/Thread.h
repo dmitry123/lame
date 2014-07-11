@@ -3,6 +3,7 @@
 
 #include "Types.h"
 #include "Condition.h"
+#include "Mutex.h"
 
 LAME_BEGIN2(Core)
 
@@ -21,7 +22,7 @@ public:
 	Void Yield(Void) const;
 	Bool IsAlive(Void) const;
 	Bool Equal(const Thread& thread) const;
-	Void Sleep(Clock delay) const;
+	static Void Sleep(Clock delay);
 public:
 	inline Bool operator == (const Thread& thread) const {
 		return this->Equal(thread);
@@ -37,7 +38,7 @@ public:
 		return this->handle_;
 	}
 	inline ConditionPtr GetCondition() {
-		return &this->condition_;
+		return this->condition_;
 	}
 public:
 	static Handle GetCurrentHandle(Void);
@@ -48,7 +49,8 @@ private:
 	Handle handle_ = 0;
 	ThreadProc callback_ = 0;
 	VoidP parameter_ = 0;
-	Condition condition_;
+	Mutex mutex_;
+	ConditionPtr condition_;
 	Uint32 flags_ = 0;
 };
 

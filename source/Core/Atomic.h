@@ -1,8 +1,8 @@
 #ifndef __LAME_CORE__ATOMIC__
 #define __LAME_CORE__ATOMIC__
 
-#include "define.h"
-#include "types.h"
+#include "Define.h"
+#include "Types.h"
 
 #if !defined(LAME_CPP)
 typedef volatile Uint16 Atomic16, *Atomic16P;

@@ -168,6 +168,8 @@ typedef struct ResourceAudioInfo : ResourceFileInfo {
 
 } *ResourceAudioInfoPtr;
 
+typedef Core::Exception ResourceException;
+
 LAME_END2
 
 #endif // ~__LAME_RESOURCE_MANAGER__DEFINE__

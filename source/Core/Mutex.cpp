@@ -9,39 +9,43 @@ Mutex::Mutex() {
 
 	pthread_mutexattr_t attributes;
 
-	// initialize posix mutex
 	pthread_mutexattr_init(&attributes);
 	pthread_mutexattr_settype(&attributes, PTHREAD_MUTEX_NORMAL);
-	pthread_mutex_init((pthread_mutex_t*)&this->handle_, &attributes);
+	if (pthread_mutex_init((pthread_mutex_t*)&this->handle, &attributes) != 0) {
+		throw MutexException("Unable to create mutex");
+	}
 	pthread_mutexattr_destroy(&attributes);
 }
 
 Mutex::~Mutex() {
 
-	// destroy posix mutex
-	pthread_mutex_destroy(
-		(pthread_mutex_t*)&this->handle_);
+	if (pthread_mutex_destroy((pthread_mutex_t*)&this->handle) != 0) {
+		throw MutexException("Unable to destroy mutex");
+	}
 }
 
-Bool Mutex::Lock(Void) {
+Void Mutex::Lock(Void) {
 
-	// lock posix mutex
-	return pthread_mutex_lock(
-		(pthread_mutex_t*)&this->handle_) == 0;
+	if (pthread_mutex_lock((pthread_mutex_t*)&this->handle) != 0) {
+		throw MutexException("Unable to lock mutex");
+	}
 }
 
-Bool Mutex::UnLock(Void) {
+Void Mutex::UnLock(Void) {
 
-	// unlock posix mutex
-	return pthread_mutex_unlock(
-		(pthread_mutex_t*)&this->handle_) == 0;
+	if (pthread_mutex_unlock((pthread_mutex_t*)&this->handle) != 0) {
+		throw MutexException("Unable to unlock mutex");
+	}
 }
 
 Bool Mutex::TryLock(Void) {
 
-	// try to lock posix mutex
 	return pthread_mutex_trylock(
-		(pthread_mutex_t*)&this->handle_) == 0;
+		(pthread_mutex_t*)&this->handle) == 0;
+}
+
+ConditionPtr Mutex::NewCondition() {
+	return new Condition(this);;
 }
 
 LAME_END2

@@ -1,5 +1,5 @@
-#ifndef __MAIN__
-#define __MAIN__
+#ifndef __CONSOLE_MAIN__
+#define __CONSOLE_MAIN__
 
 #if 0
 #  define LAME_VLD
@@ -11,4 +11,4 @@
 #include <VirtualMachine/VirtualMachine.h>
 #include <Compiler/Compiler.h>
 
-#endif // ~__MAIN__
+#endif // ~__CONSOLE_MAIN__

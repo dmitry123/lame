@@ -1,65 +1,66 @@
-#ifndef __LAME_CORE__TIMER__
-#define __LAME_CORE__TIMER__
+#ifndef __LAME_CORE_TIMER__
+#define __LAME_CORE_TIMER__
 
-#include "Define.h"
-#include "Types.h"
-#include "Utility.h"
-#include "Event.h"
+#include "Mutex.h"
 
 LAME_BEGIN2(Core)
 
-typedef class Time Time, *TimePtr;
-typedef class Timer Timer, *TimerPtr;
-
-class LAME_API Time {
+class LAME_API Timer : public Locker {
 public:
-	Buffer ConvertToString(Void);
-	Uint64 ConvertToMilliseconds(Void);
+	typedef Void(*Proc)(TimerPtr timer);
 public:
-	Void BuildForDate(Clock milliseconds);
-	Void BuildTorTime(Clock milliseconds);
-	Void BuildForCurrentDate(Void);
-public:
-	static Clock GetTime(Void);
-	static Void Sleep(Clock milliseconds);
-	static Time GetCurrentDate(Void);
-public:
-	Uint32 year = 0;
-	Uint32 month = 0;
-	Uint32 day = 0;
-	Uint32 hour = 0;
-	Uint32 minute = 0;
-	Uint32 second = 0;
-	Uint32 msecond = 0;
-};
-
-class LAME_API Timer {
-public:
-	typedef Event <Void(TimerPtr)> Callback;
-public:
-	Void Create(Callback callback, Clock interval);
-	Bool Update(Void);
-	Void Terminate(Void);
-	Void Suspend(Void);
-	Void Resume(Void);
 	Void Reset(Void);
+	Void Terminate(Void);
+	Bool Update(Void);
 public:
-	inline Callback GetCallback() const {
-		return this->callback_;
+	inline Bool TryLock() override {
+		return this->mutex.TryLock();
 	}
-	inline Clock GetInterval() const {
-		return this->interval_;
+	inline Void Lock() override {
+		this->mutex.Lock();
+	}
+	inline Void UnLock() override {
+		this->mutex.UnLock();
+	}
+public:
+	inline Proc GetCallback() {
+		return this->callback;
+	}
+	inline Clock GetInterval() {
+		return this->timeInterval;
 	}
 	inline Void SetInterval(Clock interval) {
-		this->interval_ = interval;
+		this->timeInterval = interval;
+	}
+	inline Bool IsSuspended() {
+		return this->isSuspended;
+	}
+	inline Void SetSuspended(Bool isSuspended) {
+		this->isSuspended = isSuspended;
+	}
+	inline WaitManagerPtr GetWaitManager() {
+		return this->waitManager;
+	}
+	inline Uint32 GetRepeats() {
+		return this->repeats;
+	}
+public:
+	Timer(Proc timerCallback, Clock timeInterval,
+		WaitManagerPtr waitManager = NULL);
+public:
+	~Timer() {
+		this->mutex.UnLock();
 	}
 private:
-	Callback callback_;
-	Clock interval_ = 0;
-	Clock last_ = 0;
-	Bool suspended_ = 0;
+	Proc callback;
+	Clock timeInterval;
+	Clock lastTime;
+	Bool isSuspended;
+	WaitManagerPtr waitManager;
+	Mutex mutex;
+	Uint32 repeats;
 };
 
 LAME_END2
 
-#endif // ~__LAME_CORE__TIMER__
+#endif // ~__LAME_CORE_TIMER__

@@ -105,7 +105,7 @@ Void Directory::Open(StringC path, Uint32 flags, StringC extfilter) {
 	this->handle_ = __FindFirstFile(searchPath);
 
 	if (!this->handle_ || this->handle_ == INVALID_HANDLE_VALUE) {
-		PostErrorMessage("Unable to open directory (%s)", path);
+		throw DirectoryException("Unable to open directory (%s)", path);
 	}
 
     if (!(this->flags_ & kDots)) {
@@ -157,8 +157,6 @@ __RepeatFileSearch:;
 		catch(Exception error) {
 
 			this->stack_.pop_back();
-
-			PostWarningMessage(error.What(), 1);
 
 			if (this->stack_.size()) {
 				goto __TryToOpenAnotherDirectory;

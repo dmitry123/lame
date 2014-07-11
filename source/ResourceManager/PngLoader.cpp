@@ -20,7 +20,7 @@ Bool PngLoader::Load(StringC fileName) {
 	image.version = PNG_IMAGE_VERSION;
 
 	if (!png_image_begin_read_from_file(&image, fileName)) {
-		PostErrorMessage("Unable to read png file (%s)", image.message);
+		throw ResourceException("Unable to read png file (%s)", image.message);
 	}
 
 	image.format = PNG_FORMAT_RGB;

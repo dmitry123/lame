@@ -8,6 +8,7 @@
 #include <deque>
 #include <map>
 #include <stack>
+#include <set>
 
 LAME_BEGIN2(Core)
 
@@ -15,6 +16,7 @@ LAME_BEGIN2(Core)
 template <class T> using Vector = std::deque <T>;
 template <class T> using List = std::list <T>;
 template <class T> using Stack = std::stack <T>;
+template <class T> using Set = std::set <T>;
 template <class K, class T> using Map = std::map <K, T>;
 template <class L, class R> using Pair = std::pair <L, R>;
 #else

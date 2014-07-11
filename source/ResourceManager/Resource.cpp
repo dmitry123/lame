@@ -17,11 +17,11 @@ Resource::~Resource() {
 Bool Resource::Load(StringC fileName) {
 
 	if (!fileName) {
-		PostErrorMessage("Resource's filename mustn't be NULL", 1);
+		throw ResourceException("Resource's filename mustn't be NULL", 1);
 	}
 
 	if (!File::IsFile(fileName)) {
-		PostErrorMessage("Unable to open resource (%s)", fileName);
+		throw ResourceException("Unable to open resource (%s)", fileName);
 	}
 
 	ResourceType resourceType(fileName);
@@ -34,7 +34,7 @@ Bool Resource::Load(StringC fileName) {
 		}
 
 		if (!this->resourceLoader_.audioLoader_->Check(File::GetFileExtension(fileName))) {
-			PostErrorMessage("Invalid file's extension (%s)", File::GetFileExtension(fileName));
+			throw ResourceException("Invalid file's extension (%s)", File::GetFileExtension(fileName));
 		}
 
 		this->resourceLoader_.audioLoader_->Load(fileName);
@@ -51,7 +51,7 @@ Bool Resource::Load(StringC fileName) {
 		}
 
 		if (!this->resourceLoader_.textureLoader_->Check(File::GetFileExtension(fileName))) {
-			PostErrorMessage("Invalid file's extension (%s)", File::GetFileExtension(fileName));
+			throw ResourceException("Invalid file's extension (%s)", File::GetFileExtension(fileName));
 		}
 
 		this->resourceLoader_.textureLoader_->Load(fileName);
@@ -103,7 +103,7 @@ Bool Resource::Save(StringC fileName) {
 		if (      resourceLoader_.audioLoader_->GetInfo()->fileType.IsAudio() &&
 			this->resourceLoader_.audioLoader_->GetInfo()->fileType.IsTexture()
 		) {
-			PostErrorMessage("Invalid type conversion from (%s) to (%s)",
+			throw ResourceException("Invalid type conversion from (%s) to (%s)",
 				resourceLoader_.audioLoader_->GetInfo()->fileExtension,
 				this->resourceLoader_.audioLoader_->GetInfo()->fileExtension);
 		}
@@ -116,7 +116,7 @@ Bool Resource::Save(StringC fileName) {
 	if (resourceType.IsAudio()) {
 
 		if (!this->resourceLoader_.audioLoader_->Check(File::GetFileExtension(fileName))) {
-			PostErrorMessage("Invalid file's extension (%s)", File::GetFileExtension(fileName));
+			throw ResourceException("Invalid file's extension (%s)", File::GetFileExtension(fileName));
 		}
 
 		resourceLoader_.audioLoader_->Save(fileName);
@@ -124,7 +124,7 @@ Bool Resource::Save(StringC fileName) {
 	else if (resourceType.IsTexture()) {
 
 		if (!resourceLoader_.textureLoader_->Check(File::GetFileExtension(fileName))) {
-			PostErrorMessage("Invalid file's extension (%s)", File::GetFileExtension(fileName));
+			throw ResourceException("Invalid file's extension (%s)", File::GetFileExtension(fileName));
 		}
 
 		resourceLoader_.textureLoader_->Save(fileName);

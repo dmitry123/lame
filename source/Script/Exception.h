@@ -5,7 +5,7 @@
 
 LAME_BEGIN2(Script)
 
-class LAME_API SyntaxException : public ::LAME_NAMESPACE::Core::Exception {
+class LAME_API SyntaxException : public Exception {
 public:
 	SyntaxException(
 		Uint32 line,

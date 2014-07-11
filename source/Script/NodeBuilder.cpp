@@ -31,10 +31,8 @@ Void NodeBuilder::Build(FileParserPtr parser) {
 	LexNodePtr lexNode = new LexNode("#", 0, Lex::Find(kScriptLexDefault));
 
 	this->_Reset();
-
 	this->parser_ = parser;
 	this->parser_->GetLexList().push_front(lexNode);
-
 	this->rootNode_ = this->_CreateNode(lexNode, kScriptNodeEntry);
 	this->parentNode_ = this->rootNode_;
 
@@ -166,6 +164,7 @@ NodeBuilder::Iterator NodeBuilder::_BuildVariable(NodePtr& parent, Iterator i) {
 	varNode->isArray = parent->isArray;
 	parent = varNode;
 	parent->modificators = this->modificators_;
+	parent->templates = typeNode->templates;
 
 	if (parent->parent->id == kScriptNodeClass) {
 		_AllowModificators(parent, -1);
@@ -600,6 +599,47 @@ NodeBuilder::Iterator NodeBuilder::_Build(NodePtr& node, Iterator i) {
 			i = this->parser_->GetLexList().insert(i, lexNode) + 1;
 			this->nodeQueue_->push_back(this->_CreateNode(lexNode, kScriptNodeDefault));
 		}
+	}
+
+	if (this->parser_->GetLexList().end() - i > 3 &&
+		(*(i + 0))->lex->id == kScriptLexDefault &&
+		(*(i + 1))->lex->id == kScriptLexBellow &&
+		(*(i + 2))->lex->id == kScriptLexDefault &&
+		(*(i + 3))->lex->id == kScriptLexAbove
+	) {
+		node->templates = (*(i + 2))->word;
+		i = this->parser_->GetLexList().erase(i + 1);
+		i = this->parser_->GetLexList().erase(i);
+		i = this->parser_->GetLexList().erase(i);
+		__Dec(i);
+	}
+	else if (this->parser_->GetLexList().end() - i > 4 &&
+		(*(i + 0))->lex->id == kScriptLexClass &&
+		(*(i + 1))->lex->id == kScriptLexDefault &&
+		(*(i + 2))->lex->id == kScriptLexBellow &&
+		(*(i + 3))->lex->id == kScriptLexDefault &&
+		(*(i + 4))->lex->id == kScriptLexAbove
+	) {
+		node->templates = (*(i + 3))->word;
+		i = this->parser_->GetLexList().erase(i + 2);
+		i = this->parser_->GetLexList().erase(i);
+		i = this->parser_->GetLexList().erase(i);
+		__Dec(i);
+		__Dec(i);
+	}
+
+	if (this->parser_->GetLexList().end() - i > 3 &&
+		(*(i + 1))->lex->id == kScriptLexParentheseL &&
+		(*(i + 2))->lex->id == kScriptLexDefault &&
+		(*(i + 3))->lex->id == kScriptLexParentheseR
+	) {
+		__Inc(i);
+		std::swap(*(i + 0), *(i + 1));
+		std::swap(*(i + 2), *(i + 3));
+		i = this->parser_->GetLexList().insert(i, new LexNode((*i)->word, (*i)->line, Lex::Find(kScriptLexCast)));
+		i = this->parser_->GetLexList().erase(i + 1);
+		__Dec(i);
+		__Dec(i);
 	}
 
 	if (node->lex->lex->IsLanguage()) {

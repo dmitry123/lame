@@ -61,7 +61,7 @@ Void ScopeBuilder::Build(NodeBuilderPtr nodeBuilder, ScopeControllerPtr scopeCon
 	NodePtr rootNode = nodeBuilder->GetRootNode();
 
 	if (!nodeBuilder) {
-		throw InvalidArgumentException("Builder mustn't be NULL");
+		throw Exception("Builder mustn't be NULL");
 	}
 
 	_MoveNode(nodeBuilder->GetRootNode());
@@ -157,9 +157,15 @@ Void ScopeBuilder::_ForEachClassDeclare(NodePtr n) {
 		ObjectPtr typeClass =
 			ScopeBuilder::_FindClass(n, m->typeName);
 
+		if (!typeClass && m->typeName == n->templates) {
+			n->var->SetTemplateClass(NULL);
+		}
+
+#if 0 // Template type is NULL
 		if (!typeClass) {
 			PostSyntaxError(m->lex->line, "Undeclared type (%s)", m->typeName.data());
 		}
+#endif
 
 		if (m->id == kScriptNodeFunction) {
 
@@ -321,6 +327,8 @@ Void ScopeBuilder::_ForEachConstDeclare(NodePtr n) {
 
 Void ScopeBuilder::_ForEachVariableDeclare(NodePtr n) {
 
+	ObjectPtr templateClass;
+
 	if (n->parent->id != kScriptNodeEntry) {
 		return;
 	}
@@ -329,7 +337,7 @@ Void ScopeBuilder::_ForEachVariableDeclare(NodePtr n) {
 		ScopeBuilder::_FindClass(n->parent, n->typeName);
 
 	if (!typeClass) {
-		PostSyntaxError(n->lex->line, "Undeclared type (%s)", n->word.data());
+		PostSyntaxError(n->lex->line, "Undeclared type (%s)", n->typeName.data());
 	}
 
 	if (n->isArray) {
@@ -339,6 +347,16 @@ Void ScopeBuilder::_ForEachVariableDeclare(NodePtr n) {
 	else {
 		n->var = n->parent->GetScope()->GetVarScope()->Add(
 			new Variable(n->word, typeClass, n));
+	}
+
+	if (n->templates.length() > 0) {
+		if (!(templateClass = ScopeBuilder::_FindClass(n->parent, n->templates))) {
+			PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->typeName.data());
+		}
+		else if (templateClass->CheckModificator(Class::Modificator::Primitive)) {
+			PostSyntaxError(n->lex->line, "Template class mustn't be primitive (%s)", n->typeName.data());
+		}
+		n->var->SetTemplateClass(templateClass->GetClass());
 	}
 
 	if (!n->var) {
@@ -353,7 +371,9 @@ Void ScopeBuilder::_ForEachVariableRegister(NodePtr n) {
 		n->var = _FindVariable(n->parent, n->word);
 
 		if (!n->var) {
+#if 0
 			PostSyntaxError(n->lex->line, "Undeclared variable (%s)", n->word.data());
+#endif
 		}
 	}
 }
@@ -393,7 +413,9 @@ ObjectPtr ScopeBuilder::_Find(Object::Type type, NodePtr node, BufferRefC name) 
 	}
 
 __ClassNotFound:
+#if 0
 	PostSyntaxError(savedNode->lex->line, "Undeclared class, variable or method (%s)", name.data());
+#endif
 
 	return NULL;
 }

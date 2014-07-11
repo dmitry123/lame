@@ -17,11 +17,9 @@
 #  define LAME_API
 #endif
 
-using namespace ::Lame::Core;
-
-/* Core Types */
-
 LAME_BEGIN2(Script)
+
+using namespace Core;
 
 typedef class Lex *LexPtr, *const LexPtrC;
 typedef class LexNode *LexNodePtr, *const LexNodePtrC;
@@ -44,9 +42,12 @@ typedef class SegmentBuilder *SegmentSegmentBuilderPtr, *const SegmentSegmentBui
 typedef class SegmentLinker *SegmentLinkerPtr, *const SegmentLinkerPtrC;
 
 typedef Buffer ScriptNativeString;
-typedef Sint32 ScriptNativeInt;
-typedef Float32 ScriptNativeFloat;
+typedef Sint64 ScriptNativeInt;
+typedef Float64 ScriptNativeFloat;
 typedef Bool ScriptNativeBool;
+
+typedef Exception SegmentLinkerException;
+typedef Exception SegmentException;
 
 LAME_END2
 

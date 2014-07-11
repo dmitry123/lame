@@ -1,6 +1,7 @@
 #include "Node.h"
 #include "Exception.h"
 #include "GlobalScope.h"
+#include "Variable.h"
 
 #include <stack>
 
@@ -8,7 +9,7 @@ LAME_BEGIN2(Script)
 
 class ShuntingYard {
 public:
-	inline Stack<NodePtr>* Convert(Vector<NodePtr>* list) {
+	Stack<NodePtr>* Convert(Vector<NodePtr>* list) {
 
 		NodePtr top = NULL;
 
@@ -140,149 +141,6 @@ Void _Order(Vector<NodePtr>* list) {
 		list->push_front(result->top());
 		result->pop();
 	}
-
-	return;
-
-	//List<NodePtr> stack;
-	//List<NodePtr> result;
-
-	//Bool isFound = 0;
-	//NodePtr back = 0;
-	//Bool isSelectionLast = 0;
-	//NodePtr prev = 0;
-
-	//for (NodePtr node : *list) {
-	//	break;
-	//	if (isSelectionLast) {
-	//		result.push_back(node);
-	//		if (!stack.size()) {
-	//			PostSyntaxError(node->lex->line, "Very strange field selection", 1);
-	//		}
-	//		result.push_back(stack.back());
-	//		stack.pop_back();
-	//		isSelectionLast = LAME_FALSE;
-	//		goto __Continue;
-	//	}
-	//	isSelectionLast = LAME_FALSE;
-
-	//	if (
-	//		node->lex->lex->IsConst() ||
-	//		node->lex->lex->IsUnknown() ||
-	//		node->lex->lex->IsCondition() ||
-	//		node->lex->lex->IsClass()
-	//	) {
-	//		result.push_back(node);
-	//	}
-	//	else if (
-	//		node->lex->lex->id == kScriptLexParentheseL ||
-	//		node->lex->lex->id == kScriptLexBracketL
-	//	) {
-	//		if (prev && prev->lex->lex->IsUnknown()) {
-	//			stack.push_back(prev);
-	//			prev->MakeInvoke();
-	//			result.pop_back();
-	//		}
-	//		stack.push_back(node);
-	//	}
-	//	else if (
-	//		node->lex->lex->id == kScriptLexParentheseR ||
-	//		node->lex->lex->id == kScriptLexBracketR
-	//	) {
-	//		isFound = 0;
-	//		while (stack.size()) {
-	//			back = stack.back();
-	//			if (back->lex->lex->id == kScriptLexParentheseL ||
-	//				back->lex->lex->id == kScriptLexBracketL
-	//			) {
-	//				isFound = 1; break;
-	//			}
-	//			else {
-	//				result.push_back(back);
-	//				stack.pop_back();
-	//			}
-	//		}
-	//		if (!isFound) {
-	//			PostSyntaxError(node->lex->line, "Parentheses mismatched", 1);
-	//		}
-	//		else {
-	//			stack.pop_back();
-	//			if (stack.size()) {
-	//				back = stack.back();
-	//				if (back->lex->lex->IsCondition() ||
-	//					back->lex->lex->IsUnknown()
-	//				) {
-	//					result.push_back(back);
-	//					stack.pop_back();
-	//				}
-	//			}
-	//		}
-	//	}
-	//	else if (node->lex->lex->id == kScriptLexSemicolon) {
-	//		while (stack.size()) {
-	//			back = stack.back();
-	//			if (back->lex->lex->id == kScriptLexParentheseL ||
-	//				back->lex->lex->id == kScriptLexParentheseR ||
-	//				back->lex->lex->id == kScriptLexBracketL ||
-	//				back->lex->lex->id == kScriptLexBracketR
-	//			) {
-	//				PostSyntaxError(back->lex->line, "Parentheses mismatched", 1);
-	//			}
-	//			else {
-	//				result.push_back(back);
-	//				stack.pop_back();
-	//			}
-	//		}
-	//	}
-	//	else if (node->lex->lex->id == kScriptLexComma) {
-	//		continue;
-	//	}
-	//	else {
-	//		while (stack.size()) {
-	//			back = stack.back();
-	//			if (((node->lex->lex->IsLeft() && node->lex->lex->priority >= back->lex->lex->priority)) ||
-	//				(!node->lex->lex->IsLeft() && node->lex->lex->priority > back->lex->lex->priority))
-	//			{
-	//				result.push_back(back);
-	//				stack.pop_back();
-	//			}
-	//			else {
-	//				break;
-	//			}
-	//		}
-	//		if (node->lex->lex->id == kScriptLexMediated ||
-	//			node->lex->lex->id == kScriptLexDirected
-	//		) {
-	//			isSelectionLast = LAME_TRUE;
-	//		}
-	//		stack.push_back(node);
-	//	}
-	//__Continue:
-	//	prev = node;
-	//}
-
-	//while (stack.size()) {
-	//	back = stack.back();
-	//	if (back->lex->lex->id == kScriptLexParentheseL ||
-	//		back->lex->lex->id == kScriptLexParentheseR ||
-	//		back->lex->lex->id == kScriptLexBracketL ||
-	//		back->lex->lex->id == kScriptLexBracketR
-	//	) {
-	//		PostSyntaxError(back->lex->line, "Parentheses mismatched", 1);
-	//	}
-	//	else if (back->id != kScriptNodeDefault) {
-	//		result.push_back(back);
-	//	}
-	//	else {
-	//		result.push_back(back);
-	//	}
-	//	stack.pop_back();
-	//}
-
-	//list->clear();
-	//while (result.size()) {
-	//	list->push_back(result.front());
-	//	result.pop_front();
-	//}
 }
 
 Node::Node(Buffer word, NodeID id, LexNodePtr lex, NodePtr parent, NodePtr prev) :
@@ -296,9 +154,11 @@ Node::Node(Buffer word, NodeID id, LexNodePtr lex, NodePtr parent, NodePtr prev)
 	this->var = 0;
 	this->isMethodImpl = 0;
 	this->isArray = 0;
+	this->thisVar = 0;
 }
 
 Node::~Node() {
+
 }
 
 ScopeControllerPtr Node::GetScope() {
@@ -306,7 +166,12 @@ ScopeControllerPtr Node::GetScope() {
 	if (this->id == kScriptNodeEntry) {
 		return GlobalScope::GetInstance();
 	}
-	return this->var->GetScopeController();
+	if (this->thisVar) {
+		return this->thisVar->GetScopeController();
+	}
+	else {
+		return this->var->GetScopeController();
+	}
 }
 
 Void Node::ShuntingYard(Void) {

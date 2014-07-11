@@ -36,6 +36,8 @@ Thread::~Thread() {
 	internal::threadList.erase(std::find(
 		internal::threadList.begin(),
 		internal::threadList.end(), this));
+
+	this->condition_->Release();
 }
 
 Void Thread::Create(ThreadProc callback, VoidP parameter) {
@@ -56,6 +58,9 @@ Void Thread::Create(ThreadProc callback, VoidP parameter) {
 	}
 
 	internal::threadList.push_back(this);
+
+	this->condition_ =
+		this->mutex_.NewCondition();
 }
 
 Bool Thread::Wait(Void) {
@@ -70,7 +75,7 @@ Bool Thread::Wait(Void) {
 		if (!this->IsAlive()) {
 			break;
 		}
-	} while (this->condition_.TimedWait(1000) != ETIMEDOUT);
+	} while (this->condition_->TimedWait(1000) != ETIMEDOUT);
 
 	return result == 0;
 }
@@ -81,7 +86,7 @@ Bool Thread::Terminate(Void) {
 		return 0;
 	}
 
-	this->condition_.Broadcast();
+	this->condition_->Broadcast();
 
 	return pthread_cancel(*(pthread_t*)&this->handle_) == 0;
 }
@@ -154,6 +159,10 @@ Void Thread::Yield(Void) const {
 
 Bool Thread::IsAlive(Void) const {
 
+	if (!this->handle_) {
+		return FALSE;
+	}
+
 #ifdef LAME_WINDOWS
 	HANDLE h = ::OpenThread(SYNCHRONIZE, FALSE, GetThreadId(
 		pthread_getw32threadhandle_np(*(pthread_t*)&this->handle_)));
@@ -177,7 +186,7 @@ Bool Thread::Equal(const Thread& thread) const {
 		*(pthread_t*)&thread.handle_);
 }
 
-Void Thread::Sleep(Clock delay) const {
+Void Thread::Sleep(Clock delay) {
 
 #ifdef LAME_WINDOWS
 	::Sleep((DWORD)delay);
@@ -219,7 +228,7 @@ VoidP Thread::__PosixThread(VoidP __this) {
 	Thread* thread = (Thread*)__this;
 	pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 	thread->callback_(thread->parameter_);
-	thread->condition_.Broadcast();
+	thread->condition_->Broadcast();
 	thread->handle_ = 0;
 	pthread_exit(NULL);
 	return LAME_NULL;

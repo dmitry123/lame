@@ -1,6 +1,7 @@
 #include "Main.h"
 #include "Test.h"
 
+using namespace Lame::Core;
 using namespace Lame::Compiler;
 using namespace Lame::Core;
 using namespace Lame::ResourceManager;
@@ -17,44 +18,42 @@ int main(int argc, char** argv) {
 	Clock time;
 	ScopeControllerPtr g;
 
-	fileName = argc > 1 ? argv[1] : "main.ls";
+	fileName = argc > 1 ?
+		argv[1] : "main.ls";
 
 	g = GlobalScope::GetInstance();
 
 	NodeBuilder nodeBuilder;
 	FileParser fileParser;
-	NodePerformer nodePerformer;
+	CodeTranslator nodePerformer;
 	ScopeBuilder scopeBuilder;
 	SegmentBuilder segmentBuilder(g);
 	SegmentLinker segmentLinker;
+	Compiler::CodeAnalizer codeAnalizer;
+
+	time = Time::GetTime();
 
 	try {
-		time = Time::GetTime();
 		fileParser.Load(fileName);
 		nodeBuilder.Build(&fileParser);
-		nodePerformer.Overload();
+		codeAnalizer.Overload();
 		scopeBuilder.Build(&nodeBuilder, g);
-		time = Time::GetTime() - time;
 	}
 	catch (SyntaxException& e) {
 		printf("\n---------------------------");
 		GlobalScope::GetInstance()->Trace(0, FALSE);
 		puts("\n---------------------------");
 		e.Debug();
+		puts("");
 		goto _AvoidTrace;
 	}
 	catch (Exception& e) {
 		printf("\n---------------------------");
 		GlobalScope::GetInstance()->Trace(0, FALSE);
-		e.Debug();
+		e.Debug(Console::GetInstance());
 		puts("\n---------------------------");
 		goto _AvoidTrace;
 	}
-
-	printf("\n-----------------------------");
-	g->Trace(0, FALSE);
-	puts("\n-----------------------------");
-_AvoidTrace:
 
 	try {
 		segmentLinker.Add(
@@ -73,7 +72,8 @@ _AvoidTrace:
 		VirtualMachine::ByteCodePrinter::GetInstance()
 			->SetPosition(segmentLinker.GetPosition());
 
-		nodePerformer.Perform(&nodeBuilder);
+		codeAnalizer.Analize(&nodeBuilder);
+		//nodePerformer.Translate(&nodeBuilder);
 
 		//segmentBuilder.GetDataSegment()->Trace();
 		//segmentBuilder.GetTextSegment()->Trace();
@@ -81,24 +81,30 @@ _AvoidTrace:
 
 		Buffer fcName = File::GetFileNameWithoutExtension(fileName) + ".lc";
 
-		segmentLinker.Save(fcName);
+		segmentLinker.Save(fcName.data());
 	}
 	catch (SyntaxException e) {
-		puts("-----------------------------");
+		puts("\n-----------------------------");
 		e.Debug();
-		puts("");
 	}
 	catch (Exception e) {
-		puts("-----------------------------");
-		e.Debug();
+		puts("\n-----------------------------");
+		e.Debug(Console::GetInstance());
 		puts("");
 	}
+
+	printf("\n-----------------------------");
+	g->Trace(0, FALSE);
+	puts("\n-----------------------------");
+_AvoidTrace:
 
 #pragma push_macro("printf")
 #pragma push_macro("puts")
 
 #undef printf
 #undef puts
+
+	time = Time::GetTime() - time;
 
 	puts("-----------------------------");
 	printf("Elapsed Time : %d ms", Uint32(time));

@@ -9,26 +9,7 @@ LAME_BEGIN2(Script)
 	PostSyntaxError(0, "Unable to apply %s operation to this type", #_operation, left->name.data());
 
 Variable::Variable(BufferRefC name, ObjectPtrC classType, Type type, NodePtr node) : Object(name, type, node),
-	classType((ClassPtrC)classType)
-{
-	this->objectValue = NULL;
-	this->registerType = NULL;
-
-	if (classType == GlobalScope::classString) {
-		this->SetString("");
-	} else if (!classType->CheckModificator(Modificator::Primitive)) {
-		this->SetObject(NULL);
-	} else if (classType == GlobalScope::classFloat) {
-		this->SetFloat(0.0f);
-	} else {
-		this->SetInteger(0);
-	}
-
-	this->SetSizeOf(Object::SizeOf);
-}
-
-Variable::Variable(BufferRefC name, ObjectPtrC classType, NodePtr node) : Object(name, Type::Variable, node),
-	classType((ClassPtrC)classType)
+classType((ClassPtrC)classType)
 {
 	this->objectValue = NULL;
 	this->registerType = NULL;
@@ -46,10 +27,35 @@ Variable::Variable(BufferRefC name, ObjectPtrC classType, NodePtr node) : Object
 		this->SetInteger(0);
 	}
 
-	if (!classType->GetSizeOf()) {
-		this->SetSizeOf(Object::SizeOf);
-	} else {
-		this->SetSizeOf(classType->GetSizeOf());
+	this->SetSizeOf(Object::SizeOf);
+}
+
+Variable::Variable(BufferRefC name, ObjectPtrC classType, NodePtr node) : Object(name, Type::Variable, node),
+	classType((ClassPtrC)classType)
+{
+	this->objectValue = NULL;
+	this->registerType = NULL;
+
+	if (classType == GlobalScope::classString) {
+		this->SetString("");
+	}
+	else if (classType && !classType->CheckModificator(Modificator::Primitive)) {
+		this->SetObject(NULL);
+	}
+	else if (classType == GlobalScope::classFloat) {
+		this->SetFloat(0.0f);
+	}
+	else {
+		this->SetInteger(0);
+	}
+
+	if (classType) {
+		if (!classType->GetSizeOf()) {
+			this->SetSizeOf(Object::SizeOf);
+		}
+		else {
+			this->SetSizeOf(classType->GetSizeOf());
+		}
 	}
 }
 
@@ -191,11 +197,21 @@ Void Variable::Trace(Uint32 offset) {
 
 	if (this->GetClass()) {
 		if (this->GetName().size() > 0) {
-			printf("%s %s = ", this->GetClass()->GetName().data(), this->GetName().data());
-		} else {
+			if (this->GetTemplateClass()) {
+				printf("%s<%s> %s = ",
+					this->GetClass()->GetName().data(),
+					this->GetTemplateClass()->GetName().data(),
+					this->GetName().data());
+			}
+			else {
+				printf("%s %s = ", this->GetClass()->GetName().data(), this->GetName().data());
+			}
+		}
+		else {
 			printf("%s = ", this->GetClass()->GetName().data());
 		}
-	} else {
+	}
+	else {
 		printf("null %s = ", this->GetName().data());
 	}
 
@@ -203,7 +219,12 @@ Void Variable::Trace(Uint32 offset) {
 		printf("%.2f", this->v.floatValue);
 	}
 	else if (varType == Var::Integer) {
-		printf("%d", this->v.intValue);
+		if (sizeof(this->v.intValue) == 4) {
+			printf("%d", this->v.intValue);
+		}
+		else {
+			printf("%lld", this->v.intValue);
+		}
 	}
 	else {
 		if (this->objectValue && this->GetName() != "this") {
@@ -226,18 +247,19 @@ Void Variable::Trace(Uint32 offset) {
 	}
 }
 
-Error Variable::Make(Class::Operator command, VariablePtr var) {
+Error Variable::Make(Class::Operator command, VariablePtr left, VariablePtr right) {
 
-	if (var->GetClass()->priority > this->GetClass()->priority) {
-		if (var->GetClass()->operators.empty() || !var->GetClass()->operators.at((Uint32)command)) {
+	if (left->GetClassType()->priority > right->GetClassType()->priority) {
+		if (left->GetClassType()->operators.empty() || !left->GetClassType()->operators.at((Uint32)command)) {
 			return Error::Class_OperatorNotOverloaded;
 		}
-		var->GetClass()->operators.at((Uint32)command)(this, var);
-	} else {
-		if (this->GetClass()->operators.empty() || !this->GetClass()->operators.at((Uint32)command)) {
+		left->GetClassType()->operators.at((Uint32)command)(this, left, right);
+	}
+	else {
+		if (right->GetClassType()->operators.empty() || !right->GetClassType()->operators.at((Uint32)command)) {
 			return Error::Class_OperatorNotOverloaded;
 		}
-		this->GetClass()->operators.at((Uint32)command)(var, this);
+		right->GetClassType()->operators.at((Uint32)command)(this, left, right);
 	}
 
 	return Error::NoError;

@@ -91,13 +91,8 @@ typedef struct {
 	Uint8 arguments;
 } AsmInfo, *AsmInfoPtr;
 
-#if defined(LAME_X86)
-  typedef Uint32  R, *RP;
-  typedef Float32 F, *FP;
-#else
-  typedef Uint64  R, *RP;
-  typedef Float64 F, *FP;
-#endif
+typedef Uint64  R, *RP;
+typedef Float64 F, *FP;
 
 class Assembler {
 public:

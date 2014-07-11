@@ -89,13 +89,17 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\source\Compiler\Analizer.cpp" />
     <ClCompile Include="..\..\source\Compiler\Compiler.cpp" />
     <ClCompile Include="..\..\source\Compiler\Define.cpp" />
+    <ClCompile Include="..\..\source\Compiler\Internal.cpp" />
     <ClCompile Include="..\..\source\Compiler\Translator.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\source\Compiler\Analizer.h" />
     <ClInclude Include="..\..\source\Compiler\Compiler.h" />
     <ClInclude Include="..\..\source\Compiler\Define.h" />
+    <ClInclude Include="..\..\source\Compiler\Internal.h" />
     <ClInclude Include="..\..\source\Compiler\Translator.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

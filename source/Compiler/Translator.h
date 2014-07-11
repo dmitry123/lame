@@ -7,9 +7,7 @@ LAME_BEGIN2(Compiler)
 
 using namespace Script;
 
-class LAME_API NodePerformer {
-public:
-	typedef Void(*ForEachNode)(NodePtr node);
+class LAME_API CodeTranslator {
 public:
 	typedef       Vector<NodePtr>  NodeList;
 	typedef       Vector<NodePtr>& NodeListRef;
@@ -18,16 +16,16 @@ public:
 	typedef       Vector<ObjectPtr>& VarListRef;
 	typedef const Vector<ObjectPtr>& VarListRefC;
 public:
-	NodePerformer() :
+	CodeTranslator() :
 		builder(0)
 	{
 	}
 public:
-	~NodePerformer() {
+	~CodeTranslator() {
 	}
 public:
 	Void Overload(Void);
-	Void Perform(NodeBuilderPtr builder);
+	Void Translate(NodeBuilderPtr builder);
 	Bool Evaluate(NodeListRef nodeList);
 private:
 	typedef struct {
@@ -35,14 +33,14 @@ private:
 		ObjectPtr var;
 	} VarNode, *VarNodePtr;
 private:
-	Void _TranslateNew(NodePtr node);
-	Void _TranslateCondition(NodePtr node);
 	Void _Translate0(NodePtr node);
 	Void _Translate1(NodePtr node);
 	Void _Translate2(NodePtr node);
+	Void _TranslateNew(NodePtr node);
+	Void _TranslateCondition(NodePtr node);
 	Void _ReadArguments(NodePtr node);
 private:
-	Vector<VarNode> nodeStack;
+	Vector<VarNode> varStack;
 	NodeBuilderPtr builder;
 	Vector<VarNode> argsArray;
 	Uint32 methodHash;
