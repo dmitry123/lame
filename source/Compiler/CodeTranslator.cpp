@@ -1,5 +1,4 @@
-#include "CodeAnalizer.h"
-#include "LowLevelStack.h"
+#include "CodeTranslator.h"
 #include "Assembler.h"
 
 LAME_BEGIN2(Compiler)
@@ -37,12 +36,12 @@ static Void _TranslateCondition(Uint32 cmp, Uint32 command, VariablePtr source, 
 	switch (command) {
 	case JA: _MAKEJUMP(<= ); break;
 	case JNBE: _MAKEJUMP(<= ); break;
-	case JAE: _MAKEJUMP(< ); break;
-	case JNB: _MAKEJUMP(< ); break;
+	case JAE: _MAKEJUMP(<); break;
+	case JNB: _MAKEJUMP(<); break;
 	case JB: _MAKEJUMP(>= ); break;
 	case JNAE: _MAKEJUMP(>= ); break;
-	case JBE: _MAKEJUMP(> ); break;
-	case JNA: _MAKEJUMP(> ); break;
+	case JBE: _MAKEJUMP(>); break;
+	case JNA: _MAKEJUMP(>); break;
 	case JE: _MAKEJUMP(!= ); break;
 	case JNE: _MAKEJUMP(== ); break;
 	}
@@ -58,11 +57,11 @@ static Void _TranslateSingle(Uint32 command, VariablePtr source) {
 	}
 }
 
-Void CodeAnalizer::AnalizeBinary(VariablePtr source, VariablePtr left, VariablePtr right) {
+Void CodeTranslator::AnalizeBinary(VariablePtr source, VariablePtr left, VariablePtr right) {
 
 	if (this->currentNode->lex->lex->IsLeft()) {
 		printf("%s %s %s\n",
-			source->GetName().data(), 
+			source->GetName().data(),
 			this->currentNode->word.data(),
 			right->GetName().data());
 	}
@@ -74,7 +73,7 @@ Void CodeAnalizer::AnalizeBinary(VariablePtr source, VariablePtr left, VariableP
 	}
 }
 
-Void CodeAnalizer::AnalizeUnary(VariablePtr source, VariablePtr left) {
+Void CodeTranslator::AnalizeUnary(VariablePtr source, VariablePtr left) {
 
 	printf("%s = %s%s\n",
 		source->GetName().data(),
@@ -82,7 +81,7 @@ Void CodeAnalizer::AnalizeUnary(VariablePtr source, VariablePtr left) {
 		left->GetName().data());
 }
 
-Void CodeAnalizer::AnalizeNew(VariablePtr source, VariablePtr left, ClassPtr right) {
+Void CodeTranslator::AnalizeNew(VariablePtr source, VariablePtr left, ClassPtr right) {
 
 	if (left == NULL) {
 		printf("%s = new %s()\n",
@@ -92,35 +91,100 @@ Void CodeAnalizer::AnalizeNew(VariablePtr source, VariablePtr left, ClassPtr rig
 	else {
 		printf("%s = new %s[%s]\n",
 			source->GetName().data(),
-			right->GetName().data(), 
+			right->GetName().data(),
 			left->GetName().data());
 	}
 }
 
-Void CodeAnalizer::AnalizeSelection(VariablePtr source, VariablePtr left, VariablePtr right) {
+Void CodeTranslator::AnalizeSelection(VariablePtr source, VariablePtr left, VariablePtr right) {
 
 }
 
-Void CodeAnalizer::AnalizeCondition(NodePtr n, VariablePtr source) {
+Void CodeTranslator::AnalizeCondition(NodePtr n, VariablePtr source) {
 
 }
 
-Void CodeAnalizer::AnalizeCast(VariablePtr source, VariablePtr left) {
+Void CodeTranslator::AnalizeCast(VariablePtr source, VariablePtr left) {
 	printf("%s = %s\n", source->GetName().data(), left->GetName().data());
 }
 
-Void CodeAnalizer::AnalizeInvoke(NodePtr n, VariablePtr source) {
+Void CodeTranslator::AnalizeInvoke(NodePtr n, VariablePtr source) {
 
 }
 
-Void CodeAnalizer::AnalizePush(VariablePtr var) {
+Void CodeTranslator::AnalizePush(VariablePtr var) {
 	printf("push %s\n", var->GetName().data());
 	this->lowLevelStack->Push(var);
 }
 
-Void CodeAnalizer::AnalizePop(VariablePtr& var) {
+Void CodeTranslator::AnalizePop(VariablePtr& var) {
 	printf("pop %s\n", var->GetName().data());
 	var = this->lowLevelStack->Pop();
+}
+
+Void CodeTranslator::_New(Uint32 command) {
+	this->byteCodePrinter->New(Asm(command));
+}
+
+Void CodeTranslator::_Read1(VariablePtr& left) {
+
+	if (this->varStack.size() < 1) {
+		throw Exception("No more elements in stack");
+	}
+	left = this->varStack.back();
+	this->varStack.pop_back();
+	this->nameStack.pop_back();
+}
+
+Void CodeTranslator::_Read2(VariablePtr& left, VariablePtr& right) {
+
+	if (this->varStack.size() < 2) {
+		throw Exception("No more elements in stack");
+	}
+	right = this->varStack.back();
+	this->varStack.pop_back();
+	this->nameStack.pop_back();
+	left = this->varStack.back();
+	this->varStack.pop_back();
+	this->nameStack.pop_back();
+}
+
+Void CodeTranslator::_Write1(VariablePtr var) {
+
+	if (var->CheckModificator(Object::Modificator::Register)) {
+		this->byteCodePrinter->Write(var->GetName());
+	}
+	else {
+		this->byteCodePrinter->Write(var->GetAddress());
+	}
+}
+
+Void CodeTranslator::_Jump(Uint32 address) {
+	this->byteCodePrinter->Write(address, ByteCodePrinter::LineType::Jump);
+}
+
+Void CodeTranslator::_Const(Uint32 value) {
+	this->byteCodePrinter->Write(value, ByteCodePrinter::LineType::Const);
+}
+
+Void CodeTranslator::_Return(VariablePtr var) {
+
+}
+
+Void CodeTranslator::_Mov(Uint32 command, VariablePtr source, VariablePtr left, VariablePtr right) {
+
+}
+
+Void CodeTranslator::_Math(Uint32 command, VariablePtr source, VariablePtr left, VariablePtr right) {
+
+}
+
+Void CodeTranslator::_Bool(Uint32 cmp, Uint32 command, VariablePtr source, VariablePtr left, VariablePtr right) {
+	
+}
+
+Void CodeTranslator::_Unary(Uint32 command, VariablePtr source) {
+
 }
 
 LAME_END2

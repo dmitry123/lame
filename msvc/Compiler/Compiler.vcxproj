@@ -217,20 +217,22 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\Compiler\Assembler.cpp" />
+    <ClCompile Include="..\..\source\Compiler\ByteCodePrinter.cpp" />
     <ClCompile Include="..\..\source\Compiler\CodeAnalizer.cpp" />
+    <ClCompile Include="..\..\source\Compiler\CodeTranslator.cpp" />
     <ClCompile Include="..\..\source\Compiler\Compiler.cpp" />
     <ClCompile Include="..\..\source\Compiler\Define.cpp" />
-    <ClCompile Include="..\..\source\Compiler\Internal.cpp" />
     <ClCompile Include="..\..\source\Compiler\LowLevelStack.cpp" />
     <ClCompile Include="..\..\source\Compiler\Register.cpp" />
     <ClCompile Include="..\..\source\Compiler\VirtualAnalizer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\Compiler\Assembler.h" />
+    <ClInclude Include="..\..\source\Compiler\ByteCodePrinter.h" />
     <ClInclude Include="..\..\source\Compiler\CodeAnalizer.h" />
+    <ClInclude Include="..\..\source\Compiler\CodeTranslator.h" />
     <ClInclude Include="..\..\source\Compiler\Compiler.h" />
     <ClInclude Include="..\..\source\Compiler\Define.h" />
-    <ClInclude Include="..\..\source\Compiler\Internal.h" />
     <ClInclude Include="..\..\source\Compiler\LowLevelStack.h" />
     <ClInclude Include="..\..\source\Compiler\Register.h" />
     <ClInclude Include="..\..\source\Compiler\VirtualAnalizer.h" />

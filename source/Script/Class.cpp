@@ -12,10 +12,6 @@ Class::Class(BufferRefC name, ScopePtr parent, Uint32 size) : Object(name, paren
 	size(size)
 {
 	this->references = new Uint32(0);
-
-	for (Uint32 i = 0; i < OperatorAmount; i++) {
-		this->operators[i] = NULL;
-	}
 }
 
 Class::~Class() {
@@ -141,8 +137,6 @@ Void Class::Extend(ObjectPtr object) {
 
 	this->extendClass = object;
 
-	memcpy(this->operators, object->GetClass()->operators, sizeof(this->operators));
-
 	if (this->CheckType(Type::Interface)) {
 		return;
 	}
@@ -219,78 +213,6 @@ Void Class::Implement(ObjectPtr object) {
 		// throw an error
 		if (!founded->GetMethod()->GetRootNode() && !founded->GetMethod()->GetNativeMethod()) {
 			throw ScriptException("Class must implement interface methods");
-		}
-	}
-}
-
-Void Class::Overload(Operator op, OperatorCallback callback) {
-
-	if (!((Uint32)op > 0 && (Uint32)op < OperatorAmount)) {
-		throw ScriptException("Wrong operator's index");
-	}
-
-	operators[Uint32(op)] = callback;
-}
-
-Void Class::Evaluate(Operator op, VariablePtr source, VariablePtr left, VariablePtr right, LexPtrC lex) {
-
-	if (!left->CheckType(Type::Variable) ||
-		!right->CheckType(Type::Variable)
-	) {
-		throw ScriptException("You can evaluate expressions only with variables");
-	}
-
-	if (left->GetClass()->Hash() != right->GetClass()->Hash()) {
-		if (
-			!left->GetClass()->CheckModificator(Modificator::Primitive) ||
-			!right->GetClass()->CheckModificator(Modificator::Primitive)
-		) {
-			throw ScriptException("Invalid type cast");
-		}
-	}
-
-	if ((Uint32)op >= OperatorAmount) {
-		throw ScriptException("Wrong operator's index");
-	}
-
-	if (right->CheckModificator(Modificator::Register) && right->registerType) {
-		right = right->registerType->GetVariable();
-	}
-
-	if (left->GetClass()->CheckModificator(Modificator::Primitive) &&
-		right->GetVariable() && left->GetVariable() && right->GetVariable()->registerType &&
-		right->GetVariable()->registerType->GetClass() != left->GetClass()
-	) {
-		throw ScriptException("Invalid type cast");
-	}
-
-	if (left->GetVariable()->GetVarType() == Variable::Var::Object) {
-		if (!this->operators[(Uint32)Operator::Cast]) {
-			throw ScriptException("Class operator not overloaded");
-		}
-		this->operators[(Uint32)Operator::Cast](source, right, left);
-	}
-	else if (left->GetVariable()->GetVarType() != right->GetVariable()->GetVarType()) {
-		if (lex->IsRight()) {
-			source->Make(Operator::Cast, left, right);
-		}
-		else {
-			if (!this->operators[(Uint32)Operator::Cast]) {
-				throw ScriptException("Class operator not overloaded");
-			}
-			this->operators[(Uint32)Operator::Cast](source, left, right);
-		}
-	}
-
-	if (op != Operator::Cast) {
-		if (lex->IsRight()) {
-			source->Make(op, left, right);
-		}
-		else {
-			if (!this->operators[(Uint32)op]) {
-				throw ScriptException("Class operator not overloaded");
-			}
-			this->operators[(Uint32)op](source, right, left);
 		}
 	}
 }

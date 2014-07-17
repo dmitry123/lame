@@ -144,13 +144,17 @@ Void LowLevelStack::ReleaseRegister(RegisterPtr var) {
 	}
 }
 
-Void LowLevelStack::Push(RegisterPtr var) {
-
+Void LowLevelStack::Push(VariablePtr var) {
+	this->callStack.push(var);
 }
 
-RegisterPtr LowLevelStack::Pop(Void) {
-
-	return 0;
+Script::VariablePtr LowLevelStack::Pop(Void) {
+	if (this->callStack.empty()) {
+		throw Core::Exception("Stack is empty, push lost");
+	}
+	VariablePtr var = this->callStack.top();
+	this->callStack.pop();
+	return var;
 }
 
 LAME_END2

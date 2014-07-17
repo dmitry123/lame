@@ -1,5 +1,5 @@
-#ifndef __LAME_VIRTUAL_MACHINE_ASSEMBLER__
-#define __LAME_VIRTUAL_MACHINE_ASSEMBLER__
+#ifndef __LAME_COMPILER_ASSEMBLER__
+#define __LAME_COMPILER_ASSEMBLER__
 
 #include "Define.h"
 
@@ -103,4 +103,4 @@ public:
 
 LAME_END2
 
-#endif // ~__LAME_VIRTUAL_MACHINE_ASSEMBLER__
+#endif // ~__LAME_COMPILER_ASSEMBLER__

@@ -3,6 +3,7 @@
 
 #include "LowLevelStack.h"
 #include "Register.h"
+#include "ByteCodePrinter.h"
 
 LAME_BEGIN2(Compiler)
 
@@ -24,30 +25,19 @@ protected:
 	typedef Core::Vector<Buffer> NameList;
 	typedef Core::Vector<Buffer>& NameListRef;
 protected:
-	virtual Void OverloadInteger(ScopePtr scope) = 0;
-	virtual Void OverloadFloat(ScopePtr scope) = 0;
-	virtual Void OverloadString(ScopePtr scope) = 0;
-	virtual Void OverloadObject(ScopePtr scope) = 0;
-protected:
-	virtual RegisterPtr Integer2Float(VariablePtr value) = 0;
-	virtual RegisterPtr Float2Integer(VariablePtr value) = 0;
-	virtual RegisterPtr Object2String(VariablePtr value) = 0;
-	virtual RegisterPtr String2Object(VariablePtr value) = 0;
-	virtual RegisterPtr Integer2String(VariablePtr value) = 0;
-	virtual RegisterPtr String2Integer(VariablePtr value) = 0;
-	virtual RegisterPtr Float2String(VariablePtr value) = 0;
-	virtual RegisterPtr String2Float(VariablePtr value) = 0;
-protected:
 	virtual Void AnalizeBinary(VariablePtr source, VariablePtr left, VariablePtr right) = 0;
-	virtual Void AnalizeUnary(VariablePtr source) = 0;
-	virtual Void AnalizeNew(VariablePtr source, ClassPtr left) = 0;
+	virtual Void AnalizeUnary(VariablePtr source, VariablePtr left) = 0;
+	virtual Void AnalizeNew(VariablePtr source, VariablePtr left, ClassPtr right) = 0;
 	virtual Void AnalizeSelection(VariablePtr source, VariablePtr left, VariablePtr right) = 0;
 	virtual Void AnalizeCondition(NodePtr n, VariablePtr source) = 0;
-	virtual Void AnalizeCast(VariablePtr source, ClassPtr left) = 0;
+	virtual Void AnalizeCast(VariablePtr source, VariablePtr left) = 0;
 	virtual Void AnalizeInvoke(NodePtr n, VariablePtr source) = 0;
+	virtual Void AnalizePush(VariablePtr var) = 0;
+	virtual Void AnalizePop(VariablePtr& var) = 0;
 protected:
 	Void Treat(NodeListRef nodeList);
 	Void Read(NodePtr node, VariablePtr& left, VariablePtr& right);
+	Void Write(VariablePtr var);
 protected:
 	LowLevelStackPtr lowLevelStack;
 	VarList varStack;
@@ -56,9 +46,17 @@ protected:
 	Uint32 methodHash;
 	ScopePtr rootScope;
 	NodePtr currentNode;
+	ByteCodePrinterPtr byteCodePrinter;
+public:
+	VirtualAnalizer() {
+		this->byteCodePrinter =
+			ByteCodePrinter::GetInstance();
+	}
 public:
 	Void Analize(LowLevelStackPtr lowLevelStack,
 		NodeBuilderPtr nodeBuilder, ScopePtr rootScope);
+private:
+	RegisterPtr _GetSourceRegister(VariablePtr variable);
 private:
 	Void _AnalizeBinary(NodePtr n);
 	Void _AnalizeUnary(NodePtr n);

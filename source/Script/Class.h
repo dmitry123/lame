@@ -8,21 +8,6 @@ LAME_BEGIN2(Script)
 class LAME_API Class : public Object {
 	friend class Variable;
 public:
-	typedef Void(*OperatorCallback)(
-		VariablePtr source,
-		VariablePtr left,
-		VariablePtr right);
-	typedef OperatorCallback* OperatorCallbackPtr;
-public:
-	enum class Operator : Uint32 {
-		Unkown, Add,     Sub,    Mul,    Div,
-		Mod,    Above,   Bellow, Equal,  NotEqual,
-		Move,   ShiftR,  ShiftL, BitAnd, BitOr,
-		BitXor, BellowE, AboveE, And,    Or,
-		Inc,    Dec,     Sizeof, BitNot, Not,
-		Cast
-	};
-public:
 	Class(BufferRefC name, ScopePtr parent, Uint32 size = SizeOf);
 	~Class();
 public:
@@ -51,24 +36,14 @@ public:
 	inline Uint32 GetPriority() {
 		return this->priority;
 	}
-	inline OperatorCallback* GetOperators() {
-		return this->operators;
-	}
 public:
 	Void Extend(ObjectPtr object);
 	Void Implement(ObjectPtr object);
 	Void New(ObjectPtr object);
-	Void Evaluate(Operator op, VariablePtr source, VariablePtr left, VariablePtr right, LexPtrC lex);
-	Void Overload(Operator op, OperatorCallback callback);
-private:
-	enum {
-		OperatorAmount = 26
-	};
 private:
 	ObjectPtr extendClass;
 	Set<ObjectPtr> implementClass;
 	Uint32P references;
-	OperatorCallback operators[OperatorAmount];
 	Uint32 priority;
 	Uint32 size;
 };

@@ -232,20 +232,4 @@ VariablePtr Variable::GetVariable() {
 	return this;
 }
 
-Void Variable::Make(Class::Operator command, VariablePtr left, VariablePtr right) {
-
-	if (left->GetClassType()->priority > right->GetClassType()->priority) {
-		if (!left->GetClassType()->operators[(Uint32)command]) {
-			throw ScriptException("Class operator not overloaded");
-		}
-		left->GetClassType()->operators[(Uint32)command](this, left, right);
-	}
-	else {
-		if (!right->GetClassType()->operators[(Uint32)command]) {
-			throw ScriptException("Class operator not overloaded");
-		}
-		right->GetClassType()->operators[(Uint32)command](this, left, right);
-	}
-}
-
 LAME_END2

@@ -23,6 +23,7 @@ typedef class CodeTranslator *CodeTranslatorPtr, *const CodeTranslatorPtrC;
 typedef class CodeAnalizer *CodeAnalizerPtr, *const CodeAnalizerPtrC;
 typedef class LowLevelStack *LowLevelStackPtr, *const LowLevelStackPtrC;
 typedef class Register *RegisterPtr, *const RegisterPtrPtrC;
+typedef class ByteCodePrinter *ByteCodePrinterPtr, *const ByteCodePrinterPtrC;
 
 LAME_END2
 

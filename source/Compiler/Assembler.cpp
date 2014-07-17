@@ -1,6 +1,6 @@
 #include "Assembler.h"
 
-LAME_BEGIN2(VirtualMachine)
+LAME_BEGIN2(Compiler)
 
 static Bool isVirtualMachineInitialized = 0;
 

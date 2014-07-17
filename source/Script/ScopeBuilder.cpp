@@ -88,6 +88,13 @@ Void ScopeBuilder::Build(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassDeclare, this), kScriptNodeClass);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassVariableDeclare, this), kScriptNodeVariable);
 
+	/*	Class/Interface inheritance:
+			1. We have to apply inheritance for classes
+			2. Apply inheritance for interfaces */
+
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassInherit, this), kScriptNodeClass);
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachInterfaceInherit, this), kScriptNodeInterface);
+
 	/*	Constant declare. That block allocate memory
 		for constant variables and push it to root
 		scope. */
@@ -108,13 +115,6 @@ Void ScopeBuilder::Build(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachMethodRegister, this), kScriptNodeFunction);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachVariableDeclare, this), kScriptNodeUnknown);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachModificatorSet, this), kScriptNodeVariable);
-
-	/*	Class/Interface inheritance:
-			1. We have to apply inheritance for classes
-			2. Apply inheritance for interfaces */
-
-	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassInherit, this), kScriptNodeClass);
-	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachInterfaceInherit, this), kScriptNodeInterface);
 
 	/*	Check for empty nodes */
 
@@ -431,7 +431,10 @@ Void ScopeBuilder::_ForEachMethodRegister(NodePtr n) {
 		n->parent->id == kScriptNodeInterface
 	) {
 		if (!methodObject->CheckModificator(Object::Modificator::Static)) {
-			methodObject->Scope::Add(new Variable("this", methodObject, ClassPtr(methodObject->GetParent())));
+			methodObject->Scope::Add(new Variable("this", methodObject, ClassPtr(this->scope)));
+			if (ClassPtr(this->scope)->GetExtend()) {
+				methodObject->Scope::Add(new Variable("super", methodObject, ClassPtr(this->scope)->GetExtend()->GetClass()));
+			}
 		}
 	}
 

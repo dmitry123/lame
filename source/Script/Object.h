@@ -21,7 +21,8 @@ public:
 		Internal = 0x0200,
 		Constant = 0x0400,
 		Override = 0x0800,
-		Deprecated = 0x1000
+		Deprecated = 0x1000,
+		Array = 0x2000
 	};
 	enum class Type : Uint32 {
 		Unknown = 0x0000,

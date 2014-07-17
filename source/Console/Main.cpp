@@ -25,21 +25,46 @@ int main(int argc, char** argv) {
 	ScopePtr rootScope;
 	CodeAnalizer codeAnalizer;
 	LowLevelStackPtr lowLevelStack;
-
-	//CodeTranslator nodePerformer;
-	//SegmentBuilder segmentBuilder(g);
-	//SegmentLinker segmentLinker;
+	SegmentLinker segmentLinker;
+	SegmentBuilderPtr segmentBuilder;
 
 	rootScope = Scope::GetRootScope();
 	time = Time::GetTime();
 
 	try {
+		/* Load and parser file */
 		fileParser.Load(fileName);
+
+		/* File node and scope trees */
 		nodeBuilder.Build(&fileParser);
 		scopeBuilder.Build(&nodeBuilder, rootScope);
+
+		puts("");
+		for (Uint32 i = 0; i < 80; i++) {
+			printf("-");
+		}
+
+		/* Allocate memory for segment builder and low level stack */
 		lowLevelStack = new LowLevelStack();
-		puts("\n---------------------------");
-		codeAnalizer.Analize(lowLevelStack, &nodeBuilder, rootScope);
+		segmentBuilder = new SegmentBuilder(rootScope);
+
+		/* Build segments */
+		segmentBuilder->BuildTextSegment();
+		segmentBuilder->BuildDataSegment();
+		segmentBuilder->BuildCodeSegment();
+
+		/* Link segments */
+		segmentLinker.Add(segmentBuilder->GetTextSegment());
+		segmentLinker.Add(segmentBuilder->GetDataSegment());
+		segmentLinker.Add(segmentBuilder->GetCodeSegment());
+
+		/* Trace segments */
+		printf("\n");
+		segmentBuilder->GetTextSegment()->Trace();
+		printf("\n");
+		segmentBuilder->GetDataSegment()->Trace();
+
+		//codeAnalizer.Analize(lowLevelStack, &nodeBuilder, rootScope);
 	}
 	catch (SyntaxException& e) {
 		printf("\n---------------------------");
@@ -65,47 +90,8 @@ int main(int argc, char** argv) {
 		goto _AvoidTrace;
 	}
 
-	try {
-		//segmentLinker.Add(
-		//	segmentBuilder.BuildDataSegment());
-		//segmentLinker.Add(
-		//	segmentBuilder.BuildTextSegment());
-		//segmentLinker.Add(
-		//	segmentBuilder.BuildCodeSegment());
-
-		//GlobalScope::SetCodeSegment(
-		//	segmentBuilder.GetCodeSegment());
-
-		//segmentBuilder.GetCodeSegment()->SetOffset(
-		//	segmentLinker.GetPosition());
-
-		//VirtualMachine::ByteCodePrinter::GetInstance()
-		//	->SetPosition(segmentLinker.GetPosition());
-
-		//codeAnalizer.Analize(&nodeBuilder);
-		//nodePerformer.Translate(&nodeBuilder);
-
-		//segmentBuilder.GetDataSegment()->Trace();
-		//segmentBuilder.GetTextSegment()->Trace();
-		//segmentBuilder.GetCodeSegment()->Trace();
-
-		//Buffer fcName = File::GetFileNameWithoutExtension(fileName) + ".lc";
-
-		//segmentLinker.Save(fcName.data());
-	}
-	catch (SyntaxException e) {
-		puts("\n-----------------------------");
-		e.Debug();
-	}
-	catch (Exception e) {
-		puts("\n-----------------------------");
-		e.Debug(Console::GetInstance());
-		puts("");
-	}
-
-	printf("-----------------------------");
 	rootScope->Trace(0);
-	puts("\n-----------------------------");
+	puts("\n");
 _AvoidTrace:
 
 #pragma push_macro("printf")
@@ -116,9 +102,9 @@ _AvoidTrace:
 
 	time = Time::GetTime() - time;
 
-	puts("-----------------------------");
+	puts("+---------------------------+");
 	printf("Elapsed Time : %d ms", Uint32(time));
-	printf("\n---------------------------\n");
+	printf("\n+---------------------------+\n");
 
 #pragma pop_macro("printf")
 #pragma pop_macro("puts")

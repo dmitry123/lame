@@ -6,6 +6,7 @@
 LAME_BEGIN2(Compiler)
 
 class LAME_API LowLevelStack {
+	typedef Script::VariablePtr VariablePtr;
 public:
 	LowLevelStack();
 public:
@@ -17,8 +18,8 @@ public:
 public:
 	RegisterPtr FindRegister(Type type);
 	Void ReleaseRegister(RegisterPtr var = NULL);
-	Void Push(RegisterPtr var);
-	RegisterPtr Pop(Void);
+	Void Push(VariablePtr var);
+	VariablePtr Pop(Void);
 public:
 	RegisterPtr p0;
 	RegisterPtr p1;
@@ -61,6 +62,7 @@ private:
 	Core::Set<RegisterPtr> fRegList;
 	Core::Set<RegisterPtr> pRegList;
 	Script::Scope registerScope;
+	Core::Stack<VariablePtr> callStack;
 };
 
 LAME_END2

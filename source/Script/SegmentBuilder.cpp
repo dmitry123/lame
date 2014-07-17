@@ -66,75 +66,65 @@ SegmentPtr SegmentBuilder::BuildTextSegment(Void) {
 	return this->textSegment;
 }
 
-Void SegmentBuilder::_ForEachScopeObject(ForEachScopeObject callback, SegmentPtr segment, ScopeControllerPtr scope) {
+Void SegmentBuilder::_ForEachScopeObject(ForEachScopeObject callback, SegmentPtr segment, ScopePtr scope) {
 
 	if (!scope) {
-		scope = this->scopeController;
+		scope = this->rootScope;
 	}
 
-	for (auto& i : scope->GetVarScope()->GetStringMap()) {
-		if (i.second->CheckType(Class::Type::Variable) ||
-			i.second->CheckType(Class::Type::Array)
-		) {
-			if (!i.second->CheckModificator(Class::Modificator::Register)) {
-				callback(segment, i.second->GetVariable());
+	for (ObjectPtr i : scope->GetVariableSet()) {
+		if (i->CheckType(Class::Type::Variable)) {
+			if (!i->CheckModificator(Class::Modificator::Register) &&
+				!i->CheckModificator(Class::Modificator::Constant)
+			) {
+				callback(segment, i->GetVariable());
 			}
 		}
 	}
 
-	for (auto& i : scope->GetClassScope()->GetStringMap()) {
-		for (auto& j : i.second->GetScopeController()->GetMethodScope()->GetStringMap()) {
-			if (j.second->GetScopeController()) {
-				this->_ForEachScopeObject(callback, segment, j.second->GetScopeController());
-			}
+	for (ObjectPtr i : scope->GetClassSet()) {
+		for (ObjectPtr j : i->GetMethodSet()) {
+			this->_ForEachScopeObject(callback, segment, j);
 		}
 	}
 }
 
-Void SegmentBuilder::_ForEachScopeTemp(ForEachScopeObject callback, SegmentPtr segment, ScopeControllerPtr scope) {
+Void SegmentBuilder::_ForEachScopeTemp(ForEachScopeObject callback, SegmentPtr segment, ScopePtr scope) {
 
 	if (!scope) {
-		scope = this->scopeController;
+		scope = this->rootScope;
 	}
 
-	for (auto& i : scope->GetTempScope()->GetStringMap()) {
-		if (i.second->CheckType(Class::Type::Variable) ||
-			i.second->CheckType(Class::Type::Array)
-		) {
-			if (!i.second->CheckModificator(Class::Modificator::Register)) {
-				callback(segment, i.second->GetVariable());
+	for (ObjectPtr i : scope->GetVariableSet()) {
+		if (i->CheckType(Class::Type::Variable)) {
+			if (i->CheckModificator(Class::Modificator::Constant)) {
+				callback(segment, i->GetVariable());
 			}
 		}
 	}
 
-	for (auto& i : scope->GetClassScope()->GetStringMap()) {
-		for (auto& j : i.second->GetScopeController()->GetMethodScope()->GetStringMap()) {
-			if (j.second->GetScopeController()) {
-				this->_ForEachScopeTemp(callback, segment, j.second->GetScopeController());
-			}
+	for (ObjectPtr i : scope->GetClassSet()) {
+		for (ObjectPtr j : i->GetMethodSet()) {
+			this->_ForEachScopeTemp(callback, segment, j);
 		}
 	}
 }
 
-Void SegmentBuilder::_ForEachScopeMethod(ForEachScopeMethod callback, SegmentPtr segment, ScopeControllerPtr scope) {
+Void SegmentBuilder::_ForEachScopeMethod(ForEachScopeMethod callback, SegmentPtr segment, ScopePtr scope) {
 
 	if (!scope) {
-		scope = this->scopeController;
+		scope = this->rootScope;
 	}
 
-	for (auto& i : scope->GetClassScope()->GetStringMap()) {
-		for (auto& j : i.second->GetScopeController()->GetMethodScope()->GetStringMap()) {
-			if (j.second->GetScopeController()) {
-				if (!j.second->CheckModificator(Class::Modificator::Native) &&
-					!j.second->CheckModificator(Class::Modificator::Abstract)
-				) {
-					callback(segment, j.second->GetMethod());
-				}
+	for (ObjectPtr i : scope->GetClassSet()) {
+		for (ObjectPtr j : i->GetMethodSet()) {
+			if (!j->CheckModificator(Class::Modificator::Native) &&
+				!j->CheckModificator(Class::Modificator::Abstract)
+			) {
+				callback(segment, j->GetMethod());
 			}
 		}
-		if (i.second->GetScopeController()) {
-			_ForEachScopeMethod(callback, segment, i.second->GetScopeController());
-		}
+		_ForEachScopeMethod(callback, segment, i);
 	}
 }
 

@@ -39,8 +39,6 @@ public:
 	ClassPtr GetClass() final override;
 	VariablePtr GetVariable() override;
 public:
-	Void Make(Class::Operator command, VariablePtr left, VariablePtr right);
-public:
 	inline ClassPtr GetClassType() { return this->classType; }
 	inline ClassPtr GetObject() { return this->objectValue; }
 	inline Var GetVarType() { return varType; }

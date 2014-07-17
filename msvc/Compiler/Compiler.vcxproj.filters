@@ -12,9 +12,6 @@
     <ClCompile Include="..\..\source\Compiler\Compiler.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\Compiler\Internal.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\Compiler\LowLevelStack.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -30,15 +27,18 @@
     <ClCompile Include="..\..\source\Compiler\Assembler.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\Compiler\ByteCodePrinter.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Compiler\CodeTranslator.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\Compiler\Define.h">
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Compiler\Compiler.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Compiler\Internal.h">
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Compiler\LowLevelStack.h">
@@ -54,6 +54,12 @@
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Compiler\Assembler.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Compiler\ByteCodePrinter.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Compiler\CodeTranslator.h">
       <Filter>source</Filter>
     </ClInclude>
   </ItemGroup>

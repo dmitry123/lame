@@ -1,5 +1,5 @@
-#ifndef __LAME_COMPILER_CODE_ANALIZER__
-#define __LAME_COMPILER_CODE_ANALIZER__
+#ifndef __LAME_COMPILER_CODE_TRANSLATOR__
+#define __LAME_COMPILER_CODE_TRANSLATOR__
 
 #include "VirtualAnalizer.h"
 
@@ -8,7 +8,7 @@ LAME_BEGIN2(Compiler)
 using namespace Core;
 using namespace Script;
 
-class LAME_API CodeAnalizer : public VirtualAnalizer {
+class LAME_API CodeTranslator : public VirtualAnalizer {
 	typedef Script::NodePtr NodePtr;
 private:
 	typedef Vector<NodePtr> NodeList;
@@ -27,8 +27,20 @@ private:
 	Void AnalizeInvoke(NodePtr n, VariablePtr source) override;
 	Void AnalizePush(VariablePtr var) override;
 	Void AnalizePop(VariablePtr& var) override;
+private:
+	Void _New(Uint32 command);
+	Void _Read1(VariablePtr& left);
+	Void _Read2(VariablePtr& left, VariablePtr& right);
+	Void _Write1(VariablePtr var);
+	Void _Jump(Uint32 address);
+	Void _Const(Uint32 value);
+	Void _Return(VariablePtr var);
+	Void _Mov(Uint32 command, VariablePtr source, VariablePtr left, VariablePtr right);
+	Void _Math(Uint32 command, VariablePtr source, VariablePtr left, VariablePtr right);
+	Void _Bool(Uint32 cmp, Uint32 command, VariablePtr source, VariablePtr left, VariablePtr right);
+	Void _Unary(Uint32 command, VariablePtr source);
 };
 
 LAME_END2
 
-#endif // ~__LAME_COMPILER_CODE_ANALIZER__
+#endif // ~__LAME_COMPILER_CODE_TRANSLATOR__

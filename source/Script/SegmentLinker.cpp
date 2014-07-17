@@ -124,6 +124,6 @@ Void SegmentLinker::Save(StringC fileName) {
 	file.Close();
 }
 
-StringC SegmentLinker::signature = "LSCL";
+StringC SegmentLinker::signature = "LCLS";
 
 LAME_END2

@@ -228,6 +228,9 @@
     <ClCompile Include="..\..\source\Script\Scope.cpp" />
     <ClCompile Include="..\..\source\Script\ScopeBuilder.cpp" />
     <ClCompile Include="..\..\source\Script\Script.cpp" />
+    <ClCompile Include="..\..\source\Script\Segment.cpp" />
+    <ClCompile Include="..\..\source\Script\SegmentBuilder.cpp" />
+    <ClCompile Include="..\..\source\Script\SegmentLinker.cpp" />
     <ClCompile Include="..\..\source\Script\Variable.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -246,6 +249,9 @@
     <ClInclude Include="..\..\source\Script\Scope.h" />
     <ClInclude Include="..\..\source\Script\ScopeBuilder.h" />
     <ClInclude Include="..\..\source\Script\Script.h" />
+    <ClInclude Include="..\..\source\Script\Segment.h" />
+    <ClInclude Include="..\..\source\Script\SegmentBuilder.h" />
+    <ClInclude Include="..\..\source\Script\SegmentLinker.h" />
     <ClInclude Include="..\..\source\Script\Variable.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

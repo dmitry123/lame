@@ -23,12 +23,17 @@ Segment::~Segment(Void) {
 
 Void Segment::Write(VoidP block, Uint32 size) {
 
+	Uint32 grow = 64;
+
 	if (!this->data) {
 		throw SegmentException("Segment not allocated", 0);
 	}
 	if (this->position + size > this->size) {
-		this->data = (Uint8P) realloc(this->data, this->size + 64);
-		this->size += 64;
+		if (size > grow) {
+			grow = size;
+		}
+		this->data = (Uint8P)realloc(this->data, this->size + grow);
+		this->size += grow;
 	}
 
 	memcpy(this->data + this->position, block, size);
@@ -43,7 +48,7 @@ Uint32P Segment::Write(VariablePtr var) {
 	Uint32 bufferSize = 0;
 	Buffer hexString;
 
-	bufferSize = var->GetSizeOf();
+	bufferSize = var->Size();
 
 	if (var->GetVarType() == Variable::Var::String) {
 		copyBuffer = (VoidP)var->stringValue.data();
@@ -83,17 +88,19 @@ Uint32P Segment::Write(MethodPtr method) {
 
 Void Segment::Trace(Uint32 columns) {
 
-	if (!this->size) {
-		printf("| Segment \"%s\" is empty   |\n", this->name.data());
-		puts("-----------------------------");
-		return;
+	puts("+----------------------------+");
+	printf("| Segment \"%s\" : %d", this->name.data(), this->size);
+	printf(" bytes");
+	if (this->size < 10) {
+		printf("  ");
 	}
-
-	puts("-----------------------------");
-	printf("| Segment \"%s\" : %d bytes |", this->name.data(), this->size);
-	puts("\n-----------------------------");
-	printf("| name   | address  | size  |");
-	puts("\n-----------------------------");
+	else if (this->size < 100) {
+		printf(" ");
+	}
+	printf(" |");
+	puts("\n+----------------------------+");
+	printf("| name   | address  | size   |");
+	puts("\n+----------------------------+");
 
 	for (History& h : this->history) {
 
@@ -116,40 +123,33 @@ Void Segment::Trace(Uint32 columns) {
 		printf(" | %.8X | %d", h.offset, h.size);
 
 		if (h.size < 10) {
-			printf("     ");
+			printf("      ");
 		} else if (h.size < 100) {
-			printf("    ");
+			printf("     ");
 		} else if (h.size < 1000) {
-			printf("   ");
+			printf("    ");
 		} else if (h.size < 10000) {
-			printf("  ");
+			printf("   ");
 		}
 
 		printf("| ");
 
 		if (h.block) {
-			for (Uint32 i = 0; i < (h.size > 10 ? 10 : h.size); i++) {
+			for (Uint32 i = 0; i < h.size; i++) {
+				if (i && !(i % 16)) {
+					printf("\n|        |          |        | ");
+				}
 				printf("%.2X ", Uint8P(h.block)[i]);
 			}
-			if (h.size > 10) {
-				printf("...");
-			}
 		}
 
-		puts("");
-	}
-
-	puts("-----------------------------");
-
-	for (Uint32 i = 0; i < this->size; i++) {
-
-		if (i && !(i % 10)) {
+		if (h.size > 16 || &h == &this->history.back()) {
+			puts("\n+----------------------------+");
+		}
+		else {
 			puts("");
 		}
-		printf("%.2X ", Uint8P(this->data)[i]);
 	}
-
-	puts("\n-----------------------------");
 }
 
 Void Segment::Allocate(Uint32 size) {

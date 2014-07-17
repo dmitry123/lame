@@ -34,12 +34,8 @@ typedef class Variable *VariablePtr, *const VariablePtrC;
 typedef class Method *MethodPtr, *const MethodPtrC;
 typedef class Scope *ScopePtr, *const ScopePtrC;
 typedef class ScopeBuilder *ScopeBuilderPtr, *const ScopeBuilderPtrC;
-
-//typedef class Abstract *AbstractPtr, *const AbstractPtrC;
-//typedef class Error *ErrorPtr, *const ErrorPtrC;
-//typedef class GlobalScope *GlobalScopePtr, *const GlobalScopePtrC;
 typedef class Segment *SegmentPtr, *const SegmentPtrC;
-typedef class SegmentBuilder *SegmentSegmentBuilderPtr, *const SegmentSegmentBuilderPtrC;
+typedef class SegmentBuilder *SegmentBuilderPtr, *const SegmentBuilderPtrC;
 typedef class SegmentLinker *SegmentLinkerPtr, *const SegmentLinkerPtrC;
 
 typedef Buffer ScriptNativeString;

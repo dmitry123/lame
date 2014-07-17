@@ -5,46 +5,6 @@ LAME_BEGIN2(Compiler)
 using namespace Core;
 using namespace Script;
 
-static Map<LexID, Class::Operator> operatorMap =
-{
-	{ kScriptLexDefault, Class::Operator::Unkown },
-	{ kScriptLexAdd, Class::Operator::Add },
-	{ kScriptLexAddSet, Class::Operator::Add },
-	{ kScriptLexSub, Class::Operator::Sub },
-	{ kScriptLexSubSet, Class::Operator::Sub },
-	{ kScriptLexMul, Class::Operator::Mul },
-	{ kScriptLexMulSet, Class::Operator::Mul },
-	{ kScriptLexDiv, Class::Operator::Div },
-	{ kScriptLexDivSet, Class::Operator::Div },
-	{ kScriptLexMod, Class::Operator::Mod },
-	{ kScriptLexModSet, Class::Operator::Mod },
-	{ kScriptLexAbove, Class::Operator::Above },
-	{ kScriptLexBellow, Class::Operator::Bellow },
-	{ kScriptLexEqual, Class::Operator::Equal },
-	{ kScriptLexNotEqual, Class::Operator::NotEqual },
-	{ kScriptLexSet, Class::Operator::Move },
-	{ kScriptLexBitShiftR, Class::Operator::ShiftR },
-	{ kScriptLexBitShiftSetR, Class::Operator::ShiftR },
-	{ kScriptLexBitShiftL, Class::Operator::ShiftL },
-	{ kScriptLexBitShiftSetL, Class::Operator::ShiftL },
-	{ kScriptLexBitAnd, Class::Operator::BitAnd },
-	{ kScriptLexBitAndSet, Class::Operator::BitAnd },
-	{ kScriptLexBitOr, Class::Operator::BitOr },
-	{ kScriptLexBitOrSet, Class::Operator::BitOr },
-	{ kScriptLexBitXor, Class::Operator::BitXor },
-	{ kScriptLexBitXorSet, Class::Operator::BitXor },
-	{ kScriptLexBellowEqual, Class::Operator::BellowE },
-	{ kScriptLexAboveEqual, Class::Operator::AboveE },
-	{ kScriptLexAnd, Class::Operator::And },
-	{ kScriptLexOr, Class::Operator::Or },
-	{ kScriptLexIncrement, Class::Operator::Inc },
-	{ kScriptLexDecrement, Class::Operator::Dec },
-	{ kScriptLexSizeof, Class::Operator::Sizeof },
-	{ kScriptLexBitNot, Class::Operator::BitNot },
-	{ kScriptLexNot, Class::Operator::Not },
-	{ kScriptLexCast, Class::Operator::Cast }
-};
-
 Void VirtualAnalizer::Treat(NodeListRef nodeList) {
 
 	for (NodePtr n : nodeList) {
@@ -53,7 +13,7 @@ Void VirtualAnalizer::Treat(NodeListRef nodeList) {
 			if (n->id == kScriptNodeClass || n->id == kScriptNodeInterface || n->id == kScriptNodeFunction) {
 				continue;
 			}
-			else if (n->id == kScriptNodeInvoke || n->id == kScriptNodeAlloc) {
+			else if (n->id == kScriptNodeInvoke) {
 				if (!n->var) {
 					PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->word.data());
 				}
@@ -61,10 +21,21 @@ Void VirtualAnalizer::Treat(NodeListRef nodeList) {
 					this->_AnalizeCast(n);
 				}
 				else {
-					this->_AnalizeInvoke(n);
+					if (!n->var->CheckType(Object::Type::Class)) {
+						this->_AnalizeInvoke(n);
+					}
 					if (n->parent->id != kScriptNodeClass) {
 						goto _SaveNode;
 					}
+				}
+			}
+			else if (n->id == kScriptNodeAlloc) {
+				if (!n->var) {
+					PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->word.data());
+				}
+				this->_AnalizeInvoke(n);
+				if (n->parent->id != kScriptNodeClass) {
+					goto _SaveNode;
 				}
 			}
 			else if (n->lex->lex->IsUnknown() || n->lex->lex->IsConst()) {
@@ -133,132 +104,78 @@ Void VirtualAnalizer::Read(NodePtr n, VariablePtr& left, VariablePtr& right) {
 	}
 }
 
+Void VirtualAnalizer::Write(VariablePtr var) {
+
+	this->varStack.push_back(var);
+	this->nameStack.push_back(var->GetName());
+}
+
 Void VirtualAnalizer::Analize(LowLevelStackPtr lowLevelStack, NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
 
 	this->lowLevelStack = lowLevelStack;
 	this->nodeBuilder = nodeBuilder;
 	this->rootScope = rootScope;
 
-	this->OverloadInteger(rootScope->classBoolean);
-	this->OverloadInteger(rootScope->classByte);
-	this->OverloadInteger(rootScope->classChar);
-	this->OverloadInteger(rootScope->classInt);
-	this->OverloadInteger(rootScope->classLong);
-	this->OverloadInteger(rootScope->classShort);
-	this->OverloadFloat(rootScope->classFloat);
-	this->OverloadFloat(rootScope->classDouble);
-	this->OverloadString(rootScope->classString);
-	this->OverloadObject(rootScope->classString);
-	this->OverloadObject(rootScope->classObject);
-	this->OverloadObject(rootScope->classClass);
-
 	this->Treat(this->nodeBuilder->GetRootNode()->blockList);
+}
+
+RegisterPtr VirtualAnalizer::_GetSourceRegister(VariablePtr variable) {
+
+	if (variable->GetClassType()->IsFloat()) {
+		return this->lowLevelStack->FindRegister(LowLevelStack::Float);
+	}
+	else if (variable->GetClassType()->IsInt()) {
+		return this->lowLevelStack->FindRegister(LowLevelStack::Integer);
+	}
+	return this->lowLevelStack->FindRegister(LowLevelStack::Pointer);
 }
 
 Void VirtualAnalizer::_AnalizeBinary(NodePtr n) {
 
 	VariablePtr sourceVar;
 	VariablePtr leftVar;
+	VariablePtr leftVar2;
 	VariablePtr rightVar;
 	VariablePtr rightVar2;
 
 	this->Read(n, leftVar, rightVar);
 
+	leftVar2 = leftVar;
 	rightVar2 = rightVar;
 
 	if (n->lex->lex->IsRight()) {
+
+		sourceVar = leftVar->GetClassType()->GetPriority() >= rightVar->GetClassType()->GetPriority() ?
+			this->_GetSourceRegister(leftVar) : this->_GetSourceRegister(rightVar);
+
 		if (leftVar->GetClassType()->Hash() != rightVar->GetClassType()->Hash()) {
-			if (leftVar->GetClassType()->GetPriority() != rightVar->GetClassType()->GetPriority()) {
-				if (leftVar->GetClassType()->GetPriority() > rightVar->GetClassType()->GetPriority()) {
-					if (leftVar->GetClassType()->IsFloat()) {
-						sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Float);
-					}
-					else if (leftVar->GetClassType()->IsInt()) {
-						sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Integer);
-					}
-					else {
-						sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Pointer);
-					}
-					leftVar->GetClassType()->Evaluate(Class::Operator::Cast, sourceVar, rightVar, leftVar, n->lex->lex);
-					rightVar = sourceVar;
-				}
-				else {
-					if (rightVar->GetClassType()->IsFloat()) {
-						sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Float);
-					}
-					else if (rightVar->GetClassType()->IsInt()) {
-						sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Integer);
-					}
-					else {
-						sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Pointer);
-					}
-					rightVar->GetClassType()->Evaluate(Class::Operator::Cast, sourceVar, leftVar, rightVar, n->lex->lex);
-					leftVar = sourceVar;
-				}
+			if (leftVar->GetClassType()->Hash() != sourceVar->GetClassType()->Hash()) {
+				leftVar = this->_GetSourceRegister(sourceVar);
+				this->AnalizeCast(leftVar, leftVar2);
 			}
-		}
-		if (n->lex->lex->IsMath()) {
-			if (leftVar->GetClassType()->GetPriority() != rightVar2->GetClassType()->GetPriority()) {
-				if (leftVar->GetClassType()->GetPriority() > rightVar2->GetClassType()->GetPriority()) {
-					if (leftVar->GetClassType()->IsFloat()) {
-						sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Float);
-					}
-					else if (leftVar->GetClassType()->IsInt()) {
-						sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Integer);
-					}
-					else {
-						sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Pointer);
-					}
-				}
-				else {
-					if (rightVar->GetClassType()->IsFloat()) {
-						sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Float);
-					}
-					else if (rightVar->GetClassType()->IsInt()) {
-						sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Integer);
-					}
-					else {
-						sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Pointer);
-					}
-				}
+			if (rightVar->GetClassType()->Hash() != sourceVar->GetClassType()->Hash()) {
+				rightVar = this->_GetSourceRegister(sourceVar);
+				this->AnalizeCast(rightVar, rightVar2);
 			}
-			else {
-				if (leftVar->GetClassType()->IsFloat()) {
-					sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Float);
-				}
-				else if (leftVar->GetClassType()->IsInt()) {
-					sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Integer);
-				}
-				else {
-					sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Pointer);
-				}
-			}
-		}
-		else {
-			sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Integer);
 		}
 	}
 	else {
-		if (rightVar->GetVarType() != Variable::Var::Object && leftVar->GetClassType()->Hash() != rightVar->GetClassType()->Hash()) {
-			if (leftVar->GetClassType()->IsFloat()) {
-				sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Float);
+		if (leftVar->GetClassType()->Hash() != rightVar->GetClassType()->Hash()) {
+			if (leftVar->GetClassType()->Hash() != leftVar->GetClassType()->Hash()) {
+				leftVar = this->_GetSourceRegister(leftVar);
+				this->AnalizeCast(leftVar, leftVar2);
 			}
-			else if (leftVar->GetClassType()->IsInt()) {
-				sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Integer);
+			if (rightVar->GetClassType()->Hash() != leftVar->GetClassType()->Hash()) {
+				rightVar = this->_GetSourceRegister(leftVar);
+				if (rightVar != rightVar2) {
+					this->AnalizeCast(rightVar, rightVar2);
+				}
 			}
-			else {
-				sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Pointer);
-			}
-			leftVar->GetClass()->Evaluate(Class::Operator::Cast, sourceVar, rightVar, leftVar, n->lex->lex);
-			rightVar = sourceVar;
 		}
-		sourceVar = leftVar;
+		sourceVar = leftVar2;
 	}
 
-	printf("%s = %s %s %s\n", sourceVar->GetName().data(), leftVar->GetName().data(), n->word.data(), rightVar->GetName().data());
-
-	sourceVar->GetClass()->Evaluate(operatorMap[n->lex->lex->id],
-		sourceVar, leftVar, rightVar, n->lex->lex);
+	this->AnalizeBinary(sourceVar, leftVar, rightVar);
 
 	if (leftVar->CheckModificator(Class::Modificator::Register)) {
 		this->lowLevelStack->ReleaseRegister(RegisterPtr(leftVar));
@@ -274,29 +191,20 @@ Void VirtualAnalizer::_AnalizeBinary(NodePtr n) {
 Void VirtualAnalizer::_AnalizeUnary(NodePtr n) {
 
 	VariablePtr leftVar;
-	VariablePtr rightVar;
+	VariablePtr leftVar2;
 	VariablePtr sourceVar;
 
-	this->Read(n, leftVar, rightVar);
+	this->Read(n, leftVar, leftVar);
+	leftVar2 = leftVar;
 
 	if (n->lex->lex->IsRight()) {
-		if (leftVar->GetClassType()->IsFloat()) {
-			sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Float);
-		}
-		else if (leftVar->GetClassType()->IsInt()) {
-			sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Integer);
-		}
-		else {
-			sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Pointer);
-		}
-		leftVar->GetClassType()->Evaluate(Class::Operator::Move, sourceVar, leftVar, leftVar, n->lex->lex);
+		sourceVar = this->_GetSourceRegister(leftVar);
 	}
 	else {
 		sourceVar = leftVar;
 	}
 
-	sourceVar->GetClass()->Evaluate(operatorMap[n->lex->lex->id],
-		sourceVar, sourceVar, sourceVar, n->lex->lex);
+	this->AnalizeUnary(sourceVar, leftVar);
 
 	this->varStack.push_back(sourceVar);
 	this->nameStack.push_back(sourceVar->GetName());
@@ -306,34 +214,51 @@ Void VirtualAnalizer::_AnalizeNew(NodePtr n) {
 
 	Vector<VariablePtr> stackBackup;
 	VariablePtr leftVar;
-	ClassPtr classVar;
-	VariablePtr sourcePtr;
-	ObjectPtr templateClass;
+	VariablePtr rightVar;
+	VariablePtr sourceVar;
 
 	this->Read(n, leftVar, leftVar);
-	classVar = ClassPtr(leftVar);
-	sourcePtr = this->lowLevelStack->FindRegister(LowLevelStack::Pointer);
+	sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Pointer);
 
-	if (classVar->CheckModificator(Class::Modificator::Primitive)) {
-		sourcePtr->SetObject(new Class(*classVar));
+	if (leftVar->CheckModificator(Object::Modificator::Primitive)) {
+		this->Read(n, rightVar, rightVar);
+		if (!rightVar->CheckType(Object::Type::Variable)) {
+			PostSyntaxError(n->lex->line, "Array parameter must be variable (%s)", rightVar->GetName().data());
+		}
+		if (rightVar->GetVarType() != Variable::Var::Integer) {
+			PostSyntaxError(n->lex->line, "Array parameter must be integer value (%s)", rightVar->GetName().data());
+		}
+		this->AnalizeNew(sourceVar, rightVar, ClassPtr(leftVar));
 	}
 	else {
+		if (leftVar->CheckModificator(Object::Modificator::Primitive)) {
+			PostSyntaxError(n->lex->line, "Unable to apply 'new' for primitive type (%s)", leftVar->GetName().data());
+		}
+		this->AnalizeNew(sourceVar, NULL, ClassPtr(leftVar));
+		ObjectPtr classVar = leftVar->Find(leftVar->Hash());
+		ObjectPtr constructorVar = leftVar->Find(leftVar->GetName());
 		stackBackup = this->varStack;
-		classVar->GetClass()->New(sourcePtr);
 		if (classVar->GetNode()) {
 			for (NodePtr n2 : classVar->GetNode()->blockList) {
 				this->Treat(n2->blockList);
 			}
 		}
+		if (constructorVar && FALSE) {
+			if (constructorVar->GetMethod()->GetRootNode()) {
+				this->Treat(constructorVar->GetMethod()->GetRootNode()->blockList);
+			}
+			else if (constructorVar->GetMethod()->GetNativeMethod()) {
+				constructorVar->GetMethod()->GetNativeMethod()(constructorVar->GetMethod());
+			}
+			else {
+				PostSyntaxError(n->lex->line, "Non-implemented class constructor (%s)", constructorVar->GetName().data());
+			}
+		}
 		this->varStack = stackBackup;
 	}
 
-	this->varStack.push_back(sourcePtr);
-	this->nameStack.push_back(sourcePtr->GetName());
-
-	if (classVar->GetNewNode()) {
-		this->_AnalizeInvoke(classVar->GetNewNode());
-	}
+	this->varStack.push_back(sourceVar);
+	this->nameStack.push_back(sourceVar->GetName());
 }
 
 Void VirtualAnalizer::_AnalizeSelection(NodePtr n) {
@@ -380,23 +305,7 @@ Void VirtualAnalizer::_AnalizeCast(NodePtr n) {
 	this->Read(n, leftVar, leftVar);
 	rightVar = n->var->GetClass();
 
-	if (leftVar->GetClass()->Hash() != rightVar->GetClass()->Hash()) {
-		if (rightVar->GetClass() == Scope::classFloat ||
-			rightVar->GetClass() == Scope::classDouble
-			) {
-			sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Float);
-		}
-		else {
-			sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Integer);
-		}
-		rightVar->GetClass()->GetOperators()[Uint32(Class::Operator::Cast)](
-			sourceVar, leftVar, sourceVar);
-		rightVar->GetClass()->Evaluate(operatorMap[n->lex->lex->id],
-			sourceVar, sourceVar, sourceVar, n->lex->lex);
-	}
-	else {
-		sourceVar = leftVar;
-	}
+	__asm int 3
 
 	this->varStack.push_back(sourceVar);
 	this->nameStack.push_back(sourceVar->GetName());
@@ -412,36 +321,40 @@ Void VirtualAnalizer::_AnalizeInvoke(NodePtr n) {
 	Uint32 invokeHash;
 	Buffer formattedParameters;
 
-	if (n->var && n->var->CheckType(Object::Type::Class)) {
-		if (n->var->GetNewNode() != n) {
-			n->var->SetNewNode(n);
-			return;
+	if (n->var->CheckModificator(Object::Modificator::Primitive)) {
+		this->Read(n, leftVar, leftVar);
+		if (!leftVar->CheckType(Object::Type::Variable)) {
+			PostSyntaxError(n->lex->line, "Array parameter must be variable (%s)", leftVar->GetName().data());
 		}
+		this->varStack.push_back(leftVar->GetVariable());
+		this->nameStack.push_back(leftVar->GetName());
 	}
-
-	for (Uint32 i = 0; i < n->lex->args; i++) {
-		objectList.push_back(this->varStack.back()->GetClass());
-		formattedParameters.append(this->varStack.back()->GetClass()->GetName());
-		this->varStack.pop_back();
-		this->nameStack.pop_back();
-		if (i != n->lex->args - 1) {
-			formattedParameters.append(", ");
+	else {
+		for (Uint32 i = 0; i < n->lex->args; i++) {
+			objectList.push_back(this->varStack.back()->GetClass());
+			this->AnalizePush(this->varStack.back());
+			formattedParameters.append(this->varStack.back()->GetClass()->GetName());
+			this->varStack.pop_back();
+			this->nameStack.pop_back();
+			if (i != n->lex->args - 1) {
+				formattedParameters.append(", ");
+			}
 		}
+
+		invokeHash = Method::ComputeInvokeHash(objectList);
+		methodHash = n->var->GetNode()->methodHash;
+		methodVar = n->var->Find(Uint64(n->var->GetPathHash32()) << 32 | invokeHash);
+
+		if (!methodVar) {
+			PostSyntaxError(n->lex->line, "Undeclared method %s(%s)", n->word.data(), formattedParameters.data());
+		}
+
+		printf("Invoked %s(%s)\n", n->word.data(), formattedParameters.data());
+
+		sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Pointer);
+		this->varStack.push_back(sourceVar);
+		this->nameStack.push_back(sourceVar->GetName());
 	}
-
-	invokeHash = Method::ComputeInvokeHash(objectList);
-	methodHash = n->var->GetNode()->methodHash;
-	methodVar = n->var->Find(Uint64(n->var->GetPathHash32()) << 32 | invokeHash);
-
-	if (!methodVar) {
-		PostSyntaxError(n->lex->line, "Undeclared method %s(%s)", n->word.data(), formattedParameters.data());
-	}
-
-	printf("Invoked %s(%s)\n", n->word.data(), formattedParameters.data());
-
-	sourceVar = this->lowLevelStack->FindRegister(LowLevelStack::Pointer);
-	this->varStack.push_back(sourceVar);
-	this->nameStack.push_back(sourceVar->GetName());
 }
 
 LAME_END2

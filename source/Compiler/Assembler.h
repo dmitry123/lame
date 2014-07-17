@@ -3,7 +3,7 @@
 
 #include "Define.h"
 
-LAME_BEGIN2(VirtualMachine)
+LAME_BEGIN2(Compiler)
 
 enum Asm {
 	NOP = 0x00,

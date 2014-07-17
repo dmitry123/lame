@@ -4,6 +4,7 @@
 #include "Object.h"
 #include "Class.h"
 #include "Method.h"
+#include "Variable.h"
 
 #include <utility>
 
@@ -315,6 +316,7 @@ ScopePtr Scope::GetRootScope(Void) {
 	classObject = rootScope->Scope::Add(new Script::Class("Object", rootScope))->GetClass();
 	classClass = rootScope->Scope::Add(new Script::Class("Class", rootScope))->GetClass();
 	classUnknown = rootScope->Scope::Add(new Script::Class("?", rootScope))->GetClass();
+	classArray = rootScope->Scope::Add(new Script::Class("Array", rootScope))->GetClass();
 
 	classChar
 		->SetModificator(Script::Object::Modificator::Primitive)
@@ -348,9 +350,15 @@ ScopePtr Scope::GetRootScope(Void) {
 	classObject->SetModificator(Script::Object::Modificator::Internal);
 	classClass->SetModificator(Script::Object::Modificator::Internal);
 	classUnknown->SetModificator(Script::Object::Modificator::Internal);
+	classArray->SetModificator(Script::Object::Modificator::Internal);
 
-	classObject->Script::Scope::Add(new Script::Method("toString", classObject, classObject, classString))
+	classObject->Scope::Add(new Method("toString", classObject, classObject, classString))
 		->GetMethod()->SetNativeMethod([](Script::MethodPtr method) { /* Nothing */ });
+
+	classArray->Scope::Add(new Variable("length", classArray, classInt))
+		->SetModificator(Object::Modificator::Public);
+	classArray->Scope::Add(new Variable("array", classArray, classInt))
+		->SetModificator(Object::Modificator::Private);
 
 	classChar->SetPriority(0);
 	classByte->SetPriority(0);
@@ -365,6 +373,7 @@ ScopePtr Scope::GetRootScope(Void) {
 	classObject->SetPriority(7);
 	classClass->SetPriority(0);
 	classUnknown->SetPriority(0);
+	classArray->SetPriority(0);
 
 	return ScopePtr(rootScope);
 }
@@ -382,5 +391,6 @@ Script::ClassPtr Scope::classString = NULL;
 Script::ClassPtr Scope::classObject = NULL;
 Script::ClassPtr Scope::classClass = NULL;
 Script::ClassPtr Scope::classUnknown = NULL;
+Script::ClassPtr Scope::classArray = NULL;
 
 LAME_END2
