@@ -16,21 +16,49 @@
 #    define LAME_X86
 #  endif
 #else
-#  error "Unknown platform!"
+#  error "Unsupported platform!"
 #endif
 
 #if defined(_MSC_VER)
-#  define LAME_MSVC
+#  if _MSC_VER == 1800
+#    define LAME_MSVC_120
+#    define LAME_MSVC 120
+#  elif _MSC_VER == 1700
+#    define LAME_MSVC_110
+#    define LAME_MSVC 110
+#  elif _MSC_VER == 1600
+#    define LAME_MSVC_100
+#    define LAME_MSVC 100
+#  elif _MSC_VER == 1500
+#    define LAME_MSVC_090
+#    define LAME_MSVC 090
+#  elif _MSC_VER == 1400
+#    define LAME_MSVC_080
+#    define LAME_MSVC 080
+#  elif _MSC_VER == 1300
+#    define LAME_MSVC_071
+#    define LAME_MSVC 071
+#  elif _MSC_VER == 1300
+#    define LAME_MSVC_070
+#    define LAME_MSVC 070
+#  elif _MSC_VER == 1200
+#    define LAME_MSVC_060
+#    define LAME_MSVC 060
+#  elif _MSC_VER == 1100
+#    define LAME_MSVC_050
+#    define LAME_MSVC 050
+#  endif
 #elif defined(__clang__)
 #  define LAME_CLANG
-#else
-#  error "Unknown compiler!"
-#endif
-
-#if defined(LAME_CLANG)
 #  if defined(__llvm__)
 #    define LAME_LLVM
 #  endif
+#else
+#  error "Unsupported compiler!"
+#endif
+
+#if LAME_MSVC < 120
+#  error "Lame Script requires MSVC12 compiler with C++0x support!"
 #endif
 
 #if defined(LAME_MSVC) || defined(LAME_CLANG)
@@ -76,7 +104,7 @@
 #endif
 
 #if defined(LAME_MSVC)
-#  if _MSC_VER >= 1800
+#  if LAME_MSVC >= 120
 #    define LAME_CPP0X
 #  endif
 #endif
@@ -110,10 +138,14 @@
 #  define LAME_DLL
 #endif
 
-#if defined(CORE_EXPORTS)
-#  define LAME_API __declspec(dllexport)
+#if defined(LAME_WINDOWS)
+#  if defined(CORE_EXPORTS)
+#    define LAME_API __declspec(dllexport)
+#  else
+#    define LAME_API __declspec(dllimport)
+#  endif
 #else
-#  define LAME_API __declspec(dllimport)
+#  define LAME_API
 #endif
 
 #if defined(LAME_WINDOWS)
@@ -139,10 +171,10 @@
 
 #if defined(LAME_WINDOWS)
 #  define LAME_SLASH '\\'
-#  define LAME_SLASH_STR "\\"
+#  define LAME_SLASH2 "\\"
 #else
 #  define LAME_SLASH '/'
-#  define LAME_SLASH_STR "/"
+#  define LAME_SLASH2 "/"
 #endif
 
 #define LAME_DECLARE_HANDLE(_name) \
@@ -155,13 +187,13 @@
 #define LAME_ERRORBUFFER_MAX 1024
 #define LAME_TIMEBUFFER_MAX 64
 
-#define LAME_MS_SECOND 1000
-#define LAME_MS_MINUTE 60000
-#define LAME_MS_HOUR 3600000
-#define LAME_MS_DAY 86400000
-#define LAME_MS_WEEK 604800000
-#define LAME_MS_MONTH 2419200000
-#define LAME_MS_YEAR 29030400000
+#define LAME_TIME_SECOND 1000
+#define LAME_TIME_MINUTE 60000
+#define LAME_TIME_HOUR   3600000
+#define LAME_TIME_DAY    86400000
+#define LAME_TIME_WEEK   604800000
+#define LAME_TIME_MONTH  2419200000
+#define LAME_TIME_YEAR   29030400000
 
 #define LAME_DECLARE_TYPE(_type, _name) \
 	typedef _type _name, *_name##P;
@@ -178,17 +210,13 @@
 #  define LAME_TODO(_message) (_message)
 #endif
 
-#define LAME_BLOCK
+#define LAME_SCOPE
 
-#if defined(LAME_VLD) && defined(LAME_MSVC)
-#  include <vld.h>
-#endif
-
-#ifdef LAME_MSVC
-#  ifdef LAME_X64
+#if defined(LAME_WINDOWS)
+#  if defined(LAME_MSVC)
 #    pragma comment(lib, "pthreadvc2.lib")
 #  else
-#    pragma comment(lib, "pthreadvc2.lib")
+#    error "Unsupported compiler";
 #  endif
 #endif
 

@@ -1,7 +1,5 @@
 #include "Node.h"
 #include "Exception.h"
-#include "GlobalScope.h"
-#include "Variable.h"
 
 #include <stack>
 
@@ -150,27 +148,30 @@ Node::Node(Buffer word, NodeID id, LexNodePtr lex, NodePtr parent, NodePtr prev)
 	parent(parent),
 	previous(prev)
 {
-	this->modificators = 0;
+	this->flags = 0;
 	this->var = 0;
-	this->isMethodImpl = 0;
-	this->isArray = 0;
-	this->thisVar = 0;
+	this->typeNode = 0;
+	this->templateNode = 0;
+	this->extendNode = 0;
+	this->methodHash = 0;
 }
 
 Node::~Node() {
 
-}
-
-ScopeControllerPtr Node::GetScope() {
-
-	if (this->id == kScriptNodeEntry) {
-		return GlobalScope::GetInstance();
+	if (this->typeNode) {
+		delete this->typeNode;
 	}
-	if (this->thisVar) {
-		return this->thisVar->GetScopeController();
+	
+	if (this->templateNode) {
+		delete this->templateNode;
 	}
-	else {
-		return this->var->GetScopeController();
+	
+	if (this->extendNode) {
+		delete this->extendNode;
+	}
+
+	for (NodePtr n : this->implementNode) {
+		delete n;
 	}
 }
 
@@ -182,6 +183,58 @@ Void Node::ShuntingYard(Void) {
 	if (this->argList.size() > 0) {
 		_Order(&this->argList);
 	}
+}
+
+Void Node::Extend(NodePtr node) {
+	this->extendNode = new Node(*node);
+}
+
+Void Node::Implement(NodePtr node) {
+	this->implementNode.push_back(new Node(*node));
+}
+
+Void Node::Template(NodePtr node) {
+	this->templateNode = new Node(*node);
+}
+
+Void Node::Type(NodePtr node) {
+	this->typeNode = new Node(*node);
+}
+
+Node::Node(const Node& node) :
+	Node(node.word, node.id, node.lex, node.parent, node.previous)
+{
+	if (node.extendNode) {
+		this->Extend(node.extendNode);
+	}
+
+	if (node.templateNode) {
+		this->Template(node.templateNode);
+	}
+
+	if (node.typeNode) {
+		this->Type(node.typeNode);
+	}
+
+	for (NodePtr n : node.implementNode) {
+		this->Implement(n);
+	}
+
+	this->flags = node.flags;
+}
+
+Node::Node() :
+	word(""),
+	parent(NULL),
+	previous(NULL),
+	lex(NULL),
+	id(kScriptNodeDefault)
+{
+	this->flags = 0;
+	this->var = 0;
+	this->typeNode = 0;
+	this->templateNode = 0;
+	this->extendNode = 0;
 }
 
 LAME_END2

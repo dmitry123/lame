@@ -5,7 +5,7 @@
 
 LAME_BEGIN2(Core)
 
-class LAME_API ThrowableAdapter : public Throwable {
+class ThrowableAdapter : public Throwable {
 public:
 	inline Void Debug(PrintStreamPtr printer) override {
 		printer->Print(this->errorBuffer);

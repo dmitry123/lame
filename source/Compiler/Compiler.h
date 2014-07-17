@@ -4,5 +4,7 @@
 #include "Analizer.h"
 #include "Define.h"
 #include "Translator.h"
+#include "Register.h"
+#include "LowLevelStack.h"
 
 #endif // ~__LAME_COMPILER_COMPILER__

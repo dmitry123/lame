@@ -1,20 +1,18 @@
 #ifndef __LAME_SCRIPT__CLASS__
 #define __LAME_SCRIPT__CLASS__
 
-#include "ScopeController.h"
-#include "Error.h"
+#include "Object.h"
 
 LAME_BEGIN2(Script)
 
 class LAME_API Class : public Object {
 	friend class Variable;
-	friend class Abstract;
-	friend class Interface;
 public:
 	typedef Void(*OperatorCallback)(
 		VariablePtr source,
 		VariablePtr left,
 		VariablePtr right);
+	typedef OperatorCallback* OperatorCallbackPtr;
 public:
 	enum class Operator : Uint32 {
 		Unkown, Add,     Sub,    Mul,    Div,
@@ -24,61 +22,22 @@ public:
 		Inc,    Dec,     Sizeof, BitNot, Not,
 		Cast
 	};
-private:
-	enum {
-		OPERATOR_AMOUNT = 26
-	};
-private:
-	Class(BufferRefC name, Type type, NodePtr node = NULL) : Object(name, type, node),
-		extended(0),
-		priority(0)
-	{
-		this->references = new Uint32(0);
-		this->EnableScopeController();
-	}
 public:
-	Class(BufferRefC name, NodePtr node = NULL) : Object(name, Type::Class, node),
-		extended(0),
-		priority(0)
-	{
-		this->references = new Uint32(0);
-		this->EnableScopeController();
-	}
+	Class(BufferRefC name, ScopePtr parent, Uint32 size = SizeOf);
+	~Class();
 public:
-	~Class() {
-		if (!(*this->references)) {
-			delete this->references;
-		}
-	}
-public:
-	Error Clone(ObjectPtrC object) override;
+	Bool Equal(ObjectPtrC object) override;
+	ObjectPtr Clone(BufferRefC name) override;
 	Void Trace(Uint32 offset) override;
+	HashType Hash(Void) override;
+	Uint32 Size(Void) override;
+	Void Release(Void) override;
+	ClassPtr GetClass(Void) override;
 public:
-	inline VariablePtr FindVariable(BufferRefC name) {
-		return (VariablePtr) this->GetScopeController()->GetVarScope()->Find(name);
-	}
-	inline VariablePtr FindVariable(Uint32 hash) {
-		return (VariablePtr) this->GetScopeController()->GetVarScope()->Find(hash);
-	}
-	inline ClassPtr FindClass(BufferRefC name) {
-		return (ClassPtr) this->GetScopeController()->GetClassScope()->Find(name);
-	}
-	inline ClassPtr FindClass(Uint32 hash) {
-		return (ClassPtr) this->GetScopeController()->GetClassScope()->Find(hash);
-	}
-	inline MethodPtr FindMethod(BufferRefC name, Uint32 invokeHash = -1) {
-		return (MethodPtr) this->GetScopeController()->GetMethodScope()->Find(name, invokeHash);
-	}
-	inline MethodPtr FindMethod(Uint32 hash) {
-		return (MethodPtr) this->GetScopeController()->GetMethodScope()->Find(hash);
-	}
-public:
-	inline Uint32 GetReferences() { return *this->references; }
-	inline ClassPtr GetExtended() { return this->extended; }
-	inline ClassPtr GetClass() { return this; }
-	inline Vector<InterfacePtr>& GetImplements() { return this->implemented; }
-public:
-	Error New(ObjectPtr object);
+	inline Uint32 GetReferences() const { return *this->references; }
+	inline ObjectPtr GetExtend() { return this->extendClass; }
+	inline Set<ObjectPtr>& GetImplements() { return this->implementClass; }
+	inline Uint32 GetPriority() const { return this->priority; }
 public:
 	inline Bool DecRef(Void) {
 		return --(*this->references) == 0;
@@ -92,21 +51,26 @@ public:
 	inline Uint32 GetPriority() {
 		return this->priority;
 	}
-	inline Vector<OperatorCallback>& GetOperators() {
+	inline OperatorCallback* GetOperators() {
 		return this->operators;
 	}
 public:
-	Error Extend(ClassPtr object);
-	Error Implement(InterfacePtr object);
-	Error Overload(Operator op, OperatorCallback callback);
-	Error Evaluate(Operator op, VariablePtr source, VariablePtr left, VariablePtr right, LexPtrC lex);
-	Void ComputeSizeOf(Void);
+	Void Extend(ObjectPtr object);
+	Void Implement(ObjectPtr object);
+	Void New(ObjectPtr object);
+	Void Evaluate(Operator op, VariablePtr source, VariablePtr left, VariablePtr right, LexPtrC lex);
+	Void Overload(Operator op, OperatorCallback callback);
 private:
-	ClassPtr extended;
-	Vector<InterfacePtr> implemented;
+	enum {
+		OperatorAmount = 26
+	};
+private:
+	ObjectPtr extendClass;
+	Set<ObjectPtr> implementClass;
 	Uint32P references;
-	Vector<OperatorCallback> operators;
+	OperatorCallback operators[OperatorAmount];
 	Uint32 priority;
+	Uint32 size;
 };
 
 LAME_END2

@@ -22,7 +22,9 @@ private:
 	Iterator _BuildClass(NodePtr& parent, Iterator i);
 	Iterator _BuildCondition(NodePtr& parent, Iterator i);
 	Iterator _BuildEntry(NodePtr& parent, Iterator i);
-	Iterator _BuildArguments(NodePtr& parent, Iterator i);
+	Iterator _BuildArray(NodePtr& parent, Iterator i);
+	Iterator _BuildArgumentList(NodePtr& parent, Iterator i);
+	Iterator _BuildTemplate(NodePtr& parent, Iterator i);
 private:
 	Uint32 _GetCountOfArguments(Iterator i);
 private:

@@ -101,8 +101,16 @@ Void Buffer::Get(Void) {
 	*this = string;
 }
 
-Uint32 Buffer::GetHash(Void) const {
+Uint16 Buffer::GetHash16(Void) const {
+	return GetHash16(this->data());
+}
+
+Uint32 Buffer::GetHash32(Void) const {
 	return GetHash32(this->data());
+}
+
+Uint64 Buffer::GetHash64(Void) const {
+	return GetHash64(this->data());
 }
 
 Uint16 Buffer::GetHash16(StringC string) {

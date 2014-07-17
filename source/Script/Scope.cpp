@@ -1,11 +1,9 @@
 #include "Scope.h"
 #include "Exception.h"
-#include "Variable.h"
-#include "Interface.h"
-#include "Method.h"
+#include "Lex.h"
+#include "Object.h"
 #include "Class.h"
-#include "AbstractClass.h"
-#include "Array.h"
+#include "Method.h"
 
 #include <utility>
 
@@ -14,116 +12,101 @@ LAME_BEGIN2(Script)
 ObjectPtr Scope::Add(ObjectPtr object) {
 
 	HashMap::iterator i;
-    StringPair stringPair;
-    HashPair hashPair;
-    
-    stringPair.first = object->GetName();
-	stringPair.second = object->Hash();
-    
-    hashPair.first = object->GetNameHash();
-	hashPair.second = object->Hash();
+	Hash hash = object->Hash();
 
-	if ((i = this->hashMap_.find(hashPair)) != this->hashMap_.end() && object->GetName().length() > 0) {
+	if (Lex::Find(object->GetName()) != NULL) {
+		PostSyntaxError(0, "Reserved name (%s)", object->GetName().data());
+	}
+
+	if ((i = this->hashMap_.find(hash)) != this->hashMap_.end() && object->GetName().length() > 0) {
 		return LAME_NULL;
 	}
 
-	this->stringMap_.insert(MapStringPair(stringPair, object));
-	this->hashMap_.insert(MapHashPair(hashPair, object));
+	this->hashMap_.insert(std::make_pair(hash, object));
+	this->stringMap_.insert(std::make_pair(object->GetName(), object));
+
+	object->GetObservable()
+		->Add(this);
+
+	this->Update(object);
 
 	return object;
 }
 
-Void Scope::Remove(ObjectPtr var) {
+Void Scope::Remove(ObjectPtr object) {
 
-	StringMap::iterator i;
-	HashMap::iterator j;
-    
-    StringPair stringPair;
-    HashPair hashPair;
-    
-	stringPair.first = var->GetName();
-	stringPair.second = var->Hash();
+	HashMap::iterator i;
+	StringMap::iterator j;
 
-	hashPair.first = var->GetNameHash();
-	hashPair.second = var->Hash();
-
-	if ((i = this->stringMap_.find(stringPair)) == this->stringMap_.end() ||
-		(j = this->hashMap_.find(hashPair)) == this->hashMap_.end()
+	if ((i = this->hashMap_.find(object->Hash())) == this->hashMap_.end() ||
+		(j = this->stringMap_.find(object->GetName())) == this->stringMap_.end()
 	) {
 		return;
 	}
 
-	ObjectPtr object = i->second;
+	object->GetObservable()
+		->Remove(this);
 
-	if (object->CheckType(Object::Type::Variable) &&
-		object->GetVariable()->GetVarType() == Variable::Var::Object
-	) {
-		ClassPtr clss = object->GetVariable()->GetObject();
-
-		if (clss && clss->DecRef()) {
-			if (isOwner_) {
-				delete object;
-			}
-		}
-	}
-	else {
-		if (isOwner_) {
-			delete object;
-		}
+	if ((object = i->second) != NULL) {
+		object->Release();
 	}
 
-	this->stringMap_.erase(i);
-	this->hashMap_.erase(j);
+	if (this->publicSet_.count(object)) {
+		this->publicSet_.erase(object);
+	}
+	if (this->staticSet_.count(object)) {
+		this->staticSet_.erase(object);
+	}
+	if (this->methodSet_.count(object)) {
+		this->methodSet_.erase(object);
+	}
+	if (this->variableSet_.count(object)) {
+		this->variableSet_.erase(object);
+	}
+	if (this->classSet_.count(object)) {
+		this->classSet_.erase(object);
+	}
+
+	this->hashMap_.erase(i);
+	this->stringMap_.erase(j);
 }
 
-ObjectPtr Scope::Find(StringC name, Uint32 rightHash) {
-	return this->Find(Buffer::GetHash32(name), rightHash);
-}
-
-ObjectPtr Scope::Find(Uint32 hash, Uint32 rightHash) {
+ObjectPtr Scope::Find(Hash hash) {
 
 	HashMap::iterator i;
-	HashPair hashPair;
+	ScopePtr scope;
 
-	if (rightHash == -1) {
-		rightHash = hash;
+	scope = this;
+
+	while (scope) {
+
+		if ((i = scope->hashMap_.find(hash)) != scope->hashMap_.end()) {
+			return i->second;
+		}
+
+		scope = scope->parentScope_;
 	}
 
-	hashPair.first = hash;
-	hashPair.second = (Uint64)hash << 32 | rightHash;
-
-	if ((i = this->hashMap_.find(hashPair)) == this->hashMap_.end()) {
-		return LAME_NULL;
-	}
-
-	return i->second;
+	return NULL;
 }
 
-static void _CloneObject(ScopePtr scope, ObjectPtr i) {
+ObjectPtr Scope::Find(BufferRefC name) {
 
-	if (i->CheckModificator(Class::Modificator::Static)) {
-		scope->Add(i);
+	StringMap::iterator i;
+	ScopePtr scope;
+
+	scope = this;
+
+	while (scope) {
+
+		if ((i = scope->stringMap_.find(name)) != scope->stringMap_.end()) {
+			return i->second;
+		}
+
+		scope = scope->parentScope_;
 	}
-	else {
-		if (i->CheckType(Object::Type::Class)) {
-			scope->Add(i);
-		}
-		else if (i->CheckType(Object::Type::Interface)) {
-			scope->Add(new Interface(*InterfacePtr(i)));
-		}
-		else if (i->CheckType(Object::Type::Method)) {
-			scope->Add(new Method(*MethodPtr(i)));
-		}
-		else if (i->CheckType(Object::Type::Variable)) {
-			scope->Add(new Variable(*(VariablePtr)i));
-		}
-		else if (i->CheckType(Object::Type::Abstract)) {
-			scope->Add(new Abstract(*(AbstractPtr)i));
-		}
-		else if (i->CheckType(Object::Type::Array)) {
-			scope->Add(new Array(*(ArrayPtr)i));
-		}
-	}
+
+	return NULL;
 }
 
 Void Scope::Merge(ScopePtrC scope) {
@@ -132,19 +115,8 @@ Void Scope::Merge(ScopePtrC scope) {
 		return;
 	}
 
-	for (auto& i : scope->stringMap_) {
-
-		if (i.second->CheckModificator(Object::Modificator::Static)) {
-			_CloneObject(this, i.second);
-		}
-		else {
-			if (i.second->CheckType(Object::Type::Method)) {
-				_CloneObject(this, i.second);
-			}
-			else {
-				_CloneObject(this, i.second);
-			}
-		}
+	for (auto& i : scope->hashMap_) {
+		this->Add(i.second->Clone(i.second->GetName()));
 	}
 }
 
@@ -162,7 +134,7 @@ Void Scope::Move(ScopePtrC scope) {
 		return;
 	}
 
-	for (auto& i : scope->stringMap_) {
+	for (auto& i : scope->hashMap_) {
 
 		if (i.second->CheckModificator(Object::Modificator::Static)) {
 			this->Add(i.second);
@@ -186,27 +158,33 @@ Uint32 Scope::Amount(Void) {
 
 Void Scope::Clear(Void) {
 
-	while (this->stringMap_.size()) {
-		this->Remove(this->stringMap_.begin()->second);
+	while (this->hashMap_.size()) {
+		this->Remove(this->hashMap_.begin()->second);
 	}
+
+	this->hashMap_.clear();
+	this->stringMap_.clear();
+	this->publicSet_.clear();
+	this->staticSet_.clear();
+	this->methodSet_.clear();
+	this->variableSet_.clear();
+	this->classSet_.clear();
 }
 
 Void Scope::Trace(Uint32 offset) {
 
-	Uint32 count = 0;
+	for (auto& i : this->hashMap_) {
 
-	for (auto& i : this->stringMap_) {
-
-		++count;
-
-		if (i.second->CheckModificator(Class::Modificator::Primitive) ||
-			i.second->CheckModificator(Class::Modificator::Register) ||
-			i.second->CheckModificator(Class::Modificator::Internal)
+		if (i.second->CheckModificator(Object::Modificator::Primitive) ||
+			i.second->CheckModificator(Object::Modificator::Register) ||
+			i.second->CheckModificator(Object::Modificator::Internal) ||
+			i.second->CheckModificator(Object::Modificator::Constant)
 		) {
 			continue;
 		}
 
 		Lex::PrintLine(offset);
+
 		i.second->Trace(offset);
 	}
 }
@@ -215,22 +193,194 @@ Uint32 Scope::Size(Void) {
 
 	Uint32 size = 0;
 
-	for (auto& i : this->stringMap_) {
+	for (auto& i : this->hashMap_) {
 
-		if (i.second->CheckModificator(Class::Modificator::Register) ||
-			i.second->CheckModificator(Class::Modificator::Internal)
+		if (i.second->CheckModificator(Object::Modificator::Register) ||
+			i.second->CheckModificator(Object::Modificator::Internal)
 		) {
 			continue;
 		}
 
-		size += i.second->GetSizeOf();
+		size += i.second->Size();
 	}
 
 	return size;
 }
 
+Void Scope::Update(ObjectPtr object) {
+
+	if (this->publicSet_.count(object)) {
+		this->publicSet_.erase(object);
+	}
+	if (this->staticSet_.count(object)) {
+		this->staticSet_.erase(object);
+	}
+	if (this->methodSet_.count(object)) {
+		this->methodSet_.erase(object);
+	}
+	if (this->variableSet_.count(object)) {
+		this->variableSet_.erase(object);
+	}
+	if (this->classSet_.count(object)) {
+		this->classSet_.erase(object);
+	}
+
+	if (object->CheckModificator(Object::Modificator::Private)) {
+		// ignore
+	}
+	else if (object->CheckModificator(Object::Modificator::Protected)) {
+		// ignore
+	}
+	else {
+		this->publicSet_.insert(object);
+	}
+
+	if (object->CheckModificator(Object::Modificator::Static)) {
+		this->staticSet_.insert(object);
+	}
+
+	if (object->CheckType(Object::Type::Class)) {
+		this->classSet_.insert(object);
+	}
+	else if (object->CheckType(Object::Type::Variable)) {
+		this->variableSet_.insert(object);
+	}
+	else {
+		this->methodSet_.insert(object);
+	}
+}
+
+ScopePtr Scope::Root(Void) {
+
+	ScopePtr root = this;
+
+	while (root->parentScope_ != NULL) {
+		root = root->parentScope_;
+	}
+
+	return root;
+}
+
+Buffer Scope::Path(Void) {
+
+	ScopePtr root = this;
+	Buffer resultPath;
+
+	while (root && root->parentScope_) {
+		resultPath += root->GetName() + '@';
+		root = root->parentScope_;
+	}
+
+	return resultPath;
+}
+
+Void Scope::Flush(Void) {
+
+	this->publicSet_.clear();
+	this->staticSet_.clear();
+	this->methodSet_.clear();
+	this->variableSet_.clear();
+	this->classSet_.clear();
+
+	for (auto i : this->stringMap_) {
+		this->Update(i.second);
+	}
+}
+
+Scope::Scope(BufferRefC name, ScopePtr parent) {
+
+	this->scopeName_ = name;
+	this->parentScope_ = parent;
+	this->isOwner_ = TRUE;
+}
+
 Scope::~Scope() {
 	this->Clear();
 }
+
+ScopePtr Scope::GetRootScope(Void) {
+
+	Script::ClassPtr rootScope = new Script::Class("Root", NULL, 0);
+
+	classChar = rootScope->Scope::Add(new Script::Class("char", rootScope, 1))->GetClass();
+	classByte = rootScope->Scope::Add(new Script::Class("byte", rootScope, 1))->GetClass();
+	classBoolean = rootScope->Scope::Add(new Script::Class("boolean", rootScope, 1))->GetClass();
+	classShort = rootScope->Scope::Add(new Script::Class("short", rootScope, 2))->GetClass();
+	classInt = rootScope->Scope::Add(new Script::Class("int", rootScope, 4))->GetClass();
+	classLong = rootScope->Scope::Add(new Script::Class("long", rootScope, 8))->GetClass();
+	classFloat = rootScope->Scope::Add(new Script::Class("float", rootScope, 4))->GetClass();
+	classDouble = rootScope->Scope::Add(new Script::Class("double", rootScope, 8))->GetClass();
+	classVoid = rootScope->Scope::Add(new Script::Class("void", rootScope, 0))->GetClass();
+	classString = rootScope->Scope::Add(new Script::Class("String", rootScope))->GetClass();
+	classObject = rootScope->Scope::Add(new Script::Class("Object", rootScope))->GetClass();
+	classClass = rootScope->Scope::Add(new Script::Class("Class", rootScope))->GetClass();
+	classUnknown = rootScope->Scope::Add(new Script::Class("?", rootScope))->GetClass();
+
+	classChar
+		->SetModificator(Script::Object::Modificator::Primitive)
+		->SetModificator(Script::Object::Modificator::Internal);
+	classByte
+		->SetModificator(Script::Object::Modificator::Primitive)
+		->SetModificator(Script::Object::Modificator::Internal);
+	classBoolean
+		->SetModificator(Script::Object::Modificator::Primitive)
+		->SetModificator(Script::Object::Modificator::Internal);
+	classShort
+		->SetModificator(Script::Object::Modificator::Primitive)
+		->SetModificator(Script::Object::Modificator::Internal);
+	classInt
+		->SetModificator(Script::Object::Modificator::Primitive)
+		->SetModificator(Script::Object::Modificator::Internal);
+	classLong
+		->SetModificator(Script::Object::Modificator::Primitive)
+		->SetModificator(Script::Object::Modificator::Internal);
+	classFloat
+		->SetModificator(Script::Object::Modificator::Primitive)
+		->SetModificator(Script::Object::Modificator::Internal);
+	classDouble
+		->SetModificator(Script::Object::Modificator::Primitive)
+		->SetModificator(Script::Object::Modificator::Internal);
+	classVoid
+		->SetModificator(Script::Object::Modificator::Primitive)
+		->SetModificator(Script::Object::Modificator::Internal);
+
+	classString->SetModificator(Script::Object::Modificator::Internal);
+	classObject->SetModificator(Script::Object::Modificator::Internal);
+	classClass->SetModificator(Script::Object::Modificator::Internal);
+	classUnknown->SetModificator(Script::Object::Modificator::Internal);
+
+	classObject->Script::Scope::Add(new Script::Method("toString", classObject, classObject, classString))
+		->GetMethod()->SetNativeMethod([](Script::MethodPtr method) { /* Nothing */ });
+
+	classChar->SetPriority(0);
+	classByte->SetPriority(0);
+	classBoolean->SetPriority(0);
+	classShort->SetPriority(1);
+	classInt->SetPriority(2);
+	classLong->SetPriority(3);
+	classFloat->SetPriority(4);
+	classDouble->SetPriority(5);
+	classVoid->SetPriority(0);
+	classString->SetPriority(6);
+	classObject->SetPriority(7);
+	classClass->SetPriority(0);
+	classUnknown->SetPriority(0);
+
+	return ScopePtr(rootScope);
+}
+
+Script::ClassPtr Scope::classChar = NULL;
+Script::ClassPtr Scope::classByte = NULL;
+Script::ClassPtr Scope::classBoolean = NULL;
+Script::ClassPtr Scope::classShort = NULL;
+Script::ClassPtr Scope::classInt = NULL;
+Script::ClassPtr Scope::classLong = NULL;
+Script::ClassPtr Scope::classFloat = NULL;
+Script::ClassPtr Scope::classDouble = NULL;
+Script::ClassPtr Scope::classVoid = NULL;
+Script::ClassPtr Scope::classString = NULL;
+Script::ClassPtr Scope::classObject = NULL;
+Script::ClassPtr Scope::classClass = NULL;
+Script::ClassPtr Scope::classUnknown = NULL;
 
 LAME_END2

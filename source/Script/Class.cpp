@@ -1,25 +1,38 @@
 #include "Class.h"
+#include "Lex.h"
+#include "Exception.h"
 #include "Variable.h"
 #include "Method.h"
-#include "Interface.h"
-#include "Exception.h"
 
 LAME_BEGIN2(Script)
 
-Error Class::Clone(ObjectPtrC object) {
+Class::Class(BufferRefC name, ScopePtr parent, Uint32 size) : Object(name, parent, Type::Class),
+	extendClass(0),
+	priority(0),
+	size(size)
+{
+	this->references = new Uint32(0);
 
-	Object::Clone(object);
+	for (Uint32 i = 0; i < OperatorAmount; i++) {
+		this->operators[i] = NULL;
+	}
+}
 
-	this->GetScopeController()->Move(
-		object->GetScopeController());
+Class::~Class() {
+
+	if (!(*this->references)) {
+		delete this->references;
+	}
+}
+
+Bool Class::Equal(ObjectPtrC object) {
+	return this->Hash() == object->Hash();
+}
+
+ObjectPtr Class::Clone(BufferRefC name) {
 
 	this->IncRef();
-
-	if (object->GetClass()->DecRef()) {
-		delete object;
-	}
-
-	return Error::NoError;
+	return this;
 }
 
 Void Class::Trace(Uint32 offset) {
@@ -33,78 +46,68 @@ Void Class::Trace(Uint32 offset) {
 		printf("class %s ", this->GetName().data());
 	}
 
-	if (this->extended) {
-		printf("extends %s ", this->extended->GetName().data());
+	if (this->extendClass) {
+		printf("extends %s ", this->extendClass->GetName().data());
 	}
 
-	if (this->implemented.size() > 0) {
+	if (this->implementClass.size() > 0) {
 
 		printf("implements ");
 
-		for (InterfacePtr c : this->implemented) {
-
-			if (c == this->implemented.front()) {
-				break;
-			}
-
+		for (ObjectPtr c : this->implementClass) {
 			printf("%s, ", c->GetName().data());
 		}
-
-		printf("%s ", this->implemented.front()->GetName().data());
 	}
 
 	printf("{");
 
-	if (this->GetScopeController()->Amount() > 0) {
-		this->GetScopeController()->Trace(offset + 1);
+	if (this->Amount() > 0) {
+		this->Scope::Trace(offset + 1);
 		Lex::PrintLine(offset);
 	}
 
 	printf("}");
 }
 
-Error Class::New(ObjectPtr object) {
+Class::HashType Class::Hash(Void) {
+	return this->GetPathHash64();
+}
+
+Uint32 Class::Size(Void) {
+	return this->Scope::Size();
+}
+
+Void Class::Release(Void) {
+	if (this->DecRef()) {
+		delete this;
+	}
+}
+
+ClassPtr Class::GetClass(Void) {
+	return this;
+}
+
+Void Class::New(ObjectPtr object) {
 
 	// check object for variable, cuz we can
 	// store class's objects only in variables
 	if (!object->CheckType(Type::Variable)) {
-		return Error::Class_ObjectNotVariable;
+		throw ScriptException("Unable to apply operator new for non-variable object");
 	}
 
 	// get object's variable, its true (checking upper)
 	VariablePtr var = object->GetVariable();
-
-	// allocate memory for new class's object
-	var->SetObject(new Class(this->GetName()));
-
-	// copy all scopes and it's script objects
-	// to new class variable
-	var->objectValue->GetScopeController()
-		->Clone(this->GetScopeController());
+	var->SetObject(new Class(this->GetName(), object->GetParent()));
+	var->objectValue->Scope::Clone(this);
 
 	// now we have to check extended class for
 	// abstract, if it true, then we must
 	// change method's reference and it's this
 	// object
-	if (this->extended != NULL && this->extended->CheckModificator(Modificator::Abstract)) {
-
-		// walk though all methods
-		for (auto i : this->extended->GetScopeController()->GetMethodScope()->GetStringMap()) {
-
-			// get method from just created object. we have
-			// it, cuz we've extende that abstract class
-			MethodPtr mThis = var->objectValue->GetScopeController()->GetMethodScope()
-				->Find(i.first.first, i.second->GetMethod()->GetInvokeHash())->GetMethod();
-
-			// now we have to check our method for null node,
-			// if root node is null, then we method not implemented,
-			// but only if we also havn't native method callback
-			if (mThis->GetRootNode() == NULL && mThis->GetNativeMethod() == NULL) {
-				return Error::AbstractClass_ObjectMustImplementAbstractMethod;
-			}
-
-			// we can succesfull copy object's variable
-			// to it's method
+	if (this->extendClass != NULL && this->extendClass->CheckModificator(Modificator::Abstract)) {
+		for (ObjectPtr i : this->extendClass->GetMethodSet()) {
+			MethodPtr mThis = var->objectValue->Find(i->Hash())->GetMethod();
+			LAME_TODO("Add strong abstract methods implement!");
 			mThis->SetThis(var);
 		}
 	}
@@ -112,64 +115,48 @@ Error Class::New(ObjectPtr object) {
 	// if we have implemented interfaces, then
 	// we must do the same thingsm that with
 	// abstract class
-	for (InterfacePtr i : this->implemented) {
-
-		// look thought all methods
-		for (auto i : i->GetScopeController()->GetMethodScope()->GetStringMap()) {
-
-			// we can succesfull copy object's variable
-			// to it's method
-			var->objectValue->GetScopeController()->GetMethodScope()
-				->Find(i.first.first, i.second->GetMethod()->GetInvokeHash())->GetMethod()->SetThis(var);
+	for (ObjectPtr i : this->implementClass) {
+		for (ObjectPtr i : i->GetMethodSet()) {
+			var->objectValue->Find(i->Hash())
+				->GetMethod()->SetThis(var);
 		}
 	}
 
 	// activate all class'es methods
-	for (auto i : var->GetObject()->GetScopeController()->GetMethodScope()->GetStringMap()) {
-
-		// get method from just created object. we have
-		// it, cuz we've extende that abstract class
-		MethodPtr mThis = var->objectValue->GetScopeController()->GetMethodScope()
-			->Find(i.first.first, i.second->GetMethod()->GetInvokeHash())->GetMethod();
-
-		// we can succesfull copy object's variable
-		// to it's method
+	for (ObjectPtr i : var->GetObject()->GetMethodSet()) {
+		MethodPtr mThis = var->objectValue->Find(i->Hash())->GetMethod();
 		mThis->SetThis(var);
 	}
-
-	return Error::NoError;
 }
 
-Error Class::Extend(ClassPtr object) {
+Void Class::Extend(ObjectPtr object) {
 
-	if (this->extended != NULL) {
-		return Error::Class_AlreadyExtended;
+	if (this->extendClass != NULL) {
+		throw ScriptException("Class has already been extended");
 	}
 
-	this->extended = object;
-	this->operators = object->operators;
+	this->extendClass = object;
+
+	memcpy(this->operators, object->GetClass()->operators, sizeof(this->operators));
 
 	if (this->CheckType(Type::Interface)) {
-		return Error::NoError;
+		return;
 	}
 
-	this->GetScopeController()
-		->Merge(object->GetScopeController());
+	this->Scope::Merge(object);
 
 	// now we have to check extended class for
 	// abstract, if it true, then we must
 	// change method's reference and it's this
 	// object
-	if (this->extended &&
-		this->extended->CheckModificator(Modificator::Abstract)
-		) {
+	if (this->extendClass &&
+		this->extendClass->CheckModificator(Modificator::Abstract)
+	) {
 		// walk though all methods
-		for (auto i : this->extended->GetScopeController()
-			->GetMethodScope()->GetStringMap()
-			) {
-			MethodPtr m = i.second->GetMethod();
+		for (ObjectPtr i : this->extendClass->GetMethodSet()) {
 
-			// if we met not abstract method, then ignore it
+			MethodPtr m = i->GetMethod();
+
 			if (!m->CheckModificator(Modificator::Abstract)) {
 				continue;
 			}
@@ -178,43 +165,39 @@ Error Class::Extend(ClassPtr object) {
 			// cuz abstract methods can't be implemented
 			// its stupid fact from Java
 			if (m->GetRootNode() != NULL) {
-				return Error::AbstractClass_CantStoreImplementedAbstractMethods;
+				throw ScriptException("Abstrac class can't implement abstract methods");
 			}
 		}
 	}
 
-	for (InterfacePtr i : object->implemented) {
+	for (ObjectPtr i : object->GetClass()->implementClass) {
 		this->Implement(i);
 	}
-
-	return Error::NoError;
 }
 
-Error Class::Implement(InterfacePtr object) {
+Void Class::Implement(ObjectPtr object) {
 
-	if (std::find(this->implemented.begin(), this->implemented.end(), object) != this->implemented.end()) {
-		return Error::Class_AlreadyImplemented;
+	if (this->implementClass.count(object)) {
+		throw ScriptException("Class has already been implemented with that class");
 	}
 
 	if (!object || !object->CheckType(Type::Interface)) {
-		return Error::Class_CanImplementOnlyInterfaces;
+		throw ScriptException("Class can only implement interfaces");
 	}
 
-	this->implemented.push_back(object);
-
-	this->GetScopeController()->GetMethodScope()
-		->Merge(object->GetScopeController()->GetMethodScope());
+	this->implementClass.insert(object);
+	this->Scope::Merge(object);
 
 	// look thought all methods
-	for (auto i : object->GetScopeController()->GetMethodScope()->GetStringMap()) {
+	for (auto i : object->GetMethodSet()) {
 
-		MethodPtr m = (MethodPtr)i.second;
+		MethodPtr m = i->GetMethod();
 
 		// if method has root node then
 		// throw an error, cuz interface's
 		// methods mustn't be implemented
 		if (m->GetRootNode() != NULL) {
-			return Error::Interface_MethodsMustBeImplemented;
+			throw ScriptException("Interface methods don't have to be implemented");
 		}
 
 		ObjectPtr founded;
@@ -223,59 +206,47 @@ Error Class::Implement(InterfacePtr object) {
 		// in current class (this), if we cant, then
 		// throw an error, cuz class, which implements
 		// interface have to implement it's methods
-		if (!(founded = this->GetScopeController()->GetMethodScope()->Find(i.second->GetName(), m->GetInvokeHash()))) {
-			return Error::Interface_ClassMustImplementMethods;
+		if (!(founded = this->Find(i->Hash()))) {
+			throw ScriptException("Class must implement interface methods");
 		}
 
 		// but if we've found method, but it hasn't root node
 		// and hasn't native method callback, then its a mistake
 		// throw an error
 		if (!founded->GetMethod()->GetRootNode() && !founded->GetMethod()->GetNativeMethod()) {
-			return Error::Interface_ClassMustImplementMethods;
+			throw ScriptException("Class must implement interface methods");
 		}
 	}
-
-	return Error::NoError;
 }
 
-Error Class::Overload(Operator op, OperatorCallback callback) {
+Void Class::Overload(Operator op, OperatorCallback callback) {
 
-	if (!((Uint32)op > 0 && (Uint32)op < OPERATOR_AMOUNT)) {
-		return Error::Class_WrongOperator;
+	if (!((Uint32)op > 0 && (Uint32)op < OperatorAmount)) {
+		throw ScriptException("Wrong operator's index");
 	}
 
-	if (!operators.size()) {
-		for (Uint32 i = 0; i < OPERATOR_AMOUNT; i++) {
-			operators.push_back(NULL);
-		}
-	}
-
-	operators.at((Uint32)op) = callback;
-
-	return Error::NoError;
+	operators[Uint32(op)] = callback;
 }
 
-Error Class::Evaluate(Operator op, VariablePtr source, VariablePtr left, VariablePtr right, LexPtrC lex) {
+Void Class::Evaluate(Operator op, VariablePtr source, VariablePtr left, VariablePtr right, LexPtrC lex) {
 
-	if (!left->CheckType(Type::Variable) && !left->CheckType(Type::Array) ||
-		!right->CheckType(Type::Variable) && !right->CheckType(Type::Array)
-		) {
-		return Error::Class_ObjectNotVariable;
-	}
-
-	if (left->GetClass()->GetNameHash() != right->GetClass()->GetNameHash() &&
-		left->GetClass()->GetNameHash() != this->GetNameHash()
+	if (!left->CheckType(Type::Variable) ||
+		!right->CheckType(Type::Variable)
 	) {
+		throw ScriptException("You can evaluate expressions only with variables");
+	}
+
+	if (left->GetClass()->Hash() != right->GetClass()->Hash()) {
 		if (
 			!left->GetClass()->CheckModificator(Modificator::Primitive) ||
 			!right->GetClass()->CheckModificator(Modificator::Primitive)
 		) {
-			return Error::Class_ObjectsHaveDifferentHash;
+			throw ScriptException("Invalid type cast");
 		}
 	}
 
-	if ((Uint32)op >= OPERATOR_AMOUNT) {
-		return Error::Class_WrongOperator;
+	if ((Uint32)op >= OperatorAmount) {
+		throw ScriptException("Wrong operator's index");
 	}
 
 	if (right->CheckModificator(Modificator::Register) && right->registerType) {
@@ -285,25 +256,25 @@ Error Class::Evaluate(Operator op, VariablePtr source, VariablePtr left, Variabl
 	if (left->GetClass()->CheckModificator(Modificator::Primitive) &&
 		right->GetVariable() && left->GetVariable() && right->GetVariable()->registerType &&
 		right->GetVariable()->registerType->GetClass() != left->GetClass()
-		) {
-		throw ClassInvalidCastException();
+	) {
+		throw ScriptException("Invalid type cast");
 	}
 
 	if (left->GetVariable()->GetVarType() == Variable::Var::Object) {
-		if (!this->operators.at((Uint32)Operator::Cast)) {
-			return Error::Class_OperatorNotOverloaded;
+		if (!this->operators[(Uint32)Operator::Cast]) {
+			throw ScriptException("Class operator not overloaded");
 		}
-		this->operators.at((Uint32)Operator::Cast)(source, right, left);
+		this->operators[(Uint32)Operator::Cast](source, right, left);
 	}
 	else if (left->GetVariable()->GetVarType() != right->GetVariable()->GetVarType()) {
 		if (lex->IsRight()) {
 			source->Make(Operator::Cast, left, right);
 		}
 		else {
-			if (!this->operators.at((Uint32)Operator::Cast)) {
-				return Error::Class_OperatorNotOverloaded;
+			if (!this->operators[(Uint32)Operator::Cast]) {
+				throw ScriptException("Class operator not overloaded");
 			}
-			this->operators.at((Uint32)Operator::Cast)(source, left, right);
+			this->operators[(Uint32)Operator::Cast](source, left, right);
 		}
 	}
 
@@ -312,14 +283,12 @@ Error Class::Evaluate(Operator op, VariablePtr source, VariablePtr left, Variabl
 			source->Make(op, left, right);
 		}
 		else {
-			if (!this->operators.at((Uint32)op)) {
-				return Error::Class_OperatorNotOverloaded;
+			if (!this->operators[(Uint32)op]) {
+				throw ScriptException("Class operator not overloaded");
 			}
-			this->operators.at((Uint32)op)(source, right, left);
+			this->operators[(Uint32)op](source, right, left);
 		}
 	}
-
-	return Error::NoError;
 }
 
 LAME_END2

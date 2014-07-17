@@ -11,7 +11,7 @@ public:
 	Uint64 ConvertToMilliseconds(Void);
 public:
 	Void BuildForDate(Clock milliseconds);
-	Void BuildTorTime(Clock milliseconds);
+	Void BuildForTime(Clock milliseconds);
 	Void BuildForCurrentDate(Void);
 public:
 	static Clock GetTime(Void);

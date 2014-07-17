@@ -103,6 +103,9 @@ LAME_CLASS(Thread);
 LAME_CLASS(Timer);
 LAME_CLASS(WaitManager);
 LAME_CLASS(Console);
+LAME_CLASS(Hashable16);
+LAME_CLASS(Hashable32);
+LAME_CLASS(Hashable64);
 
 LAME_END2
 

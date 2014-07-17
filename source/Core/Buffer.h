@@ -26,7 +26,9 @@ public:
 	Void LAME_API Format(StringC format, ...);
 	List <Buffer> LAME_API Split(Sint8 symbol) const;
 	Void LAME_API Get(Void);
-	Uint32 LAME_API GetHash(Void) const;
+	Uint16 LAME_API GetHash16(Void) const;
+	Uint32 LAME_API GetHash32(Void) const;
+	Uint64 LAME_API GetHash64(Void) const;
 public:
 	static Uint16 LAME_API GetHash16(StringC string);
 	static Uint32 LAME_API GetHash32(StringC string);

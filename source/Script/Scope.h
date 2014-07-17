@@ -2,28 +2,19 @@
 #define __LAME_SCRIPT__SCOPE__
 
 #include "Define.h"
-#include "Object.h"
 
 LAME_BEGIN2(Script)
 
-class LAME_API Scope {
-	friend class ScopeController;
+class LAME_API Scope : public Observer <Object> {
+	typedef Hashable64::HashType Hash;
 public:
-	typedef Pair<Buffer, Uint64> StringPair;
-	typedef Pair<Uint32, Uint64> HashPair;
-    typedef Pair<StringPair, ObjectPtr> MapStringPair;
-    typedef Pair<HashPair, ObjectPtr> MapHashPair;
-	typedef Map<StringPair, ObjectPtr> StringMap;
-	typedef Map<HashPair, ObjectPtr> HashMap;
-public:
-	inline ObjectPtr Find(BufferRefC buffer, Uint32 invokeHash = -1) {
-		return this->Find(buffer.data(), invokeHash);
-	}
+	typedef Map<Hashable64::HashType, ObjectPtr> HashMap;
+	typedef Map<Buffer, ObjectPtr> StringMap;
 public:
 	ObjectPtr Add(ObjectPtr object);
 	Void Remove(ObjectPtr var);
-	ObjectPtr Find(StringC name, Uint32 invokeHash = -1);
-	ObjectPtr Find(Uint32 hash, Uint32 invokeHash = -1);
+	ObjectPtr Find(Hash hash);
+	ObjectPtr Find(BufferRefC name);
 	Void Merge(ScopePtrC scope);
 	Void Clone(ScopePtrC scope);
 	Void Move(ScopePtrC scope);
@@ -31,23 +22,50 @@ public:
 	Void Clear(Void);
 	Void Trace(Uint32 offset);
 	Uint32 Size(Void);
+	Void Update(ObjectPtr object) override;
+	ScopePtr Root(Void);
+	Buffer Path(Void);
+	Void Flush(Void);
 public:
-	inline StringMap& GetStringMap() {
-		return this->stringMap_;
-	}
-	inline HashMap& GetHashMap() {
-		return this->hashMap_;
-	}
+	inline HashMap& GetHashMap() { return this->hashMap_; }
+	inline ScopePtr GetParent() { return this->parentScope_; }
+	inline BufferRefC GetName() { return this->scopeName_; }
 public:
+	inline Set<ObjectPtr>& GetPublicSet() { return this->publicSet_; }
+	inline Set<ObjectPtr>& GetStaticSet() { return this->staticSet_; }
+	inline Set<ObjectPtr>& GetMethodSet() { return this->methodSet_; }
+	inline Set<ObjectPtr>& GetVariableSet() { return this->variableSet_; }
+	inline Set<ObjectPtr>& GetClassSet() { return this->classSet_; }
+public:
+	Scope(BufferRefC name, ScopePtr parent);
 	~Scope();
+public:
+	static ScopePtr GetRootScope(Void);
+public:
+	static ClassPtr classChar;
+	static ClassPtr classByte;
+	static ClassPtr classBoolean;
+	static ClassPtr classShort;
+	static ClassPtr classInt;
+	static ClassPtr classLong;
+	static ClassPtr classFloat;
+	static ClassPtr classDouble;
+	static ClassPtr classVoid;
+	static ClassPtr classString;
+	static ClassPtr classObject;
+	static ClassPtr classClass;
+	static ClassPtr classUnknown;
 private:
-	Scope() {
-		isOwner_ = TRUE;
-	}
-private:
-	StringMap stringMap_;
 	HashMap hashMap_;
+	StringMap stringMap_;
 	Bool isOwner_;
+	ScopePtr parentScope_;
+	Set<ObjectPtr> publicSet_;
+	Set<ObjectPtr> staticSet_;
+	Set<ObjectPtr> methodSet_;
+	Set<ObjectPtr> variableSet_;
+	Set<ObjectPtr> classSet_;
+	Buffer scopeName_;
 };
 
 LAME_END2

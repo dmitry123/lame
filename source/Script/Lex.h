@@ -5,8 +5,6 @@
 
 LAME_BEGIN2(Script)
 
-using namespace ::Lame::Core;
-
 typedef enum {
 	kScriptLexDefault = -1,
 	// variable/constants
@@ -20,6 +18,7 @@ typedef enum {
 	kScriptLexParentheseL,
 	kScriptLexParentheseR,
 	kScriptLexArray,
+	kScriptLexArgumentList,
 	// selectors
 	kScriptLexDirected,
 	kScriptLexMediated,
@@ -99,6 +98,8 @@ typedef enum {
 	kScriptLexNative,
 	kScriptLexFinal,
 	kScriptLexAbstract,
+	kScriptLexOverride,
+	kScriptLexDecprecated,
 	// special lex for builder
 	kScriptLexArguments,
 	// amount

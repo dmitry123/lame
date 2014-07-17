@@ -7,8 +7,8 @@ LAME_BEGIN2(Script)
 static LexPtrC _ParseLex(StringC* wordPtr, Buffer* name) {
 
 	static StringC lockedTokens = "\n\r\t ";
-	static StringC allowedTokens = "@$_=/|&><+-*[]";
-	static StringC wordTokens = "_$";
+	static StringC allowedTokens = "@$_=/|&><+-*[].";
+	static StringC wordTokens = "_$@";
 
 	StringC savedWord = *wordPtr;
 	StringC word = *wordPtr;

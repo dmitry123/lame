@@ -2,77 +2,101 @@
 #define __LAME_CORE_OBSERVABLE__
 
 #include "List.h"
-#include "Mutex.h"
+#include "Locker.h"
 
 LAME_BEGIN2(Core)
 
-LAME_CLASS(Observer);
-LAME_CLASS(Observable);
-
-class Observer {
+template <class T> class Observer {
 public:
-	virtual Void Update(ObservablePtr observable) = 0;
+	virtual Void Update(T* observable) = 0;
 };
 
-class Observable {
+template <class T> class Observable {
+protected:
+	typedef Observer<T>* Essence;
 public:
-	virtual inline Void Add(ObserverPtr observer) {
-		this->observers.insert(observer);
+	virtual inline Void Add(Essence observer) {
+		if (observer != NULL) {
+			this->observers.insert(observer);
+		}
 	}
-	virtual inline Void Remove(ObserverPtr observer) {
-		this->observers.erase(observer);
+	virtual inline Void Remove(Essence observer) {
+		if (observer != NULL) {
+			this->observers.erase(observer);
+		}
 	}
-	virtual inline Void Notify() {
-		for (ObserverPtr observer : this->observers) {
-			observer->Update(this);
+	virtual inline Void Notify(Bool setChanged = FALSE) {
+		if (!this->isChanged && setChanged) {
+			this->SetChanged(setChanged);
+		}
+		if (this->isChanged) {
+			for (Essence observer : this->observers) {
+				observer->Update((T*)this);
+			}
 		}
 	}
 public:
 	virtual inline Void SetChanged(Bool isChanged) {
 		this->isChanged = isChanged;
 	}
-	virtual inline Uint32 CountObservers() {
+	virtual inline Uint32 Size() {
 		return Uint32(this->observers.size());
 	}
-protected:
-	Bool isChanged;
-	Set<ObserverPtr> observers;
+public:
+	inline Observable<T>* GetObservable() {
+		return this;
+	}
+private:
+	Bool isChanged = FALSE;
+	Set<Essence> observers;
 };
 
-class InterlockedObservable : Observable {
+template <class T> class InterlockedObservable : Observable < T > {
+	typedef Observable<T>::Essence Essence;
 public:
-	inline Void Add(ObserverPtr observer) {
-		this->mutex.Lock();
-		this->observers.insert(observer);
-		this->mutex.UnLock();
+	inline Void Add(Essence observer) {
+		this->observerLocker->Lock();
+		observable.Add(observer);
+		this->observerLocker->UnLock();
 	}
-	inline Void Remove(ObserverPtr observer) {
-		this->mutex.Lock();
-		this->observers.erase(observer);
-		this->mutex.UnLock();
+	inline Void Remove(Essence observer) {
+		this->observerLocker->Lock();
+		observable.Remove(observer);
+		this->observerLocker->UnLock();
 	}
 	inline Void Notify() {
-		this->mutex.Lock();
-		for (ObserverPtr observer : this->observers) {
-			observer->Update(this);
-		}
-		this->mutex.UnLock();
+		this->observerLocker->Lock();
+		observable.Notify();
+		this->observerLocker->UnLock();
 	}
 public:
 	inline Void SetChanged(Bool isChanged) {
-		this->mutex.Lock();
-		this->isChanged = isChanged;
-		this->mutex.UnLock();
+		this->observerLocker->Lock();
+		observable.SetChanged(isChanged);
+		this->observerLocker->UnLock();
 	}
 	inline Uint32 CountObservers() {
 		Uint32 size;
-		this->mutex.Lock();
-		size = Uint32(this->observers.size());
-		this->mutex.UnLock();
+		this->observerLocker->Lock();
+		size = observable.Size();
+		this->observerLocker->UnLock();
 		return size;
 	}
+public:
+	InterlockedObservable(LockerPtr locker) :
+		observerLocker(locker)
+	{
+	}
+	~InterlockedObservable() {
+		this->observerLocker->UnLock();
+	}
+public:
+	inline LockerPtr GetLocker() {
+		return this->observerLocker;
+	}
 private:
-	Mutex mutex;
+	LockerPtr observerLocker;
+	Observable<T> observable;
 };
 
 LAME_END2

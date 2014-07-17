@@ -1,7 +1,51 @@
 #include "Analizer.h"
-#include "Internal.h"
+#include "LowLevelStack.h"
+
+#include <VirtualMachine/Assembler.h>
 
 LAME_BEGIN2(Compiler)
+
+using namespace VirtualMachine;
+
+static Map<LexID, Class::Operator> operatorMap =
+{
+	{ kScriptLexDefault, Class::Operator::Unkown },
+	{ kScriptLexAdd, Class::Operator::Add },
+	{ kScriptLexAddSet, Class::Operator::Add },
+	{ kScriptLexSub, Class::Operator::Sub },
+	{ kScriptLexSubSet, Class::Operator::Sub },
+	{ kScriptLexMul, Class::Operator::Mul },
+	{ kScriptLexMulSet, Class::Operator::Mul },
+	{ kScriptLexDiv, Class::Operator::Div },
+	{ kScriptLexDivSet, Class::Operator::Div },
+	{ kScriptLexMod, Class::Operator::Mod },
+	{ kScriptLexModSet, Class::Operator::Mod },
+	{ kScriptLexAbove, Class::Operator::Above },
+	{ kScriptLexBellow, Class::Operator::Bellow },
+	{ kScriptLexEqual, Class::Operator::Equal },
+	{ kScriptLexNotEqual, Class::Operator::NotEqual },
+	{ kScriptLexSet, Class::Operator::Move },
+	{ kScriptLexBitShiftR, Class::Operator::ShiftR },
+	{ kScriptLexBitShiftSetR, Class::Operator::ShiftR },
+	{ kScriptLexBitShiftL, Class::Operator::ShiftL },
+	{ kScriptLexBitShiftSetL, Class::Operator::ShiftL },
+	{ kScriptLexBitAnd, Class::Operator::BitAnd },
+	{ kScriptLexBitAndSet, Class::Operator::BitAnd },
+	{ kScriptLexBitOr, Class::Operator::BitOr },
+	{ kScriptLexBitOrSet, Class::Operator::BitOr },
+	{ kScriptLexBitXor, Class::Operator::BitXor },
+	{ kScriptLexBitXorSet, Class::Operator::BitXor },
+	{ kScriptLexBellowEqual, Class::Operator::BellowE },
+	{ kScriptLexAboveEqual, Class::Operator::AboveE },
+	{ kScriptLexAnd, Class::Operator::And },
+	{ kScriptLexOr, Class::Operator::Or },
+	{ kScriptLexIncrement, Class::Operator::Inc },
+	{ kScriptLexDecrement, Class::Operator::Dec },
+	{ kScriptLexSizeof, Class::Operator::Sizeof },
+	{ kScriptLexBitNot, Class::Operator::BitNot },
+	{ kScriptLexNot, Class::Operator::Not },
+	{ kScriptLexCast, Class::Operator::Cast }
+};
 
 static Void _TranslateMov(Uint32 command, VariablePtr source, VariablePtr left, VariablePtr right, Bool isFloat = FALSE) {
 	source->v = left->v;
@@ -135,29 +179,28 @@ static Void OverloadInteger(ClassPtr intClass) {
 		case Class::Type::Class:
 		case Class::Type::Method:
 		case Class::Type::Interface:
-		case Class::Type::Abstract:
-			throw ClassInvalidCastException();
-		case Class::Type::Array:
-			if (left->GetClass() != right->GetClass()) {
-				throw ClassInvalidCastException();
-			}
+			throw ClassInvalidCastException("");
+		//case Class::Type::Array:
+		//	if (left->GetClass() != right->GetClass()) {
+		//		throw ClassInvalidCastException("");
+		//	}
 		case Class::Type::Variable:
 			break;
 		}
 
 		if (left->GetVarType() != Variable::Var::Integer &&
-			left->GetVarType() != Variable::Var::IntegerPtr
-			) {
+			left->GetVarType() != Variable::Var::Integer
+		) {
 			if (left->GetVarType() == Variable::Var::Float) {
 				source->v.intValue = (ScriptNativeInt)left->v.floatValue;
 			}
 			else {
-				throw ClassInvalidCastException();
+				throw ClassInvalidCastException("");
 			}
 		}
 
 		if (right->GetObject() && !left->GetObject() || !right->GetObject() && left->GetObject()) {
-			throw ClassInvalidCastException();
+			throw ClassInvalidCastException("");
 		}
 	});
 }
@@ -204,21 +247,21 @@ static Void OverloadFloat(ClassPtr floatClass) {
 		case Class::Type::Class:
 		case Class::Type::Method:
 		case Class::Type::Interface:
-		case Class::Type::Abstract:
-		case Class::Type::Array:
-			throw ClassInvalidCastException();
+		//case Class::Type::Abstract:
+		//case Class::Type::Array:
+			throw ClassInvalidCastException("");
 		case Class::Type::Variable:
 			break;
 		}
 
 		if (left->GetVarType() != Variable::Var::Float &&
-			left->GetVarType() != Variable::Var::FloatPtr
-			) {
+			left->GetVarType() != Variable::Var::Float
+		) {
 			if (left->GetVarType() == Variable::Var::Integer) {
 				source->v.floatValue = (ScriptNativeFloat)left->v.intValue;
 			}
 			else {
-				throw ClassInvalidCastException();
+				throw ClassInvalidCastException("");
 			}
 		}
 	});
@@ -249,64 +292,68 @@ static Void OverloadString(ClassPtr stringClass) {
 static Void OverloadObject(ClassPtr objectClass) {
 
 	objectClass->Overload(Class::Operator::Move, [](VariablePtr source, VariablePtr left, VariablePtr right) {
-		left->Clone(source);
+		left->Clone(source->GetName());
 	});
 
 	objectClass->Overload(Class::Operator::Cast, [](VariablePtr source, VariablePtr left, VariablePtr right) {
 
-		if (right->GetClass()->GetNameHash() == left->GetClass()->GetNameHash()) {
+		if (right->GetClass()->Hash() == left->GetClass()->Hash()) {
 			goto __AllowCast;
 		}
 
-		if (left->GetClass()->GetExtended() == right->GetClass()) {
+		if (left->GetClass()->GetExtend() == right->GetClass()) {
 			goto __AllowCast;
 		}
 
-		for (InterfacePtr i : left->GetClass()->GetImplements()) {
+		for (ObjectPtr i : left->GetClass()->GetImplements()) {
 			if (right->GetClass() == i->GetClass()) {
 				goto __AllowCast;
 			}
 		}
 
-		throw ClassInvalidCastException();
+		throw ClassInvalidCastException("Invalid object cast");
 
 	__AllowCast:
 		;
 	});
 }
 
-Void CodeAnalizer::Analize(NodeBuilderPtr nodeBuilder) {
+Void CodeAnalizer::Analize(LowLevelStackPtr lowLevelStack, NodeBuilderPtr nodeBuilder) {
+	this->lls = lowLevelStack;
 	this->_AnalizeList(nodeBuilder->GetRootNode()->blockList);
 }
 
-Void CodeAnalizer::Overload(Void) {
+Void CodeAnalizer::Overload(ScopePtr rootScope) {
 
-	OverloadInteger(GlobalScope::classBoolean);
-	OverloadInteger(GlobalScope::classByte);
-	OverloadInteger(GlobalScope::classChar);
-	OverloadInteger(GlobalScope::classInt);
-	OverloadInteger(GlobalScope::classLong);
-	OverloadInteger(GlobalScope::classShort);
+	this->rootScope = rootScope;
 
-	OverloadFloat(GlobalScope::classFloat);
-	OverloadFloat(GlobalScope::classDouble);
+	OverloadInteger(rootScope->classBoolean);
+	OverloadInteger(rootScope->classByte);
+	OverloadInteger(rootScope->classChar);
+	OverloadInteger(rootScope->classInt);
+	OverloadInteger(rootScope->classLong);
+	OverloadInteger(rootScope->classShort);
 
-	OverloadString(GlobalScope::classString);
-	OverloadObject(GlobalScope::classString);
-	OverloadObject(GlobalScope::classObject);
-	OverloadObject(GlobalScope::classClass);
+	OverloadFloat(rootScope->classFloat);
+	OverloadFloat(rootScope->classDouble);
+
+	OverloadString(rootScope->classString);
+	OverloadObject(rootScope->classString);
+	OverloadObject(rootScope->classObject);
+	OverloadObject(rootScope->classClass);
 }
 
 Void CodeAnalizer::_AnalizeList(NodeListRef nodeList) {
 
 	for (NodePtr n : nodeList) {
 		try {
-			if (n->id == kScriptNodeClass || n->id == kScriptNodeInterface) {
+			if (n->id == kScriptNodeClass || n->id == kScriptNodeInterface || n->id == kScriptNodeFunction) {
 				continue;
 			}
 			else if (n->id == kScriptNodeInvoke || n->id == kScriptNodeAlloc) {
 				if (!n->var) {
-					n->var = n->parent->GetScope()->GetClassScope()->Find(n->word);
+					PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->word.data());
+					//n->var = n->parent->GetScope()->GetClassScope()->Find(n->word);
 				}
 				if (n->lex->args == 1 && n->var->CheckType(Class::Type::Class)) {
 					this->_AnalizeCast(n);
@@ -321,7 +368,8 @@ Void CodeAnalizer::_AnalizeList(NodeListRef nodeList) {
 			else if (n->lex->lex->IsUnknown() || n->lex->lex->IsConst()) {
 			_SaveNode:
 				if (!n->var) {
-					n->var = n->parent->GetScope()->GetClassScope()->Find(n->word);
+					PostSyntaxError(n->lex->line, "Undeclared variable (%s)", n->word.data());
+					//n->var = n->parent->GetScope()->GetClassScope()->Find(n->word);
 					if (n->var) {
 						varStack.push_back(VariablePtr(n->var));
 					}
@@ -334,11 +382,11 @@ Void CodeAnalizer::_AnalizeList(NodeListRef nodeList) {
 				}
 				nameStack.push_back(n->word);
 				if (n->var) {
-					n->var->GetNode()->templatesNew = n->templates;
+					//n->var->GetNode()->templatesNew = n->templates;
 				}
 			}
 			else if (n->lex->lex->id == kScriptLexSemicolon) {
-				_ReleaseAllRegisters();
+				lls->ReleaseRegister();
 				this->varStack.clear();
 			}
 			else if (n->lex->lex->id == kScriptLexNew) {
@@ -359,8 +407,8 @@ Void CodeAnalizer::_AnalizeList(NodeListRef nodeList) {
 				}
 			}
 		}
-		catch (ClassInvalidCastException) {
-			PostSyntaxError(n->lex->line, "Invalid type cast", 0);
+		catch (ScriptException e) {
+			throw SyntaxException(n->lex->line, e.GetErrorBuffer());
 		}
 	}
 }
@@ -369,12 +417,33 @@ Void CodeAnalizer::_Analize0(NodePtr n) {
 
 	VariablePtr sourceVar;
 	VariablePtr leftVar;
+	ObjectPtr methodVar;
+	Uint32 methodHash;
+	Vector<ClassPtr> objectList;
+	Uint32 invokeHash;
+	Buffer formattedParameters;
 
-	if (!n->lex->args) {
-		return;
+	for (Uint32 i = 0; i < n->lex->args; i++) {
+		objectList.push_back(this->varStack.back()->GetClass());
+		formattedParameters.append(this->varStack.back()->GetClass()->GetName());
+		this->varStack.pop_back();
+		this->nameStack.pop_back();
+		if (i != n->lex->args - 1) {
+			formattedParameters.append(", ");
+		}
 	}
 
-	__asm int 3
+	invokeHash = Method::ComputeInvokeHash(objectList);
+	methodHash = n->var->GetNode()->methodHash;
+	methodVar = n->var->Find(Uint64(n->var->GetPathHash32()) << 32 | invokeHash);
+
+	if (!methodVar) {
+		PostSyntaxError(n->lex->line, "Undeclared method %s(%s)", n->word.data(), formattedParameters.data());
+	}
+
+	printf("Invoked %s(%s)\n", n->word.data(), formattedParameters.data());
+
+	sourceVar = lls->FindRegister(LowLevelStack::Pointer);
 
 	this->varStack.push_back(sourceVar);
 	this->nameStack.push_back(sourceVar->GetName());
@@ -389,8 +458,19 @@ Void CodeAnalizer::_Analize1(NodePtr n) {
 	_Read(n, leftVar, rightVar);
 
 	if (n->lex->lex->IsRight()) {
-		sourceVar = _FindAvailableRegister(leftVar->IsFloat());
+		if (leftVar->GetClassType()->IsFloat()) {
+			sourceVar = lls->FindRegister(LowLevelStack::Float);
+		}
+		else if (leftVar->GetClassType()->IsInt()) {
+			sourceVar = lls->FindRegister(LowLevelStack::Integer);
+		}
+		else {
+			sourceVar = lls->FindRegister(LowLevelStack::Pointer);
+		}
 		leftVar->GetClassType()->Evaluate(Class::Operator::Move, sourceVar, leftVar, leftVar, n->lex->lex);
+	}
+	else {
+		sourceVar = leftVar;
 	}
 
 	sourceVar->GetClass()->Evaluate(operatorMap[n->lex->lex->id],
@@ -412,15 +492,31 @@ Void CodeAnalizer::_Analize2(NodePtr n) {
 	rightVar2 = rightVar;
 
 	if (n->lex->lex->IsRight()) {
-		if (leftVar->GetClassType()->GetNameHash() != rightVar->GetClassType()->GetNameHash()) {
+		if (leftVar->GetClassType()->Hash() != rightVar->GetClassType()->Hash()) {
 			if (leftVar->GetClassType()->GetPriority() != rightVar->GetClassType()->GetPriority()) {
 				if (leftVar->GetClassType()->GetPriority() > rightVar->GetClassType()->GetPriority()) {
-					sourceVar = _FindAvailableRegister(leftVar->IsFloat());
+					if (leftVar->GetClassType()->IsFloat()) {
+						sourceVar = lls->FindRegister(LowLevelStack::Float);
+					}
+					else if (leftVar->GetClassType()->IsInt()) {
+						sourceVar = lls->FindRegister(LowLevelStack::Integer);
+					}
+					else {
+						sourceVar = lls->FindRegister(LowLevelStack::Pointer);
+					}
 					leftVar->GetClassType()->Evaluate(Class::Operator::Cast, sourceVar, rightVar, leftVar, n->lex->lex);
 					rightVar = sourceVar;
 				}
 				else {
-					sourceVar = _FindAvailableRegister(rightVar->IsFloat());
+					if (rightVar->GetClassType()->IsFloat()) {
+						sourceVar = lls->FindRegister(LowLevelStack::Float);
+					}
+					else if (rightVar->GetClassType()->IsInt()) {
+						sourceVar = lls->FindRegister(LowLevelStack::Integer);
+					}
+					else {
+						sourceVar = lls->FindRegister(LowLevelStack::Pointer);
+					}
 					rightVar->GetClassType()->Evaluate(Class::Operator::Cast, sourceVar, leftVar, rightVar, n->lex->lex);
 					leftVar = sourceVar;
 				}
@@ -429,37 +525,71 @@ Void CodeAnalizer::_Analize2(NodePtr n) {
 		if (n->lex->lex->IsMath()) {
 			if (leftVar->GetClassType()->GetPriority() != rightVar2->GetClassType()->GetPriority()) {
 				if (leftVar->GetClassType()->GetPriority() > rightVar2->GetClassType()->GetPriority()) {
-					sourceVar = _FindAvailableRegister(leftVar->IsFloat());
+					if (leftVar->GetClassType()->IsFloat()) {
+						sourceVar = lls->FindRegister(LowLevelStack::Float);
+					}
+					else if (leftVar->GetClassType()->IsInt()) {
+						sourceVar = lls->FindRegister(LowLevelStack::Integer);
+					}
+					else {
+						sourceVar = lls->FindRegister(LowLevelStack::Pointer);
+					}
 				}
 				else {
-					sourceVar = _FindAvailableRegister(rightVar->IsFloat());
+					if (rightVar->GetClassType()->IsFloat()) {
+						sourceVar = lls->FindRegister(LowLevelStack::Float);
+					}
+					else if (rightVar->GetClassType()->IsInt()) {
+						sourceVar = lls->FindRegister(LowLevelStack::Integer);
+					}
+					else {
+						sourceVar = lls->FindRegister(LowLevelStack::Pointer);
+					}
 				}
 			}
 			else {
-				sourceVar = _FindAvailableRegister();
+				if (leftVar->GetClassType()->IsFloat()) {
+					sourceVar = lls->FindRegister(LowLevelStack::Float);
+				}
+				else if (leftVar->GetClassType()->IsInt()) {
+					sourceVar = lls->FindRegister(LowLevelStack::Integer);
+				}
+				else {
+					sourceVar = lls->FindRegister(LowLevelStack::Pointer);
+				}
 			}
 		}
 		else {
-			sourceVar = _FindAvailableRegister();
+			sourceVar = lls->FindRegister(LowLevelStack::Integer);
 		}
 	}
 	else {
-		if (rightVar->GetVarType() != Variable::Var::Object && leftVar->GetClass() != rightVar->GetClass()) {
-			sourceVar = _FindAvailableRegister(leftVar->IsFloat());
+		if (rightVar->GetVarType() != Variable::Var::Object && leftVar->GetClassType()->Hash() != rightVar->GetClassType()->Hash()) {
+			if (leftVar->GetClassType()->IsFloat()) {
+				sourceVar = lls->FindRegister(LowLevelStack::Float);
+			}
+			else if (leftVar->GetClassType()->IsInt()) {
+				sourceVar = lls->FindRegister(LowLevelStack::Integer);
+			}
+			else {
+				sourceVar = lls->FindRegister(LowLevelStack::Pointer);
+			}
 			leftVar->GetClass()->Evaluate(Class::Operator::Cast, sourceVar, rightVar, leftVar, n->lex->lex);
 			rightVar = sourceVar;
 		}
 		sourceVar = leftVar;
 	}
 
+	printf("%s = %s %s %s\n", sourceVar->GetName().data(), leftVar->GetName().data(), n->word.data(), rightVar->GetName().data());
+
 	sourceVar->GetClass()->Evaluate(operatorMap[n->lex->lex->id],
 		sourceVar, leftVar, rightVar, n->lex->lex);
 
 	if (leftVar->CheckModificator(Class::Modificator::Register)) {
-		_ReleaseRegister(leftVar);
+		lls->ReleaseRegister(RegisterPtr(leftVar));
 	}
 	if (rightVar->CheckModificator(Class::Modificator::Register)) {
-		_ReleaseRegister(rightVar);
+		lls->ReleaseRegister(RegisterPtr(rightVar));
 	}
 
 	this->varStack.push_back(sourceVar);
@@ -479,13 +609,13 @@ Void CodeAnalizer::_AnalizeNew(NodePtr n) {
 	ObjectPtr templateClass;
 
 	this->_Read(n, leftVar, leftVar);
-	classVar = leftVar->GetClass();
+	classVar = ClassPtr(leftVar);
 
-	if (!classVar->GetNode() && !classVar->CheckModificator(Class::Modificator::Primitive)) {
-		PostSyntaxError(n->lex->line, "Object isn't class (%s)", classVar->GetName().data());
-	}
+	//if (!classVar->GetNode() && !classVar->CheckModificator(Class::Modificator::Primitive)) {
+	//	PostSyntaxError(n->lex->line, "Object isn't class (%s)", classVar->GetName().data());
+	//}
 
-	sourcePtr = _FindAvailableRegister();
+	sourcePtr = lls->FindRegister(LowLevelStack::Pointer);
 
 	if (classVar->CheckModificator(Class::Modificator::Primitive)) {
 		sourcePtr->SetObject(new Class(*classVar));
@@ -493,31 +623,22 @@ Void CodeAnalizer::_AnalizeNew(NodePtr n) {
 	else {
 		stackBackup = this->varStack;
 		classVar->GetClass()->New(sourcePtr);
-		if (leftVar->GetNode()->templates.length() > 0) {
-			if (!(templateClass = ScopeBuilder::_FindClass(leftVar->GetNode()->parent, leftVar->GetNode()->templatesNew))) {
-				PostSyntaxError(n->lex->line, "Undeclared class %s", leftVar->GetNode()->templates.data());
+
+		//if (leftVar->GetTemplateClass()) {
+		//	if (!(templateClass = ScopeBuilder::_FindClass(leftVar->GetNode()->parent, leftVar->GetNode()->templatesNew))) {
+		//		PostSyntaxError(n->lex->line, "Undeclared class %s", leftVar->GetNode()->templates.data());
+		//	}
+		//	sourcePtr->SetTemplateClass(templateClass->GetClass());
+		//	ClassPtr classT = new Class(leftVar->GetNode()->templates);
+		//	templateClass->Clone(classT);
+		//	sourcePtr->GetObject()->GetScopeController()->GetClassScope()
+		//		->Add(classT)->SetNode(templateClass->GetNode());
+		//}
+		
+		if (classVar->GetNode()) {
+			for (NodePtr n2 : classVar->GetNode()->blockList) {
+				this->_AnalizeList(n2->blockList);
 			}
-			sourcePtr->SetTemplateClass(templateClass->GetClass());
-			ClassPtr classT = new Class(leftVar->GetNode()->templates);
-			templateClass->Clone(classT);
-			sourcePtr->GetObject()->GetScopeController()->GetClassScope()
-				->Add(classT)->SetNode(templateClass->GetNode());
-		}
-		for (NodePtr n2 : classVar->GetNode()->blockList) {
-			for (NodePtr n3 : n2->blockList) {
-				if (n3->lex->lex->IsUnknown()) {
-					n3->var = sourcePtr->GetObject()->GetScopeController()
-						->GetVarScope()->Find(n3->word);
-					if (!n3->var) {
-						n3->var = sourcePtr->GetObject()->GetScopeController()
-							->GetClassScope()->Find(n3->word);
-						if (!n3->var) {
-							PostSyntaxError(n3->lex->line, "Undeclared variable or class (%s)", n3->word.data());
-						}
-					}
-				}
-			}
-			this->_AnalizeList(n2->blockList);
 		}
 		this->varStack = stackBackup;
 	}
@@ -546,8 +667,7 @@ Void CodeAnalizer::_AnalizeSelection(NodePtr n) {
 		PostSyntaxError(n->lex->line, "Object not allocated (%s)", leftVar->GetName().data());
 	}
 
-	fieldObject = leftVar->objectValue->GetScopeController()
-		->GetVarScope()->Find(fieldName);
+	fieldObject = leftVar->objectValue->Find(fieldName);
 
 	if (!fieldObject) {
 		PostSyntaxError(n->lex->line, "Undeclared object's field (%s.%s)", leftVar->GetClass()->GetName().data(), fieldName.data());
@@ -561,24 +681,24 @@ Void CodeAnalizer::_AnalizeSelection(NodePtr n) {
 Void CodeAnalizer::_AnalizeCast(NodePtr n) {
 
 	VariablePtr leftVar;
-	VariablePtr rightVar;
+	ClassPtr rightVar;
 	VariablePtr sourceVar;
 
 	_Read(n, leftVar, leftVar);
-	rightVar = VariablePtr(n->var);
+	rightVar = n->var->GetClass();
 
-	if (leftVar->GetClass()->GetNameHash() != rightVar->GetClass()->GetNameHash()) {
-		if (rightVar->GetClass() == GlobalScope::classFloat ||
-			rightVar->GetClass() == GlobalScope::classDouble
-			) {
-			sourceVar = _FindAvailableRegister(TRUE);
+	if (leftVar->GetClass()->Hash() != rightVar->GetClass()->Hash()) {
+		if (rightVar->GetClass() == Scope::classFloat ||
+			rightVar->GetClass() == Scope::classDouble
+		) {
+			sourceVar = lls->FindRegister(LowLevelStack::Float);
 		}
 		else {
-			sourceVar = _FindAvailableRegister(FALSE);
+			sourceVar = lls->FindRegister(LowLevelStack::Integer);
 		}
-		sourceVar->GetClass()->GetOperators().at(Uint32(Class::Operator::Cast))(
+		rightVar->GetClass()->GetOperators()[Uint32(Class::Operator::Cast)](
 			sourceVar, leftVar, sourceVar);
-		sourceVar->GetClass()->Evaluate(operatorMap[n->lex->lex->id],
+		rightVar->GetClass()->Evaluate(operatorMap[n->lex->lex->id],
 			sourceVar, sourceVar, sourceVar, n->lex->lex);
 	}
 	else {

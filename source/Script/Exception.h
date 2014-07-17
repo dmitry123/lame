@@ -5,17 +5,17 @@
 
 LAME_BEGIN2(Script)
 
+typedef Exception ScriptException;
+
 class LAME_API SyntaxException : public Exception {
 public:
 	SyntaxException(
 		Uint32 line,
-		Uint32 where,
 		StringC message,
 		...);
 	SyntaxException(
 		Bool warning,
 		Uint32 line,
-		Uint32 where,
 		StringC message, ...);
 public:
 	inline Uint32 Line() {
@@ -29,19 +29,19 @@ public:
 protected:
 	Bool warning_;
 	Uint32 line_;
-    Uint32 where_;
 };
 
-class ClassInvalidCastException {};
-class ArrayOutOfBoundsException {};
+typedef ScriptException ClassInvalidCastException;
+typedef ScriptException MethodException;
+typedef ScriptException InterfaceException;
 
 #define PostSyntaxError(_line, _message, ...) \
-	throw SyntaxException(_line, __LINE__, _message, __VA_ARGS__)
+	throw SyntaxException(_line, _message, __VA_ARGS__)
 
 #define PostSyntaxWarning(_line, _message, ...) \
 	static Bool __warningExceptionLock = 0; \
 	if (!__warningExceptionLock) { \
-		SyntaxException(1, _line, __LINE__, _message, __VA_ARGS__).Debug(); \
+		SyntaxException(1, _line, _message, __VA_ARGS__).Debug(); \
 	} __warningExceptionLock = 1;
 
 LAME_END2

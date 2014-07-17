@@ -9,9 +9,6 @@
     <ClCompile Include="..\..\source\Compiler\Define.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\Compiler\Translator.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\Compiler\Compiler.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -21,12 +18,15 @@
     <ClCompile Include="..\..\source\Compiler\Internal.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\Compiler\LowLevelStack.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Compiler\Register.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\Compiler\Define.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Compiler\Translator.h">
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Compiler\Compiler.h">
@@ -36,6 +36,12 @@
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Compiler\Internal.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Compiler\LowLevelStack.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Compiler\Register.h">
       <Filter>source</Filter>
     </ClInclude>
   </ItemGroup>

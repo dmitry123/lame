@@ -7,28 +7,16 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\Script\Script.cpp" />
-    <ClCompile Include="..\..\source\Script\AbstractClass.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\Script\Array.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\Script\Class.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\Script\Define.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\Script\Error.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\Script\Exception.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\Script\FileParser.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\Script\GlobalScope.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\Script\Interface.cpp">
@@ -61,18 +49,6 @@
     <ClCompile Include="..\..\source\Script\ScopeBuilder.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\Script\ScopeController.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\Script\Segment.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\Script\SegmentBuilder.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\Script\SegmentLinker.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\Script\Variable.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -82,28 +58,16 @@
     <ClInclude Include="..\..\source\Script\Variable.h">
       <Filter>source</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\source\Script\AbstractClass.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Script\Array.h">
-      <Filter>source</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\source\Script\Class.h">
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Script\Define.h">
       <Filter>source</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\source\Script\Error.h">
-      <Filter>source</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\source\Script\Exception.h">
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Script\FileParser.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Script\GlobalScope.h">
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Script\Interface.h">
@@ -134,18 +98,6 @@
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Script\ScopeBuilder.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Script\ScopeController.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Script\Segment.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Script\SegmentBuilder.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Script\SegmentLinker.h">
       <Filter>source</Filter>
     </ClInclude>
   </ItemGroup>

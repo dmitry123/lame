@@ -1,31 +1,46 @@
 #include "Interface.h"
-#include "ScopeController.h"
+#include "Exception.h"
 #include "Class.h"
 
 LAME_BEGIN2(Script)
 
-Error Interface::Implement(InterfacePtr object) {
+Interface::Interface(BufferRefC name, ScopePtr parent) : Object(name, parent, Type::Interface),
+	inheritor(0)
+{
+}
+
+Void Interface::Implement(InterfacePtr object) {
 
 	Vector<InterfacePtr>::iterator i;
 
 	if ((i = std::find(this->implemented.begin(), this->implemented.end(), object)) != this->implemented.end()) {
 
 		if (*i == this) {
-			return Error::Class_AlreadyImplemented;
+			throw InterfaceException("Interface has already implement that interface");
 		}
 	}
 
 	this->implemented.push_back(object);
 
 	if (!object->CheckType(Type::Interface)) {
-		return Error::Interface_UnableToImplementClass;
+		throw InterfaceException("Unable to implement non-interface object");
 	}
 
-	this->GetScopeController()
-		->GetMethodScope()->Merge(object->GetScopeController()
-		->GetMethodScope());
+	this->Merge(object);
+}
 
-	return Error::NoError;
+Bool Interface::Equal(ObjectPtrC object) {
+	return this->Hash() == object->Hash();
+}
+
+ObjectPtr Interface::Clone(BufferRefC name) {
+
+	InterfacePtr newInterface
+		= new Interface(name, this);
+
+	newInterface->Move(this);
+
+	return newInterface;
 }
 
 Void Interface::Trace(Uint32 offset) {
@@ -45,11 +60,23 @@ Void Interface::Trace(Uint32 offset) {
 
 	printf("{");
 
-	if (this->GetScopeController()->Amount() > 0) {
-		puts(""); this->GetScopeController()->Trace(offset + 1);
+	if (this->Amount() > 0) {
+		puts(""); this->Trace(offset + 1);
 	}
 
 	printf("}");
+}
+
+Interface::HashType Interface::Hash(Void) {
+	return this->GetPathHash64();
+}
+
+Uint32 Interface::Size(Void) {
+	return 0;
+}
+
+Void Interface::Release(Void) {
+	// Donkey
 }
 
 LAME_END2

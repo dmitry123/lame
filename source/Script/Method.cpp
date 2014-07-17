@@ -1,17 +1,11 @@
 #include "Method.h"
-#include "ScopeController.h"
+#include "Lex.h"
 #include "Variable.h"
 #include "Class.h"
 
 LAME_BEGIN2(Script)
 
-Method::Method(
-		BufferRefC methodName,
-		NodePtr node,
-		ObjectPtr thisClass,
-		ObjectPtr returnClass,
-		Vector<ClassPtr> attributes) : Object(methodName, Type::Method, node),
-
+Method::Method(BufferRefC name, ScopePtr parent, ObjectPtr thisClass, ObjectPtr returnClass, Vector<ClassPtr> attributes) : Object(name, parent, Type::Method),
 	attributesHash(attributes),
 	thisClass((VariablePtr)thisClass),
 	returnClass((ClassPtr) returnClass),
@@ -19,14 +13,24 @@ Method::Method(
 	rootNode(0),
 	invokeHash(0)
 {
-	this->EnableScopeController();
-
 	this->invokeHash =
 		this->ComputeInvokeHash(attributes);
 }
 
 ClassPtr Method::GetClass() {
-	return thisClass->GetObject();
+	return thisClass->GetVariable()->GetObject();
+}
+
+MethodPtr Method::GetMethod() {
+	return this;
+}
+
+Bool Method::Equal(ObjectPtrC object) {
+	return this->Hash() == object->Hash();
+}
+
+ObjectPtr Method::Clone(BufferRefC name) {
+	return this;
 }
 
 Void Method::Trace(Uint32 offset) {
@@ -51,7 +55,7 @@ Void Method::Trace(Uint32 offset) {
 
 	if (this->rootNode) {
 		printf(" {");
-		this->GetScopeController()->Trace(offset + 1);
+		this->Scope::Trace(offset + 1);
 		Lex::PrintLine(offset);
 		printf("}");
 	}
@@ -65,81 +69,26 @@ Void Method::Trace(Uint32 offset) {
 	}
 }
 
-Uint64 Method::Hash(Void) const {
-	return Uint64(this->GetNameHash()) << 32 | this->invokeHash;
+Method::HashType Method::Hash(Void) {
+	return Uint64(this->GetPathHash32()) << 32 | this->GetInvokeHash();
 }
 
-Error Method::SetNativeMethod(NativeMethod method) {
+Uint32 Method::Size(Void) {
+	return SizeOf / 1;
+}
 
-	if (this->nativeMethod != NULL) {
-		//return Error::Method_CantOverrideNativeMethod;
-	}
+Void Method::Release(Void) {
+	// Donkey :D
+}
+
+Void Method::SetNativeMethod(NativeMethod method) {
 
 	this->nativeMethod = method;
 	this->SetModificator(Modificator::Native);
-
-	return Error::NoError;
 }
 
-Error Method::Invoke(Vector<VariablePtr> attributes) {
+Void Method::Invoke(Vector<VariablePtr> attributes) {
 
-	if (attributes.size() != this->attributesHash.size()) {
-		return Error::Method_InvalidArguments;
-	}
-
-	for (Uint32 i = 0; i < this->attributesHash.size(); i++) {
-		if (  this->attributesHash[i]->GetNameHash() !=
-			attributes[i]->GetClass()->GetNameHash()
-		) {
-			return Error::Method_InvalidArguments;
-		}
-	}
-
-	ScopeControllerPtr scopes
-		= this->GetNode()->var->GetScopeController();
-
-	if (!this->thisClass && !this->CheckModificator(Modificator::Static)) {
-		return Error::Class_NotStaticObjectWithoutThis;
-	}
-
-	if (this->thisClass) {
-
-		ObjectPtr thisObject = scopes->GetVarScope()
-			->Add(new Variable("this", this->thisClass))
-			->SetModificator(Modificator::Internal);
-
-		if (thisObject) {
-			this->GetThis()->Clone(thisObject);
-		}
-	}
-
-	for (Uint32 i = 0; i < attributes.size(); i++) {
-		attributes[attributes.size() - 1 - i]->Clone(
-			scopes->GetVarScope()->Find(this->GetNode()->argList[i]->word.data()));
-	}
-
-	if (this->nativeMethod != NULL) {
-		this->nativeMethod(this);
-	}
-
-	return Error::NoError;
-}
-
-Bool Method::CompareArguments(MethodPtr method) {
-
-	if (method->attributesHash.size() != this->attributesHash.size()) {
-		return FALSE;
-	}
-
-	for (Uint32 i = 0; i < this->attributesHash.size(); i++) {
-		if (  this->attributesHash[i]->GetNameHash() !=
-			method->attributesHash[i]->GetClass()->GetNameHash()
-		) {
-			return FALSE;
-		}
-	}
-
-	return TRUE;
 }
 
 Uint32 Method::ComputeInvokeHash(Vector<ClassPtr>& classList) {
@@ -147,7 +96,7 @@ Uint32 Method::ComputeInvokeHash(Vector<ClassPtr>& classList) {
 	Uint32 invokeHash = 0;
 
 	for (ClassPtr c : classList) {
-		invokeHash = 31 * invokeHash + c->GetNameHash();
+		invokeHash = 31 * invokeHash + c->GetHash32();
 	}
 
 	return invokeHash;
@@ -158,7 +107,7 @@ Uint32 Method::ComputeInvokeHash(Vector<VariablePtr>& classList) {
 	Uint32 invokeHash = 0;
 
 	for (VariablePtr c : classList) {
-		invokeHash = 31 * invokeHash + c->GetClass()->GetNameHash();
+		invokeHash = 31 * invokeHash + c->GetClass()->GetHash32();
 	}
 
 	return invokeHash;

@@ -13,17 +13,13 @@ public:
 		Integer,
 		Float,
 		Object,
-		String,
-		IntegerPtr,
-		FloatPtr,
-		ObjectPtr,
-		StringPtr
+		String
 	};
 public:
 	ClassPtr classType;
 	ObjectPtr registerType;
 public:
-	Variable(BufferRefC name, ObjectPtrC classType, NodePtr node = NULL);
+	Variable(BufferRefC name, ScopePtr parent, ClassPtr classType);
 	~Variable();
 public:
 	VariablePtr SetInteger(ScriptNativeInt i);
@@ -33,36 +29,24 @@ public:
 public:
 	ScriptNativeInt GetInteger(Void);
 	ScriptNativeFloat GetFloat(Void);
-	ScriptNativeString GetString(Void);
 public:
-	Error Clone(ObjectPtrC object) override;
+	Bool Equal(ObjectPtrC object) override;
+	ObjectPtr Clone(BufferRefC name) override;
 	Void Trace(Uint32 offset) override;
-	Error Make(Class::Operator command, VariablePtr left, VariablePtr right);
+	HashType Hash(Void) override;
+	Uint32 Size(Void) override;
+	Void Release(Void) override;
+	ClassPtr GetClass() final override;
+	VariablePtr GetVariable() override;
 public:
-	inline ClassPtr GetClass() override {
-		if (this->objectValue) {
-			return this->objectValue;
-		}
-		return this->classType;
-	}
-	inline ClassPtr GetClassType() {
-		return this->classType;
-	}
-	inline VariablePtr GetVariable() override {
-		return this;
-	}
+	Void Make(Class::Operator command, VariablePtr left, VariablePtr right);
 public:
-	inline ClassPtr GetObject() {
-		return this->objectValue;
-	}
-	inline Var GetVarType() {
-		return varType;
-	}
+	inline ClassPtr GetClassType() { return this->classType; }
+	inline ClassPtr GetObject() { return this->objectValue; }
+	inline Var GetVarType() { return varType; }
+public:
 	inline Void SetClassType(ClassPtr classType) {
 		this->classType = classType;
-		if (classType) {
-			this->SetSizeOf(classType->GetSizeOf());
-		}
 	}
 public:
 	union {
@@ -72,25 +56,6 @@ public:
 public:
 	ClassPtr objectValue;
 	ScriptNativeString stringValue;
-public:
-	Bool IsChar(Void);
-	Bool IsByte(Void);
-	Bool IsShort(Void);
-	Bool IsInt(Void);
-	Bool IsLong(Void);
-	Bool IsFloat(Void);
-	Bool IsDouble(Void);
-	Bool IsObject(Void);
-	Bool IsClass(Void);
-	Bool IsBoolean(Void);
-	Bool IsVoid(Void);
-	Bool IsString(Void);
-private:
-	Variable(
-		BufferRefC name,
-		ObjectPtrC classType,
-		Type type,
-		NodePtr node = NULL);
 private:
 	Var varType;
 };

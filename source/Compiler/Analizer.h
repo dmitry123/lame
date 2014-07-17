@@ -2,6 +2,7 @@
 #define __LAME_COMPILER_ANALIZER__
 
 #include "Define.h"
+#include "LowLevelStack.h"
 
 LAME_BEGIN2(Compiler)
 
@@ -18,8 +19,8 @@ private:
 	typedef Vector<ObjectPtr>& VarListRef;
 	typedef const Vector<ObjectPtr>& VarListRefC;
 public:
-	Void Analize(NodeBuilderPtr nodeBuilder);
-	Void Overload(Void);
+	Void Analize(LowLevelStackPtr lowLevelStack, NodeBuilderPtr nodeBuilder);
+	Void Overload(ScopePtr rootScope);
 private:
 	Void _AnalizeList(NodeListRef nodeList);
 	Void _Analize0(NodePtr n);
@@ -35,6 +36,8 @@ private:
 	Vector<Buffer> nameStack;
 	NodeBuilderPtr builder;
 	Uint32 methodHash;
+	ScopePtr rootScope;
+	LowLevelStackPtr lls;
 };
 
 LAME_END2

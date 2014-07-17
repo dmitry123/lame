@@ -1,51 +1,24 @@
 #include "Object.h"
-#include "ScopeController.h"
 #include "Segment.h"
+#include "Lex.h"
 
 LAME_BEGIN2(Script)
 
-Object::Object(Object& object) : Object(object.name, object.type, object.GetNode()) {
-
-	this->modificators_ = object.modificators_;
-	this->sizeOf_ = object.sizeOf_;
-
-	if (object.scopeController_) {
-		this->EnableScopeController();
-		this->GetScopeController()->Clone(object.scopeController_);
-	}
-
-	this->countOfArguments_ = 0;
+Object::Object(BufferRefC name, ScopePtr parent, Type type) : Scope(name, parent),
+	name(name),
+	path(parent->Path()),
+	type(type)
+{
+	this->modificators_ = 0;
+	this->segment_ = 0;
+	this->address_ = 0;
 	this->size_ = 0;
+	this->templateClass = 0;
+	this->arguments_ = 0;
+	this->node_ = 0;
 }
 
 Object::~Object() {
-
-	if (this->isScopeControllerEnabled_) {
-		delete this->scopeController_;
-	}
-}
-
-Bool Object::Equal(ObjectPtrC object) const {
-
-	if (this->type == Type::Class) {
-		return this->type == object->type && this->hash == object->hash;
-	} else {
-		return this->type == object->type;
-	}
-}
-
-Error Object::Clone(ObjectPtrC object) {
-
-	//object->modificators_ = this->modificators_;
-	return Error::NoError;
-}
-
-Void Object::Trace(Uint32 offset) {
-	// ignore
-}
-
-Uint64 Object::Hash(Void) const {
-	return (Uint64(this->hash) << 32) | this->hash;
 }
 
 ObjectPtr Object::SetModificator(Modificator modificator, Bool state) {
@@ -54,53 +27,76 @@ ObjectPtr Object::SetModificator(Modificator modificator, Bool state) {
 		this->modificators_ |=  (Uint32)modificator :
 		this->modificators_ &= ~(Uint32)modificator;
 
+	this->SetChanged(TRUE);
+	this->Notify();
+
 	return this;
 }
 
-Void Object::SetSegment(SegmentPtr segment, Uint32P address) {
+ObjectPtr Object::SetSegment(SegmentPtr segment, Uint32P address) {
 
 	this->address_ = address;
 	this->size_ = segment->GetLastSize();;
 	this->segment_ = segment;
+
+	return this;
 }
 
 Void Object::PrintModificators(Void) {
 
+	ConsolePtr c = Console::GetInstance();
+
+	if (this->CheckModificator(Modificator::Override)) {
+		c->Print("override ");
+	}
+	if (this->CheckModificator(Modificator::Deprecated)) {
+		c->Print("deprecated ");
+	}
 	if (this->CheckModificator(Modificator::Public)) {
-		printf("public ");
+		c->Print("public ");
 	}
 	if (this->CheckModificator(Modificator::Private)) {
-		printf("private ");
+		c->Print("private ");
 	}
 	if (this->CheckModificator(Modificator::Protected)) {
-		printf("protected ");
+		c->Print("protected ");
 	}
 	if (this->CheckModificator(Modificator::Static)) {
-		printf("static ");
+		c->Print("static ");
 	}
 	if (this->CheckModificator(Modificator::Final)) {
-		printf("final ");
+		c->Print("final ");
 	}
 	if (this->CheckModificator(Modificator::Native)) {
-		printf("native ");
+		c->Print("native ");
 	}
 	if (this->CheckModificator(Modificator::Abstract)) {
-		printf("abstract ");
+		c->Print("abstract ");
 	}
 }
 
-Bool Object::EnableScopeController(Void) {
+Uint64 Object::GetPathHash64(Void) {
+	return Uint64(this->GetName().GetHash32()) << 32 | this->GetPath().GetHash32();
+}
 
-	if (this->scopeController_ != NULL) {
-		return FALSE;
+Uint32 Object::GetPathHash32(Void) {
+	return Uint32(this->GetName().GetHash16()) << 16 | this->GetPath().GetHash16();
+}
+
+Uint64 Object::GetHash64(Void) {
+	return this->Hash();
+}
+
+Uint32 Object::GetHash32(Void) {
+
+	Uint64 hash = this->GetHash64();
+	Uint32 result = 0;
+
+	for (Uint32 i = 0; i < 64; i++) {
+		result = 31 * result + (hash >> i) & 0xffffffff;
 	}
 
-	this->scopeController_
-		= new ScopeController();
-
-	this->isScopeControllerEnabled_ = TRUE;
-
-	return TRUE;
+	return result;
 }
 
 LAME_END2

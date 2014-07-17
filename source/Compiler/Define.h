@@ -21,6 +21,8 @@ LAME_BEGIN2(Compiler)
 
 typedef class CodeTranslator *CodeTranslatorPtr, *const CodeTranslatorPtrC;
 typedef class CodeAnalizer *CodeAnalizerPtr, *const CodeAnalizerPtrC;
+typedef class LowLevelStack *LowLevelStackPtr, *const LowLevelStackPtrC;
+typedef class Register *RegisterPtr, *const RegisterPtrPtrC;
 
 LAME_END2
 

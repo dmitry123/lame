@@ -3,7 +3,6 @@
 
 using namespace Lame::Core;
 using namespace Lame::Compiler;
-using namespace Lame::Core;
 using namespace Lame::ResourceManager;
 using namespace Lame::Script;
 using namespace Lame;
@@ -16,72 +15,84 @@ int main(int argc, char** argv) {
 
 	StringC fileName;
 	Clock time;
-	ScopeControllerPtr g;
 
 	fileName = argc > 1 ?
 		argv[1] : "main.ls";
 
-	g = GlobalScope::GetInstance();
-
 	NodeBuilder nodeBuilder;
 	FileParser fileParser;
-	CodeTranslator nodePerformer;
 	ScopeBuilder scopeBuilder;
-	SegmentBuilder segmentBuilder(g);
-	SegmentLinker segmentLinker;
-	Compiler::CodeAnalizer codeAnalizer;
+	ScopePtr rootScope;
+	CodeAnalizer codeAnalizer;
+	LowLevelStackPtr lowLevelStack;
 
+	//CodeTranslator nodePerformer;
+	//SegmentBuilder segmentBuilder(g);
+	//SegmentLinker segmentLinker;
+
+	rootScope = Scope::GetRootScope();
 	time = Time::GetTime();
 
 	try {
 		fileParser.Load(fileName);
 		nodeBuilder.Build(&fileParser);
-		codeAnalizer.Overload();
-		scopeBuilder.Build(&nodeBuilder, g);
+		scopeBuilder.Build(&nodeBuilder, rootScope);
+		codeAnalizer.Overload(rootScope);
+		lowLevelStack = new LowLevelStack();
+		puts("\n---------------------------");
+		codeAnalizer.Analize(lowLevelStack, &nodeBuilder);
 	}
 	catch (SyntaxException& e) {
-		printf("\n---------------------------");
-		GlobalScope::GetInstance()->Trace(0, FALSE);
+		printf("---------------------------");
+		rootScope->Trace(0);
 		puts("\n---------------------------");
 		e.Debug();
 		puts("");
 		goto _AvoidTrace;
 	}
 	catch (Exception& e) {
-		printf("\n---------------------------");
-		GlobalScope::GetInstance()->Trace(0, FALSE);
+		printf("---------------------------");
+		rootScope->Trace(0);
+		e.Debug(Console::GetInstance());
+		puts("\n---------------------------");
+		goto _AvoidTrace;
+	}
+	catch (ThrowableAdapter& e) {
+		printf("---------------------------");
+		rootScope->Trace(0);
+		puts("\n---------------------------");
 		e.Debug(Console::GetInstance());
 		puts("\n---------------------------");
 		goto _AvoidTrace;
 	}
 
 	try {
-		segmentLinker.Add(
-			segmentBuilder.BuildDataSegment());
-		segmentLinker.Add(
-			segmentBuilder.BuildTextSegment());
-		segmentLinker.Add(
-			segmentBuilder.BuildCodeSegment());
+		//segmentLinker.Add(
+		//	segmentBuilder.BuildDataSegment());
+		//segmentLinker.Add(
+		//	segmentBuilder.BuildTextSegment());
+		//segmentLinker.Add(
+		//	segmentBuilder.BuildCodeSegment());
 
-		GlobalScope::SetCodeSegment(
-			segmentBuilder.GetCodeSegment());
+		//GlobalScope::SetCodeSegment(
+		//	segmentBuilder.GetCodeSegment());
 
-		segmentBuilder.GetCodeSegment()->SetOffset(
-			segmentLinker.GetPosition());
+		//segmentBuilder.GetCodeSegment()->SetOffset(
+		//	segmentLinker.GetPosition());
 
-		VirtualMachine::ByteCodePrinter::GetInstance()
-			->SetPosition(segmentLinker.GetPosition());
+		//VirtualMachine::ByteCodePrinter::GetInstance()
+		//	->SetPosition(segmentLinker.GetPosition());
 
-		codeAnalizer.Analize(&nodeBuilder);
+		//codeAnalizer.Analize(&nodeBuilder);
 		//nodePerformer.Translate(&nodeBuilder);
 
 		//segmentBuilder.GetDataSegment()->Trace();
 		//segmentBuilder.GetTextSegment()->Trace();
 		//segmentBuilder.GetCodeSegment()->Trace();
 
-		Buffer fcName = File::GetFileNameWithoutExtension(fileName) + ".lc";
+		//Buffer fcName = File::GetFileNameWithoutExtension(fileName) + ".lc";
 
-		segmentLinker.Save(fcName.data());
+		//segmentLinker.Save(fcName.data());
 	}
 	catch (SyntaxException e) {
 		puts("\n-----------------------------");
@@ -93,8 +104,8 @@ int main(int argc, char** argv) {
 		puts("");
 	}
 
-	printf("\n-----------------------------");
-	g->Trace(0, FALSE);
+	printf("-----------------------------");
+	rootScope->Trace(0);
 	puts("\n-----------------------------");
 _AvoidTrace:
 

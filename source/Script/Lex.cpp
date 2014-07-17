@@ -54,6 +54,10 @@ Map<LexID, Lex> Lex::lexMap = {
 			{ "[]", P(0, 0), kScriptLexArray, 0,
 				kScriptLexFlagRight }
 		},
+		{ kScriptLexArgumentList,
+			{ "...", P(0, 0), kScriptLexArgumentList, 0,
+				kScriptLexFlagRight }
+		},
 
 		/* Selection Directed/Mediated */
 
@@ -361,6 +365,14 @@ Map<LexID, Lex> Lex::lexMap = {
 		},
 		{ kScriptLexAbstract,
 			{ "abstract", P(0, 0), kScriptLexAbstract, 0,
+				kScriptLexFlagLanguage | kScriptLexFlagModificator }
+		},
+		{ kScriptLexOverride,
+			{ "@Override", P(0, 0), kScriptLexOverride, 0,
+				kScriptLexFlagLanguage | kScriptLexFlagModificator }
+		},
+		{ kScriptLexDecprecated,
+			{ "@Deprecated", P(0, 0), kScriptLexDecprecated, 0,
 				kScriptLexFlagLanguage | kScriptLexFlagModificator }
 		}
 };

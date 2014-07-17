@@ -2,12 +2,15 @@
 
 LAME_BEGIN2(Script)
 
+static StringC wordTokens = "_$@";
+
 Bool IsDigit(Sint8 symbol) {
 	return symbol >= '0' && symbol <= '9';
 }
 
 Bool IsLetter(Sint8 symbol) {
-	return (symbol >= 'a' && symbol <= 'z') || (symbol >= 'A' && symbol <= 'Z');
+	return (symbol >= 'a' && symbol <= 'z') || (symbol >= 'A' && symbol <= 'Z') ||
+		strchr(wordTokens, symbol);
 }
 
 Bool IsIntValue(StringC string) {

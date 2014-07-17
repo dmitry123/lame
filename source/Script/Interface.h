@@ -6,15 +6,18 @@
 
 LAME_BEGIN2(Script)
 
-class LAME_API Interface : public Class {
+class LAME_API Interface : public Object {
 public:
-	Interface(BufferRefC name, NodePtr node = NULL) : Class(name, Type::Interface, node),
-		inheritor(0)
-	{
-	}
+	Interface(BufferRefC name, ScopePtr parent);
 public:
-	Error Implement(InterfacePtr object);
+	Void Implement(InterfacePtr object);
+public:
+	Bool Equal(ObjectPtrC object) override;
+	ObjectPtr Clone(BufferRefC name) override;
 	Void Trace(Uint32 offset) override;
+	HashType Hash(Void) override;
+	Uint32 Size(Void) override;
+	Void Release(Void) override;
 public:
 	inline Void SetInheritor(ClassPtr inheritor) {
 		this->inheritor = inheritor;

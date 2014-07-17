@@ -1,4 +1,5 @@
 #include "Time.h"
+#include "Buffer.h"
 
 #include <time.h>
 #include <stdio.h>
@@ -16,30 +17,30 @@ LAME_BEGIN2(Core)
 
 Void Time::ConvertToString(String buffer) {
 
-	//Buffer buffer;
+	Buffer b;
 
-	//buffer.resize(30);
-	//buffer.Format("%d.%d.%d %d:%d:%d",
-	//	(Sint32)this->year,
-	//	(Sint32)this->month,
-	//	(Sint32)this->day,
-	//	(Sint32)this->hour,
-	//	(Sint32)this->minute,
-	//	(Sint32)this->second
-	//	);
+	b.resize(30);
+	b.Format("%d.%d.%d %d:%d:%d",
+		(Sint32)this->year,
+		(Sint32)this->month,
+		(Sint32)this->day,
+		(Sint32)this->hour,
+		(Sint32)this->minute,
+		(Sint32)this->second
+	);
 
-	//return buffer;
+	strcpy(buffer, b.data());
 }
 
 Uint64 Time::ConvertToMilliseconds(Void) {
 
 	return
-		this->year * LAME_MS_YEAR +
-		this->month * LAME_MS_MONTH +
-		this->day * LAME_MS_DAY +
-		this->hour * LAME_MS_HOUR +
-		this->minute * LAME_MS_MINUTE +
-		this->second * LAME_MS_SECOND +
+		this->year * LAME_TIME_YEAR +
+		this->month * LAME_TIME_MONTH +
+		this->day * LAME_TIME_DAY +
+		this->hour * LAME_TIME_HOUR +
+		this->minute * LAME_TIME_MINUTE +
+		this->second * LAME_TIME_SECOND +
 		this->msecond;
 }
 
@@ -59,20 +60,20 @@ Void Time::BuildForDate(Clock milliseconds) {
 	this->second = today->tm_sec;
 }
 
-Void Time::BuildTorTime(Clock milliseconds) {
+Void Time::BuildForTime(Clock milliseconds) {
 
-	this->year = Uint32(milliseconds / LAME_MS_YEAR);
-	milliseconds %= LAME_MS_YEAR;
-	this->month = Uint32(milliseconds / LAME_MS_MONTH);
-	milliseconds %= LAME_MS_MONTH;
-	this->day = Uint32(milliseconds / LAME_MS_DAY);
-	milliseconds %= LAME_MS_DAY;
-	this->hour = Uint32(milliseconds / LAME_MS_HOUR);
-	milliseconds %= LAME_MS_HOUR;
-	this->minute = Uint32(milliseconds / LAME_MS_MINUTE);
-	milliseconds %= LAME_MS_MINUTE;
-	this->second = Uint32(milliseconds / LAME_MS_SECOND);
-	milliseconds %= LAME_MS_SECOND;
+	this->year = Uint32(milliseconds / LAME_TIME_YEAR);
+	milliseconds %= LAME_TIME_YEAR;
+	this->month = Uint32(milliseconds / LAME_TIME_MONTH);
+	milliseconds %= LAME_TIME_MONTH;
+	this->day = Uint32(milliseconds / LAME_TIME_DAY);
+	milliseconds %= LAME_TIME_DAY;
+	this->hour = Uint32(milliseconds / LAME_TIME_HOUR);
+	milliseconds %= LAME_TIME_HOUR;
+	this->minute = Uint32(milliseconds / LAME_TIME_MINUTE);
+	milliseconds %= LAME_TIME_MINUTE;
+	this->second = Uint32(milliseconds / LAME_TIME_SECOND);
+	milliseconds %= LAME_TIME_SECOND;
 	this->msecond = Uint32(milliseconds);
 }
 
