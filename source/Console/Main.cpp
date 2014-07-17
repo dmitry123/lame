@@ -37,13 +37,12 @@ int main(int argc, char** argv) {
 		fileParser.Load(fileName);
 		nodeBuilder.Build(&fileParser);
 		scopeBuilder.Build(&nodeBuilder, rootScope);
-		codeAnalizer.Overload(rootScope);
 		lowLevelStack = new LowLevelStack();
 		puts("\n---------------------------");
-		codeAnalizer.Analize(lowLevelStack, &nodeBuilder);
+		codeAnalizer.Analize(lowLevelStack, &nodeBuilder, rootScope);
 	}
 	catch (SyntaxException& e) {
-		printf("---------------------------");
+		printf("\n---------------------------");
 		rootScope->Trace(0);
 		puts("\n---------------------------");
 		e.Debug();
@@ -51,14 +50,14 @@ int main(int argc, char** argv) {
 		goto _AvoidTrace;
 	}
 	catch (Exception& e) {
-		printf("---------------------------");
+		printf("\n---------------------------");
 		rootScope->Trace(0);
 		e.Debug(Console::GetInstance());
 		puts("\n---------------------------");
 		goto _AvoidTrace;
 	}
 	catch (ThrowableAdapter& e) {
-		printf("---------------------------");
+		printf("\n---------------------------");
 		rootScope->Trace(0);
 		puts("\n---------------------------");
 		e.Debug(Console::GetInstance());

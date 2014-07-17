@@ -30,8 +30,8 @@ public:
 				if (node->lex->lex->id == kScriptLexSemicolon) {
 					while (!this->opStack.empty()) {
 						top = this->opStack.top();
-						if (top->lex->lex->id == kScriptLexParentheseL ||
-							top->lex->lex->id == kScriptLexParentheseR ||
+						if (top->lex->lex->id == kScriptLexParenthesisL ||
+							top->lex->lex->id == kScriptLexParenthesisR ||
 							top->lex->lex->id == kScriptLexBracketL ||
 							top->lex->lex->id == kScriptLexBracketR
 						) {
@@ -43,13 +43,13 @@ public:
 					this->resultStack.push(node);
 				}
 				else if (
-					node->lex->lex->id == kScriptLexParentheseL ||
+					node->lex->lex->id == kScriptLexParenthesisL ||
 					node->lex->lex->id == kScriptLexBracketL
 				) {
 					this->HandleLeftParenthesis(node);
 				}
 				else if (
-					node->lex->lex->id == kScriptLexParentheseR ||
+					node->lex->lex->id == kScriptLexParenthesisR ||
 					node->lex->lex->id == kScriptLexBracketR
 				) {
 					this->HandleRightParenthesis(node);
@@ -91,14 +91,14 @@ private:
 	}
 	inline void HandleRightParenthesis(NodePtr node) {
 		while (!this->opStack.empty() && (
-			this->opStack.top()->lex->lex->id != kScriptLexParentheseL &&
+			this->opStack.top()->lex->lex->id != kScriptLexParenthesisL &&
 			this->opStack.top()->lex->lex->id != kScriptLexBracketL)
 		) {
 			this->resultStack.push(this->opStack.top());
 			this->opStack.pop();
 		}
 		if (this->opStack.empty() || !this->opStack.empty() && (
-			this->opStack.top()->lex->lex->id != kScriptLexParentheseL &&
+			this->opStack.top()->lex->lex->id != kScriptLexParenthesisL &&
 			this->opStack.top()->lex->lex->id != kScriptLexBracketL)
 		) {
 			PostSyntaxError(node->lex->line, "Parenthese mismatched", 0);
@@ -136,6 +136,16 @@ Void _Order(Vector<NodePtr>* list) {
 
 	list->clear();
 	while (!result->empty()) {
+		if (result->top()->id == kScriptLexBraceL ||
+			result->top()->id == kScriptLexBraceR
+		) {
+			PostSyntaxError(result->top()->lex->line, "Braces mismatched", 0);
+		}
+		if (result->top()->id == kScriptLexParenthesisL ||
+			result->top()->id == kScriptLexParenthesisR
+		) {
+			PostSyntaxError(result->top()->lex->line, "Parentheses mismatched", 0);
+		}
 		list->push_front(result->top());
 		result->pop();
 	}

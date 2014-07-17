@@ -12,9 +12,6 @@
     <ClCompile Include="..\..\source\Compiler\Compiler.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\Compiler\Analizer.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\Compiler\Internal.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -22,6 +19,15 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\Compiler\Register.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Compiler\VirtualAnalizer.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Compiler\CodeAnalizer.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Compiler\Assembler.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -32,9 +38,6 @@
     <ClInclude Include="..\..\source\Compiler\Compiler.h">
       <Filter>source</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\source\Compiler\Analizer.h">
-      <Filter>source</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\source\Compiler\Internal.h">
       <Filter>source</Filter>
     </ClInclude>
@@ -42,6 +45,15 @@
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Compiler\Register.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Compiler\VirtualAnalizer.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Compiler\CodeAnalizer.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Compiler\Assembler.h">
       <Filter>source</Filter>
     </ClInclude>
   </ItemGroup>

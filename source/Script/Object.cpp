@@ -16,6 +16,7 @@ Object::Object(BufferRefC name, ScopePtr parent, Type type) : Scope(name, parent
 	this->templateClass = 0;
 	this->arguments_ = 0;
 	this->node_ = 0;
+	this->newNode_ = 0;
 }
 
 Object::~Object() {

@@ -15,8 +15,8 @@ typedef enum {
 	// brackets
 	kScriptLexBracketL,
 	kScriptLexBracketR,
-	kScriptLexParentheseL,
-	kScriptLexParentheseR,
+	kScriptLexParenthesisL,
+	kScriptLexParenthesisR,
 	kScriptLexArray,
 	kScriptLexArgumentList,
 	// selectors

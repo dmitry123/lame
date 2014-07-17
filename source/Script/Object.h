@@ -40,7 +40,7 @@ public:
 	virtual ~Object();
 public:
 	virtual Bool Equal(ObjectPtrC object) = 0;
-	virtual ObjectPtr Clone(BufferRefC name) = 0;
+	virtual ObjectPtr Clone(BufferRefC name, ObjectPtr parent) = 0;
 	virtual Void Trace(Uint32 offset) = 0;
 	virtual HashType Hash(Void) = 0;
 	virtual Uint32 Size(Void) = 0;
@@ -77,6 +77,9 @@ public:
 	}
 	inline NodePtr GetNode() {
 		return this->node_;
+	}
+	inline Void SetNewNode(NodePtr node) {
+		this->newNode_ = node;
 	}
 public:
 	inline Bool IsInt() const {
@@ -118,6 +121,7 @@ public:
 	inline Uint32 GetCountOfArguments() const { return this->arguments_; }
 	inline ClassPtr GetTemplateClass() { return this->templateClass; }
 	inline BufferRefC GetPath() const { return this->path; }
+	inline NodePtr GetNewNode() { return this->newNode_; }
 private:
 	Uint32 modificators_;
 	Uint32 arguments_;
@@ -126,6 +130,7 @@ private:
 	Uint32 size_;
 	ClassPtr templateClass;
 	NodePtr node_;
+	NodePtr newNode_;
 public:
 	enum {
 		SizeOf = 8

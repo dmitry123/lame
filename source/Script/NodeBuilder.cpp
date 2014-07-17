@@ -134,7 +134,7 @@ NodeBuilder::Iterator NodeBuilder::_BuildFunction(NodePtr& parent, Iterator i) {
 			had happened with braces or parentheses -
 			its a mistake, throw syntax error. */
 
-		else if ((*i)->lex->id == kScriptLexParentheseL) {
+		else if ((*i)->lex->id == kScriptLexParenthesisL) {
 			if (this->nodeQueue_ == &parent->blockList) {
 				goto __SaveNode;
 			}
@@ -143,7 +143,7 @@ NodeBuilder::Iterator NodeBuilder::_BuildFunction(NodePtr& parent, Iterator i) {
 			}
 			this->_Push(&parent->argList);
 			__Inc(i);
-			while ((*i)->lex->id != kScriptLexParentheseR) {
+			while ((*i)->lex->id != kScriptLexParenthesisR) {
 				if (!((*(i + 0))->lex->IsUnknown() &&
 					(*(i + 1))->lex->IsUnknown())
 				) {
@@ -160,7 +160,7 @@ NodeBuilder::Iterator NodeBuilder::_BuildFunction(NodePtr& parent, Iterator i) {
 			}
 			__Dec(i);
 		}
-		else if ((*i)->lex->id == kScriptLexParentheseR) {
+		else if ((*i)->lex->id == kScriptLexParenthesisR) {
 			if (this->nodeQueue_ == &parent->blockList) {
 				goto __SaveNode;
 			}
@@ -192,7 +192,7 @@ NodeBuilder::Iterator NodeBuilder::_BuildFunction(NodePtr& parent, Iterator i) {
 		__SaveNode:
 			this->nodeQueue_->push_back(this->_CreateNode(*i, kScriptNodeDefault));
 			i = this->_Build(this->nodeQueue_->back(), i);
-			if ((*i)->lex->id == kScriptLexParentheseR && this->nodeQueue_ == &parent->argList) {
+			if ((*i)->lex->id == kScriptLexParenthesisR && this->nodeQueue_ == &parent->argList) {
 				__Dec(i);
 			}
 		}
@@ -204,6 +204,7 @@ NodeBuilder::Iterator NodeBuilder::_BuildFunction(NodePtr& parent, Iterator i) {
 			break;
 		}
 	}
+
 	parent->ShuntingYard();
 
 	return i;
@@ -283,7 +284,7 @@ NodeBuilder::Iterator NodeBuilder::_BuildVariable(NodePtr& parent, Iterator i) {
 			only can save all its nodes. */
 
 		else if (
-			(*i)->lex->id == kScriptLexParentheseR ||
+			(*i)->lex->id == kScriptLexParenthesisR ||
 			(*i)->lex->id == kScriptLexSet
 		) {
 			goto __SaveNode;
@@ -354,6 +355,19 @@ NodeBuilder::Iterator NodeBuilder::_BuildClass(NodePtr& parent, Iterator i) {
 		else if ((*i)->lex->id == kScriptLexBraceR) {
 			this->_Pop();
 			break;
+		}
+
+		/*	Fix for constructor */
+
+		else if (this->parser_->GetLexList().end() - i > 2 &&
+			(*(i + 0))->lex->id == kScriptLexDefault &&
+			(*(i + 1))->lex->id == kScriptLexParenthesisL &&
+			(*(i + 2))->lex->id == kScriptLexParenthesisR
+		) {
+			if ((*i)->word == parent->typeNode->word) {
+				i = this->parser_->GetLexList().insert(i, new LexNode("void", (*i)->line, Lex::Find(kScriptLexDefault)));
+			}
+			goto __SaveNode;
 		}
 
 		/*	If we've met 'extend' key word, then we
@@ -434,6 +448,7 @@ NodeBuilder::Iterator NodeBuilder::_BuildClass(NodePtr& parent, Iterator i) {
 		/*	Build another class nodes with saved. */
 
 		else {
+		__SaveNode:
 			this->nodeQueue_->push_back(this->_CreateNode(*i, kScriptNodeDefault));
 			i = this->_Build(this->nodeQueue_->back(), i);
 			this->nodeQueue_->back()->flags = modificators;
@@ -492,7 +507,7 @@ NodeBuilder::Iterator NodeBuilder::_BuildCondition(NodePtr& parent, Iterator i) 
 		not needed. */
 
 	if ((parent->lex->lex->flags & kScriptLexFlagWoParenthese) == 0) {
-		if ((*i)->lex->id != kScriptLexParentheseL) {
+		if ((*i)->lex->id != kScriptLexParenthesisL) {
 			PostSyntaxError((*i)->line, "Left parenthesis has been lost");
 		}
 	}
@@ -530,7 +545,7 @@ NodeBuilder::Iterator NodeBuilder::_BuildCondition(NodePtr& parent, Iterator i) 
 			to '1 if { ... }'. But not now, ony after
 			order. */
 
-		else if ((*i)->lex->id == kScriptLexParentheseL) {
+		else if ((*i)->lex->id == kScriptLexParenthesisL) {
 			if (extraParenseses > 0) {
 				++extraParenseses;
 				goto __SaveNode;
@@ -540,7 +555,7 @@ NodeBuilder::Iterator NodeBuilder::_BuildCondition(NodePtr& parent, Iterator i) 
 				extraParenseses = 1;
 			}
 		}
-		else if ((*i)->lex->id == kScriptLexParentheseR) {
+		else if ((*i)->lex->id == kScriptLexParenthesisR) {
 			if (extraParenseses == 1) {
 				this->_Pop();
 				if ((*(i + 1))->lex->id == kScriptLexSemicolon) {
@@ -550,7 +565,7 @@ NodeBuilder::Iterator NodeBuilder::_BuildCondition(NodePtr& parent, Iterator i) 
 				__AvoidBraces:
 					this->_Push(&parent->blockList);
 					isSingleExpression = LAME_TRUE;
-					if ((*i)->lex->id != kScriptLexParentheseR) {
+					if ((*i)->lex->id != kScriptLexParenthesisR) {
 						goto __SaveNode;
 					}
 				}
@@ -709,7 +724,7 @@ Uint32 NodeBuilder::_GetCountOfArguments(Iterator i) {
 	__Inc(i);
 
 	while (LAME_TRUE) {
-		if ((*i)->lex->id == kScriptLexParentheseL ||
+		if ((*i)->lex->id == kScriptLexParenthesisL ||
 			(*i)->lex->id == kScriptLexBracketL
 		) {
 			if (extraParenseses > 0) {
@@ -720,7 +735,7 @@ Uint32 NodeBuilder::_GetCountOfArguments(Iterator i) {
 			}
 		}
 		else if (
-			(*i)->lex->id == kScriptLexParentheseR ||
+			(*i)->lex->id == kScriptLexParenthesisR ||
 			(*i)->lex->id == kScriptLexBracketR
 			) {
 			if (extraParenseses == 1) {
@@ -796,9 +811,9 @@ NodeBuilder::Iterator NodeBuilder::_Build(NodePtr& node, Iterator i) {
 	/*	Fix for cast */
 
 	if (this->parser_->GetLexList().end() - i > 3 &&
-		(*(i + 1))->lex->id == kScriptLexParentheseL &&
+		(*(i + 1))->lex->id == kScriptLexParenthesisL &&
 		(*(i + 2))->lex->id == kScriptLexDefault &&
-		(*(i + 3))->lex->id == kScriptLexParentheseR
+		(*(i + 3))->lex->id == kScriptLexParenthesisR
 	) {
 		__Inc(i);
 		std::swap(*(i + 0), *(i + 1));
@@ -869,7 +884,7 @@ NodeBuilder::Iterator NodeBuilder::_Build(NodePtr& node, Iterator i) {
 
 			if ((*(i + 0))->lex->IsUnknown() &&
 				(*(i + 1))->lex->IsUnknown() &&
-				(*(i + 2))->lex->id == kScriptLexParentheseL
+				(*(i + 2))->lex->id == kScriptLexParenthesisL
 			) {
 				i = this->_BuildFunction(node, i);
 			}
@@ -882,7 +897,7 @@ NodeBuilder::Iterator NodeBuilder::_Build(NodePtr& node, Iterator i) {
 				((*(i + 2))->lex->id == kScriptLexSemicolon ||
 				(*(i + 2))->lex->id == kScriptLexSet ||
 				(*(i + 2))->lex->id == kScriptLexComma ||
-				(*(i + 2))->lex->id == kScriptLexParentheseR)
+				(*(i + 2))->lex->id == kScriptLexParenthesisR)
 			) {
 				i = this->_BuildVariable(node, i);
 			}
@@ -892,10 +907,10 @@ NodeBuilder::Iterator NodeBuilder::_Build(NodePtr& node, Iterator i) {
 
 		if (this->parser_->GetLexList().end() - i > 1) {
 			if ((*(i + 0))->lex->IsUnknown() &&
-				((*(i + 1))->lex->id == kScriptLexParentheseL ||
+				((*(i + 1))->lex->id == kScriptLexParenthesisL ||
 				 (*(i + 1))->lex->id == kScriptLexBracketL)
 			) {
-				if ((*(i + 1))->lex->id == kScriptLexParentheseL) {
+				if ((*(i + 1))->lex->id == kScriptLexParenthesisL) {
 					node->id = kScriptNodeInvoke;
 				}
 				else {

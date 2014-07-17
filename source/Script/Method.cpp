@@ -29,7 +29,7 @@ Bool Method::Equal(ObjectPtrC object) {
 	return this->Hash() == object->Hash();
 }
 
-ObjectPtr Method::Clone(BufferRefC name) {
+ObjectPtr Method::Clone(BufferRefC name, ObjectPtr parent) {
 	return this;
 }
 

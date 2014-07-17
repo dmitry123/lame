@@ -30,6 +30,10 @@ static Bool _MoveNode(NodePtr node) {
 			node->parent->blockList.begin(),
 			node->parent->blockList.end(), node);
 
+		if (position == node->parent->blockList.end()) {
+			PostSyntaxError(node->parent->lex->line, "Node (%s) hasn't been appended to his parent (%s)", node->word.data(), node->parent->word.data());
+		}
+
 		/*	Push argument list in parent's block stack */
 		if (node->id != kScriptNodeVariable) {
 			node->parent->blockList.insert(position,
@@ -82,6 +86,7 @@ Void ScopeBuilder::Build(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachModificatorSet, this), kScriptNodeInterface);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachInterfaceDeclare, this), kScriptNodeInterface);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassDeclare, this), kScriptNodeClass);
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassVariableDeclare, this), kScriptNodeVariable);
 
 	/*	Constant declare. That block allocate memory
 		for constant variables and push it to root
@@ -198,6 +203,64 @@ Void ScopeBuilder::_ForEachClassDeclare(NodePtr n) {
 
 	if (!n->var) {
 		PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->typeNode->word.data());
+	}
+
+	if (n->typeNode->templateNode) {
+		ClassPtr classT = n->var->Scope::Add(this->scope->classObject->Clone(
+			n->typeNode->templateNode->word, n->var))->SetModificator(Object::Modificator::Private)->GetClass();
+		n->var->SetTemplateClass(classT);
+	}
+}
+
+Void ScopeBuilder::_ForEachClassVariableDeclare(NodePtr n) {
+
+	ObjectPtr typeClass;
+
+	if (!(n->parent && n->parent->id == kScriptNodeClass)) {
+		return;
+	}
+
+	if (!n->typeNode) {
+		if (!(typeClass = scope->Find(n->word))) {
+			PostSyntaxError(n->lex->line, "Undeclared variable (%s)", n->word.data());
+		}
+		n->var = typeClass;
+		typeClass = typeClass->GetClass();
+	}
+	else {
+		typeClass = scope->Find(n->typeNode->word);
+	}
+
+	if (!typeClass) {
+		PostSyntaxError(n->lex->line, "Undeclared type (%s)", n->typeNode->word.data());
+	}
+
+	if ((n->flags & kScriptFlagArray) != 0) {
+		LAME_TODO("Add array support!");
+	}
+	else if (!n->var) {
+		n->var = scope->Add(new Variable(n->word, scope, typeClass->GetClass()));
+	}
+
+	if (!n->var) {
+		PostSyntaxError(n->lex->line, "Variable redeclaration (%s)", n->word.data());
+	}
+
+	if (n->typeNode && n->typeNode->templateNode) {
+		if (!typeClass->GetTemplateClass()) {
+			PostSyntaxError(n->lex->line, "Class (%s) non-template", typeClass->GetName().data());
+		}
+		ObjectPtr classT = n->var->Find(n->typeNode->templateNode->word);
+		if (!classT) {
+			PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->typeNode->templateNode->word.data());
+		}
+		if (classT->CheckModificator(Class::Modificator::Primitive)) {
+			PostSyntaxError(n->lex->line, "Template class mustn't be primitive type (%s)", n->templateNode->word.data());
+		}
+		ClassPtr classT2 = classT->GetClass();
+		n->var->Scope::Add(classT->Clone(
+			typeClass->GetTemplateClass()->GetName(), n->var));
+		n->var->SetTemplateClass(classT2);
 	}
 }
 
@@ -318,7 +381,6 @@ Void ScopeBuilder::_ForEachConstDeclare(NodePtr n) {
 
 Void ScopeBuilder::_ForEachMethodDeclare(NodePtr n) {
 
-	ObjectPtr templateClass;
 	ObjectPtr returnType;
 	ObjectPtr methodObject;
 	Vector<ClassPtr> methodAttributes;
@@ -346,6 +408,11 @@ Void ScopeBuilder::_ForEachMethodDeclare(NodePtr n) {
 		PostSyntaxError(n->lex->line, "Method redeclaration (%s)", n->word.data());
 	}
 
+	if (methodObject->GetName() == this->scope->GetName() && !returnType->IsVoid()) {
+		PostSyntaxError(n->lex->line, "You can't declare custom constructor (%s) with another return type (%s)",
+			methodObject->GetName().data(), returnType->GetName().data());
+	}
+
 	n->var = methodObject;
 	methodObject->GetMethod()->SetRootNode(n);
 	n->methodHash = methodObject->GetMethod()->GetInvokeHash();
@@ -367,14 +434,40 @@ Void ScopeBuilder::_ForEachMethodRegister(NodePtr n) {
 			methodObject->Scope::Add(new Variable("this", methodObject, ClassPtr(methodObject->GetParent())));
 		}
 	}
+
+	if (!methodObject->GetMethod()->GetReturnType()->IsVoid()) {
+		Bool isReturnFound = FALSE;
+		for (NodePtr n : methodObject->GetNode()->blockList) {
+			if (n->lex->lex->id == kScriptLexReturn) {
+				isReturnFound = TRUE;
+				n->lex->args = 1;
+				break;
+			}
+		}
+		if (!isReturnFound) {
+			PostSyntaxError(n->lex->line, "Non-void method (%s) must return (%s)", methodObject->GetName().data(), methodObject->GetMethod()->GetReturnType()->GetName().data());
+		}
+	}
+	else {
+		for (NodePtr n : methodObject->GetNode()->blockList) {
+			if (n->lex->lex->id == kScriptLexReturn) {
+				n->lex->args = 0;
+				break;
+			}
+		}
+	}
 }
 
 Void ScopeBuilder::_ForEachVariableDeclare(NodePtr n) {
 
-	ObjectPtr templateClass;
 	ObjectPtr typeClass;
 
 	if (n->id == kScriptNodeVariable) {
+
+		if (n->parent && n->parent->id == kScriptNodeClass) {
+			return;
+		}
+
 		if (!n->typeNode) {
 			if (!(typeClass = scope->Find(n->word))) {
 				PostSyntaxError(n->lex->line, "Undeclared variable (%s)", n->word.data());
@@ -392,23 +485,30 @@ Void ScopeBuilder::_ForEachVariableDeclare(NodePtr n) {
 
 		if ((n->flags & kScriptFlagArray) != 0) {
 			LAME_TODO("Add array support!");
-			//n->var = scope->Add(new Array(n->word, n, typeClass));
 		}
 		else if (!n->var) {
 			n->var = scope->Add(new Variable(n->word, scope, typeClass->GetClass()));
-			if (!n->var) {
-				PostSyntaxError(n->lex->line, "Variable redeclaration (%s)", n->word.data());
-			}
 		}
 
-		if (n->templateNode) {
-			if (!(templateClass = scope->Find(n->templateNode->word))) {
-				PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->templateNode->word.data());
+		if (!n->var) {
+			PostSyntaxError(n->lex->line, "Variable redeclaration (%s)", n->word.data());
+		}
+
+		if (n->typeNode && n->typeNode->templateNode) {
+			if (!typeClass->GetTemplateClass()) {
+				PostSyntaxError(n->lex->line, "Class (%s) non-template", typeClass->GetName().data());
 			}
-			else if (templateClass->CheckModificator(Class::Modificator::Primitive)) {
+			ObjectPtr classT = n->var->Find(n->typeNode->templateNode->word);
+			if (!classT) {
+				PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->typeNode->templateNode->word.data());
+			}
+			if (classT->CheckModificator(Class::Modificator::Primitive)) {
 				PostSyntaxError(n->lex->line, "Template class mustn't be primitive type (%s)", n->templateNode->word.data());
 			}
-			n->var->SetTemplateClass(templateClass->GetClass());
+			ClassPtr classT2 = classT->GetClass();
+			n->var->Scope::Add(classT->Clone(
+				typeClass->GetTemplateClass()->GetName(), n->var));
+			n->var->SetTemplateClass(classT2);
 		}
 	}
 	else if (n->id == kScriptNodeDefault) {

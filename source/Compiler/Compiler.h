@@ -1,9 +1,8 @@
 #ifndef __LAME_COMPILER_COMPILER__
 #define __LAME_COMPILER_COMPILER__
 
-#include "Analizer.h"
+#include "CodeAnalizer.h"
 #include "Define.h"
-#include "Translator.h"
 #include "Register.h"
 #include "LowLevelStack.h"
 

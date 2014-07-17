@@ -113,7 +113,7 @@ LowLevelStack::LowLevelStack() :
 
 RegisterPtr LowLevelStack::FindRegister(Type type) {
 
-	Core::USet<RegisterPtr>& list =
+	Core::Set<RegisterPtr>& list =
 		type == Type::Float   ? this->fRegList :
 		type == Type::Integer ? this->iRegList : this->pRegList;
 

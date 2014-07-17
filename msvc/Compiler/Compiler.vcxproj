@@ -216,20 +216,24 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\source\Compiler\Analizer.cpp" />
+    <ClCompile Include="..\..\source\Compiler\Assembler.cpp" />
+    <ClCompile Include="..\..\source\Compiler\CodeAnalizer.cpp" />
     <ClCompile Include="..\..\source\Compiler\Compiler.cpp" />
     <ClCompile Include="..\..\source\Compiler\Define.cpp" />
     <ClCompile Include="..\..\source\Compiler\Internal.cpp" />
     <ClCompile Include="..\..\source\Compiler\LowLevelStack.cpp" />
     <ClCompile Include="..\..\source\Compiler\Register.cpp" />
+    <ClCompile Include="..\..\source\Compiler\VirtualAnalizer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\source\Compiler\Analizer.h" />
+    <ClInclude Include="..\..\source\Compiler\Assembler.h" />
+    <ClInclude Include="..\..\source\Compiler\CodeAnalizer.h" />
     <ClInclude Include="..\..\source\Compiler\Compiler.h" />
     <ClInclude Include="..\..\source\Compiler\Define.h" />
     <ClInclude Include="..\..\source\Compiler\Internal.h" />
     <ClInclude Include="..\..\source\Compiler\LowLevelStack.h" />
     <ClInclude Include="..\..\source\Compiler\Register.h" />
+    <ClInclude Include="..\..\source\Compiler\VirtualAnalizer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

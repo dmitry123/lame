@@ -27,7 +27,7 @@ public:
 	~Class();
 public:
 	Bool Equal(ObjectPtrC object) override;
-	ObjectPtr Clone(BufferRefC name) override;
+	ObjectPtr Clone(BufferRefC name, ObjectPtr parent) override;
 	Void Trace(Uint32 offset) override;
 	HashType Hash(Void) override;
 	Uint32 Size(Void) override;

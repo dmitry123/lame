@@ -124,9 +124,9 @@ Bool Variable::Equal(ObjectPtrC object) {
 	}
 }
 
-ObjectPtr Variable::Clone(BufferRefC name) {
+ObjectPtr Variable::Clone(BufferRefC name, ObjectPtr parent) {
 
-	VariablePtr newVariable = new Variable(name, this, this->GetClassType());
+	VariablePtr newVariable = new Variable(name, parent, this->GetClassType());
 
 	if (this->varType == Var::Object) {
 		newVariable->SetObject(this->objectValue);

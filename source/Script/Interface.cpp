@@ -33,10 +33,10 @@ Bool Interface::Equal(ObjectPtrC object) {
 	return this->Hash() == object->Hash();
 }
 
-ObjectPtr Interface::Clone(BufferRefC name) {
+ObjectPtr Interface::Clone(BufferRefC name, ObjectPtr parent) {
 
 	InterfacePtr newInterface
-		= new Interface(name, this);
+		= new Interface(name, parent);
 
 	newInterface->Move(this);
 

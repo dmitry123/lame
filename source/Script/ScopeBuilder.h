@@ -29,6 +29,7 @@ private:
 	Void _ForEachClassPrototype(NodePtr n);
 	Void _ForEachInterfacePrototype(NodePtr n);
 	Void _ForEachClassDeclare(NodePtr n);
+	Void _ForEachClassVariableDeclare(NodePtr n);
 	Void _ForEachInterfaceDeclare(NodePtr n);
 	Void _ForEachClassInherit(NodePtr n);
 	Void _ForEachInterfaceInherit(NodePtr n);

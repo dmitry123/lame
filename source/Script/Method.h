@@ -17,7 +17,7 @@ public:
 	MethodPtr GetMethod() override;
 public:
 	Bool Equal(ObjectPtrC object) final override;
-	ObjectPtr Clone(BufferRefC name) final override;
+	ObjectPtr Clone(BufferRefC name, ObjectPtr parent) final override;
 	Void Trace(Uint32 offset) final override;
 	HashType Hash(Void) final override;
 	Uint32 Size(Void) final override;
@@ -26,18 +26,13 @@ public:
 	Void SetNativeMethod(NativeMethod method);
 	Void Invoke(Vector<VariablePtr> attributes = {});
 public:
-	Void SetThis(ObjectPtr thisClass) {
-		this->thisClass = thisClass;
-	}
-	Void SetReturnType(ClassPtr returnClass) {
-		this->returnClass = returnClass;
-	}
-	inline Void SetRootNode(NodePtr node) {
-		this->rootNode = node;
-	}
-public:
-	inline NodePtr GetRootNode() { return this->rootNode; }
+	Void SetThis(ObjectPtr thisClass) { this->thisClass = thisClass; }
 	inline ObjectPtr GetThis() { return this->thisClass; }
+	Void SetReturnType(ClassPtr returnClass) { this->returnClass = returnClass; }
+	inline ClassPtr GetReturnType() { return this->returnClass; }
+	inline Void SetRootNode(NodePtr node) { this->rootNode = node; }
+	inline NodePtr GetRootNode() { return this->rootNode; }
+public:
 	inline NativeMethod GetNativeMethod() { return this->nativeMethod; }
 	inline Uint32 GetInvokeHash() { return this->invokeHash; }
 public:

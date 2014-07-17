@@ -6,12 +6,15 @@
 #define SOURCE_LINK "/Storage/code/C++/Projects/lame/source/"
 #endif
 
-#define CORE_LINK SOURCE_LINK "Core"
-#define SCRIPT_LINK SOURCE_LINK "Script"
-#define RM_LINK SOURCE_LINK "ResourceManager"
-#define CONSOLE_LINK SOURCE_LINK "Console"
-#define COUNTER_LINK SOURCE_LINK "Counter"
+#define CORE_LINK SOURCE_LINK     "Core"
+#define SCRIPT_LINK SOURCE_LINK   "Script"
+#define RM_LINK SOURCE_LINK       "ResourceManager"
+#define CONSOLE_LINK SOURCE_LINK  "Console"
+#define COUNTER_LINK SOURCE_LINK  "Counter"
 #define COMPILER_LINK SOURCE_LINK "Compiler"
+#define TEST_LINK SOURCE_LINK     "Test"
+#define VM_LINK SOURCE_LINK       "VirtualMachine"
+
 #define EXTENSION_FILTER "cpp&h&c"
 
 using namespace Lame::Core;
@@ -42,56 +45,81 @@ Uint32 GetCountOfLines(List<Buffer>* list) {
 }
 
 Void PrintCountOfLines(StringC name, Uint32 lines) {
-	printf("%s : %d\n", name, lines);
+	printf("| %s | %d", name, lines);
+	if (lines < 10) {
+		printf("     ");
+	}
+	else if (lines < 100) {
+		printf("    ");
+	}
+	else if (lines < 1000) {
+		printf("   ");
+	}
+	else if (lines < 10000) {
+		printf("  ");
+	}
+	else if (lines < 100000) {
+		printf(" ");
+	}
+	printf("|\n");
 }
 
 int main() {
 
 	Uint32 totalLines = 0;
 	Uint32 lines = 0;
+	List<Buffer> list;
+
+	puts("+------------------+");
 
 	try {
-		List<Buffer> coreList = Directory::GetFilesAtPath(CORE_LINK, EXTENSION_FILTER);
-
-		lines = GetCountOfLines(&coreList);
+		list = Directory::GetFilesAtPath(CORE_LINK, EXTENSION_FILTER);
+		lines = GetCountOfLines(&list);
 		totalLines += lines;
-		PrintCountOfLines("Core", lines);
+		PrintCountOfLines("Core    ", lines);
 
-		List<Buffer> scriptList = Directory::GetFilesAtPath(SCRIPT_LINK, EXTENSION_FILTER);
-
-		lines = GetCountOfLines(&scriptList);
+		list = Directory::GetFilesAtPath(SCRIPT_LINK, EXTENSION_FILTER);
+		lines = GetCountOfLines(&list);
 		totalLines += lines;
-		PrintCountOfLines("Script", lines);
+		PrintCountOfLines("Script  ", lines);
 
-		List<Buffer> consoleList = Directory::GetFilesAtPath(CONSOLE_LINK, EXTENSION_FILTER);
-
-		lines = GetCountOfLines(&consoleList);
+		list = Directory::GetFilesAtPath(CONSOLE_LINK, EXTENSION_FILTER);
+		lines = GetCountOfLines(&list);
 		totalLines += lines;
-		PrintCountOfLines("Console", lines);
+		PrintCountOfLines("Console ", lines);
 
-		List<Buffer> counterList = Directory::GetFilesAtPath(COUNTER_LINK, EXTENSION_FILTER);
-
-		lines = GetCountOfLines(&counterList);
+		list = Directory::GetFilesAtPath(COUNTER_LINK, EXTENSION_FILTER);
+		lines = GetCountOfLines(&list);
 		totalLines += lines;
-		PrintCountOfLines("Counter", lines);
+		PrintCountOfLines("Counter ", lines);
 
-		List<Buffer> rmList = Directory::GetFilesAtPath(RM_LINK, EXTENSION_FILTER);
-
-		lines = GetCountOfLines(&rmList);
+		list = Directory::GetFilesAtPath(RM_LINK, EXTENSION_FILTER);
+		lines = GetCountOfLines(&list);
 		totalLines += lines;
-		PrintCountOfLines("ResourceManager", lines);
+		PrintCountOfLines("Resource", lines);
 
-		List<Buffer> compilerList = Directory::GetFilesAtPath(COMPILER_LINK, EXTENSION_FILTER);
-
-		lines = GetCountOfLines(&compilerList);
+		list = Directory::GetFilesAtPath(COMPILER_LINK, EXTENSION_FILTER);
+		lines = GetCountOfLines(&list);
 		totalLines += lines;
 		PrintCountOfLines("Compiler", lines);
+
+		list = Directory::GetFilesAtPath(TEST_LINK, EXTENSION_FILTER);
+		lines = GetCountOfLines(&list);
+		totalLines += lines;
+		PrintCountOfLines("Test    ", lines);
+
+		list = Directory::GetFilesAtPath(VM_LINK, EXTENSION_FILTER);
+		lines = GetCountOfLines(&list);
+		totalLines += lines;
+		PrintCountOfLines("Machine ", lines);
 	}
 	catch (Exception& e) {
 		e.Debug(Console::GetInstance());
 	}
 
-	PrintCountOfLines("Total", totalLines);
+	puts("+------------------+");
+	PrintCountOfLines("Total   ", totalLines);
+	puts("+------------------+");
 
 #if defined(LAME_WINDOWS)
 	puts("");

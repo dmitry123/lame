@@ -42,12 +42,12 @@ Map<LexID, Lex> Lex::lexMap = {
 			{ "]", P(2, 0), kScriptLexBracketR, 0,
 				kScriptLexFlagRight }
 		},
-		{ kScriptLexParentheseL,
-			{ "(", P(2, 0), kScriptLexParentheseL, 0,
+		{ kScriptLexParenthesisL,
+			{ "(", P(2, 0), kScriptLexParenthesisL, 0,
 				kScriptLexFlagRight }
 		},
-		{ kScriptLexParentheseR,
-			{ ")", P(2, 0), kScriptLexParentheseR, 0,
+		{ kScriptLexParenthesisR,
+			{ ")", P(2, 0), kScriptLexParenthesisR, 0,
 				kScriptLexFlagRight }
 		},
 		{ kScriptLexArray,
@@ -113,7 +113,7 @@ Map<LexID, Lex> Lex::lexMap = {
 				kScriptLexFlagRight | kScriptLexFlagMath }	
 		},
 		{ kScriptLexNew,
-			{ "new", P(3, 0), kScriptLexNew, 1,
+			{ "new", P(3, 1), kScriptLexNew, 1,
 				kScriptLexFlagRight | kScriptLexFlagLanguage }
 		},
 		

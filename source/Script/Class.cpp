@@ -29,10 +29,14 @@ Bool Class::Equal(ObjectPtrC object) {
 	return this->Hash() == object->Hash();
 }
 
-ObjectPtr Class::Clone(BufferRefC name) {
+ObjectPtr Class::Clone(BufferRefC name, ObjectPtr parent) {
 
-	this->IncRef();
-	return this;
+	ClassPtr newClass =
+		new Class(name, parent);
+
+	this->Move(newClass);
+
+	return newClass;
 }
 
 Void Class::Trace(Uint32 offset) {

@@ -57,9 +57,9 @@ public:
 		return &this->registerScope;
 	}
 private:
-	Core::USet<RegisterPtr> iRegList;
-	Core::USet<RegisterPtr> fRegList;
-	Core::USet<RegisterPtr> pRegList;
+	Core::Set<RegisterPtr> iRegList;
+	Core::Set<RegisterPtr> fRegList;
+	Core::Set<RegisterPtr> pRegList;
 	Script::Scope registerScope;
 };
 

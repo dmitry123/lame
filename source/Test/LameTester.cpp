@@ -7,10 +7,9 @@ ScopePtr LameTester::Test(StringC fileName) {
 	try {
 		fileParser.Load(fileName);
 		nodeBuilder.Build(&fileParser);
-		codeAnalizer.Overload(rootScope);
 		lowLevelStack = new LowLevelStack();
 		scopeBuilder.Build(&nodeBuilder, rootScope);
-		codeAnalizer.Analize(lowLevelStack, &nodeBuilder);
+		codeAnalizer.Analize(lowLevelStack, &nodeBuilder, rootScope);
 	}
 	catch (SyntaxException& e) {
 		Assert::Fail(_StrToWstr(e.GetErrorBuffer()));

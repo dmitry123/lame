@@ -116,7 +116,7 @@ Void Scope::Merge(ScopePtrC scope) {
 	}
 
 	for (auto& i : scope->hashMap_) {
-		this->Add(i.second->Clone(i.second->GetName()));
+		this->Add(i.second->Clone(i.second->GetName(), ObjectPtr(scope)));
 	}
 }
 
