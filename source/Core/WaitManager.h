@@ -13,9 +13,7 @@ class LAME_API WaitManager {
 private:
 	typedef Timer::Proc Proc;
 public:
-	static WaitManagerPtr GetDefaultWaitManager() {
-		return defaultWaitManager;
-	}
+	static WaitManagerPtr GetDefaultWaitManager();
 public:
 	Void Append(Proc callback, Uint32 interval);
 	Void Remove(TimerPtr timer);
@@ -41,8 +39,6 @@ private:
 public:
 	WaitManager();
 	~WaitManager();
-private:
-	static WaitManagerPtr defaultWaitManager;
 private:
 	Thread thread;
 	Map<Clock, Set<TimerPtr>> timerList;

@@ -621,7 +621,6 @@ Bool TgaLoader::Load(StringC fileName) {
 	texInfo->BuildFileInfo(fileName);
 
 	i = 0;
-	j = 0;
 	n = 0;
 	skipOver = 0;
 

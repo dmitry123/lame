@@ -13,7 +13,7 @@ Map<LexID, Lex> Lex::lexMap = {
 				kScriptLexFlagRight | kScriptLexFlagUnknown }
 		},
 
-		/* Variable/Constants */
+		/* Constants */
 
 		{ kScriptLexInt, {
 			"#", P(0, 1), kScriptLexInt, 0,
@@ -27,9 +27,9 @@ Map<LexID, Lex> Lex::lexMap = {
 			"#", P(0, 1), kScriptLexString, 0,
 				kScriptLexFlagRight | kScriptLexFlagConst }
 		},
-		{ kScriptLexCast, {
-			"#", P(3, 1), kScriptLexCast, 0,
-				kScriptLexFlagRight | kScriptLexFlagUnknown }
+		{ kScriptLexCharacter, {
+			"#", P(0, 1), kScriptLexCharacter, 0,
+				kScriptLexFlagRight | kScriptLexFlagConst }
 		},
 
 		/* Brackets */
@@ -50,6 +50,13 @@ Map<LexID, Lex> Lex::lexMap = {
 			{ ")", P(2, 0), kScriptLexParenthesisR, 0,
 				kScriptLexFlagRight }
 		},
+
+		/* Specials */
+
+		{ kScriptLexCast, {
+			"#", P(3, 1), kScriptLexCast, 0,
+				kScriptLexFlagRight | kScriptLexFlagUnknown }
+		},
 		{ kScriptLexArray,
 			{ "[]", P(0, 0), kScriptLexArray, 0,
 				kScriptLexFlagRight }
@@ -59,18 +66,14 @@ Map<LexID, Lex> Lex::lexMap = {
 				kScriptLexFlagRight }
 		},
 
-		/* Selection Directed/Mediated */
+		/* Selection */
 
 		{ kScriptLexDirected,
 			{ ".", P(2, 0), kScriptLexDirected, 2,
 				kScriptLexFlagRight }
 		},
-		{ kScriptLexMediated,
-			{ "->", P(2, 1), kScriptLexMediated, 2,
-				kScriptLexFlagRight }
-		},
 
-		/* Single-Arguments Operators */
+		/* Unary Operators */
 
 		{ kScriptLexIncrement,
 			{ "++", P(2, 0), kScriptLexIncrement, 1,
@@ -88,8 +91,8 @@ Map<LexID, Lex> Lex::lexMap = {
 			{ "--", P(3, 1), kScriptLexPrefixDecrement, 1,
 				kScriptLexFlagLeft | kScriptLexFlagMath }
 		},
-		{ kScriptLexSizeof,
-			{ "sizeof", P(3, 0), kScriptLexSizeof, 1,
+		{ kScriptLexInstanceof,
+			{ "instanceof", P(3, 0), kScriptLexInstanceof, 1,
 				kScriptLexFlagRight }
 		},
 		{ kScriptLexReturn,
@@ -125,7 +128,7 @@ Map<LexID, Lex> Lex::lexMap = {
 		},
 		{ kScriptLexElse,
 			{ "else", P(0, 1), kScriptLexElse, 0,
-				kScriptLexFlagCondition | kScriptLexFlagLanguage | kScriptLexFlagWoParenthese }
+				kScriptLexFlagCondition | kScriptLexFlagLanguage | kScriptLexFlagWoParentheses }
 		},
 		{ kScriptLexWhile,
 			{ "while", P(0, 1), kScriptLexWhile, 1,
@@ -133,26 +136,26 @@ Map<LexID, Lex> Lex::lexMap = {
 		},
 		{ kScriptLexDo,
 			{ "do", P(0, 1), kScriptLexDo, 0,
-				kScriptLexFlagCondition | kScriptLexFlagLanguage | kScriptLexFlagWoParenthese }
+				kScriptLexFlagCondition | kScriptLexFlagLanguage | kScriptLexFlagWoParentheses }
 		},
 		{ kScriptLexFor,
-			{ "for", P(0, 1), kScriptLexFor, 3,
+			{ "for", P(0, 1), kScriptLexFor, 0,
 				kScriptLexFlagCondition | kScriptLexFlagLanguage }
 		},
 		{ kScriptLexTry,
 			{ "try", P(0, 1), kScriptLexTry, 0,
-				kScriptLexFlagCondition | kScriptLexFlagLanguage | kScriptLexFlagWoParenthese }
+				kScriptLexFlagCondition | kScriptLexFlagLanguage | kScriptLexFlagWoParentheses }
 		},
 		{ kScriptLexCatch,
-			{ "catch", P(0, 1), kScriptLexCatch, 1,
+			{ "catch", P(0, 1), kScriptLexCatch, 0,
 				kScriptLexFlagCondition | kScriptLexFlagLanguage }
 		},
 		{ kScriptLexFinally,
 			{ "finally", P(0, 1), kScriptLexFinally, 0,
-				kScriptLexFlagCondition | kScriptLexFlagLanguage | kScriptLexFlagWoParenthese }
+				kScriptLexFlagCondition | kScriptLexFlagLanguage | kScriptLexFlagWoParentheses }
 		},
 
-		/* Math-Operators */
+		/* Binary Operators */
 
 		{ kScriptLexMul,
 			{ "*", P(5, 1), kScriptLexMul, 2,
@@ -176,23 +179,23 @@ Map<LexID, Lex> Lex::lexMap = {
 		},
 		{ kScriptLexBitShiftL,
 			{ "<<", P(7, 1), kScriptLexBitShiftL, 2,
-				kScriptLexFlagRight | kScriptLexFlagMath }
+				kScriptLexFlagRight | kScriptLexFlagMath | kScriptLexFlagLogic }
 		},
 		{ kScriptLexBitShiftR,
 			{ ">>", P(7, 1), kScriptLexBitShiftR, 2,
-				kScriptLexFlagRight | kScriptLexFlagMath }
+				kScriptLexFlagRight | kScriptLexFlagMath | kScriptLexFlagLogic }
 		},
 		{ kScriptLexBitAnd,
 			{ "&", P(10, 1), kScriptLexBitAnd, 2,
-				kScriptLexFlagRight | kScriptLexFlagMath }
+				kScriptLexFlagRight | kScriptLexFlagMath | kScriptLexFlagLogic }
 		},
 		{ kScriptLexBitXor,
 			{ "^", P(11, 1), kScriptLexBitXor, 2,
-				kScriptLexFlagRight | kScriptLexFlagMath }
+				kScriptLexFlagRight | kScriptLexFlagMath | kScriptLexFlagLogic }
 		},
 		{ kScriptLexBitOr,
 			{ "|", P(12, 1), kScriptLexBitOr, 2,
-				kScriptLexFlagRight | kScriptLexFlagMath }
+				kScriptLexFlagRight | kScriptLexFlagMath | kScriptLexFlagLogic }
 		},
 		{ kScriptLexSet,
 			{ "=", P(16, 1), kScriptLexSet, 2,
@@ -220,27 +223,24 @@ Map<LexID, Lex> Lex::lexMap = {
 		},
 		{ kScriptLexBitShiftSetL,
 			{ "<<=", P(16, 1), kScriptLexBitShiftSetL, 2,
-				kScriptLexFlagLeft | kScriptLexFlagMath }
+				kScriptLexFlagLeft | kScriptLexFlagMath | kScriptLexFlagLogic }
 		},
 		{ kScriptLexBitShiftSetR,
 			{ ">>=", P(16, 1), kScriptLexBitShiftSetR, 2,
-				kScriptLexFlagLeft | kScriptLexFlagMath }
+				kScriptLexFlagLeft | kScriptLexFlagMath | kScriptLexFlagLogic }
 		},
 		{ kScriptLexBitAndSet,
 			{ "&=", P(16, 1), kScriptLexBitAndSet, 2,
-				kScriptLexFlagLeft | kScriptLexFlagMath }
+				kScriptLexFlagLeft | kScriptLexFlagMath | kScriptLexFlagLogic }
 		},
 		{ kScriptLexBitXorSet,
 			{ "^=", P(16, 1), kScriptLexBitXorSet, 2,
-				kScriptLexFlagLeft | kScriptLexFlagMath }
+				kScriptLexFlagLeft | kScriptLexFlagMath | kScriptLexFlagLogic }
 		},
 		{ kScriptLexBitOrSet,
 			{ "|=", P(16, 1), kScriptLexBitOrSet, 2,
-				kScriptLexFlagLeft | kScriptLexFlagMath }
+				kScriptLexFlagLeft | kScriptLexFlagMath | kScriptLexFlagLogic }
 		},
-
-		/* Boolean-Operators */
-
 		{ kScriptLexBellow,
 			{ "<", P(8, 1), kScriptLexBellow, 2,
 				kScriptLexFlagRight | kScriptLexFlagBool }
@@ -274,7 +274,7 @@ Map<LexID, Lex> Lex::lexMap = {
 				kScriptLexFlagRight | kScriptLexFlagBool }
 		},
 
-		// Special-Tokens
+		/* Others */
 
 		{ kScriptLexComma,
 			{ ",", P(18, 0), kScriptLexComma, 2,
@@ -304,6 +304,10 @@ Map<LexID, Lex> Lex::lexMap = {
 			{ ";", P(0, 0), kScriptLexSemicolon, 0,
 				kScriptLexFlagDefault }
 		},
+		{ kScriptLexColon,
+			{ ":", P(0, 0), kScriptLexColon, 0,
+				kScriptLexFlagDefault }
+		},
 		{ kScriptLexBraceL,
 			{ "{", P(0, 0), kScriptLexBraceL, 0,
 				kScriptLexFlagDefault }
@@ -313,7 +317,7 @@ Map<LexID, Lex> Lex::lexMap = {
 				kScriptLexFlagDefault }
 		},
 
-		/* Language-KeyWords */
+		/* Language Keywords */
 
 		{ kScriptLexClass,
 			{ "class", P(0, 0), kScriptLexClass, 0,

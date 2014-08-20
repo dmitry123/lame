@@ -1,13 +1,13 @@
-#ifndef __LAME_SCRIPT_REGISTER__
-#define __LAME_SCRIPT_REGISTER__
+#ifndef __LAME_COMPILER_REGISTER__
+#define __LAME_COMPILER_REGISTER__
 
 #include "Define.h"
 
 LAME_BEGIN2(Compiler)
 
-class LAME_API Register : public Script::Variable {
+class LAME_API Register : public Variable {
 public:
-	Register(Core::BufferRefC name, Script::ClassPtr classType) : Script::Variable(name, NULL, classType) {
+	Register(BufferRefC name, ClassPtr classType) : Variable(name, NULL, classType) {
 		this->isAvailable = TRUE;
 	}
 public:
@@ -27,4 +27,4 @@ private:
 
 LAME_END2
 
-#endif // ~__LAME_SCRIPT_REGISTER__
+#endif // ~__LAME_COMPILER_REGISTER__

@@ -7,6 +7,7 @@ LAME_BEGIN2(Script)
 
 class LAME_API Class : public Object {
 	friend class Variable;
+	friend class Interface;
 public:
 	Class(BufferRefC name, ScopePtr parent, Uint32 size = SizeOf);
 	~Class();
@@ -16,20 +17,12 @@ public:
 	Void Trace(Uint32 offset) override;
 	HashType Hash(Void) override;
 	Uint32 Size(Void) override;
-	Void Release(Void) override;
 	ClassPtr GetClass(Void) override;
 public:
-	inline Uint32 GetReferences() const { return *this->references; }
 	inline ObjectPtr GetExtend() { return this->extendClass; }
 	inline Set<ObjectPtr>& GetImplements() { return this->implementClass; }
 	inline Uint32 GetPriority() const { return this->priority; }
 public:
-	inline Bool DecRef(Void) {
-		return --(*this->references) == 0;
-	}
-	inline Void IncRef(Void) {
-		++(*this->references);
-	}
 	inline Void SetPriority(Uint32 priority) {
 		this->priority = priority;
 	}
@@ -40,10 +33,12 @@ public:
 	Void Extend(ObjectPtr object);
 	Void Implement(ObjectPtr object);
 	Void New(ObjectPtr object);
+    Void CheckInheritance(Void);
+private:
+	Class(BufferRefC name, ScopePtr parent, Type type, Uint32 size = SizeOf);
 private:
 	ObjectPtr extendClass;
 	Set<ObjectPtr> implementClass;
-	Uint32P references;
 	Uint32 priority;
 	Uint32 size;
 };

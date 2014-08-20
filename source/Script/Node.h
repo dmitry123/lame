@@ -19,7 +19,8 @@ typedef enum {
 	kScriptFlagArgumentList = 0x0200,
 	kScriptFlagTemplate = 0x0400,
 	kScriptFlagOverride = 0x0800,
-	kScriptFlagDeprecated = 0x1000
+	kScriptFlagDeprecated = 0x1000,
+	kScriptFlagForEach = 0x2000
 } FlagID;
 
 typedef enum {
@@ -28,6 +29,7 @@ typedef enum {
 	kScriptNodeFunction,
 	kScriptNodeVariable,
 	kScriptNodeClass,
+	kScriptNodeAnonymous,
 	kScriptNodeInterface,
 	kScriptNodeCondition,
 	kScriptNodeEntry,
@@ -51,8 +53,8 @@ public:
 	Vector<NodePtr> implementNode;
 	ObjectPtr var;
 	Uint32 flags;
-	Vector<NodePtr> argList;
-	Vector<NodePtr> blockList;
+	Deque<NodePtr> argList;
+	Deque<NodePtr> blockList;
 	Uint32 methodHash;
 public:
 	Node(Buffer word, NodeID id, LexNodePtr lex, NodePtr parent, NodePtr prev);

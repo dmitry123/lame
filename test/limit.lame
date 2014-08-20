@@ -1,0 +1,6 @@
+byte a = 0x7f;
+short b = 0x7fff;
+int c = 0x7fffffff;
+long d = 0x7fffffffffffffff;
+float e = 3.40282346E+38;
+double f = 1.7976931348623157E+308;

@@ -24,17 +24,17 @@ static Void _AllowModificators(NodePtr node, Uint32 modificators) {
 		Modificators parameter - is allowed modificators for current lex.
 		If something got wrong we will throw an exception with syntax error. */
 
-	if ((node->flags & kScriptFlagFinal) != 0 && !(modificators & kScriptFlagFinal) ||
-		(node->flags & kScriptFlagPublic) != 0 && !(modificators & kScriptFlagPublic) ||
-		(node->flags & kScriptFlagPrivate) != 0 && !(modificators & kScriptFlagPrivate) ||
-		(node->flags & kScriptFlagProtected) != 0 && !(modificators & kScriptFlagProtected) ||
-		(node->flags & kScriptFlagStatic) != 0 && !(modificators & kScriptFlagStatic) ||
-		(node->flags & kScriptFlagNative) != 0 && !(modificators & kScriptFlagNative) ||
-		(node->flags & kScriptFlagAbstract) != 0 && !(modificators & kScriptFlagAbstract) ||
-		(node->flags & kScriptFlagOverride) != 0 && !(modificators & kScriptFlagOverride) ||
-		(node->flags & kScriptFlagDeprecated) != 0 && !(modificators & kScriptFlagDeprecated)
+	if (((node->flags & kScriptFlagFinal) != 0 && !(modificators & kScriptFlagFinal)) ||
+		((node->flags & kScriptFlagPublic) != 0 && !(modificators & kScriptFlagPublic)) ||
+		((node->flags & kScriptFlagPrivate) != 0 && !(modificators & kScriptFlagPrivate)) ||
+		((node->flags & kScriptFlagProtected) != 0 && !(modificators & kScriptFlagProtected)) ||
+		((node->flags & kScriptFlagStatic) != 0 && !(modificators & kScriptFlagStatic)) ||
+		((node->flags & kScriptFlagNative) != 0 && !(modificators & kScriptFlagNative)) ||
+		((node->flags & kScriptFlagAbstract) != 0 && !(modificators & kScriptFlagAbstract)) ||
+		((node->flags & kScriptFlagOverride) != 0 && !(modificators & kScriptFlagOverride)) ||
+		((node->flags & kScriptFlagDeprecated) != 0 && !(modificators & kScriptFlagDeprecated))
 	) {
-		PostSyntaxError(node->lex->line, "Modificator in illegal place");
+		PostSyntaxError(node->lex->line, "Modificator in illegal place", 1);
 	}
 }
 
@@ -139,7 +139,7 @@ NodeBuilder::Iterator NodeBuilder::_BuildFunction(NodePtr& parent, Iterator i) {
 				goto __SaveNode;
 			}
 			if (this->nodeQueue_ == &parent->argList) {
-				PostSyntaxError((*i)->line, "Two similar parentheses in method arguments", 1);
+				PostSyntaxError((*i)->line, "Two similar parenthesis in method arguments", 1);
 			}
 			this->_Push(&parent->argList);
 			__Inc(i);
@@ -147,7 +147,7 @@ NodeBuilder::Iterator NodeBuilder::_BuildFunction(NodePtr& parent, Iterator i) {
 				if (!((*(i + 0))->lex->IsUnknown() &&
 					(*(i + 1))->lex->IsUnknown())
 				) {
-					PostSyntaxError((*i)->line, "Illegal token in method's arguments");
+					PostSyntaxError((*i)->line, "Illegal token in method's arguments", 1);
 				}
 				NodePtr var = this->_CreateNode(*(i + 1), kScriptNodeVariable);
 				var->Type(this->_CreateNode(*i, kScriptNodeDefault));
@@ -249,6 +249,14 @@ NodeBuilder::Iterator NodeBuilder::_BuildVariable(NodePtr& parent, Iterator i) {
 
 	__Inc(i);
 
+	if ((*i)->lex->id != kScriptLexSemicolon &&
+		(*i)->lex->id != kScriptLexColon &&
+		(*i)->lex->id != kScriptLexSet &&
+		(*i)->lex->id != kScriptLexComma
+	) {
+		goto _SkipWhile;
+	}
+
 	/*	Yep, if out parent is class then before building
 		variable's arguments we must save it's node in parent's
 		list with blocks. Why? Because our expresssion has next
@@ -265,12 +273,27 @@ NodeBuilder::Iterator NodeBuilder::_BuildVariable(NodePtr& parent, Iterator i) {
 
 	while (LAME_TRUE) {
 
+		/*	We can meet extra token in
+			expression, so we don't
+			have to parse variable anymore. */
+
+		if (!(*i)->lex->IsUnknown() &&
+			!(*i)->lex->IsConst() &&
+			!(*i)->lex->IsMath() &&
+			!(*i)->lex->IsBool() &&
+            !(*i)->lex->IsLanguage()
+		) {
+            LAME_TODO("No brake for cast, check out other ways");
+		}
+
 		/*	Interesting moment, semicolon or comma. We can
 			declare variable with one type, but divide it
 			with comma, likes int a, b; I don't know will
 			it works, but will tets it later. */
 
-		if ((*i)->lex->id == kScriptLexSemicolon) {
+		if ((*i)->lex->id == kScriptLexSemicolon ||
+			(*i)->lex->id == kScriptLexColon
+		) {
 			if ((*i)->lex->id == kScriptLexSemicolon) {
 				this->nodeQueue_->push_back(this->_CreateNode(*i, kScriptNodeDefault));
 			}
@@ -295,13 +318,17 @@ NodeBuilder::Iterator NodeBuilder::_BuildVariable(NodePtr& parent, Iterator i) {
 			prevNode = this->nodeQueue_->back();
 			i = this->_Build(this->nodeQueue_->back(), i);
 		}
-	__NextNode:
+		if ((*i)->lex->id == kScriptLexSemicolon) {
+			break;
+		}
 		if (++i == this->parser_->GetLexList().end()) {
 			PostSyntaxError((*(i - 1))->line, "Semicolon lost", 1);
 		}
 	}
 
 	this->_Pop();
+
+_SkipWhile:
 	parent->ShuntingYard();
 
 	return i;
@@ -314,11 +341,13 @@ NodeBuilder::Iterator NodeBuilder::_BuildClass(NodePtr& parent, Iterator i) {
 		be build in recursive _Build function. But appended to
 		class object. */
 
-	__Inc(i);
+	if (parent->id != kScriptNodeAnonymous) {
+		__Inc(i);
+	}
 
 	/*	If class hasn't name we will throw an exception */
 
-	if (!(*i)->lex->IsUnknown()) {
+	if (!(*i)->lex->IsUnknown() && parent->id != kScriptNodeAnonymous) {
 		PostSyntaxError((*i)->line, "Unable to create class without name", 1);
 	}
 
@@ -342,7 +371,9 @@ NodeBuilder::Iterator NodeBuilder::_BuildClass(NodePtr& parent, Iterator i) {
 		i = _BuildTemplate(parent->typeNode, i);
 	}
 
-	__Inc(i);
+	if (parent->id != kScriptNodeAnonymous) {
+		__Inc(i);
+	}
 
 	while (LAME_TRUE) {
 		
@@ -451,7 +482,7 @@ NodeBuilder::Iterator NodeBuilder::_BuildClass(NodePtr& parent, Iterator i) {
 		__SaveNode:
 			this->nodeQueue_->push_back(this->_CreateNode(*i, kScriptNodeDefault));
 			i = this->_Build(this->nodeQueue_->back(), i);
-			this->nodeQueue_->back()->flags = modificators;
+			this->nodeQueue_->back()->flags |= modificators;
 			modificators = 0;
 		}
 		if (++i == this->parser_->GetLexList().end()) {
@@ -468,7 +499,7 @@ NodeBuilder::Iterator NodeBuilder::_BuildClass(NodePtr& parent, Iterator i) {
 NodeBuilder::Iterator NodeBuilder::_BuildCondition(NodePtr& parent, Iterator i) {
 
 	/*	Condition is a lex, which builds node with condition block.
-		Condition block is every languages construction, with our scope,
+		Condition block is every languages construction with own scope
 		likes if/else/while/for/catch/try etc. Its one of the most difficult
 		thing, cuz it has many conditions in its building. */
 
@@ -477,15 +508,18 @@ NodeBuilder::Iterator NodeBuilder::_BuildCondition(NodePtr& parent, Iterator i) 
 	Uint32 extraParenseses = 0;
 	Uint32 modificators = 0;
 	Bool isSingleExpression = 0;
+	Uint32 expressionLength = 0;
+	Uint32 totalExpCount = 0;
+	Bool isForEach = 0;
 
 	parent->flags = this->modificators_;
 	_AllowModificators(parent, 0);
 	this->modificators_ = 0;
 
 	/*	Yep, we can avoid braces in our construction,
-		for example, 'while(true);', yep not allowed
+		for example, 'while(true);' - not allowed
 		construction for Java, cuz we must catch and
-		interruption, btw we have to implement it. */
+		interruption there, btw we have to implement it. */
 
 	if ((*i)->lex->id != kScriptLexBraceL && (
 		parent->lex->lex->id == kScriptLexElse ||
@@ -496,7 +530,7 @@ NodeBuilder::Iterator NodeBuilder::_BuildCondition(NodePtr& parent, Iterator i) 
 		goto __AvoidBraces;
 	}
 
-	/*	Some language construction has flag, that the can
+	/*	Some language construction has flag, which means that it can
 		exists without parentheses, likes try, else, finally.
 		We check it, cuz shunting yard alghoritm will simple
 		sort it without any exceptions. But we will have an
@@ -506,9 +540,9 @@ NodeBuilder::Iterator NodeBuilder::_BuildCondition(NodePtr& parent, Iterator i) 
 		or lua lanugages : 'if a > b' { ... }', but its Java and
 		not needed. */
 
-	if ((parent->lex->lex->flags & kScriptLexFlagWoParenthese) == 0) {
+	if ((parent->lex->lex->flags & kScriptLexFlagWoParentheses) == 0) {
 		if ((*i)->lex->id != kScriptLexParenthesisL) {
-			PostSyntaxError((*i)->line, "Left parenthesis has been lost");
+			PostSyntaxError((*i)->line, "Left parenthesis has been lost", 1);
 		}
 	}
 
@@ -525,7 +559,7 @@ NodeBuilder::Iterator NodeBuilder::_BuildCondition(NodePtr& parent, Iterator i) 
 
 		if ((*i)->lex->id == kScriptLexBraceL) {
 			if (this->nodeQueue_ == &parent->argList) {
-				PostSyntaxError((*i)->line, "Right parenthesis has been lost");
+				PostSyntaxError((*i)->line, "Right parenthesis has been lost", 1);
 			}
 			this->_Push(&parent->blockList);
 		}
@@ -536,6 +570,14 @@ NodeBuilder::Iterator NodeBuilder::_BuildCondition(NodePtr& parent, Iterator i) 
 			}
 			this->_Pop();
 			break;
+		}
+
+		/*	If we've met semicolon and parent
+			node name is 'for' then we are
+			working with foreach construction. */
+
+		else if ((*i)->lex->id == kScriptLexColon) {
+			isForEach = TRUE;
 		}
 
 		/*	Left/Right parentheses will build
@@ -580,8 +622,8 @@ NodeBuilder::Iterator NodeBuilder::_BuildCondition(NodePtr& parent, Iterator i) 
 		}
 
 		/*	Hmm, one more modificator condition, i don't
-			think that it will work. And why i've saved
-			final modificator for lanugage construction?
+			think that it will work. And why i left final
+			modificator for lanugage construction?
 			Likes : 'final if(1) { ... }', i'm too silly. */
 
 		else if ((*i)->lex->IsModificator()) {
@@ -598,6 +640,13 @@ NodeBuilder::Iterator NodeBuilder::_BuildCondition(NodePtr& parent, Iterator i) 
 			block. */
 
 		else if ((*i)->lex->id == kScriptLexSemicolon) {
+			if (parent->word == "for") {
+				if (expressionLength > 0) {
+					parent->lex->args++;
+				}
+				++totalExpCount;
+				expressionLength = 0;
+			}
 			if (!isSingleExpression) {
 				goto __SaveNode;
 			}
@@ -606,7 +655,7 @@ NodeBuilder::Iterator NodeBuilder::_BuildCondition(NodePtr& parent, Iterator i) 
 			break;
 		}
 
-		/*	As always else we will build other
+		/*	Else we will build other
 			nodes with _Build method. */
 
 		else {
@@ -615,8 +664,12 @@ NodeBuilder::Iterator NodeBuilder::_BuildCondition(NodePtr& parent, Iterator i) 
 			if (modificators) {
 				this->nodeQueue_->back()->flags = modificators;
 			}
+			++expressionLength;
 			modificators = 0;
 			i = this->_Build(this->nodeQueue_->back(), i);
+			if (this->nodeQueue_->back()->id == kScriptNodeVariable) {
+				__Dec(i);
+			}
 		}
 	__NextNode:
 		if (++i == this->parser_->GetLexList().end()) {
@@ -627,6 +680,19 @@ NodeBuilder::Iterator NodeBuilder::_BuildCondition(NodePtr& parent, Iterator i) 
 		}
 	}
 	parent->ShuntingYard();
+
+	if (isForEach) {
+		parent->lex->args = 2;
+		parent->flags |= kScriptFlagForEach;
+	}
+	else if (parent->word == "for") {
+		if (expressionLength > 0) {
+			parent->lex->args++;
+		}
+		if (++totalExpCount != 3) {
+			PostSyntaxError(parent->lex->line, "For construction must have 3 expressions (%d)", totalExpCount);
+		}
+	}
 
 	return i;
 }
@@ -708,6 +774,98 @@ NodeBuilder::Iterator NodeBuilder::_BuildTemplate(NodePtr& parent, Iterator i) {
 	return i;
 }
 
+NodeBuilder::Iterator NodeBuilder::_BuildCatch(NodePtr& parent, Iterator i) {
+
+	Iterator oldI = i;
+
+	__Inc(i);
+
+	while (TRUE) {
+		if ((*i)->lex->id == kScriptLexParenthesisL) {
+			this->_Push(&parent->argList);
+			__Inc(i);
+			while ((*i)->lex->id != kScriptLexParenthesisR) {
+				if (!((*(i + 0))->lex->IsUnknown() &&
+					(*(i + 1))->lex->IsUnknown())
+				) {
+					PostSyntaxError((*i)->line, "Illegal token in method's arguments (%s)", (*i)->word.data());
+				}
+				NodePtr var = this->_CreateNode(*(i + 1), kScriptNodeVariable);
+				var->Type(this->_CreateNode(*i, kScriptNodeDefault));
+				__Inc(i);
+				__Inc(i);
+				this->nodeQueue_->push_back(var);
+				if ((*i)->lex->id == kScriptLexComma) {
+					__Inc(i);
+				}
+			}
+			if (parent->argList.size() != 1) {
+				PostSyntaxError((*i)->line, "Catch must have one parameter", 1);
+			}
+			this->_Pop();
+			break;
+		}
+		else {
+			PostSyntaxError((*i)->line, "Illegal token as catch arguments (%s)", (*i)->word.data());
+		}
+	}
+
+	oldI = this->parser_->GetLexList().erase(oldI + 2);
+	oldI = this->parser_->GetLexList().erase(oldI) - 2;
+
+	return oldI;
+}
+
+NodeBuilder::Iterator NodeBuilder::_BuildNew(NodePtr& parent, Iterator i) {
+
+	/*	Why do we need to build operator new?
+		Cuz we can allocate memory for object, but
+		object may have anonimous classes, that mean
+		that we can't catch this condition in
+		build function. Anonymous class has next
+		view : new {class} {constructor} {body}, so
+		first we have to skip 'new', class name and it's
+		constructor. */
+    
+	NodePtr classNode = NULL;
+	Iterator classPosition;
+
+	/*	Skip new */
+	__Inc(i);
+
+	/*	Create class node */
+	classNode = this->_CreateNode(*i, kScriptNodeAnonymous);
+	this->nodeQueue_->push_back(classNode);
+	classPosition = i;
+	__Inc(i);
+	if (this->_IsTemplate(i)) {
+		i = this->_BuildTemplate(classNode, i - 1) + 1;
+	}
+	classNode->Type(classNode);
+	if ((*i)->lex->id != kScriptLexParenthesisL) {
+		PostSyntaxError((*i)->line, "Lost left parenthesis in constructor invoke (%s)", (*i)->word.data());
+	}
+	i = this->_SkipArguments(i - 1);
+	__Inc(i);
+
+	/*	If we have left brace here, then
+		we have anonymous class. Anonymous
+		class's type will be his own, cuz
+		later we will create scope for this
+		node, but it won't has name. */
+
+	if ((*i)->lex->id == kScriptLexBraceL) {
+		i = this->_BuildClass(classNode, i);
+	}
+    
+    /*  Scope builder requires class not
+        to have anonymous identifier. */
+    
+//    classNode->id = kScriptNodeDefault;
+
+	return i;
+}
+
 Uint32 NodeBuilder::_GetCountOfArguments(Iterator i) {
 
 	/*	Function have the same architecture
@@ -728,7 +886,8 @@ Uint32 NodeBuilder::_GetCountOfArguments(Iterator i) {
 			(*i)->lex->id == kScriptLexBracketL
 		) {
 			if (extraParenseses > 0) {
-				++extraParenseses; goto __NextNode;
+				++extraParenseses;
+				goto __NextNode;
 			}
 			else {
 				extraParenseses = 1;
@@ -737,7 +896,7 @@ Uint32 NodeBuilder::_GetCountOfArguments(Iterator i) {
 		else if (
 			(*i)->lex->id == kScriptLexParenthesisR ||
 			(*i)->lex->id == kScriptLexBracketR
-			) {
+		) {
 			if (extraParenseses == 1) {
 				break;
 			}
@@ -768,60 +927,114 @@ Uint32 NodeBuilder::_GetCountOfArguments(Iterator i) {
 	return argumentsCount;
 }
 
+NodeBuilder::Iterator NodeBuilder::_SkipArguments(Iterator i) {
+
+	/*	Function have the same architecture
+		that another builder, but it don't
+		store link to parent's node but
+		move pointer and calculates count of
+		arguments. It simplier then compute
+		it in argument blocks via command symbols etc. */
+
+	Uint32 extraParenseses = 0;
+
+	__Inc(i);
+
+	while (LAME_TRUE) {
+		if ((*i)->lex->id == kScriptLexParenthesisL ||
+			(*i)->lex->id == kScriptLexBracketL
+		) {
+			if (extraParenseses > 0) {
+				++extraParenseses;
+				goto __NextNode;
+			}
+			else {
+				extraParenseses = 1;
+			}
+		}
+		else if (
+			(*i)->lex->id == kScriptLexParenthesisR ||
+			(*i)->lex->id == kScriptLexBracketR
+		) {
+			if (extraParenseses == 1) {
+				break;
+			}
+			else {
+				--extraParenseses;
+			}
+		}
+		else {
+			this->nodeQueue_->push_back(this->_CreateNode(*i, kScriptNodeDefault));
+			i = this->_Build(this->nodeQueue_->back(), i);
+		}
+	__NextNode:
+		if (++i == this->parser_->GetLexList().end()) {
+			if (this->stackNodeQueue_.size()) {
+				PostSyntaxError((*(i - 1))->line, "Braces, Parentheses or Brackets mismatched", 1);
+			}
+			break;
+		}
+	}
+
+	return i;
+}
+
 NodeBuilder::Iterator NodeBuilder::_Build(NodePtr& node, Iterator i) {
 
 	/*	Array Lex : 'int[] array;' */
 
-	if (this->parser_->GetLexList().end() - i > 1 && (*(i + 1))->lex->id == kScriptLexArray) {
+	if (this->_IsArray(i + 1)) {
 		i = this->_BuildArray(node, i);
+	}
+
+	/*	New */
+
+	if (this->_IsNew(i)) {
+		i = this->_BuildNew(node, i);
 	}
 
 	/*	Argument List Lex : 'int... argumentList;' */
 
-	if (this->parser_->GetLexList().end() - i > 1 && (*(i + 1))->lex->id == kScriptLexArgumentList) {
-		i = this->_BuildArgumentList(node, i);
+	if (this->_IsArguments(i + 1)) {
+		i = this->_BuildArray(node, i);
 	}
 
 	/*	Fix for prefix increment/decrement. */
 
-	if ((*i)->lex->id == kScriptLexIncrement ||
-		(*i)->lex->id == kScriptLexDecrement
+	if (this->_CheckLex(i + 1, { kScriptLexIncrement }) ||
+		this->_CheckLex(i + 1, { kScriptLexDecrement })
 	) {
-		if ((*(i + 1))->lex->IsUnknown()) {
-			(*i)->priority = Lex::Find(kScriptLexPrefixIncrement)->priority;
-		}
-		else {
-			LexNodePtr lexNode = new LexNode((*(i - 1))->word, (*(i - 1))->line, Lex::Find(kScriptLexDefault));
-			i = this->parser_->GetLexList().insert(i, lexNode) + 1;
-			this->nodeQueue_->push_back(this->_CreateNode(lexNode, kScriptNodeDefault));
+		if (!(*(i + 2))->lex->IsUnknown()) {
+			if ((*(i + 1))->lex->id == kScriptLexIncrement) {
+				this->incStack_.push_back(*(i));
+			}
+			else {
+				this->decStack_.push_back(*(i));
+			}
+			i = this->parser_->GetLexList().erase(i + 1) - 1;
 		}
 	}
 
 	/*	Template Lex : 'Array<Object> objectArray;' */
 
-	if (this->parser_->GetLexList().end() - i > 3 &&
-		(*(i + 0))->lex->id == kScriptLexDefault &&
-		(*(i + 1))->lex->id == kScriptLexBellow &&
-		(*(i + 2))->lex->id == kScriptLexDefault &&
-		(*(i + 3))->lex->id == kScriptLexAbove
-	) {
+	if (this->_IsTemplate(i + 1)) {
 		i = _BuildTemplate(node, i);
 	}
 
 	/*	Fix for cast */
 
-	if (this->parser_->GetLexList().end() - i > 3 &&
-		(*(i + 1))->lex->id == kScriptLexParenthesisL &&
-		(*(i + 2))->lex->id == kScriptLexDefault &&
-		(*(i + 3))->lex->id == kScriptLexParenthesisR
-	) {
+	if (this->_IsCast(i + 1)) {
 		__Inc(i);
-		std::swap(*(i + 0), *(i + 1));
-		std::swap(*(i + 2), *(i + 3));
-		i = this->parser_->GetLexList().insert(i, new LexNode((*i)->word, (*i)->line, Lex::Find(kScriptLexCast)));
-		i = this->parser_->GetLexList().erase(i + 1);
+        __Inc(i);
+        LexNodePtr castLex = new LexNode((*i)->word, (*i)->line, Lex::Find(kScriptLexCast));
+        i = this->parser_->GetLexList().erase(i);
+        i = this->parser_->GetLexList().insert(i, castLex);
 		__Dec(i);
 		__Dec(i);
+	}
+
+	if ((*i)->lex->id == kScriptLexCatch) {
+		i = this->_BuildCatch(node, i);
 	}
 
 	if (node->lex->lex->IsLanguage()) {
@@ -878,46 +1091,23 @@ NodeBuilder::Iterator NodeBuilder::_Build(NodePtr& node, Iterator i) {
 	}
 	else {
 
-		if (this->parser_->GetLexList().end() - i > 2) {
-
-			/*	Method Lex : 'void foo(...) {...}' */
-
-			if ((*(i + 0))->lex->IsUnknown() &&
-				(*(i + 1))->lex->IsUnknown() &&
-				(*(i + 2))->lex->id == kScriptLexParenthesisL
-			) {
-				i = this->_BuildFunction(node, i);
-			}
-
-			/*	Variable Lex : 'int value = 0x7b;' */
-
-			else if (
-				(*(i + 0))->lex->IsUnknown() &&
-				(*(i + 1))->lex->IsUnknown() &&
-				((*(i + 2))->lex->id == kScriptLexSemicolon ||
-				(*(i + 2))->lex->id == kScriptLexSet ||
-				(*(i + 2))->lex->id == kScriptLexComma ||
-				(*(i + 2))->lex->id == kScriptLexParenthesisR)
-			) {
-				i = this->_BuildVariable(node, i);
-			}
+		if (this->_IsMethod(i)) {
+			i = this->_BuildFunction(node, i);
 		}
-
-		/*	Invoke/Alloc Fix : 'foo(100, 20, 3);' */
-
-		if (this->parser_->GetLexList().end() - i > 1) {
-			if ((*(i + 0))->lex->IsUnknown() &&
-				((*(i + 1))->lex->id == kScriptLexParenthesisL ||
-				 (*(i + 1))->lex->id == kScriptLexBracketL)
-			) {
-				if ((*(i + 1))->lex->id == kScriptLexParenthesisL) {
-					node->id = kScriptNodeInvoke;
-				}
-				else {
-					node->id = kScriptNodeAlloc;
-				}
-				node->lex->args = this->_GetCountOfArguments(i);
+		else if (this->_IsVariable(i)) {
+			i = this->_BuildVariable(node, i);
+		}
+		else if (
+			this->_IsInvoke(i) ||
+			this->_IsAlloc(i)
+		) {
+			if ((*(i + 1))->lex->id == kScriptLexParenthesisL) {
+				node->id = kScriptNodeInvoke;
 			}
+			else {
+				node->id = kScriptNodeAlloc;
+			}
+			node->lex->args = this->_GetCountOfArguments(i);
 		}
 	}
 
@@ -984,7 +1174,11 @@ NodePtr NodeBuilder::_CreateNode(LexNodePtrC lex, NodeID id) {
 
 	/*	Check node for 'power' and save its parent. */
 
-	if (node->lex->lex->IsCondition() || (node->lex->lex->IsLanguage() && node->lex->lex->id == kScriptLexClass)) {
+	if (node->lex->lex->IsCondition() || (
+            node->lex->lex->IsLanguage() &&
+            node->lex->lex->id == kScriptLexClass
+        ) || node->id == kScriptNodeAnonymous
+    ) {
 		this->prevNode_ = node;
 		this->parentNode_ = node;
 	}
@@ -1004,7 +1198,7 @@ NodePtr NodeBuilder::_RemoveNode(NodePtr node) {
 
 	if (node->parent) {
 
-		Vector<NodePtr>::iterator i = node->parent->blockList.begin();
+		Deque<NodePtr>::iterator i = node->parent->blockList.begin();
 
 		while (i != node->parent->blockList.end()) {
 			if (*i == node) {
@@ -1023,7 +1217,7 @@ NodePtr NodeBuilder::_RemoveNode(NodePtr node) {
 	return parent;
 }
 
-Void NodeBuilder::_Push(Vector<NodePtr>* stack) {
+Void NodeBuilder::_Push(Deque<NodePtr>* stack) {
 
 	/*	Push current node's stack to builder queueu.
 		It helps to generate tree like structure and
@@ -1035,7 +1229,9 @@ Void NodeBuilder::_Push(Vector<NodePtr>* stack) {
 	this->nodeQueue_ = stack;
 }
 
-Vector<NodePtr>* NodeBuilder::_Pop(Void) {
+Deque<NodePtr>* NodeBuilder::_Pop(Void) {
+
+	this->_ApplySemicolon();
 
 	/*	Pop current parent's stack from queue, that
 		means that we've finished building some
@@ -1051,8 +1247,122 @@ Vector<NodePtr>* NodeBuilder::_Pop(Void) {
 	return this->nodeQueue_;
 }
 
+Bool NodeBuilder::_CheckLex(Iterator i, Vector<LexID> lexList) {
+
+	Uint32 okCount = 0;
+
+	if (this->parser_->GetLexList().end() - i < (Sint32)lexList.size()) {
+		return FALSE;
+	}
+
+	for (LexID lexID : lexList) {
+		if (lexID != (*i++)->lex->id) {
+			if (okCount >= 3 && FALSE) {
+				PostSyntaxError((*i)->line, "Not finished expression at (%s) position", (*i)->word.data());
+			}
+			return FALSE;
+		}
+		else {
+			++okCount;
+		}
+		if (this->parser_->GetLexList().end() == i) {
+			PostSyntaxError((*(i - 1))->line, "Not finished expression at (%s) position", (*(i - 1))->word.data());
+		}
+	}
+
+	return TRUE;
+}
+
+Void NodeBuilder::_DeclareSequence(LexSequenceID id, Vector<LexID> lexList) {
+
+	if (sequenceList_.empty()) {
+		sequenceList_.resize(kScriptLexSequenceAmount);
+	}
+
+	sequenceList_[id] = lexList;
+}
+
+Bool NodeBuilder::_CheckSequence(Iterator i, LexSequenceID id) {
+
+	if (this->sequenceList_.empty() || this->sequenceList_[id].empty()) {
+		throw Exception("Unable to check iterator with empty sequence", 0);
+	}
+
+	return this->_CheckLex(i, this->sequenceList_[id]);
+}
+
+Void NodeBuilder::_ApplySemicolon(Void) {
+
+	static LexNode incLex("++", 0, Lex::Find(kScriptLexIncrement));
+	static LexNode decLex("--", 0, Lex::Find(kScriptLexDecrement));
+
+	for (LexNodePtr lexNode : this->incStack_) {
+		this->nodeQueue_->push_back(this->_CreateNode(&incLex, kScriptNodeDefault));
+		this->nodeQueue_->push_back(this->_CreateNode(lexNode, kScriptNodeDefault));
+	}
+
+	for (LexNodePtr lexNode : this->decStack_) {
+		this->nodeQueue_->push_back(this->_CreateNode(&decLex, kScriptNodeDefault));
+		this->nodeQueue_->push_back(this->_CreateNode(lexNode, kScriptNodeDefault));
+	}
+
+	this->incStack_.clear();
+	this->decStack_.clear();
+}
+
 NodeBuilder::NodeBuilder() {
+
 	this->_Reset();
+
+	this->_DeclareSequence(kScriptLexSequenceDefault, {
+		kScriptLexDefault
+	});
+
+	this->_DeclareSequence(kScriptLexSequenceArguments, {
+		kScriptLexArgumentList
+	});
+
+	this->_DeclareSequence(kScriptLexSequenceArray, {
+		kScriptLexArray
+	});
+
+	this->_DeclareSequence(kScriptLexSequenceTemplate, {
+		kScriptLexBellow,
+		kScriptLexDefault,
+		kScriptLexAbove
+	});
+
+	this->_DeclareSequence(kScriptLexSequenceCast, {
+		kScriptLexParenthesisL,
+		kScriptLexDefault,
+		kScriptLexParenthesisR
+	});
+
+	this->_DeclareSequence(kScriptLexSequenceMethod, {
+		kScriptLexDefault,
+		kScriptLexDefault,
+		kScriptLexParenthesisL
+	});
+
+	this->_DeclareSequence(kScriptLexSequenceVariable, {
+		kScriptLexDefault,
+		kScriptLexDefault
+	});
+
+	this->_DeclareSequence(kScriptLexSequenceInvoke, {
+		kScriptLexDefault,
+		kScriptLexParenthesisL
+	});
+
+	this->_DeclareSequence(kScriptLexSequenceAlloc, {
+		kScriptLexDefault,
+		kScriptLexBracketL
+	});
+
+	this->_DeclareSequence(kScriptLexSequenceNew, {
+		kScriptLexNew,
+		kScriptLexDefault
+	});
 }
 
 NodeBuilder::~NodeBuilder() {

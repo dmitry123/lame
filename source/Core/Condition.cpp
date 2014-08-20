@@ -8,11 +8,11 @@ LAME_BEGIN2(Core)
 
 Condition::Condition(MutexPtr mutex) {
 	this->mutex = mutex;
-	pthread_cond_init((pthread_cond_t*)&this->condition_, NULL);
+	pthread_cond_init(&this->condition_, NULL);
 }
 
 Condition::~Condition() {
-	pthread_cond_destroy((pthread_cond_t*)&this->condition_);
+	pthread_cond_destroy(&this->condition_);
 }
 
 Void Condition::Lock(Void) {
@@ -25,21 +25,20 @@ Void Condition::UnLock(Void) {
 
 Bool Condition::Signal(Void) {
 	return pthread_cond_signal(
-		(pthread_cond_t*)&this->condition_) == 0;
+        &this->condition_) == 0;
 }
 
 Bool Condition::Broadcast(Void) {
 	return pthread_cond_broadcast(
-		(pthread_cond_t*)&this->condition_) == 0;
+        &this->condition_) == 0;
 }
 
 Bool Condition::Wait(Void) {
 
-	VoidP mutexHandle = this->mutex->GetHandle();
+	pthread_mutex_t mutexHandle = this->mutex->GetHandle();
 
 	return pthread_cond_wait(
-			(pthread_cond_t*)&this->condition_,
-			(pthread_mutex_t*)&mutexHandle) == 0;
+        &this->condition_, &mutexHandle) == 0;
 }
 
 Bool Condition::TimedWait(Clock duration) {
@@ -47,7 +46,7 @@ Bool Condition::TimedWait(Clock duration) {
 	Sint32 result;
 	timespec s;
 
-	VoidP mutexHandle = this->mutex->GetHandle();
+	pthread_mutex_t mutexHandle = this->mutex->GetHandle();
 
 #ifdef LAME_WINDOWS
     s.tv_sec = time(NULL) + duration / 1000;

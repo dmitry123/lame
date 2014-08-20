@@ -2,8 +2,13 @@
 
 LAME_BEGIN2(Core)
 
-WaitManagerPtr WaitManager::defaultWaitManager
-	= new WaitManager();
+WaitManagerPtr WaitManager::GetDefaultWaitManager() {
+    
+    static WaitManagerPtr defaultWaitManager
+        = new WaitManager();
+    
+    return defaultWaitManager;
+}
 
 Void WaitManager::Append(Proc callback, Uint32 interval) {
 	new Timer(callback, interval, this);

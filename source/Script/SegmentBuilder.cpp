@@ -21,8 +21,6 @@ SegmentPtr SegmentBuilder::BuildDataSegment(Void) {
 
 	this->dataSegment->Flush();
 
-	memset(this->dataSegment->data, 0, this->dataSegment->size);
-
 	return this->dataSegment;
 }
 
@@ -74,9 +72,7 @@ Void SegmentBuilder::_ForEachScopeObject(ForEachScopeObject callback, SegmentPtr
 
 	for (ObjectPtr i : scope->GetVariableSet()) {
 		if (i->CheckType(Class::Type::Variable)) {
-			if (!i->CheckModificator(Class::Modificator::Register) &&
-				!i->CheckModificator(Class::Modificator::Constant)
-			) {
+			if (!i->CheckModificator(Class::Modificator::Constant)) {
 				callback(segment, i->GetVariable());
 			}
 		}
@@ -86,6 +82,14 @@ Void SegmentBuilder::_ForEachScopeObject(ForEachScopeObject callback, SegmentPtr
 		for (ObjectPtr j : i->GetMethodSet()) {
 			this->_ForEachScopeObject(callback, segment, j);
 		}
+	}
+
+	for (ObjectPtr i : scope->GetMethodSet()) {
+		this->_ForEachScopeObject(callback, segment, i);
+	}
+
+	for (ObjectPtr i : scope->GetConditionSet()) {
+		this->_ForEachScopeObject(callback, segment, i);
 	}
 }
 

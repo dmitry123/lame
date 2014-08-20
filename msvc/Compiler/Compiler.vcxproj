@@ -95,7 +95,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\code\C++\Projects\lame\source;$(IncludePath)</IncludePath>
+    <IncludePath>$(IncludePath);$(SolutionDir)/../source</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <LinkIncremental>true</LinkIncremental>
@@ -222,9 +222,11 @@
     <ClCompile Include="..\..\source\Compiler\CodeTranslator.cpp" />
     <ClCompile Include="..\..\source\Compiler\Compiler.cpp" />
     <ClCompile Include="..\..\source\Compiler\Define.cpp" />
+    <ClCompile Include="..\..\source\Compiler\Internal.cpp" />
     <ClCompile Include="..\..\source\Compiler\LowLevelStack.cpp" />
     <ClCompile Include="..\..\source\Compiler\Register.cpp" />
-    <ClCompile Include="..\..\source\Compiler\VirtualAnalizer.cpp" />
+    <ClCompile Include="..\..\source\Compiler\VariableStack.cpp" />
+    <ClCompile Include="..\..\source\Compiler\VirtualCompiler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\Compiler\Assembler.h" />
@@ -233,9 +235,11 @@
     <ClInclude Include="..\..\source\Compiler\CodeTranslator.h" />
     <ClInclude Include="..\..\source\Compiler\Compiler.h" />
     <ClInclude Include="..\..\source\Compiler\Define.h" />
+    <ClInclude Include="..\..\source\Compiler\Internal.h" />
     <ClInclude Include="..\..\source\Compiler\LowLevelStack.h" />
     <ClInclude Include="..\..\source\Compiler\Register.h" />
-    <ClInclude Include="..\..\source\Compiler\VirtualAnalizer.h" />
+    <ClInclude Include="..\..\source\Compiler\VariableStack.h" />
+    <ClInclude Include="..\..\source\Compiler\VirtualCompiler.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

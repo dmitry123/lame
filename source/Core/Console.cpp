@@ -28,11 +28,9 @@ Uint32 Console::Available() {
 }
 
 Void Console::Close() {
-
 }
 
 Void Console::Reset() {
-
 }
 
 ConsolePtr Console::consolePrinter

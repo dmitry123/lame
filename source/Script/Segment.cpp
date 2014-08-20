@@ -23,17 +23,17 @@ Segment::~Segment(Void) {
 
 Void Segment::Write(VoidP block, Uint32 size) {
 
-	Uint32 grow = 64;
+	static Uint32 GROW = 64;
 
 	if (!this->data) {
 		throw SegmentException("Segment not allocated", 0);
 	}
 	if (this->position + size > this->size) {
-		if (size > grow) {
-			grow = size;
+		if (size > GROW) {
+			GROW = size;
 		}
-		this->data = (Uint8P)realloc(this->data, this->size + grow);
-		this->size += grow;
+		this->data = (Uint8P)realloc(this->data, this->size + GROW);
+		this->size += GROW;
 	}
 
 	memcpy(this->data + this->position, block, size);
@@ -48,7 +48,7 @@ Uint32P Segment::Write(VariablePtr var) {
 	Uint32 bufferSize = 0;
 	Buffer hexString;
 
-	bufferSize = var->Size();
+	bufferSize = var->GetClassType()->Size();
 
 	if (var->GetVarType() == Variable::Var::String) {
 		copyBuffer = (VoidP)var->stringValue.data();
@@ -59,9 +59,9 @@ Uint32P Segment::Write(VariablePtr var) {
 	}
 
 	if (var->GetVarType() == Variable::Var::String && !var->GetNode()) {
-		bufferSize = var->stringValue.length() + 1;
+		bufferSize = Uint32(var->stringValue.length()) + 1;
 	}
-
+    
 	this->history.push_back({ var->GetName().data(),
 		position, bufferSize, copyBuffer
 	});
@@ -102,21 +102,29 @@ Void Segment::Trace(Uint32 columns) {
 	printf("| name   | address  | size   |");
 	puts("\n+----------------------------+");
 
+    static StringC whiteSpaces = "\t\n\a\b\v";
+    
 	for (History& h : this->history) {
 
 		printf("| ");
 
-		Uint32 nameLength = h.name.length();
+		Uint32 nameLength = Uint32(h.name.length());
 
-		if (nameLength > 5) {
-			for (Uint32 i = 0; i < 4; i++) {
-				printf("%c", h.name.data()[i]);
-			}
-			printf("..");
-		} else {
-			printf("%s", h.name.data());
-			for (Uint32 i = 0; i < 6 - nameLength; i++) {
-				printf(" ");
+		if (nameLength == 1 && strchr(whiteSpaces, h.name[0])) {
+            printf("%d    ", h.name[0]);
+		}
+		else {
+		_Print:
+			if (nameLength > 5) {
+				for (Uint32 i = 0; i < 4; i++) {
+					printf("%c", h.name.data()[i]);
+				}
+				printf("..");
+			} else {
+				printf("%s", h.name.data());
+				for (Uint32 i = 0; i < 6 - nameLength; i++) {
+					printf(" ");
+				}
 			}
 		}
 

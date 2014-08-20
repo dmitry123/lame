@@ -2,14 +2,13 @@
 
 ScopePtr LameTester::Test(StringC fileName) {
 
-	this->rootScope = Scope::GetRootScope();
+	this->rootScope = Scope::CreateRootScope();
 
 	try {
 		fileParser.Load(fileName);
 		nodeBuilder.Build(&fileParser);
-		lowLevelStack = new LowLevelStack();
+		lowLevelStack = new LowLevelStack(rootScope);
 		scopeBuilder.Build(&nodeBuilder, rootScope);
-		codeAnalizer.Analize(lowLevelStack, &nodeBuilder, rootScope);
 	}
 	catch (SyntaxException& e) {
 		Assert::Fail(_StrToWstr(e.GetErrorBuffer()));

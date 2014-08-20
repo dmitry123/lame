@@ -4,11 +4,12 @@
 
 LAME_BEGIN2(Script)
 
-static LexPtrC _ParseLex(StringC* wordPtr, Buffer* name) {
+static StringC lockedTokens = "\n\r\t ";
+static StringC allowedTokens = "@$_=/|&><+-*[].";
+static StringC wordTokens = "_$@";
+static StringC writeSpaces = "\a\b\t\n\r";
 
-	static StringC lockedTokens = "\n\r\t ";
-	static StringC allowedTokens = "@$_=/|&><+-*[].";
-	static StringC wordTokens = "_$@";
+static LexPtrC _ParseLex(StringC* wordPtr, Buffer* name, Uint32 line) {
 
 	StringC savedWord = *wordPtr;
 	StringC word = *wordPtr;
@@ -18,15 +19,38 @@ static LexPtrC _ParseLex(StringC* wordPtr, Buffer* name) {
 
 	if (*word == '\"' || *word == '\'') {
 
+		Bool isCharacterLike = (*word == '\'');
+
 		while (*++word != *savedWord) {
 			if (!*word) {
-				PostSyntaxError(0, "Quote or Apostrophe mismatched", 1);
+				PostSyntaxError(line, "Quote or Apostrophe mismatched", 1);
 			}
 			lexWord.append(1, *word);
 		}
 		++word;
 
-		lex = (LexPtr) Lex::Find(kScriptLexString);
+		if (isCharacterLike) {
+			if (lexWord.length() == 2 && lexWord[0] == '\\') {
+				Sint8 symbol = 0;
+				switch (lexWord[1]) {
+					case 'n': symbol = '\n'; break;
+					case 'r': symbol = '\r'; break;
+					case 't': symbol = '\t'; break;
+					case 'v': symbol = '\v'; break;
+					case 'b': symbol = '\b'; break;
+					case 'a': symbol = '\a'; break;
+				}
+				lexWord.resize(1);
+				lexWord[0] = symbol;
+			}
+			if (lexWord.length() != 1) {
+//				PostSyntaxError(line, "Character's length must be 1 symbol (%s)", lexWord.data());
+			}
+			lex = (LexPtr)Lex::Find(kScriptLexCharacter);
+		}
+		else {
+			lex = (LexPtr)Lex::Find(kScriptLexString);
+		}
 
 		goto __Return;
 	}
@@ -115,15 +139,11 @@ Void FileParser::Load(StringC fileName) {
 	Buffer script;
 
 	handle.Open(fileName, "rt");
-
 	script.resize(handle.GetSize());
-
 	handle.Read((String)script.data(), handle.GetSize());
 	handle.Close();
 	
 	this->Parse(script.data());
-
-	script.clear();
 }
 
 Void FileParser::Parse(StringC script) {
@@ -135,13 +155,26 @@ Void FileParser::Parse(StringC script) {
 
 	while (*script) {
 
-		LexNodePtr node = new LexNode(lexWord, line, _ParseLex(&script, &lexWord));
+		LexNodePtr node = new LexNode(lexWord, line, _ParseLex(&script, &lexWord, line));
 
 		if (!node->lex) {
-			++line;
-			delete(node);
-			continue;
+			delete(node); continue;
 		}
+        
+        Uint32 extraWordLines = 0;
+        
+        for (auto i = lexWord.begin(); i != lexWord.end(); i++) {
+            if (strchr(writeSpaces, *i)) {
+                if (*i == '\n') {
+                    ++extraWordLines;
+                }
+                i = lexWord.erase(i);
+            }
+        }
+        
+        if (extraWordLines > 0) {
+            line += extraWordLines - 1;
+        }
 
 		while (
 			*(script) == ' ' ||
@@ -152,7 +185,7 @@ Void FileParser::Parse(StringC script) {
 			if (*script == '\0') {
 				goto __ExitLoop;
 			}
-			else if (*script == '\n' || *script == '\r') {
+			else if (*script == '\n') {
 				++line;
 			}
 			script++;
@@ -166,10 +199,13 @@ Void FileParser::Parse(StringC script) {
 		}
 
 		if (node->lex->id == kScriptLexLineComment) {
+            
+            ++line;
 
 			if (*(script - 1) == '\n' || *(script - 1) == '\r') {
 				continue;
 			}
+            
 			while (*script && *script != '\n') {
 				++script;
 			}

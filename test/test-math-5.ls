@@ -1,2 +1,12 @@
-int in = (100 > 5) && (20 > 4);
-int out = 1;
+int ia = 100;
+int ib = 50;
+boolean ir = ia > ib;
+long la = 100;
+long lb = 50;
+boolean lr = la > lb;
+float fa = 100;
+float fb = 50;
+boolean fr = fa > fb;
+double da = 100;
+double db = 50;
+boolean dr = da > db;

@@ -95,7 +95,7 @@ TEST_CLASS(TestScript) {
 
 	TEST_METHOD(TestScriptFiles) {
 
-		Core::List<Buffer> list = Core::Directory::GetFilesAtPath("../../test/", "ls");
+		Core::List<Buffer> list = Core::Directory::GetFiles("../../test/", FALSE, "ls");
 
 		for (BufferRefC b : list) {
 			_TestScript(Core::File::GetFileName(b.data()));

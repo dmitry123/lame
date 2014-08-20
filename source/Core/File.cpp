@@ -470,7 +470,7 @@ Bool File::RemoveDirectoryTree(StringC name) {
 	}
 	dir.Close();
 
-	dirlist = Directory::GetDirectoriesAtPathWithDeep(name);
+	dirlist = Directory::GetDirectories(name);
 
 	for (List <Buffer>::reverse_iterator i = dirlist.rbegin(); i != dirlist.rend(); i++) {
 		RemoveDirectory(i->data());
@@ -489,8 +489,8 @@ Bool File::MoveDirectoryTree(StringC name, StringC result) {
 
 Bool File::CopyDirectoryTree(StringC name, StringC result) {
 
-	List <Buffer> fileList = Directory::GetFilesAtPathWithDeep(name);
-	List <Buffer> directoryList = Directory::GetDirectoriesAtPathWithDeep(name);
+	List <Buffer> fileList = Directory::GetFiles(name);
+	List <Buffer> directoryList = Directory::GetDirectories(name);
 
 	CreateDirectory(result);
 
@@ -625,7 +625,7 @@ StringC File::GetFileName(StringC filename) {
 
 Buffer File::GetFileNameWithoutExtension(StringC filename) {
 
-	Uint32 fileNameLength = strlen(filename);
+	Uint32 fileNameLength = Uint32(strlen(filename));
 	Buffer result;
 
 	for (Uint32 i = 0; i < fileNameLength; i++) {

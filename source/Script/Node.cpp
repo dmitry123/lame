@@ -7,9 +7,11 @@ LAME_BEGIN2(Script)
 
 class ShuntingYard {
 public:
-	Stack<NodePtr>* Convert(Vector<NodePtr>* list) {
+	Stack<NodePtr>* Convert(Deque<NodePtr>* list) {
 
 		NodePtr top = NULL;
+        
+        this->operandsLeft = 0;
 
 		for (NodePtr node : *list) {
 			if (node->id == kScriptNodeInvoke ||
@@ -24,7 +26,7 @@ public:
 				node->lex->lex->IsClass() ||
 				node->lex->lex->IsInterface()
 			) {
-				this->resultStack.push(node);
+                this->SaveResult(node);
 			}
 			else {
 				if (node->lex->lex->id == kScriptLexSemicolon) {
@@ -35,12 +37,12 @@ public:
 							top->lex->lex->id == kScriptLexBracketL ||
 							top->lex->lex->id == kScriptLexBracketR
 						) {
-							PostSyntaxError(node->lex->line, "Parenthese mismatched", 0);
+							PostSyntaxError(node->lex->line, "Parentheses mismatched", 0);
 						}
-						this->resultStack.push(top);
+                        this->SaveResult(top);
 						this->opStack.pop();
 					}
-					this->resultStack.push(node);
+                    this->SaveResult(node);
 				}
 				else if (
 					node->lex->lex->id == kScriptLexParenthesisL ||
@@ -58,29 +60,13 @@ public:
 					continue;
 				}
 				else {
-					if (
-						this->opStack.empty() &&
-						this->resultStack.empty() && (
-							node->lex->lex->id == kScriptLexAdd ||
-							node->lex->lex->id == kScriptLexSub
-						)
-					) {
-						LexPtr lex = Lex::Find(kScriptLexUnaryPlus);
-						if (node->lex->lex->id == kScriptLexAdd) {
-							lex = Lex::Find(kScriptLexUnaryPlus);
-						} else if (node->lex->lex->id == kScriptLexSub) {
-							lex = Lex::Find(kScriptLexUnaryMinus);
-						}
-						node->lex->priority = lex->priority;
-						node->lex->args = lex->args;
-					}
 				_HandleOperator:
 					this->HandleOperator(node);
 				}
 			}
 		}
 		while (!this->opStack.empty()) {
-			this->resultStack.push(this->opStack.top());
+            this->SaveResult(this->opStack.top());
 			this->opStack.pop();
 		}
 		return &this->resultStack;
@@ -94,25 +80,50 @@ private:
 			this->opStack.top()->lex->lex->id != kScriptLexParenthesisL &&
 			this->opStack.top()->lex->lex->id != kScriptLexBracketL)
 		) {
-			this->resultStack.push(this->opStack.top());
+            this->SaveResult(this->opStack.top());
 			this->opStack.pop();
 		}
-		if (this->opStack.empty() || !this->opStack.empty() && (
+		if (this->opStack.empty() || (!this->opStack.empty() && (
 			this->opStack.top()->lex->lex->id != kScriptLexParenthesisL &&
-			this->opStack.top()->lex->lex->id != kScriptLexBracketL)
+			this->opStack.top()->lex->lex->id != kScriptLexBracketL))
 		) {
-			PostSyntaxError(node->lex->line, "Parenthese mismatched", 0);
+			PostSyntaxError(node->lex->line, "Parentheses mismatched", 0);
 		}
 		this->opStack.pop();
 	}
 	inline void HandleOperator(NodePtr node) {
+        if (node->lex->lex->args > 0) {
+            this->operandsLeft -= node->lex->lex->args;
+            if (this->operandsLeft == -2) {
+                if (
+                    node->lex->lex->id == kScriptLexAdd ||
+                    node->lex->lex->id == kScriptLexSub
+                ) {
+                    LexPtr lex = Lex::Find(kScriptLexUnaryMinus);
+                    if (node->lex->lex->id == kScriptLexAdd) {
+                        lex = Lex::Find(kScriptLexUnaryPlus);
+                    }
+                    node->lex->priority = lex->priority;
+                    node->lex->args = lex->args;
+                }
+            }
+            this->operandsLeft = 0;
+        }
 		while (!this->opStack.empty() && this->GetPrecedence(node) <= this->StackPrecedence()) {
-			this->resultStack.push(this->opStack.top());
+            this->SaveResult(this->opStack.top());
 			this->opStack.pop();
 		}
 		this->opStack.push(node);
 	}
 private:
+    inline void SaveResult(NodePtr node) {
+        if (node->lex->lex->IsUnknown() ||
+            node->lex->lex->IsConst()
+        ) {
+            ++this->operandsLeft;
+        }
+        this->resultStack.push(node);
+    }
 	inline int GetPrecedence(NodePtr node) const {
 		return node->lex->priority;
 	}
@@ -125,24 +136,25 @@ private:
 private:
 	Stack<NodePtr> resultStack;
 	Stack<NodePtr> opStack;
+    Sint32 operandsLeft;
 };
 
-Void _Order(Vector<NodePtr>* list) {
+Void _Order(Deque<NodePtr>* list) {
 
 	Stack<NodePtr>* result;
 	ShuntingYard shuntingYard;
-
+    
 	result = shuntingYard.Convert(list);
 
 	list->clear();
 	while (!result->empty()) {
-		if (result->top()->id == kScriptLexBraceL ||
-			result->top()->id == kScriptLexBraceR
+		if (result->top()->lex->lex->id == kScriptLexBraceL ||
+			result->top()->lex->lex->id == kScriptLexBraceR
 		) {
 			PostSyntaxError(result->top()->lex->line, "Braces mismatched", 0);
 		}
-		if (result->top()->id == kScriptLexParenthesisL ||
-			result->top()->id == kScriptLexParenthesisR
+		if (result->top()->lex->lex->id == kScriptLexParenthesisL ||
+			result->top()->lex->lex->id == kScriptLexParenthesisR
 		) {
 			PostSyntaxError(result->top()->lex->line, "Parentheses mismatched", 0);
 		}
@@ -196,6 +208,10 @@ Void Node::ShuntingYard(Void) {
 }
 
 Void Node::Extend(NodePtr node) {
+	if (this->extendNode) {
+		delete this->extendNode;
+		this->extendNode = NULL;
+	}
 	this->extendNode = new Node(*node);
 }
 
@@ -204,10 +220,18 @@ Void Node::Implement(NodePtr node) {
 }
 
 Void Node::Template(NodePtr node) {
+	if (this->templateNode) {
+		delete this->templateNode;
+		this->templateNode = NULL;
+	}
 	this->templateNode = new Node(*node);
 }
 
 Void Node::Type(NodePtr node) {
+	if (this->typeNode) {
+		delete this->typeNode;
+		this->typeNode = NULL;
+	}
 	this->typeNode = new Node(*node);
 }
 

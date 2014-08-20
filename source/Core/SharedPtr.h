@@ -114,7 +114,7 @@ private:
 		// ignore
 	}
 	Void _EnableSharedPtr(internal::__SharedPtrFromThis* ptr) {
-		((SharedPtrFromThis<T>*) ptr)->weakPtr._Create(*this);
+//		((SharedPtrFromThis<T>*) ptr)->weakPtr._Create(*this);
 	}
 public:
 	TypeP reference_;

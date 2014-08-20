@@ -417,52 +417,78 @@ static List <Buffer> __FindContainingFilesAtPath(StringC path, StringC name, Str
 	return result;
 }
 
-List <Buffer> Directory::GetContentAtPath(StringC path) {
-	return __GetContentAtPath(path, LAME_NULL, Directory::kFiles | Directory::kDirectories);
+List <Buffer> Directory::GetContent(StringC path, Bool withDepth) {
+    
+    if (withDepth) {
+        return __GetContentAtPath(path, LAME_NULL,
+            Directory::kFiles |
+            Directory::kDirectories |
+            Directory::kDeep);
+    } else {
+        return __GetContentAtPath(path, LAME_NULL,
+            Directory::kFiles |
+            Directory::kDirectories);
+    }
 }
 
-List <Buffer> Directory::GetDirectoriesAtPath(StringC path) {
-	return __GetContentAtPath(path, LAME_NULL, Directory::kDirectories);
+List <Buffer> Directory::GetDirectories(StringC path, Bool withDepth) {
+    
+    if (withDepth) {
+        return __GetContentAtPath(path, LAME_NULL,
+            Directory::kDirectories |
+            Directory::kDeep);
+    } else {
+        return __GetContentAtPath(path, LAME_NULL,
+            Directory::kDirectories);
+    }
 }
 
-List <Buffer> Directory::GetFilesAtPath(StringC path, StringC extension) {
-	return __GetContentAtPath(path, extension, Directory::kFiles);
+List <Buffer> Directory::GetFiles(StringC path, Bool withDepth, StringC extension) {
+    
+    if (withDepth) {
+        return __GetContentAtPath(path, LAME_NULL,
+            Directory::kFiles |
+            Directory::kDeep);
+    } else {
+        return __GetContentAtPath(path, LAME_NULL,
+            Directory::kFiles);
+    }
 }
 
-List <Buffer> Directory::GetContentAtPathWithDeep(StringC path) {
-	return __GetContentAtPath(path, LAME_NULL, Directory::kFiles | Directory::kDirectories | Directory::kDeep);
+Buffer Directory::FindFile(StringC path, StringC name, Bool withDepth, StringC extensions) {
+    
+    if (withDepth) {
+        return __FindFileAtPath(path, name, extensions,
+            Directory::kFiles |
+            Directory::kDeep);
+    } else {
+        return __FindFileAtPath(path, name, extensions,
+            Directory::kFiles);
+    }
 }
 
-List <Buffer> Directory::GetDirectoriesAtPathWithDeep(StringC path) {
-	return __GetContentAtPath(path, LAME_NULL, Directory::kDirectories | Directory::kDeep);
+List <Buffer> Directory::FindFiles(StringC path, StringC name, Bool withDepth, StringC extensions) {
+    
+    if (withDepth) {
+        return __FindFilesAtPath(path, name, extensions,
+            Directory::kFiles |
+            Directory::kDeep);
+    } else {
+        return __FindFilesAtPath(path, name, extensions,
+            Directory::kFiles);
+    }
 }
 
-List <Buffer> Directory::GetFilesAtPathWithDeep(StringC path, StringC extension) {
-	return __GetContentAtPath(path, extension, Directory::kFiles | Directory::kDeep);
-}
-
-Buffer Directory::FindFileAtPath(StringC path, StringC name, StringC extensions) {
-	return __FindFileAtPath(path, name, extensions, Directory::kFiles);
-}
-
-Buffer Directory::FindFileAtPathWithDeep(StringC path, StringC name, StringC extensions) {
-	return __FindFileAtPath(path, name, extensions, Directory::kFiles | Directory::kDeep);
-}
-
-List <Buffer> Directory::FindFilesAtPath(StringC path, StringC name, StringC extensions) {
-	return __FindFilesAtPath(path, name, extensions, Directory::kFiles);
-}
-
-List <Buffer> Directory::FindFilesAtPathWithDeep(StringC path, StringC name, StringC extensions) {
-	return __FindFilesAtPath(path, name, extensions, Directory::kFiles | Directory::kDeep);
-}
-
-List <Buffer> Directory::FindContainingFilesAtPath(StringC path, StringC name, StringC extensions) {
-	return __FindContainingFilesAtPath(path, name, extensions, Directory::kFiles);
-}
-
-List <Buffer> Directory::FindContainingFilesAtPathWithDeep(StringC path, StringC name, StringC extensions) {
-	return __FindContainingFilesAtPath(path, name, extensions, Directory::kFiles | Directory::kDeep);
+List <Buffer> Directory::FindContainingFiles(StringC path, StringC name, Bool withDepth, StringC extensions) {
+    
+    if (withDepth) {
+        return __FindContainingFilesAtPath(path, name, extensions,
+            Directory::kFiles |
+            Directory::kDeep);
+    } else {
+        return __FindContainingFilesAtPath(path, name, extensions,
+            Directory::kFiles);
+    }
 }
 
 LAME_END2

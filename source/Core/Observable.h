@@ -15,12 +15,12 @@ template <class T> class Observable {
 protected:
 	typedef Observer<T>* Essence;
 public:
-	virtual inline Void Add(Essence observer) {
+	virtual inline Void Observe(Essence observer) {
 		if (observer != NULL) {
 			this->observers.insert(observer);
 		}
 	}
-	virtual inline Void Remove(Essence observer) {
+	virtual inline Void RemoveObserver(Essence observer) {
 		if (observer != NULL) {
 			this->observers.erase(observer);
 		}
@@ -52,7 +52,7 @@ private:
 };
 
 template <class T> class InterlockedObservable : Observable < T > {
-	typedef Observable<T>::Essence Essence;
+	typedef typename Observable<T>::Essence Essence;
 public:
 	inline Void Add(Essence observer) {
 		this->observerLocker->Lock();

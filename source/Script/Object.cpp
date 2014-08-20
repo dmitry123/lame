@@ -2,10 +2,44 @@
 #include "Segment.h"
 #include "Lex.h"
 
+#include <stdint.h>
+
 LAME_BEGIN2(Script)
 
-Object::Object(BufferRefC name, ScopePtr parent, Type type) : Scope(name, parent),
-	name(name),
+static Buffer _GetRandomScopeName() {
+
+	Uint64 result = 0;
+
+	for (Uint32 i = 0; i < sizeof(result) * 8; i++) {
+		if (rand() % 2) {
+#ifdef LAME_MSVC
+			result |= 0x01ui64 << i;
+#else
+            result |= Uint64(0x01) << i;
+#endif
+		}
+	}
+
+	Sint8 numberBuffer[20];
+
+	if (sizeof(result) == 8) {
+		sprintf(numberBuffer, "%.8x%.8x", Uint32(result >> 32), Uint32(result));
+	}
+	else if (sizeof(result) == 4) {
+		sprintf(numberBuffer, "%.8x", Uint32(result));
+	}
+	else if (sizeof(result) == 2) {
+		sprintf(numberBuffer, "%.4x", Uint32(result));
+	}
+	else {
+		sprintf(numberBuffer, "%.2x", Uint32(result));
+	}
+
+	return Buffer(numberBuffer);
+}
+
+Object::Object(BufferRefC name, ScopePtr parent, Type type) : Scope(name.length() ? name : _GetRandomScopeName(), parent),
+	name(this->Scope::GetName()),
 	path(parent->Path()),
 	type(type)
 {
@@ -17,6 +51,7 @@ Object::Object(BufferRefC name, ScopePtr parent, Type type) : Scope(name, parent
 	this->arguments_ = 0;
 	this->node_ = 0;
 	this->newNode_ = 0;
+	this->segmentCodePosition = 0;
 }
 
 Object::~Object() {

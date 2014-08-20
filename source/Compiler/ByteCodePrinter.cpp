@@ -11,8 +11,16 @@ ByteCodePrinterPtr ByteCodePrinter::New(Asm command) {
 		this->Flush();
 	}
 
+	if (command == NOOP) {
+		return this;
+	}
+
 	asmInfo = assembler.GetAsmInfo(
 		command);
+
+	if (asmInfo->arguments == this->infoList.size()) {
+		this->Flush();
+	}
 
 	return this;
 }
@@ -45,35 +53,38 @@ ByteCodePrinterPtr ByteCodePrinter::Write(BufferRefC registerName) {
 
 ByteCodePrinterPtr ByteCodePrinter::Flush(Void) {
 
-	if (!this->infoList.size()) {
-		return this;
-	}
+	Uint32 address = 0;
 
 	if (asmInfo->arguments != infoList.size()) {
-		__asm int 3
+        return this;
 	}
 
-	printf("0x%.4x : %s ", this->currentPosition, asmInfo->name);
+	if (!infoList.empty()) {
+		address = infoList[0].address;
+	}
 
-	for (Uint32 i = 0; i < asmInfo->arguments; i++) {
-
-		if (infoList[i].lineType == LineType::Address) {
-			printf("<0x%.4x>", infoList[i].address);
-		} else if (infoList[i].lineType == LineType::Jump) {
-			printf("0x%.4x", infoList[i].address);
-		} else if (infoList[i].lineType == LineType::Const) {
-			printf("#%d", infoList[i].address);
-		} else {
-			printf("%s", infoList[i].registerName.data());
+	printf("0x%.4x : %s\t", this->currentPosition, asmInfo->name);
+//	printf("0x%.4x : 0x%.2x ", this->currentPosition, asmInfo->command);
+	if (asmInfo->arguments > 0) {
+		printf("0x");
+	}
+	for (Sint32 i = 0; i < asmInfo->arguments; i++) {
+		if (address <= 0xff) {
+			printf("%.4x ", address);
 		}
-
-		if (i < asmInfo->arguments - 1) {
-			printf(" ");
+		else if (address <= 0xffff) {
+			printf("%.4x ", address);
+		}
+		else {
+			printf("%.4x ", address);
 		}
 	}
 	puts("");
 
-	this->currentPosition += this->infoList.size() * 4 + 1;
+	if (asmInfo->command != NOOP) {
+		this->currentPosition += asmInfo->arguments * 4 + 1;
+	}
+
 	this->infoList.clear();
 
 	return this;

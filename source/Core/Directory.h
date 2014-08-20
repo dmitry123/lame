@@ -64,18 +64,12 @@ public:
 	 Directory();
 	~Directory();
 public:
-	static List <Buffer> GetContentAtPath(StringC path);
-	static List <Buffer> GetDirectoriesAtPath(StringC path);
-	static List <Buffer> GetFilesAtPath(StringC path, StringC extensions = LAME_NULL);
-	static List <Buffer> GetContentAtPathWithDeep(StringC path);
-	static List <Buffer> GetDirectoriesAtPathWithDeep(StringC path);
-	static List <Buffer> GetFilesAtPathWithDeep(StringC path, StringC extensions = LAME_NULL);
-	static Buffer FindFileAtPath(StringC path, StringC name, StringC extensions = LAME_NULL);
-	static Buffer FindFileAtPathWithDeep(StringC path, StringC name, StringC extensions = LAME_NULL);
-	static List <Buffer> FindFilesAtPath(StringC path, StringC name, StringC extensions = LAME_NULL);
-	static List <Buffer> FindFilesAtPathWithDeep(StringC path, StringC name, StringC extensions = LAME_NULL);
-	static List <Buffer> FindContainingFilesAtPath(StringC path, StringC name, StringC extensions = LAME_NULL);
-	static List <Buffer> FindContainingFilesAtPathWithDeep(StringC path, StringC name, StringC extensions = LAME_NULL);
+	static List <Buffer> GetContent(StringC path, Bool withDepth = FALSE);
+	static List <Buffer> GetDirectories(StringC path, Bool withDepth = FALSE);
+	static List <Buffer> GetFiles(StringC path, Bool withDepth = FALSE, StringC extensions = LAME_NULL);
+	static Buffer FindFile(StringC path, StringC name, Bool withDepth = FALSE, StringC extensions = LAME_NULL);
+	static List <Buffer> FindFiles(StringC path, StringC name, Bool withDepth = FALSE, StringC extensions = LAME_NULL);
+	static List <Buffer> FindContainingFiles(StringC path, StringC name, Bool withDepth = FALSE, StringC extensions = LAME_NULL);
 private:
 	VoidP handle_;
 	FilePathBuffer path_;

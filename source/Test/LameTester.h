@@ -20,7 +20,6 @@ private:
 	FileParser fileParser;
 	ScopeBuilder scopeBuilder;
 	ScopePtr rootScope;
-	CodeAnalizer codeAnalizer;
 	LowLevelStackPtr lowLevelStack;
 };
 

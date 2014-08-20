@@ -6,9 +6,8 @@
 LAME_BEGIN2(Compiler)
 
 class LAME_API LowLevelStack {
-	typedef Script::VariablePtr VariablePtr;
 public:
-	LowLevelStack();
+	LowLevelStack(ScopePtr rootScope);
 public:
 	typedef enum {
 		Integer,
@@ -21,17 +20,6 @@ public:
 	Void Push(VariablePtr var);
 	VariablePtr Pop(Void);
 public:
-	RegisterPtr p0;
-	RegisterPtr p1;
-	RegisterPtr p2;
-	RegisterPtr p3;
-	RegisterPtr p4;
-	RegisterPtr p5;
-	RegisterPtr p6;
-	RegisterPtr p7;
-	RegisterPtr p8;
-	RegisterPtr p9;
-public:
 	RegisterPtr r0;
 	RegisterPtr r1;
 	RegisterPtr r2;
@@ -43,6 +31,17 @@ public:
 	RegisterPtr r8;
 	RegisterPtr r9;
 public:
+	RegisterPtr i0;
+	RegisterPtr i1;
+	RegisterPtr i2;
+	RegisterPtr i3;
+	RegisterPtr i4;
+	RegisterPtr i5;
+	RegisterPtr i6;
+	RegisterPtr i7;
+	RegisterPtr i8;
+	RegisterPtr i9;
+public:
 	RegisterPtr f0;
 	RegisterPtr f1;
 	RegisterPtr f2;
@@ -53,16 +52,12 @@ public:
 	RegisterPtr f7;
 	RegisterPtr f8;
 	RegisterPtr f9;
-public:
-	inline Script::ScopePtr GetRegisterScope() {
-		return &this->registerScope;
-	}
 private:
+	Core::Set<RegisterPtr> rRegList;
 	Core::Set<RegisterPtr> iRegList;
 	Core::Set<RegisterPtr> fRegList;
-	Core::Set<RegisterPtr> pRegList;
-	Script::Scope registerScope;
 	Core::Stack<VariablePtr> callStack;
+	Script::MethodPtr registerClass;
 };
 
 LAME_END2

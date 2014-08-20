@@ -73,42 +73,42 @@ int main() {
 	puts("+------------------+");
 
 	try {
-		list = Directory::GetFilesAtPath(CORE_LINK, EXTENSION_FILTER);
+		list = Directory::GetFiles(CORE_LINK, FALSE, EXTENSION_FILTER);
 		lines = GetCountOfLines(&list);
 		totalLines += lines;
 		PrintCountOfLines("Core    ", lines);
 
-		list = Directory::GetFilesAtPath(SCRIPT_LINK, EXTENSION_FILTER);
+		list = Directory::GetFiles(SCRIPT_LINK, FALSE, EXTENSION_FILTER);
 		lines = GetCountOfLines(&list);
 		totalLines += lines;
 		PrintCountOfLines("Script  ", lines);
 
-		list = Directory::GetFilesAtPath(CONSOLE_LINK, EXTENSION_FILTER);
+		list = Directory::GetFiles(CONSOLE_LINK, FALSE, EXTENSION_FILTER);
 		lines = GetCountOfLines(&list);
 		totalLines += lines;
 		PrintCountOfLines("Console ", lines);
 
-		list = Directory::GetFilesAtPath(COUNTER_LINK, EXTENSION_FILTER);
+		list = Directory::GetFiles(COUNTER_LINK, FALSE, EXTENSION_FILTER);
 		lines = GetCountOfLines(&list);
 		totalLines += lines;
 		PrintCountOfLines("Counter ", lines);
 
-		list = Directory::GetFilesAtPath(RM_LINK, EXTENSION_FILTER);
+		list = Directory::GetFiles(RM_LINK, FALSE, EXTENSION_FILTER);
 		lines = GetCountOfLines(&list);
 		totalLines += lines;
 		PrintCountOfLines("Resource", lines);
 
-		list = Directory::GetFilesAtPath(COMPILER_LINK, EXTENSION_FILTER);
+		list = Directory::GetFiles(COMPILER_LINK, FALSE, EXTENSION_FILTER);
 		lines = GetCountOfLines(&list);
 		totalLines += lines;
 		PrintCountOfLines("Compiler", lines);
 
-		list = Directory::GetFilesAtPath(TEST_LINK, EXTENSION_FILTER);
+		list = Directory::GetFiles(TEST_LINK, FALSE, EXTENSION_FILTER);
 		lines = GetCountOfLines(&list);
 		totalLines += lines;
 		PrintCountOfLines("Test    ", lines);
 
-		list = Directory::GetFilesAtPath(VM_LINK, EXTENSION_FILTER);
+		list = Directory::GetFiles(VM_LINK, FALSE, EXTENSION_FILTER);
 		lines = GetCountOfLines(&list);
 		totalLines += lines;
 		PrintCountOfLines("Machine ", lines);

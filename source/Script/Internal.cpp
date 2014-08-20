@@ -19,7 +19,8 @@ Bool IsIntValue(StringC string) {
 
 	strtoll(string, &result, 10);
 
-	return string != result && isdigit(*string);
+	return string != result &&
+        isdigit(*string);
 }
 
 Bool IsHexValue(StringC string) {
@@ -58,11 +59,7 @@ Bool IsFloatValue(StringC string) {
 	String finish;
 	StringC pointer;
 
-	if (sizeof(ScriptNativeFloat) == 4) {
-		strtof(string, &finish);
-	} else {
-		strtod(string, &finish);
-	}
+    strtod(string, &finish);
 
 	if (finish != string) {
 
@@ -74,6 +71,7 @@ Bool IsFloatValue(StringC string) {
 			}
 		}
 	}
+    
 	return LAME_FALSE;
 }
 
@@ -90,27 +88,14 @@ Bool IsFloatValue(const Core::Buffer& string) {
 ScriptNativeInt ParseIntValue(StringC string) {
     
 	if (IsHexValue(string)) {
-        if (sizeof(ScriptNativeInt) == 8) {
-            return (ScriptNativeInt) strtoll(string, NULL, 16);
-        } else {
-            return (ScriptNativeInt) strtol(string, NULL, 16);
-        }
+        return (ScriptNativeInt) strtoll(string, NULL, 16);
 	}
-
-    if (sizeof(ScriptNativeInt) == 8) {
-        return (ScriptNativeInt) strtoll(string, NULL, 10);
-    } else {
-        return (ScriptNativeInt) strtol(string, NULL, 10);
-    }
+    
+    return (ScriptNativeInt) strtoll(string, NULL, 10);
 }
 
 ScriptNativeFloat ParseFloatValue(StringC string) {
-
-	if (sizeof(ScriptNativeFloat) == 4) {
-		return (ScriptNativeFloat)strtof(string, NULL);
-	} else {
-		return (ScriptNativeFloat)strtod(string, NULL);
-	}
+    return (ScriptNativeFloat)strtod(string, NULL);
 }
 
 ScriptNativeString ParseStringValue(StringC string) {

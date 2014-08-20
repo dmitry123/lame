@@ -146,7 +146,7 @@ typedef struct ResourceAudioInfo : ResourceFileInfo {
 	VoidP audioData;
 	Uint32 audioChunkSize;
 	Uint16 audioFormatType;
-	Uint32 audioChannels;
+	Uint16 audioChannels;
 	Uint32 audioSampleRate;
 	Uint32 audioAvgBytesPerSec;
 	Uint16 audioBytesPerSample;

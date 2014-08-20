@@ -9,6 +9,5 @@
 #include <Compiler/Compiler.h>
 #include <Script/Script.h>
 #include <ResourceManager/ResourceManager.h>
-#include <VirtualMachine/VirtualMachine.h>
 
 #endif // ~__CONSOLE_MAIN__

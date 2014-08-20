@@ -8,10 +8,9 @@ LAME_BEGIN2(Core)
 Mutex::Mutex() {
 
 	pthread_mutexattr_t attributes;
-
 	pthread_mutexattr_init(&attributes);
 	pthread_mutexattr_settype(&attributes, PTHREAD_MUTEX_NORMAL);
-	if (pthread_mutex_init((pthread_mutex_t*)&this->handle, &attributes) != 0) {
+	if (pthread_mutex_init((pthread_mutex_t*)&this->handle, NULL) != 0) {
 		throw MutexException("Unable to create mutex");
 	}
 	pthread_mutexattr_destroy(&attributes);
@@ -45,7 +44,7 @@ Bool Mutex::TryLock(Void) {
 }
 
 ConditionPtr Mutex::NewCondition() {
-	return new Condition(this);;
+	return new Condition(this);
 }
 
 LAME_END2

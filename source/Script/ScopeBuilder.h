@@ -21,6 +21,9 @@ private:
 		ScopeBuilder& self;
 	};
 public:
+	ScopeBuilder();
+	~ScopeBuilder();
+public:
 	Void Build(NodeBuilderPtr nodeBuilder, ScopePtr rootScope);
 private:
 	Void _ForEachNodeTrace(NodePtr n);
@@ -37,13 +40,19 @@ private:
 	Void _ForEachMethodDeclare(NodePtr n);
 	Void _ForEachMethodRegister(NodePtr n);
 	Void _ForEachVariableDeclare(NodePtr n);
+	Void _ForEachConstruction(NodePtr n);
+    Void _ForEachCheckInheritance(NodePtr n);
+    Void _ForEachNodeFlush(NodePtr n);
 private:
 	Void _ForEachNode(NodePtr node, ScopePtr scope, ForEachNode callback, NodeID id);
 	Void _Push(ScopePtr scope);
 	ScopePtr _Pop(Void);
 private:
 	ScopePtr scope;
+	ClassPtr rootConstruction;
 	Vector<ScopePtr> scopeStack;
+	Vector<ClassPtr> lastStack;
+	ClassPtr lastVar;
 };
 
 LAME_END2

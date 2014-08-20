@@ -57,7 +57,7 @@
 #  error "Unsupported compiler!"
 #endif
 
-#if LAME_MSVC < 120
+#if defined(LAME_MSVC) && LAME_MSVC < 120
 #  error "Lame Script requires MSVC12 compiler with C++0x support!"
 #endif
 
@@ -198,17 +198,22 @@
 #define LAME_DECLARE_TYPE(_type, _name) \
 	typedef _type _name, *_name##P;
 
-#define __LAME_STRINGISE_IMPL(x) #x
-#define __LAME_STRINGISE(x) __LAME_STRINGISE_IMPL(x)
-#define __LAME_FLL __FILE__ "(" __LAME_STRINGISE(__LINE__) ") : "
-
-#if defined(LAME_MSVC)
-#  define LAME_WARNING(_message) (__LAME_FLL "WARNING : " _message)
-#  define LAME_TODO(_message) (__LAME_FLL "TODO : "_message)
+#if defined(_MSC_VER)
+#  define LAME_DO_PRAGMA(x) __pragma(x)
+#  define __LAMESTR2__(x) #x
+#  define __LAMESTR1__(x) __LAMESTR2__(x)
+#  define __LAMEMSVCLOC__ __FILE__ "("__LAMESTR1__(__LINE__)") : "
+#  define LAME_MSG_PRAGMA(_msg) LAME_DO_PRAGMA(message (__LAMEMSVCLOC__ _msg))
+#elif defined(__GNUC__)
+#  define LAME_DO_PRAGMA(x) _Pragma (#x)
+#  define LAME_MSG_PRAGMA(_msg) LAME_DO_PRAGMA(message (_msg))
 #else
-#  define LAME_WARNING(_message) (_message)
-#  define LAME_TODO(_message) (_message)
+#  define LAME_DO_PRAGMA(x)
+#  define LAME_MSG_PRAGMA(_msg)
 #endif
+
+#define LAME_WARNING(x) LAME_MSG_PRAGMA("WARNING: " x)
+#define LAME_TODO(x) LAME_MSG_PRAGMA("TODO: " x)
 
 #define LAME_SCOPE
 

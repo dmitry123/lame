@@ -1,5 +1,4 @@
 #include "Main.h"
-#include "Test.h"
 
 using namespace Lame::Core;
 using namespace Lame::Compiler;
@@ -17,18 +16,19 @@ int main(int argc, char** argv) {
 	Clock time;
 
 	fileName = argc > 1 ?
-		argv[1] : "main.ls";
+		argv[1] : "main.lame";
 
 	NodeBuilder nodeBuilder;
 	FileParser fileParser;
 	ScopeBuilder scopeBuilder;
 	ScopePtr rootScope;
-	CodeAnalizer codeAnalizer;
 	LowLevelStackPtr lowLevelStack;
 	SegmentLinker segmentLinker;
 	SegmentBuilderPtr segmentBuilder;
+	CodeTranslator codeTranslator;
+	CodeAnalizer codeAnalizer;
 
-	rootScope = Scope::GetRootScope();
+	rootScope = Scope::CreateRootScope();
 	time = Time::GetTime();
 
 	try {
@@ -39,32 +39,39 @@ int main(int argc, char** argv) {
 		nodeBuilder.Build(&fileParser);
 		scopeBuilder.Build(&nodeBuilder, rootScope);
 
+		/* Run code analizer */
+		//        codeAnalizer.Analize(&nodeBuilder, rootScope);
+
 		puts("");
-		for (Uint32 i = 0; i < 80; i++) {
+		for (Uint32 i = 0; i < 79; i++) {
 			printf("-");
 		}
+		puts("\n");
 
 		/* Allocate memory for segment builder and low level stack */
-		lowLevelStack = new LowLevelStack();
+		lowLevelStack = new LowLevelStack(rootScope);
 		segmentBuilder = new SegmentBuilder(rootScope);
 
 		/* Build segments */
 		segmentBuilder->BuildTextSegment();
 		segmentBuilder->BuildDataSegment();
-		segmentBuilder->BuildCodeSegment();
 
 		/* Link segments */
 		segmentLinker.Add(segmentBuilder->GetTextSegment());
 		segmentLinker.Add(segmentBuilder->GetDataSegment());
-		segmentLinker.Add(segmentBuilder->GetCodeSegment());
 
 		/* Trace segments */
-		printf("\n");
-		segmentBuilder->GetTextSegment()->Trace();
-		printf("\n");
-		segmentBuilder->GetDataSegment()->Trace();
+		//segmentBuilder->GetTextSegment()->Trace();
+		//printf("\n");
+		//segmentBuilder->GetDataSegment()->Trace();
+		//printf("\n");
 
-		//codeAnalizer.Analize(lowLevelStack, &nodeBuilder, rootScope);
+		/* Set code segment offset */
+		ByteCodePrinter::GetInstance()
+			->SetPosition(segmentLinker.GetPosition());
+
+		/* Run translator */
+		codeTranslator.Analize(&nodeBuilder, rootScope);
 	}
 	catch (SyntaxException& e) {
 		printf("\n---------------------------");
@@ -90,7 +97,7 @@ int main(int argc, char** argv) {
 		goto _AvoidTrace;
 	}
 
-	rootScope->Trace(0);
+	//rootScope->Trace(0);
 	puts("\n");
 _AvoidTrace:
 

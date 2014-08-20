@@ -1,0 +1,32 @@
+byte foo(byte a, byte b, byte c) {
+	return a + b + c;
+}
+
+short foo(short a, short b, short c) {
+	return a + b + c;
+}
+
+int foo(int a, int b, int c) {
+	return a + b + c;
+}
+
+long foo(long a, long b, long c) {
+	return a + b + c;
+}
+
+float foo(float a, float b, float c) {
+	return a + b + c;
+}
+
+double foo(double a, double b, double c) {
+	return a + b + c;
+}
+
+void main() {
+	byte   r1 = foo(0x7f, 20, 3);
+	short  r2 = foo(0x7fff, 20, 3);
+	int    r3 = foo(0x7fffffff, 20, 3);
+	long   r4 = foo(0x7fffffffffffffff, 20, 3);
+	float  r5 = foo(3.40282346E+38, 20, 3);
+	double r6 = foo(1.7976931348623157E+308, 20, 3);
+}

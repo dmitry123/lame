@@ -11,10 +11,13 @@ public:
 	typedef Map<Hashable64::HashType, ObjectPtr> HashMap;
 	typedef Map<Buffer, ObjectPtr> StringMap;
 public:
+    typedef Void(*OnScopeUpdate)(
+        ScopePtr scope, ObjectPtr object);
+public:
 	ObjectPtr Add(ObjectPtr object);
 	Void Remove(ObjectPtr var);
-	ObjectPtr Find(Hash hash);
-	ObjectPtr Find(BufferRefC name);
+	ObjectPtr Find(Hash hash, Bool withDepth = TRUE);
+	ObjectPtr Find(BufferRefC name, Bool withDepth = TRUE);
 	Void Merge(ScopePtrC scope);
 	Void Clone(ScopePtrC scope);
 	Void Move(ScopePtrC scope);
@@ -27,6 +30,13 @@ public:
 	Buffer Path(Void);
 	Void Flush(Void);
 public:
+    inline Void SetOnScopeUpdate(OnScopeUpdate callback) {
+        this->callback_ = callback;
+    }
+    inline OnScopeUpdate GetOnScopeUpdate() {
+        return this->callback_;
+    }
+public:
 	inline HashMap& GetHashMap() { return this->hashMap_; }
 	inline ScopePtr GetParent() { return this->parentScope_; }
 	inline BufferRefC GetName() { return this->scopeName_; }
@@ -36,11 +46,12 @@ public:
 	inline Set<ObjectPtr>& GetMethodSet() { return this->methodSet_; }
 	inline Set<ObjectPtr>& GetVariableSet() { return this->variableSet_; }
 	inline Set<ObjectPtr>& GetClassSet() { return this->classSet_; }
+	inline Set<ObjectPtr>& GetConditionSet() { return this->conditionSet_; }
 public:
 	Scope(BufferRefC name, ScopePtr parent);
 	~Scope();
 public:
-	static ScopePtr GetRootScope(Void);
+	static ScopePtr CreateRootScope(Void);
 public:
 	static ClassPtr classChar;
 	static ClassPtr classByte;
@@ -66,7 +77,9 @@ private:
 	Set<ObjectPtr> methodSet_;
 	Set<ObjectPtr> variableSet_;
 	Set<ObjectPtr> classSet_;
+	Set<ObjectPtr> conditionSet_;
 	Buffer scopeName_;
+    OnScopeUpdate callback_;
 };
 
 LAME_END2

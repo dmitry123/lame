@@ -10,11 +10,11 @@ public:
 	Void Load(StringC fileName);
 	Void Parse(StringC script);
 public:
-	inline Vector<LexNodePtr>& GetLexList() {
+	inline Deque<LexNodePtr>& GetLexList() {
 		return this->lexList;
 	}
 private:
-	Vector<LexNodePtr> lexList;
+	Deque<LexNodePtr> lexList;
 };
 
 LAME_END2

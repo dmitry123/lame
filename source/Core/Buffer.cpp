@@ -118,7 +118,7 @@ Uint16 Buffer::GetHash16(StringC string) {
 	Uint32 length = 0;
 	Uint16 hash = 0;
 
-	length = strlen(string);
+	length = Uint32(strlen(string));
 
 	for (Uint32 i = 0; i < length; i++) {
 		hash = 15 * hash + string[i];
@@ -131,7 +131,7 @@ Uint32 Buffer::GetHash32(StringC string) {
 	Uint32 length = 0;
 	Uint32 hash = 0;
 
-	length = strlen(string);
+	length = Uint32(strlen(string));
 
 	for (Uint32 i = 0; i < length; i++) {
 		hash = 31 * hash + string[i];
@@ -144,7 +144,7 @@ Uint64 Buffer::GetHash64(StringC string) {
 	Uint32 length = 0;
 	Uint64 hash = 0;
 
-	length = strlen(string);
+	length = Uint32(strlen(string));
 
 	for (Uint32 i = 0; i < length; i++) {
 		hash = 63 * hash + string[i];

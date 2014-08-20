@@ -21,10 +21,9 @@ public:
 	Void Trace(Uint32 offset) final override;
 	HashType Hash(Void) final override;
 	Uint32 Size(Void) final override;
-	Void Release(Void) final override;
 public:
 	Void SetNativeMethod(NativeMethod method);
-	Void Invoke(Vector<VariablePtr> attributes = {});
+	Buffer GetFormattedArguments(Void);
 public:
 	Void SetThis(ObjectPtr thisClass) { this->thisClass = thisClass; }
 	inline ObjectPtr GetThis() { return this->thisClass; }
@@ -32,6 +31,7 @@ public:
 	inline ClassPtr GetReturnType() { return this->returnClass; }
 	inline Void SetRootNode(NodePtr node) { this->rootNode = node; }
 	inline NodePtr GetRootNode() { return this->rootNode; }
+	inline Vector<ClassPtr> GetAttributeHash() { return this->attributesHash; }
 public:
 	inline NativeMethod GetNativeMethod() { return this->nativeMethod; }
 	inline Uint32 GetInvokeHash() { return this->invokeHash; }
@@ -45,6 +45,8 @@ private:
 	NativeMethod nativeMethod;
 	NodePtr rootNode;
 	Uint32 invokeHash;
+public:
+	VariablePtr returnVar;
 };
 
 LAME_END2

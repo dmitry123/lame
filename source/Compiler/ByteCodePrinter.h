@@ -16,8 +16,7 @@ public:
 	enum class LineType {
 		Address,
 		Register,
-		Jump,
-		Const
+		Jump
 	};
 public:
 	ByteCodePrinterPtr New(Asm command);

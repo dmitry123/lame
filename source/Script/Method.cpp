@@ -11,7 +11,8 @@ Method::Method(BufferRefC name, ScopePtr parent, ObjectPtr thisClass, ObjectPtr 
 	returnClass((ClassPtr) returnClass),
 	nativeMethod(0),
 	rootNode(0),
-	invokeHash(0)
+	invokeHash(0),
+	returnVar(0)
 {
 	this->invokeHash =
 		this->ComputeInvokeHash(attributes);
@@ -74,11 +75,7 @@ Method::HashType Method::Hash(Void) {
 }
 
 Uint32 Method::Size(Void) {
-	return SizeOf / 1;
-}
-
-Void Method::Release(Void) {
-	// Donkey :D
+	return SizeOf;
 }
 
 Void Method::SetNativeMethod(NativeMethod method) {
@@ -87,8 +84,18 @@ Void Method::SetNativeMethod(NativeMethod method) {
 	this->SetModificator(Modificator::Native);
 }
 
-Void Method::Invoke(Vector<VariablePtr> attributes) {
+Buffer Method::GetFormattedArguments(Void) {
 
+	Buffer result;
+
+	for (Uint32 i = 0; i < this->attributesHash.size(); i++) {
+		result.append(this->attributesHash[i]->GetClass()->GetName());
+		if (i != this->attributesHash.size() - 1) {
+			result.append(", ");
+		}
+	}
+
+	return result;
 }
 
 Uint32 Method::ComputeInvokeHash(Vector<ClassPtr>& classList) {

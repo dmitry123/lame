@@ -6,11 +6,11 @@
 #include "Class.h"
 #include "Internal.h"
 
-#include <functional>
+#include <float.h>
 
 LAME_BEGIN2(Script)
 
-static Bool _MoveNode(NodePtr node) {
+static Bool _MoveNode(NodePtr node, Bool isMoveConstruciton = FALSE) {
 
 	Bool result = FALSE;
 
@@ -22,25 +22,44 @@ static Bool _MoveNode(NodePtr node) {
 		whereupon we'll swap our expressions and push in one stack. Final
 		view should be : '1 if'. We've saved count of arguments in node 'new' */
 
-	if (node->parent != NULL && node->parent->blockList.size() > 0 &&
-		node->argList.size() > 0 && node->id != kScriptNodeFunction
+	if (node->id == kScriptNodeFunction ||
+		(node->id == kScriptNodeCondition && !isMoveConstruciton) ||
+		node->lex->lex->id == kScriptLexCatch
 	) {
+		goto _Seek;
+	}
+
+	if (node->parent != NULL &&
+		node->parent->blockList.size() > 0 &&
+		node->argList.size() > 0
+	) {
+		Deque<NodePtr>* nodeStack = NULL;
+
 		/*	Get element from parent's stack */
 		auto position = std::find(
 			node->parent->blockList.begin(),
 			node->parent->blockList.end(), node);
 
 		if (position == node->parent->blockList.end()) {
-			PostSyntaxError(node->parent->lex->line, "Node (%s) hasn't been appended to his parent (%s)", node->word.data(), node->parent->word.data());
+			position = std::find(node->parent->argList.begin(), node->parent->argList.end(), node);
+			if (position == node->parent->argList.end()) {
+				PostSyntaxError(node->parent->lex->line, "Node (%s) hasn't been appended to his parent (%s)", node->word.data(), node->parent->word.data());
+			}
+			else {
+				nodeStack = &node->parent->argList;
+			}
+		}
+		else {
+			nodeStack = &node->parent->blockList;
 		}
 
 		/*	Push argument list in parent's block stack */
 		if (node->id != kScriptNodeVariable) {
-			node->parent->blockList.insert(position,
+			nodeStack->insert(position,
 				node->argList.begin(), node->argList.end());
 		}
 		else {
-			node->parent->blockList.insert(position + 1,
+			nodeStack->insert(position + 1,
 				node->argList.begin(), node->argList.end());
 		}
 
@@ -49,9 +68,18 @@ static Bool _MoveNode(NodePtr node) {
 		result = TRUE;
 	}
 
+_Seek:
+	if (node->id == kScriptNodeCondition) {
+		for (NodePtr n : node->argList) {
+			if (_MoveNode(n, isMoveConstruciton)) {
+				goto _Seek;
+			}
+		}
+	}
+
 _Again:
 	for (NodePtr n : node->blockList) {
-		if (_MoveNode(n)) {
+		if (_MoveNode(n, isMoveConstruciton)) {
 			goto _Again;
 		}
 	}
@@ -59,33 +87,45 @@ _Again:
 	return result;
 }
 
-Void ScopeBuilder::Build(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
+ScopeBuilder::ScopeBuilder() {
+	this->rootConstruction = new Class("$", NULL);
+	this->lastVar = this->rootConstruction;
+}
 
-	if (!nodeBuilder) {
-		throw Exception("Builder mustn't be NULL");
-	}
+ScopeBuilder::~ScopeBuilder() {
+	delete this->rootConstruction;
+}
+
+Void ScopeBuilder::Build(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
 
 	NodePtr rootNode = nodeBuilder->GetRootNode();
 
+	/*	Move all consutions's nodes from blocks
+		to parent's block */
+
+	_MoveNode(rootNode);
+
+	/*	Copy root scope to root node */
+
+	rootNode->var = ObjectPtr(rootScope);
+
+	/*	Save root scope in stack as default */
+
 	this->_Push(rootScope);
 
-	_MoveNode(nodeBuilder->GetRootNode());
-
-	/*	Node trace (only for debugging) */
-
-	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachNodeTrace, this), kScriptNodeUnknown);
-
-	/*	Class/Interface declare can be divided into several blocks:
+	/*	Class/Interface declare can be divided onto several blocks:
 			1. Declaring class/interface prototypes (without variables, methods or classes)
 			2. Apply class/interface modificators
 			3. Declaring class/interface methods and variables */
 
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassPrototype, this), kScriptNodeClass);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachModificatorSet, this), kScriptNodeClass);
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassPrototype, this), kScriptNodeAnonymous);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachInterfacePrototype, this), kScriptNodeInterface);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachModificatorSet, this), kScriptNodeInterface);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachInterfaceDeclare, this), kScriptNodeInterface);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassDeclare, this), kScriptNodeClass);
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassDeclare, this), kScriptNodeAnonymous);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassVariableDeclare, this), kScriptNodeVariable);
 
 	/*	Class/Interface inheritance:
@@ -101,7 +141,7 @@ Void ScopeBuilder::Build(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
 
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachConstDeclare, this), kScriptNodeDefault);
 
-	/*	Mathod/Variable declare can be divided into next blocks:
+	/*	Mathod/Variable declare can be divided onto next blocks:
 			1. Declare method (method block and it's arguments)
 			2. Apply modificators for method (public, private, static etc)
 			3. Now we can register methods (after apply modificators we can
@@ -113,21 +153,51 @@ Void ScopeBuilder::Build(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachMethodDeclare, this), kScriptNodeFunction);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachModificatorSet, this), kScriptNodeFunction);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachMethodRegister, this), kScriptNodeFunction);
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachConstruction, this), kScriptNodeCondition);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachVariableDeclare, this), kScriptNodeUnknown);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachModificatorSet, this), kScriptNodeVariable);
 
 	/*	Check for empty nodes */
 
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachNodeFind, this), kScriptNodeUnknown);
+    
+    /*  Check every class/interface inheritance lexes */
+    
+    this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachCheckInheritance, this), kScriptNodeInterface);
+    this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachCheckInheritance, this), kScriptNodeClass);
+    this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachCheckInheritance, this), kScriptNodeAnonymous);
+    
+	/*	Now we can move all other nodes which was in language constructions. That
+		mean that we've allocated memory for there variables in there scopes
+		after what move it's variables in parent scope to avoid variable redeclaration
+		and now we can use next construction :
+		'for (int i = 0; ...)' { ... }' and 'i' variable
+		will be allocated into 'for' scope and ordered expression will have next
+		view : 'i 0 = ... for' and we won't have any conflicts with other language
+		constructions. */
+
+	_MoveNode(rootNode, TRUE);
+
+	/*	Node trace (only for debugging) */
+    
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachNodeTrace, this), kScriptNodeUnknown);
+    this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachNodeFlush, this), kScriptNodeUnknown);
 }
 
 Void ScopeBuilder::_ForEachNodeTrace(NodePtr n) {
+
+	static StringC spaceTokens = "\t\n\r\a\b";
 
 	if (n->lex->args && n->lex->args != n->lex->lex->args) {
 		printf("%s(%d) ", n->word.data(), n->lex->args);
 	}
 	else {
-		printf("%s ", n->word.data());
+		if (n->word.length() == 1 && strchr(spaceTokens, n->word[0])) {
+			printf("%d ", n->word[0]);
+		}
+		else {
+			printf("%s ", n->word.data());
+		}
 	}
 }
 
@@ -158,6 +228,10 @@ Void ScopeBuilder::_ForEachModificatorSet(NodePtr n) {
 		if ((n->flags & kScriptFlagNative) != 0) {
 			n->var->SetModificator(Class::Modificator::Native);
 		}
+		if ((n->flags & kScriptFlagAbstract) != 0) {
+			n->var->SetModificator(Class::Modificator::Abstract);
+            ObjectPtr(n->var->GetParent())->SetModificator(Class::Modificator::Abstract);
+		}
 	}
 }
 
@@ -172,8 +246,14 @@ Void ScopeBuilder::_ForEachNodeFind(NodePtr n) {
 
 Void ScopeBuilder::_ForEachClassPrototype(NodePtr n) {
 
-	n->var = this->scope->Add(
-		new Class(n->typeNode->word, this->scope));
+	if (n->id == kScriptNodeAnonymous) {
+		n->var = this->scope->Add(
+			new Class("", this->scope));
+	}
+	else{
+		n->var = this->scope->Add(
+			new Class(n->typeNode->word, this->scope));
+	}
 
 	if (!n->var) {
 		PostSyntaxError(n->lex->line, "Class redeclaration (%s)", n->typeNode->word.data());
@@ -197,12 +277,23 @@ Void ScopeBuilder::_ForEachInterfacePrototype(NodePtr n) {
 Void ScopeBuilder::_ForEachClassDeclare(NodePtr n) {
 
 	ClassPtr classVar;
+	ObjectPtr classExtend;
 
-	n->var = this->scope->Find(n->typeNode->word);
+	if (!n->var) {
+		n->var = this->scope->Find(n->typeNode->word);
+	}
+
 	classVar = n->var->GetClass();
 
 	if (!n->var) {
 		PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->typeNode->word.data());
+	}
+
+	if (n->id == kScriptNodeAnonymous) {
+		if (!(classExtend = this->scope->Find(n->word))) {
+			PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->word.data());
+		}
+		classVar->Extend(classExtend);
 	}
 
 	if (n->typeNode->templateNode) {
@@ -236,7 +327,7 @@ Void ScopeBuilder::_ForEachClassVariableDeclare(NodePtr n) {
 	}
 
 	if ((n->flags & kScriptFlagArray) != 0) {
-		LAME_TODO("Add array support!");
+        n->var = scope->Add(new Variable(n->word, scope, typeClass->GetClass(), TRUE));
 	}
 	else if (!n->var) {
 		n->var = scope->Add(new Variable(n->word, scope, typeClass->GetClass()));
@@ -266,10 +357,7 @@ Void ScopeBuilder::_ForEachClassVariableDeclare(NodePtr n) {
 
 Void ScopeBuilder::_ForEachInterfaceDeclare(NodePtr n) {
 
-	ClassPtr classVar;
-
 	n->var = scope->Find(n->typeNode->word);
-	classVar = n->var->GetClass();
 
 	if (!n->var) {
 		PostSyntaxError(n->lex->line, "Undeclared interface (%s)", n->word.data());
@@ -352,19 +440,44 @@ Void ScopeBuilder::_ForEachConstDeclare(NodePtr n) {
 
 	if (n->lex->lex->id == kScriptLexInt) {
 
-		n->var = globalScope->Add(
-			new Variable(n->word, globalScope, globalScope->classInt));
+		Sint64 intValue = ParseIntValue(n->word.data());
+		ClassPtr intClass;
 
-		n->var->GetVariable()->SetInteger(ParseIntValue(n->word.data()))
+		if (intValue >= -0x7f - 1 && intValue <= 0x7f) {
+			intClass = globalScope->classByte;
+		}
+		else if (intValue >= -0x7fff - 1 && intValue <= 0x7fff) {
+			intClass = globalScope->classShort;
+		}
+		else if (intValue >= -0x7fffffff - 1 && intValue <= 0x7fffffff) {
+			intClass = globalScope->classInt;
+		}
+		else {
+			intClass = globalScope->classLong;
+		}
+
+		n->var = globalScope->Add(
+			new Variable(n->word, globalScope, intClass));
+
+		n->var->GetVariable()->SetInteger(intValue)
 			->SetModificator(Class::Modificator::Final)
 			->SetModificator(Class::Modificator::Constant);
 	}
 	else if (n->lex->lex->id == kScriptLexFloat) {
+        
+        Float64 floatValue = ParseFloatValue(n->word.data());
+        ClassPtr floatClass;
+        
+        if (floatValue >= FLT_MIN && floatValue <= FLT_MAX) {
+            floatClass = globalScope->classFloat;
+        } else {
+            floatClass = globalScope->classDouble;
+        }
 
-		n->var = globalScope->Add(
-			new Variable(n->word, globalScope, globalScope->classFloat));
+		n->var = globalScope->Add(new Variable(
+            n->word, globalScope, floatClass));
 
-		n->var->GetVariable()->SetFloat(ParseFloatValue(n->word.data()))
+		n->var->GetVariable()->SetFloat(floatValue)
 			->SetModificator(Class::Modificator::Final)
 			->SetModificator(Class::Modificator::Constant);
 	}
@@ -374,6 +487,15 @@ Void ScopeBuilder::_ForEachConstDeclare(NodePtr n) {
 			new Variable(n->word, globalScope, globalScope->classString));
 
 		n->var->GetVariable()->SetString(ParseStringValue(n->word.data()))
+			->SetModificator(Class::Modificator::Final)
+			->SetModificator(Class::Modificator::Constant);
+	}
+	else if (n->lex->lex->id == kScriptLexCharacter) {
+
+		n->var = globalScope->Add(
+			new Variable(n->word, globalScope, globalScope->classChar));
+
+		n->var->GetVariable()->SetInteger(n->word[0])
 			->SetModificator(Class::Modificator::Final)
 			->SetModificator(Class::Modificator::Constant);
 	}
@@ -412,9 +534,12 @@ Void ScopeBuilder::_ForEachMethodDeclare(NodePtr n) {
 		PostSyntaxError(n->lex->line, "You can't declare custom constructor (%s) with another return type (%s)",
 			methodObject->GetName().data(), returnType->GetName().data());
 	}
+    
+    if ((n->flags & kScriptFlagImplemented) != 0) {
+        methodObject->GetMethod()->SetRootNode(n);
+    }
 
 	n->var = methodObject;
-	methodObject->GetMethod()->SetRootNode(n);
 	n->methodHash = methodObject->GetMethod()->GetInvokeHash();
 	n->var->SetNode(n);
 }
@@ -428,7 +553,8 @@ Void ScopeBuilder::_ForEachMethodRegister(NodePtr n) {
 	}
 
 	if (n->parent->id == kScriptNodeClass ||
-		n->parent->id == kScriptNodeInterface
+		n->parent->id == kScriptNodeInterface ||
+        n->parent->id == kScriptNodeAnonymous
 	) {
 		if (!methodObject->CheckModificator(Object::Modificator::Static)) {
 			methodObject->Scope::Add(new Variable("this", methodObject, ClassPtr(this->scope)));
@@ -487,7 +613,7 @@ Void ScopeBuilder::_ForEachVariableDeclare(NodePtr n) {
 		}
 
 		if ((n->flags & kScriptFlagArray) != 0) {
-			LAME_TODO("Add array support!");
+            n->var = scope->Add(new Variable(n->word, scope, typeClass->GetClass(), TRUE));
 		}
 		else if (!n->var) {
 			n->var = scope->Add(new Variable(n->word, scope, typeClass->GetClass()));
@@ -518,21 +644,95 @@ Void ScopeBuilder::_ForEachVariableDeclare(NodePtr n) {
 		if (!n->var && n->lex->lex->id == kScriptLexDefault) {
 			n->var = scope->Find(n->word);
 			if (!n->var) {
-				PostSyntaxError(n->lex->line, "Undeclared variable (%s)", n->word.data());
+				auto i = std::find(n->parent->blockList.begin(), n->parent->blockList.end(), n);
+				if (i != n->parent->blockList.end()) {
+					if ((*(i + 1))->lex->lex->id != kScriptLexDirected) {
+						goto _UndeclaredVariable;
+					}
+				}
+				else {
+				_UndeclaredVariable:
+					PostSyntaxError(n->lex->line, "Undeclared variable (%s)", n->word.data());
+				}
 			}
 		}
 	}
 }
 
+Void ScopeBuilder::_ForEachConstruction(NodePtr n) {
+
+	if (!n->var) {
+
+		if (n->lex->lex->id == kScriptLexElse) {
+			if (!lastVar->GetNode() || lastVar->GetNode()->lex->lex->id != kScriptLexIf) {
+				PostSyntaxError(n->lex->line, "Else must have If block (%s)", lastVar->GetName().data());
+			}
+		}
+
+		if (n->lex->lex->id == kScriptLexFinally ||
+			n->lex->lex->id == kScriptLexCatch
+		) {
+			if (!lastVar->GetNode()) {
+				PostSyntaxError(n->lex->line, "Finally/Catch must have Try block (%s)", lastVar->GetName().data());
+			}
+			if (lastVar->GetNode()->lex->lex->id != kScriptLexFinally &&
+				lastVar->GetNode()->lex->lex->id != kScriptLexCatch &&
+				lastVar->GetNode()->lex->lex->id != kScriptLexTry
+			) {
+				PostSyntaxError(n->lex->line, "Finally/Catch must have Try block (%s)", lastVar->GetName().data());
+			}
+		}
+
+		if (lastVar->GetNode() && lastVar->GetNode()->lex->lex->id == kScriptLexDo) {
+			if (n->lex->lex->id != kScriptLexWhile) {
+				PostSyntaxError(n->lex->line, "Do must have While block (%s)", n->word.data());
+			}
+		}
+
+		if (!n->parent->var) {
+			PostSyntaxError(n->lex->line, "Language construction in illegal place (%s)", n->parent->word.data());
+		}
+
+		do {
+			n->var = n->parent->var->Add(new Class("", this->scope));
+		} while (!n->var);
+
+		n->var->SetNode(n);
+		n->parent->var->GetConditionSet().insert(n->var);
+		lastVar = n->var->GetClass();
+		n->var->SetNode(n);
+	}
+}
+
+Void ScopeBuilder::_ForEachCheckInheritance(NodePtr n) {
+    
+    if (n->var) {
+        if (n->var->CheckType(Object::Type::Class) ||
+            n->var->CheckType(Object::Type::Interface)
+        ) {
+            n->var->GetClass()->CheckInheritance();
+        }
+    }
+}
+
+Void ScopeBuilder::_ForEachNodeFlush(NodePtr n) {
+    
+    if (n->var) {
+        n->var->Flush();
+    }
+}
+
 Void ScopeBuilder::_ForEachNode(NodePtr node, ScopePtr scope, ForEachNode callback, NodeID id) {
 
-	if (id == kScriptNodeUnknown || id != kScriptNodeUnknown && node->id == id) {
+	if (id == kScriptNodeUnknown || (id != kScriptNodeUnknown && node->id == id)) {
 		callback(node);
 	}
-
+    
 	if (node->id == kScriptNodeClass ||
 		node->id == kScriptNodeInterface ||
-		node->id == kScriptNodeFunction
+		node->id == kScriptNodeFunction ||
+		node->id == kScriptNodeCondition ||
+		node->id == kScriptNodeAnonymous
 	)  {
 		if (node->var) {
 			this->_Push(node->var);
@@ -548,7 +748,9 @@ Void ScopeBuilder::_ForEachNode(NodePtr node, ScopePtr scope, ForEachNode callba
 
 	if (node->id == kScriptNodeClass ||
 		node->id == kScriptNodeInterface ||
-		node->id == kScriptNodeFunction
+		node->id == kScriptNodeFunction ||
+		node->id == kScriptNodeCondition ||
+		node->id == kScriptNodeAnonymous
 	)  {
 		if (node->var) {
 			this->_Pop();
@@ -560,6 +762,7 @@ Void ScopeBuilder::_Push(ScopePtr scope) {
 
 	this->scopeStack.push_back(scope);
 	this->scope = scope;
+	this->lastStack.push_back(this->lastVar);
 }
 
 ScopePtr ScopeBuilder::_Pop(Void) {
@@ -570,6 +773,8 @@ ScopePtr ScopeBuilder::_Pop(Void) {
 
 	this->scopeStack.pop_back();
 	this->scope = this->scopeStack.back();
+	this->lastVar = this->lastStack.back();
+	this->lastStack.pop_back();
 
 	return this->scope;
 }

@@ -1,26 +1,45 @@
 #include "Variable.h"
 #include "Internal.h"
 #include "Lex.h"
+#include "Node.h"
+#include "Exception.h"
 
 LAME_BEGIN2(Script)
 
-Variable::Variable(BufferRefC name, ScopePtr parent, ClassPtr classType) : Object(name, parent, Type::Variable),
+Variable::Variable(BufferRefC name, ScopePtr parent, ClassPtr classType, Bool isArray) : Object(name, parent, Type::Variable),
 	classType(classType)
 {
+    this->wasInStack = FALSE;
 	this->objectValue = NULL;
 	this->registerType = NULL;
 
-	if (classType->IsFloat()) {
+	if (classType->IsFloat() ||
+        classType->IsDouble()
+    ) {
 		this->varType = Var::Float;
+        this->SetModificator(Modificator::Float);
 	}
-	else if (classType->IsInt()) {
+	else if (
+        classType->IsInt() ||
+        classType->IsChar() ||
+        classType->IsShort() ||
+        classType->IsLong()
+    ) {
 		this->varType = Var::Integer;
+        this->SetModificator(Modificator::Integer);
 	}
 	else if (classType->IsString()) {
 		this->varType = Var::String;
+        this->SetModificator(Modificator::String);
+		this->SetModificator(Modificator::Object2);
 	}
 	else {
 		this->varType = Var::Object;
+		this->SetModificator(Modificator::Object2);
+	}
+
+	if (isArray) {
+		this->varType = Var::Array;
 	}
 
 	this->v.intValue = 0;
@@ -29,7 +48,7 @@ Variable::Variable(BufferRefC name, ScopePtr parent, ClassPtr classType) : Objec
 
 Variable::~Variable() {
 
-	if (this->objectValue != NULL && this->objectValue->DecRef()) {
+	if (this->objectValue != NULL) {
 		delete this->objectValue;
 	}
 }
@@ -53,13 +72,7 @@ VariablePtr Variable::SetFloat(ScriptNativeFloat f) {
 VariablePtr Variable::SetObject(ClassPtr c) {
 
 	if (this->objectValue) {
-		if (this->objectValue->DecRef()) {
-			delete this->objectValue;
-		}
-	}
-
-	if (c != NULL) {
-		c->IncRef();
+        delete this->objectValue;
 	}
 
 	this->objectValue = c;
@@ -76,15 +89,23 @@ VariablePtr Variable::SetString(ScriptNativeString s) {
 	return this;
 }
 
+VariablePtr Variable::SetBoolean(ScriptNativeBool b) {
+    
+    this->v.intValue = b;
+    this->varType = Var::Boolean;
+    
+    return this;
+}
+
 ScriptNativeInt Variable::GetInteger(Void) {
 
 	if (this->varType == Var::Float) {
 		return (ScriptNativeInt) this->v.floatValue;
 	}
-
-	if (this->varType == Var::Object) {
-		throw ClassInvalidCastException("Invalid class cast");
-	}
+    
+    if (this->varType != Var::Float) {
+        PostSyntaxError(this->GetNode()->lex->line, "Invalid type cast from (%s) to Integer", this->GetClass()->GetName().data());
+    }
 
 	return this->v.intValue;
 }
@@ -100,6 +121,15 @@ ScriptNativeFloat Variable::GetFloat(Void) {
 	}
 
 	return this->v.floatValue;
+}
+
+ScriptNativeBool Variable::GetBoolean(Void) {
+    
+    if (this->varType != Var::Boolean) {
+        PostSyntaxError(this->GetNode()->lex->line, "Invalid type cast from (%s) to Boolean", this->GetClass()->GetName().data());
+    }
+    
+    return this->v.intValue;
 }
 
 Bool Variable::Equal(ObjectPtrC object) {
@@ -169,11 +199,16 @@ Void Variable::Trace(Uint32 offset) {
 		printf("%.2f", this->v.floatValue);
 	}
 	else if (varType == Var::Integer) {
-		if (sizeof(this->v.intValue) == 4) {
+		if (this->GetClass()->IsChar()) {
 			printf("%lld", this->v.intValue);
 		}
 		else {
-			printf("%lld", this->v.intValue);
+			if (sizeof(this->v.intValue) == 4) {
+				printf("%d", Uint32(this->v.intValue));
+			}
+			else {
+				printf("%lld", this->v.intValue);
+			}
 		}
 	}
 	else {
@@ -214,14 +249,8 @@ Uint32 Variable::Size(Void) {
 	}
 }
 
-Void Variable::Release(Void) {
-
-	if (this->varType == Var::Object && this->objectValue) {
-		this->objectValue->Release();
-	}
-}
-
 ClassPtr Variable::GetClass() {
+    
 	if (this->objectValue) {
 		return this->objectValue;
 	}

@@ -16,7 +16,7 @@ public:
 	Void Save(StringC fileName);
 public:
 	typedef struct {
-		Uint32 singature;
+		Uint64 singature;
 		Uint32 segmentCount;
 	} HeaderInfo;
 public:

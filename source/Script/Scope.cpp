@@ -5,6 +5,7 @@
 #include "Class.h"
 #include "Method.h"
 #include "Variable.h"
+#include "Node.h"
 
 #include <utility>
 
@@ -27,7 +28,7 @@ ObjectPtr Scope::Add(ObjectPtr object) {
 	this->stringMap_.insert(std::make_pair(object->GetName(), object));
 
 	object->GetObservable()
-		->Add(this);
+		->Observe(this);
 
 	this->Update(object);
 
@@ -46,11 +47,7 @@ Void Scope::Remove(ObjectPtr object) {
 	}
 
 	object->GetObservable()
-		->Remove(this);
-
-	if ((object = i->second) != NULL) {
-		object->Release();
-	}
+        ->RemoveObserver(this);
 
 	if (this->publicSet_.count(object)) {
 		this->publicSet_.erase(object);
@@ -67,12 +64,15 @@ Void Scope::Remove(ObjectPtr object) {
 	if (this->classSet_.count(object)) {
 		this->classSet_.erase(object);
 	}
+	if (this->conditionSet_.count(object)) {
+		this->conditionSet_.erase(object);
+	}
 
 	this->hashMap_.erase(i);
 	this->stringMap_.erase(j);
 }
 
-ObjectPtr Scope::Find(Hash hash) {
+ObjectPtr Scope::Find(Hash hash, Bool withDepth) {
 
 	HashMap::iterator i;
 	ScopePtr scope;
@@ -84,6 +84,10 @@ ObjectPtr Scope::Find(Hash hash) {
 		if ((i = scope->hashMap_.find(hash)) != scope->hashMap_.end()) {
 			return i->second;
 		}
+        
+        if (!withDepth) {
+            break;
+        }
 
 		scope = scope->parentScope_;
 	}
@@ -91,7 +95,7 @@ ObjectPtr Scope::Find(Hash hash) {
 	return NULL;
 }
 
-ObjectPtr Scope::Find(BufferRefC name) {
+ObjectPtr Scope::Find(BufferRefC name, Bool withDepth) {
 
 	StringMap::iterator i;
 	ScopePtr scope;
@@ -104,6 +108,10 @@ ObjectPtr Scope::Find(BufferRefC name) {
 			return i->second;
 		}
 
+        if (!withDepth) {
+            break;
+        }
+        
 		scope = scope->parentScope_;
 	}
 
@@ -170,6 +178,7 @@ Void Scope::Clear(Void) {
 	this->methodSet_.clear();
 	this->variableSet_.clear();
 	this->classSet_.clear();
+	this->conditionSet_.clear();
 }
 
 Void Scope::Trace(Uint32 offset) {
@@ -225,6 +234,9 @@ Void Scope::Update(ObjectPtr object) {
 	if (this->classSet_.count(object)) {
 		this->classSet_.erase(object);
 	}
+	if (this->conditionSet_.count(object)) {
+		this->conditionSet_.erase(object);
+	}
 
 	if (object->CheckModificator(Object::Modificator::Private)) {
 		// ignore
@@ -246,8 +258,12 @@ Void Scope::Update(ObjectPtr object) {
 	else if (object->CheckType(Object::Type::Variable)) {
 		this->variableSet_.insert(object);
 	}
-	else {
+	else if (object->CheckType(Object::Type::Method)) {
 		this->methodSet_.insert(object);
+	}
+
+	if (object->GetNode() && object->GetNode()->id == kScriptNodeCondition) {
+		this->conditionSet_.insert(object);
 	}
 }
 
@@ -268,7 +284,7 @@ Buffer Scope::Path(Void) {
 	Buffer resultPath;
 
 	while (root && root->parentScope_) {
-		resultPath += root->GetName() + '@';
+		resultPath += root->GetName() + '/';
 		root = root->parentScope_;
 	}
 
@@ -282,9 +298,13 @@ Void Scope::Flush(Void) {
 	this->methodSet_.clear();
 	this->variableSet_.clear();
 	this->classSet_.clear();
+	this->conditionSet_.clear();
 
-	for (auto i : this->stringMap_) {
+	for (auto i : this->hashMap_) {
 		this->Update(i.second);
+        if (this->callback_) {
+            this->callback_(this, i.second);
+        }
 	}
 }
 
@@ -293,17 +313,22 @@ Scope::Scope(BufferRefC name, ScopePtr parent) {
 	this->scopeName_ = name;
 	this->parentScope_ = parent;
 	this->isOwner_ = TRUE;
+    this->callback_ = NULL;
 }
 
 Scope::~Scope() {
 	this->Clear();
 }
 
-ScopePtr Scope::GetRootScope(Void) {
+ScopePtr Scope::CreateRootScope(Void) {
 
 	Script::ClassPtr rootScope = new Script::Class("Root", NULL, 0);
+    
+    if (classChar != NULL) {
+        return ScopePtr(rootScope);
+    }
 
-	classChar = rootScope->Scope::Add(new Script::Class("char", rootScope, 1))->GetClass();
+	classChar = rootScope->Scope::Add(new Script::Class("char", rootScope, 2))->GetClass();
 	classByte = rootScope->Scope::Add(new Script::Class("byte", rootScope, 1))->GetClass();
 	classBoolean = rootScope->Scope::Add(new Script::Class("boolean", rootScope, 1))->GetClass();
 	classShort = rootScope->Scope::Add(new Script::Class("short", rootScope, 2))->GetClass();
@@ -317,43 +342,62 @@ ScopePtr Scope::GetRootScope(Void) {
 	classClass = rootScope->Scope::Add(new Script::Class("Class", rootScope))->GetClass();
 	classUnknown = rootScope->Scope::Add(new Script::Class("?", rootScope))->GetClass();
 	classArray = rootScope->Scope::Add(new Script::Class("Array", rootScope))->GetClass();
-
+    
 	classChar
 		->SetModificator(Script::Object::Modificator::Primitive)
-		->SetModificator(Script::Object::Modificator::Internal);
+		->SetModificator(Script::Object::Modificator::Internal)
+        ->SetModificator(Script::Object::Modificator::Integer);
 	classByte
 		->SetModificator(Script::Object::Modificator::Primitive)
-		->SetModificator(Script::Object::Modificator::Internal);
+		->SetModificator(Script::Object::Modificator::Internal)
+        ->SetModificator(Script::Object::Modificator::Integer);
 	classBoolean
 		->SetModificator(Script::Object::Modificator::Primitive)
-		->SetModificator(Script::Object::Modificator::Internal);
+		->SetModificator(Script::Object::Modificator::Internal)
+        ->SetModificator(Script::Object::Modificator::Boolean);
 	classShort
 		->SetModificator(Script::Object::Modificator::Primitive)
-		->SetModificator(Script::Object::Modificator::Internal);
+		->SetModificator(Script::Object::Modificator::Internal)
+        ->SetModificator(Script::Object::Modificator::Integer);
 	classInt
 		->SetModificator(Script::Object::Modificator::Primitive)
-		->SetModificator(Script::Object::Modificator::Internal);
+		->SetModificator(Script::Object::Modificator::Internal)
+        ->SetModificator(Script::Object::Modificator::Integer);
 	classLong
 		->SetModificator(Script::Object::Modificator::Primitive)
-		->SetModificator(Script::Object::Modificator::Internal);
+		->SetModificator(Script::Object::Modificator::Internal)
+        ->SetModificator(Script::Object::Modificator::Integer);
 	classFloat
 		->SetModificator(Script::Object::Modificator::Primitive)
-		->SetModificator(Script::Object::Modificator::Internal);
+		->SetModificator(Script::Object::Modificator::Internal)
+        ->SetModificator(Script::Object::Modificator::Float);
 	classDouble
 		->SetModificator(Script::Object::Modificator::Primitive)
-		->SetModificator(Script::Object::Modificator::Internal);
+		->SetModificator(Script::Object::Modificator::Internal)
+        ->SetModificator(Script::Object::Modificator::Float);
 	classVoid
 		->SetModificator(Script::Object::Modificator::Primitive)
 		->SetModificator(Script::Object::Modificator::Internal);
 
-	classString->SetModificator(Script::Object::Modificator::Internal);
-	classObject->SetModificator(Script::Object::Modificator::Internal);
-	classClass->SetModificator(Script::Object::Modificator::Internal);
-	classUnknown->SetModificator(Script::Object::Modificator::Internal);
-	classArray->SetModificator(Script::Object::Modificator::Internal);
+	classString
+        ->SetModificator(Script::Object::Modificator::Internal)
+		->SetModificator(Script::Object::Modificator::Object2)
+        ->SetModificator(Script::Object::Modificator::String);
+	classObject
+        ->SetModificator(Script::Object::Modificator::Internal)
+		->SetModificator(Script::Object::Modificator::Object2);
+	classClass
+        ->SetModificator(Script::Object::Modificator::Internal)
+		->SetModificator(Script::Object::Modificator::Object2);
+	classUnknown
+        ->SetModificator(Script::Object::Modificator::Internal)
+		->SetModificator(Script::Object::Modificator::Object2);
+	classArray
+        ->SetModificator(Script::Object::Modificator::Internal)
+		->SetModificator(Script::Object::Modificator::Object2);
 
-	classObject->Scope::Add(new Method("toString", classObject, classObject, classString))
-		->GetMethod()->SetNativeMethod([](Script::MethodPtr method) { /* Nothing */ });
+	//classObject->Scope::Add(new Method("toString", classObject, classObject, classString))
+	//	->GetMethod()->SetNativeMethod([](Script::MethodPtr method) { /* Nothing */ });
 
 	classArray->Scope::Add(new Variable("length", classArray, classInt))
 		->SetModificator(Object::Modificator::Public);

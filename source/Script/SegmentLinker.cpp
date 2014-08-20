@@ -55,7 +55,7 @@ Void SegmentLinker::Load(StringC fileName) {
 	file.Open(fileName, "rb");
 	file.Read(&header, sizeof(HeaderInfo));
 
-	if (header.singature != Uint32(signature)) {
+	if (header.singature != *Uint32P(&signature)) {
 		throw SegmentLinkerException("File isn't LameScript class (%s)", fileName);
 	}
 
@@ -86,13 +86,13 @@ Void SegmentLinker::Load(StringC fileName) {
 Void SegmentLinker::Save(StringC fileName) {
 
 	HeaderInfo header = {
-		Uint32(signature),
+		*Uint32P(&signature),
 		Uint32(segmentList.size())
 	};
 
 	File file;
 	Uint32 positionOffset = sizeof(HeaderInfo) +
-		sizeof(SegmentInfo) * this->segmentList.size();
+		sizeof(SegmentInfo) * Uint32(this->segmentList.size());
 
 	file.Open(fileName, "wb");
 	file.Write(&header, sizeof(HeaderInfo));
@@ -103,7 +103,7 @@ Void SegmentLinker::Save(StringC fileName) {
 
 	for (SegmentPtr s : this->segmentList) {
 
-		Uint32 nameLength = s->name.length() + 1;
+		Uint32 nameLength = Uint32(s->name.length()) + 1;
 
 		SegmentInfo segment = {
 			positionOffset,
@@ -124,6 +124,6 @@ Void SegmentLinker::Save(StringC fileName) {
 	file.Close();
 }
 
-StringC SegmentLinker::signature = "LCLS";
+StringC SegmentLinker::signature = "LAME_CLS";
 
 LAME_END2

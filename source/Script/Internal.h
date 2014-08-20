@@ -6,18 +6,18 @@
 
 LAME_BEGIN2(Script)
 
-Bool LAME_API IsDigit(Sint8 symbol);
-Bool LAME_API IsLetter(Sint8 symbol);
-Bool LAME_API IsIntValue(StringC string);
-Bool LAME_API IsHexValue(StringC string);
-Bool LAME_API IsStringValue(StringC string);
-Bool LAME_API IsIntValue(const Core::Buffer& string);
-Bool LAME_API IsFloatValue(StringC string);
-Bool LAME_API IsFloatValue(const Core::Buffer& string);
+Bool IsDigit(Sint8 symbol);
+Bool IsLetter(Sint8 symbol);
+Bool IsIntValue(StringC string);
+Bool IsHexValue(StringC string);
+Bool IsStringValue(StringC string);
+Bool IsIntValue(const Core::Buffer& string);
+Bool IsFloatValue(StringC string);
+Bool IsFloatValue(const Core::Buffer& string);
 
-ScriptNativeInt    LAME_API ParseIntValue(StringC string);
-ScriptNativeFloat  LAME_API ParseFloatValue(StringC string);
-ScriptNativeString LAME_API ParseStringValue(StringC string);
+ScriptNativeInt    ParseIntValue(StringC string);
+ScriptNativeFloat  ParseFloatValue(StringC string);
+ScriptNativeString ParseStringValue(StringC string);
 
 LAME_END2
 

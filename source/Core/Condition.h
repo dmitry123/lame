@@ -3,6 +3,8 @@
 
 #include "Types.h"
 
+#include <pthread.h>
+
 LAME_BEGIN2(Core)
 
 class LAME_API Condition {
@@ -20,7 +22,7 @@ private:
 	~Condition();
 private:
 	MutexPtr mutex;
-	VoidP condition_;
+	pthread_cond_t condition_;
 };
 
 LAME_END2

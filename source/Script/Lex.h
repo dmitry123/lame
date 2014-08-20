@@ -6,35 +6,37 @@
 LAME_BEGIN2(Script)
 
 typedef enum {
+	/* Default */
 	kScriptLexDefault = -1,
-	// variable/constants
+	/* Constants */
 	kScriptLexInt,
 	kScriptLexFloat,
 	kScriptLexString,
-	kScriptLexCast,
-	// brackets
+	kScriptLexCharacter,
+	/* Brackets */
 	kScriptLexBracketL,
 	kScriptLexBracketR,
 	kScriptLexParenthesisL,
 	kScriptLexParenthesisR,
+	/* Specials */
+	kScriptLexCast,
 	kScriptLexArray,
 	kScriptLexArgumentList,
-	// selectors
+	/* Selection */
 	kScriptLexDirected,
-	kScriptLexMediated,
-	// single-argument
+	/* Unary Operatorss */
 	kScriptLexIncrement,
 	kScriptLexDecrement,
 	kScriptLexPrefixIncrement,
 	kScriptLexPrefixDecrement,
-	kScriptLexSizeof,
+	kScriptLexInstanceof,
 	kScriptLexReturn,
 	kScriptLexBitNot,
 	kScriptLexNot,
 	kScriptLexUnaryMinus,
 	kScriptLexUnaryPlus,
 	kScriptLexNew,
-	// constructions
+	/* Language Constructions */
 	kScriptLexIf,
 	kScriptLexElse,
 	kScriptLexWhile,
@@ -43,7 +45,7 @@ typedef enum {
 	kScriptLexTry,
 	kScriptLexCatch,
 	kScriptLexFinally,
-	// math
+	/* Binary Operators */
 	kScriptLexMul,
 	kScriptLexDiv,
 	kScriptLexMod,
@@ -65,7 +67,6 @@ typedef enum {
 	kScriptLexBitAndSet,
 	kScriptLexBitXorSet,
 	kScriptLexBitOrSet,
-	// bool
 	kScriptLexBellow,
 	kScriptLexAbove,
 	kScriptLexBellowEqual,
@@ -74,7 +75,7 @@ typedef enum {
 	kScriptLexNotEqual,
 	kScriptLexAnd,
 	kScriptLexOr,
-	// special
+	/* Others */
 	kScriptLexComma,
 	kScriptLexCommentL,
 	kScriptLexCommentR,
@@ -82,9 +83,10 @@ typedef enum {
 	kScriptLexQuote,
 	kScriptLexApostrophe,
 	kScriptLexSemicolon,
+	kScriptLexColon,
 	kScriptLexBraceL,
 	kScriptLexBraceR,
-	// keywords
+	/* Language Keywords */
 	kScriptLexClass,
 	kScriptLexInterface,
 	kScriptLexImplements,
@@ -100,31 +102,42 @@ typedef enum {
 	kScriptLexAbstract,
 	kScriptLexOverride,
 	kScriptLexDecprecated,
-	// special lex for builder
-	kScriptLexArguments,
-	// amount
+	/* Count Of Lexes */
 	kScriptLexAmount
 } LexID;
 
 typedef enum {
+	/* No-Flags */
 	kScriptLexFlagDefault = 0x0000,
+	/* Left-Associated Lex */
 	kScriptLexFlagLeft = 0x0001,
+	/* Right-Associated Lex */
 	kScriptLexFlagRight = 0x0002,
+	/* Lex Is Constant */
 	kScriptLexFlagConst = 0x0004,
+	/* Math Like Operator */
 	kScriptLexFlagMath = 0x0008,
+	/* Bool Like Operator */
 	kScriptLexFlagBool = 0x0010,
+	/* Language Construction */
 	kScriptLexFlagCondition = 0x0020,
+	/* Reserved Language Specific Keyword */
 	kScriptLexFlagLanguage = 0x0040,
+	/* Modificator */
 	kScriptLexFlagModificator = 0x0080,
+	/* Something Unknown */
 	kScriptLexFlagUnknown = 0x0100,
-	kScriptLexFlagWoParenthese = 0x0200
+	/* Language Construction Has't Parentheses */
+	kScriptLexFlagWoParentheses = 0x0200,
+    /* Logic Mac Operators */
+    kScriptLexFlagLogic = 0x0400
 } LexFlagID;
 
 class LAME_API Lex {
 public:
 	const Buffer word;
 	const Uint32 priority;
-	const LexID id;
+	const LexID  id;
 	const Uint32 args;
 	const Uint32 flags;
 public:
@@ -155,6 +168,9 @@ public:
 	inline Bool IsModificator() const {
 		return (this->flags & kScriptLexFlagModificator) != 0;
 	}
+    inline Bool IsLogic() const {
+		return (this->flags & kScriptLexFlagLogic) != 0;
+    }
 public:
 	inline Bool IsClass() const {
 		return this->id == kScriptLexClass;
@@ -165,7 +181,7 @@ public:
 public:
 	static LexPtrC Find(LexID id);
 	static LexPtrC Find(BufferRefC word);
-	static Void PrintLine(Uint32 offset);
+	static Void PrintLine(Uint32 tabOffset = 0);
 private:
 	static Map<LexID, Lex> lexMap;
 };
