@@ -190,8 +190,15 @@ NodeBuilder::Iterator NodeBuilder::_BuildFunction(NodePtr& parent, Iterator i) {
 
 		else {
 		__SaveNode:
-			this->nodeQueue_->push_back(this->_CreateNode(*i, kScriptNodeDefault));
-			i = this->_Build(this->nodeQueue_->back(), i);
+			NodePtr node = this->_CreateNode(*i, kScriptNodeDefault);
+			if (node->lex->lex->id == kScriptLexReturn) {
+				node->lex->args = 0;
+			}
+			if (node->previous->lex->lex->id == kScriptLexReturn && node->lex->lex->IsUnknown()) {
+				node->previous->lex->args = 1;
+			}
+			this->nodeQueue_->push_back(node);
+			i = this->_Build(node, i);
 			if ((*i)->lex->id == kScriptLexParenthesisR && this->nodeQueue_ == &parent->argList) {
 				__Dec(i);
 			}
@@ -1179,9 +1186,10 @@ NodePtr NodeBuilder::_CreateNode(LexNodePtrC lex, NodeID id) {
             node->lex->lex->id == kScriptLexClass
         ) || node->id == kScriptNodeAnonymous
     ) {
-		this->prevNode_ = node;
 		this->parentNode_ = node;
 	}
+
+	this->prevNode_ = node;
 
 	return node;
 }
@@ -1219,7 +1227,7 @@ NodePtr NodeBuilder::_RemoveNode(NodePtr node) {
 
 Void NodeBuilder::_Push(Deque<NodePtr>* stack) {
 
-	/*	Push current node's stack to builder queueu.
+	/*	Push current node's stack to builder queue.
 		It helps to generate tree like structure and
 		we can easylly seek for errors or mistakes in code. */
 

@@ -73,7 +73,7 @@ Void Class::Trace(Uint32 offset) {
 }
 
 Class::HashType Class::Hash(Void) {
-	return this->GetPathHash64();
+	return this->GetHash64();
 }
 
 Uint32 Class::Size(Void) {

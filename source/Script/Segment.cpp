@@ -48,7 +48,7 @@ Uint32P Segment::Write(VariablePtr var) {
 	Uint32 bufferSize = 0;
 	Buffer hexString;
 
-	bufferSize = var->GetClassType()->Size();
+	bufferSize = var->GetClass()->Size();
 
 	if (var->GetVarType() == Variable::Var::String) {
 		copyBuffer = (VoidP)var->stringValue.data();

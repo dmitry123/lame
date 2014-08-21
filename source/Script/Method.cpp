@@ -71,7 +71,7 @@ Void Method::Trace(Uint32 offset) {
 }
 
 Method::HashType Method::Hash(Void) {
-	return Uint64(this->GetPathHash32()) << 32 | this->GetInvokeHash();
+	return Uint64(this->GetHash32()) << 32 | this->GetInvokeHash();
 }
 
 Uint32 Method::Size(Void) {

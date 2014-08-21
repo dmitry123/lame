@@ -63,7 +63,12 @@ ByteCodePrinterPtr ByteCodePrinter::Flush(Void) {
 		address = infoList[0].address;
 	}
 
-	printf("0x%.4x : %s\t", this->currentPosition, asmInfo->name);
+	if (strlen(asmInfo->name) >= 7) {
+		printf("0x%.4x : %s\t", this->currentPosition, asmInfo->name);
+	}
+	else {
+		printf("0x%.4x : %s\t\t", this->currentPosition, asmInfo->name);
+	}
 //	printf("0x%.4x : 0x%.2x ", this->currentPosition, asmInfo->command);
 	if (asmInfo->arguments > 0) {
 		printf("0x");
@@ -81,9 +86,7 @@ ByteCodePrinterPtr ByteCodePrinter::Flush(Void) {
 	}
 	puts("");
 
-	if (asmInfo->command != NOOP) {
-		this->currentPosition += asmInfo->arguments * 4 + 1;
-	}
+	this->currentPosition += asmInfo->arguments * 4 + 1;
 
 	this->infoList.clear();
 

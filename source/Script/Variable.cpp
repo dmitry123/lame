@@ -7,30 +7,30 @@
 LAME_BEGIN2(Script)
 
 Variable::Variable(BufferRefC name, ScopePtr parent, ClassPtr classType, Bool isArray) : Object(name, parent, Type::Variable),
-	classType(classType)
+classType(classType)
 {
-    this->wasInStack = FALSE;
+	this->wasInStack = FALSE;
 	this->objectValue = NULL;
 	this->registerType = NULL;
 
 	if (classType->IsFloat() ||
-        classType->IsDouble()
-    ) {
+		classType->IsDouble()
+		) {
 		this->varType = Var::Float;
-        this->SetModificator(Modificator::Float);
+		this->SetModificator(Modificator::Float);
 	}
 	else if (
-        classType->IsInt() ||
-        classType->IsChar() ||
-        classType->IsShort() ||
-        classType->IsLong()
-    ) {
+		classType->IsInt() ||
+		classType->IsChar() ||
+		classType->IsShort() ||
+		classType->IsLong()
+		) {
 		this->varType = Var::Integer;
-        this->SetModificator(Modificator::Integer);
+		this->SetModificator(Modificator::Integer);
 	}
 	else if (classType->IsString()) {
 		this->varType = Var::String;
-        this->SetModificator(Modificator::String);
+		this->SetModificator(Modificator::String);
 		this->SetModificator(Modificator::Object2);
 	}
 	else {
@@ -72,7 +72,7 @@ VariablePtr Variable::SetFloat(ScriptNativeFloat f) {
 VariablePtr Variable::SetObject(ClassPtr c) {
 
 	if (this->objectValue) {
-        delete this->objectValue;
+		delete this->objectValue;
 	}
 
 	this->objectValue = c;
@@ -90,11 +90,11 @@ VariablePtr Variable::SetString(ScriptNativeString s) {
 }
 
 VariablePtr Variable::SetBoolean(ScriptNativeBool b) {
-    
-    this->v.intValue = b;
-    this->varType = Var::Boolean;
-    
-    return this;
+
+	this->v.intValue = b;
+	this->varType = Var::Boolean;
+
+	return this;
 }
 
 ScriptNativeInt Variable::GetInteger(Void) {
@@ -102,10 +102,10 @@ ScriptNativeInt Variable::GetInteger(Void) {
 	if (this->varType == Var::Float) {
 		return (ScriptNativeInt) this->v.floatValue;
 	}
-    
-    if (this->varType != Var::Float) {
-        PostSyntaxError(this->GetNode()->lex->line, "Invalid type cast from (%s) to Integer", this->GetClass()->GetName().data());
-    }
+
+	if (this->varType != Var::Float) {
+		PostSyntaxError(this->GetNode()->lex->line, "Invalid type cast from (%s) to Integer", this->GetClass()->GetName().data());
+	}
 
 	return this->v.intValue;
 }
@@ -124,12 +124,12 @@ ScriptNativeFloat Variable::GetFloat(Void) {
 }
 
 ScriptNativeBool Variable::GetBoolean(Void) {
-    
-    if (this->varType != Var::Boolean) {
-        PostSyntaxError(this->GetNode()->lex->line, "Invalid type cast from (%s) to Boolean", this->GetClass()->GetName().data());
-    }
-    
-    return this->v.intValue;
+
+	if (this->varType != Var::Boolean) {
+		PostSyntaxError(this->GetNode()->lex->line, "Invalid type cast from (%s) to Boolean", this->GetClass()->GetName().data());
+	}
+
+	return ScriptNativeBool(this->v.intValue);
 }
 
 Bool Variable::Equal(ObjectPtrC object) {
@@ -140,7 +140,7 @@ Bool Variable::Equal(ObjectPtrC object) {
 	if (this->GetType() != object->GetType() ||
 		this->varType != object->GetVariable()->varType ||
 		this->classType->Hash() != object->GetVariable()->classType->Hash()
-	) {
+		) {
 		return FALSE;
 	}
 	if (this->varType == Var::Integer) {
@@ -156,7 +156,7 @@ Bool Variable::Equal(ObjectPtrC object) {
 
 ObjectPtr Variable::Clone(BufferRefC name, ObjectPtr parent) {
 
-	VariablePtr newVariable = new Variable(name, parent, this->GetClassType());
+	VariablePtr newVariable = new Variable(name, parent, this->GetClass());
 
 	if (this->varType == Var::Object) {
 		newVariable->SetObject(this->objectValue);
@@ -233,7 +233,7 @@ Void Variable::Trace(Uint32 offset) {
 }
 
 Variable::HashType Variable::Hash(Void) {
-	return this->GetPathHash64();
+	return this->GetHash64();
 }
 
 Uint32 Variable::Size(Void) {
@@ -250,7 +250,11 @@ Uint32 Variable::Size(Void) {
 }
 
 ClassPtr Variable::GetClass() {
-    
+
+	if (this->CheckType(Type::Class)) {
+		return ClassPtr(this);
+	}
+
 	if (this->objectValue) {
 		return this->objectValue;
 	}

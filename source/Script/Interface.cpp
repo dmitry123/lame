@@ -63,7 +63,7 @@ LAME_BEGIN2(Script)
 //}
 //
 //Interface::HashType Interface::Hash(Void) {
-//	return this->GetPathHash64();
+//	return this->GetHash64();
 //}
 //
 //Uint32 Interface::Size(Void) {

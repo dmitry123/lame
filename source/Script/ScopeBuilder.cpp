@@ -527,7 +527,8 @@ Void ScopeBuilder::_ForEachMethodDeclare(NodePtr n) {
 	methodObject = scope->Add(new Method(n->word, scope, ObjectPtr(scope), returnType, methodAttributes));
 
 	if (!methodObject) {
-		PostSyntaxError(n->lex->line, "Method redeclaration (%s)", n->word.data());
+		PostSyntaxError(n->lex->line, "Method redeclaration (%s.%s)",
+			scope->GetName().data(), n->word.data());
 	}
 
 	if (methodObject->GetName() == this->scope->GetName() && !returnType->IsVoid()) {
@@ -560,28 +561,6 @@ Void ScopeBuilder::_ForEachMethodRegister(NodePtr n) {
 			methodObject->Scope::Add(new Variable("this", methodObject, ClassPtr(this->scope)));
 			if (ClassPtr(this->scope)->GetExtend()) {
 				methodObject->Scope::Add(new Variable("super", methodObject, ClassPtr(this->scope)->GetExtend()->GetClass()));
-			}
-		}
-	}
-
-	if (!methodObject->GetMethod()->GetReturnType()->IsVoid()) {
-		Bool isReturnFound = FALSE;
-		for (NodePtr n : methodObject->GetNode()->blockList) {
-			if (n->lex->lex->id == kScriptLexReturn) {
-				isReturnFound = TRUE;
-				n->lex->args = 1;
-				break;
-			}
-		}
-		if (!isReturnFound) {
-			PostSyntaxError(n->lex->line, "Non-void method (%s) must return (%s)", methodObject->GetName().data(), methodObject->GetMethod()->GetReturnType()->GetName().data());
-		}
-	}
-	else {
-		for (NodePtr n : methodObject->GetNode()->blockList) {
-			if (n->lex->lex->id == kScriptLexReturn) {
-				n->lex->args = 0;
-				break;
 			}
 		}
 	}

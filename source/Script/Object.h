@@ -60,8 +60,6 @@ public:
 	ObjectPtr SetSegment(SegmentPtr segment, Uint32P address);
 public:
 	Void PrintModificators(Void);
-	Uint64 GetPathHash64(Void);
-	Uint32 GetPathHash32(Void);
 	Uint64 GetHash64(Void);
 	Uint32 GetHash32(Void);
 public:
@@ -183,6 +181,7 @@ private:
 	NodePtr newNode_;
 public:
 	Uint32 segmentCodePosition;
+	Bool wasInStack;
 public:
 	enum {
 		SizeOf = 8

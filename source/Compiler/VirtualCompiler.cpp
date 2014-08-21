@@ -132,7 +132,7 @@ Void VirtualCompiler::Print(StringC message, ...) {
 	VaList vaList;
 
 	va_start(vaList, message);
-	vprintf(message, vaList);
+	//vprintf(message, vaList);
 	va_end(vaList);
 }
 
@@ -152,14 +152,8 @@ Void VirtualCompiler::Analize(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
 
 		i->segmentCodePosition = this->byteCodePrinter->GetPosition();
 
-		if (i->GetPath().length() > 0) {
-			this->Print(" // %s/%s(%s)\n", i->GetPath().data(), i->GetName().data(),
-				i->GetMethod()->GetFormattedArguments().data());
-		}
-		else {
-			this->Print(" // %s(%s)\n", i->GetName().data(),
-				i->GetMethod()->GetFormattedArguments().data());
-		}
+		this->Print(" // %s%s(%s)\n", i->GetPath().data(), i->GetName().data(),
+			i->GetMethod()->GetFormattedArguments().data());
 
 		NodePtr n = i->GetMethod()->GetRootNode();
 
@@ -171,6 +165,10 @@ Void VirtualCompiler::Analize(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
 		}
 
 		this->Run(i->GetMethod()->GetRootNode()->blockList);
+
+		if (i->GetMethod()->GetReturnType()->IsVoid()) {
+			this->OnReturn(NULL);
+		}
 	}
 
 	this->Run(this->nodeBuilder->GetRootNode()->blockList);
@@ -181,8 +179,11 @@ Void VirtualCompiler::_ForEachClass(ScopePtr rootScope) {
 	for (ObjectPtr i : rootScope->GetClassSet()) {
 		if (!i->CheckModificator(Object::Modificator::Primitive) && i->GetNode()) {
 			this->classList.push_back(i);
-			this->_ForEachClass(i);
 		}
+	}
+
+	for (auto i : rootScope->GetHashMap()) {
+		this->_ForEachClass(i.second);
 	}
 }
 
@@ -196,7 +197,7 @@ Void VirtualCompiler::_ForEachMethod(ScopePtr rootScope) {
 
 	for (ObjectPtr i : rootScope->GetClassSet()) {
 		if (!i->CheckModificator(Object::Modificator::Primitive) && i->GetNode()) {
-			this->_ForEachClass(i);
+			this->_ForEachMethod(i);
 		}
 	}
 }
@@ -216,41 +217,44 @@ Void VirtualCompiler::_AnalizeBinary(NodePtr n) {
 	leftVar2 = leftVar;
 	rightVar2 = rightVar;
 
-	//this->Print(" // %s %s %s\n", leftVar->GetName().data(),
-	//	n->word.data(), rightVar->GetName().data());
+	this->Print(" // - %s %s %s\n", leftVar->GetName().data(),
+		n->word.data(), rightVar->GetName().data());
 
 	if (n->lex->lex->IsRight()) {
 
-		sourceVar = leftVar->GetClassType()->GetPriority() >= rightVar->GetClassType()->GetPriority() ?
-		leftVar : rightVar;
+		sourceVar = leftVar->GetClass()->GetPriority() >= rightVar->GetClass()->GetPriority() ?
+			leftVar : rightVar;
 
 		if (!leftVar->wasInStack) {
 			this->OnLoad(leftVar);
 		}
 
-		sourceVar->wasInStack = TRUE;
-
-		if (leftVar->GetClassType()->Hash() != rightVar->GetClassType()->Hash()) {
-			if (leftVar->GetClassType()->Hash() != sourceVar->GetClassType()->Hash()) {
-				this->OnCast(leftVar, sourceVar);
-			}
-			if (rightVar->GetClassType()->Hash() != sourceVar->GetClassType()->Hash()) {
-				this->OnCast(rightVar, sourceVar);
+		if (leftVar->GetClass()->Hash() != rightVar->GetClass()->Hash()) {
+			if (leftVar->GetClass()->Hash() != sourceVar->GetClass()->Hash()) {
+				this->OnCast(sourceVar, leftVar);
 			}
 		}
 
 		if (!rightVar->wasInStack) {
 			this->OnLoad(rightVar);
 		}
+
+		if (leftVar->GetClass()->Hash() != rightVar->GetClass()->Hash()) {
+			if (rightVar->GetClass()->Hash() != sourceVar->GetClass()->Hash()) {
+				this->OnCast(sourceVar, rightVar);
+			}
+		}
+
+		sourceVar->wasInStack = TRUE;
 	}
 	else {
 		if (!rightVar->wasInStack) {
 			this->OnLoad(rightVar);
 		}
 
-		rightVar->wasInStack = TRUE;
+		rightVar->wasInStack = FALSE;
 
-		if (leftVar->GetClassType()->Hash() != rightVar->GetClassType()->Hash()) {
+		if (leftVar->GetClass()->Hash() != rightVar->GetClass()->Hash()) {
 			this->OnCast(leftVar, rightVar);
 		}
 
@@ -276,7 +280,13 @@ Void VirtualCompiler::_AnalizeBinary(NodePtr n) {
 		this->OnStore(sourceVar);
 	}
 
-	this->variableStack.Push(sourceVar);
+	if (n->lex->lex->IsBool()) {
+		Scope::classBoolean->wasInStack = TRUE;
+		this->variableStack.Push(VariablePtr(Scope::classBoolean));
+	}
+	else {
+		this->variableStack.Push(sourceVar);
+	}
 }
 
 Void VirtualCompiler::_AnalizeUnary(NodePtr n) {
@@ -360,7 +370,7 @@ Void VirtualCompiler::_AnalizeSelection(NodePtr n) {
 		PostSyntaxError(n->lex->line, "You can access to object's fields only (%s)", fieldName.data());
 	}
 
-	fieldObject = leftVar->GetClassType()->Find(fieldName);
+	fieldObject = leftVar->GetClass()->Find(fieldName);
 
 	if (!fieldObject) {
 		PostSyntaxError(n->lex->line, "Undeclared object's field (%s.%s)", leftVar->GetClass()->GetName().data(), fieldName.data());
@@ -448,7 +458,7 @@ Void VirtualCompiler::_AnalizeInvoke(NodePtr n) {
 			}
 		}
 
-		//this->Print(" // %s(%s)\n", n->word.data(), formattedParameters.data());
+		this->Print(" // - %s(%s)\n", n->word.data(), formattedParameters.data());
 
 		for (Uint32 i = 0; i < n->lex->args; i++) {
 			this->OnLoad(this->variableStack.Pop());
@@ -456,7 +466,7 @@ Void VirtualCompiler::_AnalizeInvoke(NodePtr n) {
 
 		invokeHash = Method::ComputeInvokeHash(objectList);
 		methodHash = n->var->GetNode()->methodHash;
-		methodVar = n->var->Find(Uint64(n->var->GetPathHash32()) << 32 | invokeHash);
+		methodVar = n->var->Find(Uint64(n->var->GetHash32()) << 32 | invokeHash);
 
 		struct OrderedMethod {
 		public:
@@ -510,27 +520,55 @@ Void VirtualCompiler::_AnalizeInvoke(NodePtr n) {
 Void VirtualCompiler::_AnalizeReturn(NodePtr n) {
 
 	VariablePtr returnVar;
-	ObjectPtr methodVar;
+	ClassPtr returnType;
+	MethodPtr methodVar;
+	NodePtr methodNode;
 
-	if (n->lex->args == 1) {
+	methodNode = n->parent;
 
-		this->Read(n, returnVar, returnVar);
-		this->variableStack.Push(returnVar);
+	while (methodNode) {
 
-		methodVar = returnVar;
-
-		while (methodVar && !methodVar->CheckType(Object::Type::Method)) {
-			methodVar = ObjectPtr(methodVar->GetParent());
+		if (methodNode->var && methodNode->var->CheckType(Object::Type::Method)) {
+			break;
 		}
 
-		if (methodVar) {
-			methodVar->GetMethod()->returnVar = returnVar;
-		}
+		methodNode = methodNode->parent;
+	}
 
-		this->OnReturn(methodVar->GetMethod()->returnVar);
+	methodVar = methodNode->var->GetMethod();
+
+	if (!methodVar) {
+		PostSyntaxError(n->lex->line, "Return can only be in method or function", 0);
+	}
+
+	if (methodVar->GetReturnType()->IsVoid()) {
+		if (n->lex->args) {
+			PostSyntaxError(n->lex->line, "Void method (%s) can't return anything",
+				n->parent->word.data());
+		}
 	}
 	else {
-		this->OnReturn(NULL);
+		if (n->lex->args) {
+			PostSyntaxError(n->lex->line, "Non-void method (%s) must return (%s)",
+				n->parent->word.data(), methodVar->GetReturnType()->GetName().data());
+		}
+	}
+
+	returnVar = NULL;
+
+	if (n->lex->args > 0) {
+		this->Read(n, returnVar, returnVar);
+	}
+	
+	if (returnVar) {
+		this->variableStack.Push(returnVar);
+	}
+
+	returnType = methodVar->GetReturnType();
+	methodVar->returnVar = returnVar;
+
+	if (returnVar) {
+		this->OnReturn(methodVar->returnVar);
 	}
 }
 

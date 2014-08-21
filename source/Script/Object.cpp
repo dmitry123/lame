@@ -52,6 +52,7 @@ Object::Object(BufferRefC name, ScopePtr parent, Type type) : Scope(name.length(
 	this->node_ = 0;
 	this->newNode_ = 0;
 	this->segmentCodePosition = 0;
+	this->wasInStack = 0;
 }
 
 Object::~Object() {
@@ -111,28 +112,12 @@ Void Object::PrintModificators(Void) {
 	}
 }
 
-Uint64 Object::GetPathHash64(Void) {
-	return Uint64(this->GetName().GetHash32()) << 32 | this->GetPath().GetHash32();
-}
-
-Uint32 Object::GetPathHash32(Void) {
-	return Uint32(this->GetName().GetHash16()) << 16 | this->GetPath().GetHash16();
-}
-
 Uint64 Object::GetHash64(Void) {
-	return this->Hash();
+	return Buffer(this->GetPath() + this->GetName()).GetHash64();
 }
 
 Uint32 Object::GetHash32(Void) {
-
-	Uint64 hash = this->GetHash64();
-	Uint32 result = 0;
-
-	for (Uint32 i = 0; i < 64; i++) {
-		result = 31 * result + (hash >> i) & 0xffffffff;
-	}
-
-	return result;
+	return Buffer(this->GetPath() + this->GetName()).GetHash32();
 }
 
 LAME_END2
