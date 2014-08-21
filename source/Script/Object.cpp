@@ -38,7 +38,8 @@ static Buffer _GetRandomScopeName() {
 	return Buffer(numberBuffer);
 }
 
-Object::Object(BufferRefC name, ScopePtr parent, Type type) : Scope(name.length() ? name : _GetRandomScopeName(), parent),
+Object::Object(BufferRefC name, ScopePtr parent, Type type) :
+		Scope(name.length() ? name : _GetRandomScopeName(), parent),
 	name(this->Scope::GetName()),
 	path(parent->Path()),
 	type(type)
@@ -47,15 +48,11 @@ Object::Object(BufferRefC name, ScopePtr parent, Type type) : Scope(name.length(
 	this->segment_ = 0;
 	this->address_ = 0;
 	this->size_ = 0;
-	this->templateClass = 0;
-	this->arguments_ = 0;
+	this->template_ = 0;
 	this->node_ = 0;
-	this->newNode_ = 0;
 	this->segmentCodePosition = 0;
 	this->wasInStack = 0;
-}
-
-Object::~Object() {
+	this->position_ = 0;
 }
 
 ObjectPtr Object::SetModificator(Modificator modificator, Bool state) {
@@ -64,8 +61,7 @@ ObjectPtr Object::SetModificator(Modificator modificator, Bool state) {
 		this->modificators_ |=  (Uint32)modificator :
 		this->modificators_ &= ~(Uint32)modificator;
 
-	this->SetChanged(TRUE);
-	this->Notify();
+	this->Notify(TRUE);
 
 	return this;
 }
@@ -79,37 +75,39 @@ ObjectPtr Object::SetSegment(SegmentPtr segment, Uint32P address) {
 	return this;
 }
 
-Void Object::PrintModificators(Void) {
+Buffer Object::GetModificatorString(Void) {
 
-	ConsolePtr c = Console::GetInstance();
+	Buffer result;
 
 	if (this->CheckModificator(Modificator::Override)) {
-		c->Print("override ");
+		result.append("override ");
 	}
 	if (this->CheckModificator(Modificator::Deprecated)) {
-		c->Print("deprecated ");
+		result.append("deprecated ");
 	}
 	if (this->CheckModificator(Modificator::Public)) {
-		c->Print("public ");
+		result.append("public ");
 	}
 	if (this->CheckModificator(Modificator::Private)) {
-		c->Print("private ");
+		result.append("private ");
 	}
 	if (this->CheckModificator(Modificator::Protected)) {
-		c->Print("protected ");
+		result.append("protected ");
 	}
 	if (this->CheckModificator(Modificator::Static)) {
-		c->Print("static ");
+		result.append("static ");
 	}
 	if (this->CheckModificator(Modificator::Final)) {
-		c->Print("final ");
+		result.append("final ");
 	}
 	if (this->CheckModificator(Modificator::Native)) {
-		c->Print("native ");
+		result.append("native ");
 	}
 	if (this->CheckModificator(Modificator::Abstract)) {
-		c->Print("abstract ");
+		result.append("abstract ");
 	}
+
+	return result;
 }
 
 Uint64 Object::GetHash64(Void) {
@@ -118,6 +116,79 @@ Uint64 Object::GetHash64(Void) {
 
 Uint32 Object::GetHash32(Void) {
 	return Buffer(this->GetPath() + this->GetName()).GetHash32();
+}
+
+Bool Object::IsInt() const {
+	return
+		ClassPtr(this) == this->classChar ||
+		ClassPtr(this) == this->classByte ||
+		ClassPtr(this) == this->classBoolean ||
+		ClassPtr(this) == this->classShort ||
+		ClassPtr(this) == this->classInt;
+}
+
+Bool Object::IsChar() const {
+	return ClassPtr(this) == this->classChar;
+}
+
+Bool Object::IsByte() const {
+	return ClassPtr(this) == this->classByte;
+}
+
+Bool Object::IsBoolean() const {
+	return ClassPtr(this) == this->classBoolean;
+}
+
+Bool Object::IsShort() const {
+	return ClassPtr(this) == this->classShort;
+}
+
+Bool Object::IsInt8() const {
+	return
+		ClassPtr(this) == this->classChar ||
+		ClassPtr(this) == this->classByte;
+}
+
+Bool Object::IsInt16() const {
+	return ClassPtr(this) == this->classShort;
+}
+
+Bool Object::IsInt32() const {
+	return ClassPtr(this) == this->classInt;
+}
+
+Bool Object::IsInt64() const {
+	return ClassPtr(this) == this->classLong;
+}
+
+Bool Object::IsLong() const {
+	return ClassPtr(this) == this->classLong;
+}
+
+Bool Object::IsFloat() const {
+	return ClassPtr(this) == this->classFloat;
+}
+
+Bool Object::IsDouble() const {
+	return ClassPtr(this) == this->classDouble;
+}
+
+Bool Object::IsString() const {
+	return ClassPtr(this) == this->classString;
+}
+
+Bool Object::IsVoid() const {
+	return ClassPtr(this) == this->classVoid;
+}
+
+Bool Object::IsObject() const {
+	return
+		!this->IsInt() &&
+		!this->IsLong() &&
+		!this->IsFloat() &&
+		!this->IsDouble() &&
+		!this->IsString() &&
+		!this->IsVoid();
 }
 
 LAME_END2

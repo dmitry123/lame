@@ -30,12 +30,8 @@ public:
 	Buffer Path(Void);
 	Void Flush(Void);
 public:
-    inline Void SetOnScopeUpdate(OnScopeUpdate callback) {
-        this->callback_ = callback;
-    }
-    inline OnScopeUpdate GetOnScopeUpdate() {
-        return this->callback_;
-    }
+    inline Void SetOnScopeUpdate(OnScopeUpdate callback) { this->callback_ = callback; }
+    inline OnScopeUpdate GetOnScopeUpdate() { return this->callback_; }
 public:
 	inline HashMap& GetHashMap() { return this->hashMap_; }
 	inline ScopePtr GetParent() { return this->parentScope_; }

@@ -17,6 +17,7 @@ typedef enum {
 	kScriptLexSequenceInvoke,
 	kScriptLexSequenceAlloc,
 	kScriptLexSequenceNew,
+	kScriptLexSequenceEnum,
 	kScriptLexSequenceAmount
 } LexSequenceID;
 
@@ -41,6 +42,7 @@ private:
 	Iterator _BuildTemplate(NodePtr& parent, Iterator i);
 	Iterator _BuildCatch(NodePtr& parent, Iterator i);
 	Iterator _BuildNew(NodePtr& parent, Iterator i);
+	Iterator _BuildEnum(NodePtr& parent, Iterator i);
 private:
 	Uint32 _GetCountOfArguments(Iterator i);
 	Iterator _SkipArguments(Iterator i);
@@ -84,6 +86,9 @@ private:
 	}
 	inline Bool _IsNew(Iterator i) {
 		return this->_CheckSequence(i, kScriptLexSequenceNew);
+	}
+	inline Bool _IsEnum(Iterator i) {
+		return this->_CheckSequence(i, kScriptLexSequenceEnum);
 	}
 private:
 	Vector<NodePtr> nodeList_;

@@ -1,5 +1,4 @@
 #include "CodeTranslator.h"
-#include "LowLevelStack.h"
 #include "Assembler.h"
 
 LAME_BEGIN2(Compiler)
@@ -331,22 +330,22 @@ Void CodeTranslator::OnUnary(VariablePtr left) {
     }
 }
 
-Void CodeTranslator::OnCast(VariablePtr source, VariablePtr left) {
+Void CodeTranslator::OnCast(VariablePtr source, ClassPtr type) {
     
-	if (left->GetClass()->IsInt()) {
-		BCPNEW(source, NOOP, NOOP, ITL, ITD, ITF);
+	if (source->GetClass()->IsInt()) {
+		BCPNEW(type, NOOP, NOOP, ITL, ITD, ITF);
 	}
-	else if (left->GetClass()->IsLong()) {
-		BCPNEW(source, NOOP, LTI, NOOP, LTD, LTF);
+	else if (source->GetClass()->IsLong()) {
+		BCPNEW(type, NOOP, LTI, NOOP, LTD, LTF);
 	}
-	else if (left->GetClass()->IsFloat()) {
-		BCPNEW(source, NOOP, FTI, FTL, FTD, NOOP);
+	else if (source->GetClass()->IsFloat()) {
+		BCPNEW(type, NOOP, FTI, FTL, FTD, NOOP);
 	}
-	else if (left->GetClass()->IsDouble()) {
-		BCPNEW(source, NOOP, DTI, DTL, NOOP, DTF);
+	else if (source->GetClass()->IsDouble()) {
+		BCPNEW(type, NOOP, DTI, DTL, NOOP, DTF);
 	}
-	else if (left->GetClass()->IsObject()) {
-		if (source->GetClass()->IsObject()) {
+	else if (source->GetClass()->IsObject()) {
+		if (type->GetClass()->IsObject()) {
             // cast
 		}
 		else {
@@ -376,7 +375,7 @@ Void CodeTranslator::OnStore(VariablePtr var) {
         ->Write(var->GetAddress());
 }
 
-Void CodeTranslator::OnReturn(VariablePtr var) {
+Void CodeTranslator::OnReturn(ClassPtr var) {
     
     if (var) {
         BCPNEW(var, RRET, IRET, LRET, DRET, FRET);

@@ -132,8 +132,18 @@ Void VirtualCompiler::Print(StringC message, ...) {
 	VaList vaList;
 
 	va_start(vaList, message);
-	//vprintf(message, vaList);
+	vprintf(message, vaList);
 	va_end(vaList);
+}
+
+Void VirtualCompiler::Cast(VariablePtr var, ObjectPtr type) {
+
+	ClassPtr left = var->GetClass();
+	ClassPtr right = type->GetClass();
+
+
+
+	this->OnCast(var, type->GetClass());
 }
 
 Void VirtualCompiler::Analize(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
@@ -144,8 +154,17 @@ Void VirtualCompiler::Analize(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
 	this->_ForEachClass(this->rootScope);
 	this->_ForEachMethod(this->rootScope);
 
+	Sint64 previousEnumValue = -1;
+
 	for (ObjectPtr i : this->classList) {
-		this->Run(i->GetNode()->blockList);
+		if (i->CheckModificator(Object::Modificator::Enum)) {
+			for (NodePtr n : i->GetNode()->blockList) {
+				n->var->GetVariable()->v.intValue = ++previousEnumValue;
+			}
+		}
+		else {
+			this->Run(i->GetNode()->blockList);
+		}
 	}
 
 	for (ObjectPtr i : this->methodList) {
@@ -168,6 +187,14 @@ Void VirtualCompiler::Analize(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
 
 		if (i->GetMethod()->GetReturnType()->IsVoid()) {
 			this->OnReturn(NULL);
+		}
+
+		if (!i->GetMethod()->GetReturnType()->IsVoid()) {
+			if (!i->GetMethod()->returnVar) {
+				PostSyntaxError(n->lex->line, "Non-void method (%s) must return (%s)", i->GetName().data(),
+					i->GetMethod()->GetReturnType()->GetName().data());
+			}
+			this->variableStack.Push(i->GetMethod()->returnVar);
 		}
 	}
 
@@ -231,7 +258,7 @@ Void VirtualCompiler::_AnalizeBinary(NodePtr n) {
 
 		if (leftVar->GetClass()->Hash() != rightVar->GetClass()->Hash()) {
 			if (leftVar->GetClass()->Hash() != sourceVar->GetClass()->Hash()) {
-				this->OnCast(sourceVar, leftVar);
+				this->Cast(sourceVar, leftVar->GetClass());
 			}
 		}
 
@@ -241,7 +268,7 @@ Void VirtualCompiler::_AnalizeBinary(NodePtr n) {
 
 		if (leftVar->GetClass()->Hash() != rightVar->GetClass()->Hash()) {
 			if (rightVar->GetClass()->Hash() != sourceVar->GetClass()->Hash()) {
-				this->OnCast(sourceVar, rightVar);
+				this->Cast(sourceVar, rightVar->GetClass());
 			}
 		}
 
@@ -255,7 +282,7 @@ Void VirtualCompiler::_AnalizeBinary(NodePtr n) {
 		rightVar->wasInStack = FALSE;
 
 		if (leftVar->GetClass()->Hash() != rightVar->GetClass()->Hash()) {
-			this->OnCast(leftVar, rightVar);
+			this->Cast(leftVar, rightVar->GetClass());
 		}
 
 		sourceVar = leftVar2;
@@ -506,14 +533,6 @@ Void VirtualCompiler::_AnalizeInvoke(NodePtr n) {
 		}
 
 		this->OnInvoke(methodVar->GetMethod());
-
-		if (!methodVar->GetMethod()->GetReturnType()->IsVoid()) {
-			if (!methodVar->GetMethod()->returnVar) {
-				PostSyntaxError(n->lex->line, "Non-void method (%s) must return (%s)", methodVar->GetName().data(),
-					methodVar->GetMethod()->GetReturnType()->GetName().data());
-			}
-			this->variableStack.Push(methodVar->GetMethod()->returnVar);
-		}
 	}
 }
 
@@ -548,7 +567,7 @@ Void VirtualCompiler::_AnalizeReturn(NodePtr n) {
 		}
 	}
 	else {
-		if (n->lex->args) {
+		if (!n->lex->args) {
 			PostSyntaxError(n->lex->line, "Non-void method (%s) must return (%s)",
 				n->parent->word.data(), methodVar->GetReturnType()->GetName().data());
 		}
@@ -567,8 +586,10 @@ Void VirtualCompiler::_AnalizeReturn(NodePtr n) {
 	returnType = methodVar->GetReturnType();
 	methodVar->returnVar = returnVar;
 
+	this->Cast(methodVar->returnVar, methodVar->GetReturnType());
+
 	if (returnVar) {
-		this->OnReturn(methodVar->returnVar);
+		this->OnReturn(methodVar->GetReturnType());
 	}
 }
 

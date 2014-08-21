@@ -20,7 +20,8 @@ typedef enum {
 	kScriptFlagTemplate = 0x0400,
 	kScriptFlagOverride = 0x0800,
 	kScriptFlagDeprecated = 0x1000,
-	kScriptFlagForEach = 0x2000
+	kScriptFlagForEach = 0x2000,
+	kScriptFlagEnum = 0x4000
 } FlagID;
 
 typedef enum {

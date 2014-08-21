@@ -1,5 +1,5 @@
 class A {
-	void foo(int value) {
+	int foo(float value) {
 		return value / 2;
 	}
 }

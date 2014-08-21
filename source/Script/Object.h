@@ -5,8 +5,11 @@
 
 LAME_BEGIN2(Script)
 
-class LAME_API Object : public Hashable64, public Observable<Object>, public Scope {
-public:
+class LAME_API Object :
+	public Hashable64,
+	public Observable<Object>,
+	public Scope {
+public: /* Flags & States */
 	enum class Modificator : Uint32 {
 		Unknown    = 0x000000,
 		Public     = 0x000001,
@@ -27,7 +30,8 @@ public:
         Integer    = 0x008000,
         Boolean    = 0x010000,
         String     = 0x020000,
-        Object2    = 0x040000
+        Object2    = 0x040000,
+		Enum       = 0x080000
 	};
 	enum class Type : Uint32 {
 		Unknown    = 0x000000,
@@ -36,149 +40,88 @@ public:
 		Method     = 0x000003,
 		Interface  = 0x000004
 	};
-private:
+private: /* Constant Variables */
 	const Buffer name;
 	const Buffer path;
-	const Type type;
+	const Type   type;
 public:
-	Object(BufferRefC name, ScopePtr parent, Type type);
-public:
-	virtual ~Object();
-public:
+	Object(
+		/* Name of the scope */
+		BufferRefC name,
+		/* Object's parent scope */
+		ScopePtr   parent,
+		/* Class type */
+		Type       type);
+public: /* Strict Virtual Methods */
 	virtual Bool Equal(ObjectPtrC object) = 0;
 	virtual ObjectPtr Clone(BufferRefC name, ObjectPtr parent) = 0;
 	virtual Void Trace(Uint32 offset) = 0;
 	virtual HashType Hash(Void) = 0;
 	virtual Uint32 Size(Void) = 0;
-public:
-	virtual ClassPtr GetClass() { return NULL; }
-	virtual VariablePtr GetVariable() { return NULL; }
-	virtual MethodPtr GetMethod() { return NULL; }
+public: /* Weak virtual Methods */
+	virtual ClassPtr     GetClass()     { return NULL; }
+	virtual VariablePtr  GetVariable()  { return NULL; }
+	virtual MethodPtr    GetMethod()    { return NULL; }
 	virtual InterfacePtr GetInterface() { return NULL; }
-public:
+public: /* Setters */
 	ObjectPtr SetModificator(Modificator modificator, Bool state = TRUE);
 	ObjectPtr SetSegment(SegmentPtr segment, Uint32P address);
 public:
-	Void PrintModificators(Void);
+	inline Void SetTemplate(ClassPtr tamplate) { this->template_ = tamplate; }
+	inline Void SetNode(NodePtr node)          { this->node_     = node;     }
+	inline Void SetPosition(Uint32 position)   { this->position_ = position; }
+public: /* Getters */
+	Buffer GetModificatorString(Void);
 	Uint64 GetHash64(Void);
 	Uint32 GetHash32(Void);
-public:
+public: /* Checkers */
 	inline Bool CheckModificator(Modificator modificator) const {
 		return (this->modificators_ & (Uint32)modificator) != 0;
 	}
 	inline Bool CheckType(Type type) const {
 		return this->type == type;
 	}
-	inline Void SetCountOfArguments(Uint32 count) {
-		this->arguments_ = count;
-	}
-	inline Void SetTemplateClass(ClassPtr templateClass) {
-		this->templateClass = templateClass;
-	}
-	inline Void SetNode(NodePtr node) {
-		this->node_ = node;
-	}
-	inline NodePtr GetNode() {
-		return this->node_;
-	}
-	inline Void SetNewNode(NodePtr node) {
-		this->newNode_ = node;
-	}
 public:
-    inline Bool IsIntegerLike() const {
-        return this->CheckModificator(Modificator::Integer);
-    }
-    inline Bool IsFloatLike() const {
-        return this->CheckModificator(Modificator::Float);
-    }
-    inline Bool IsStringLike() const {
-        return this->CheckModificator(Modificator::String);
-    }
-    inline Bool IsBooleanLike() const {
-        return this->CheckModificator(Modificator::Boolean);
-    }
-    inline Bool IsObjectLike() const {
-		return this->CheckModificator(Modificator::Object2);
-    }
+    inline Bool IsIntegerLike() const { return this->CheckModificator(Modificator::Integer); }
+    inline Bool IsFloatLike()   const { return this->CheckModificator(Modificator::Float);   }
+    inline Bool IsStringLike()  const { return this->CheckModificator(Modificator::String);  }
+    inline Bool IsBooleanLike() const { return this->CheckModificator(Modificator::Boolean); }
+    inline Bool IsObjectLike()  const { return this->CheckModificator(Modificator::Object2); }
 public:
-	inline Bool IsInt() const {
-		return
-			ClassPtr(this) == this->classChar ||
-			ClassPtr(this) == this->classByte ||
-			ClassPtr(this) == this->classBoolean ||
-			ClassPtr(this) == this->classShort ||
-			ClassPtr(this) == this->classInt;
-	}
-	inline Bool IsChar() const {
-		return ClassPtr(this) == this->classChar;
-	}
-	inline Bool IsByte() const {
-		return ClassPtr(this) == this->classByte;
-	}
-	inline Bool IsBoolean() const {
-		return ClassPtr(this) == this->classBoolean;
-	}
-	inline Bool IsShort() const {
-		return ClassPtr(this) == this->classShort;
-	}
-	inline Bool IsInt8() const {
-		return
-			ClassPtr(this) == this->classChar ||
-			ClassPtr(this) == this->classByte;
-	}
-	inline Bool IsInt16() const {
-		return ClassPtr(this) == this->classShort;
-	}
-	inline Bool IsInt32() const {
-		return ClassPtr(this) == this->classInt;
-	}
-	inline Bool IsInt64() const {
-		return ClassPtr(this) == this->classLong;
-	}
-	inline Bool IsLong() const {
-		return ClassPtr(this) == this->classLong;
-	}
-	inline Bool IsFloat() const {
-		return ClassPtr(this) == this->classFloat;
-	}
-	inline Bool IsDouble() const {
-		return ClassPtr(this) == this->classDouble;
-	}
-	inline Bool IsString() const {
-		return ClassPtr(this) == this->classString;
-	}
-	inline Bool IsVoid() const {
-		return ClassPtr(this) == this->classVoid;
-	}
-	inline Bool IsObject() const {
-		return
-			!this->IsInt() &&
-			!this->IsLong() &&
-			!this->IsFloat() &&
-			!this->IsDouble() &&
-			!this->IsString() &&
-			!this->IsVoid();
-	}
-public:
-	inline BufferRefC GetName() const { return this->name; }
-	inline Type GetType() const { return this->type; }
-	inline SegmentPtr GetSegment() const { return this->segment_; }
-	inline Uint32 GetAddress() const { return *this->address_; }
-	inline Uint32 GetSize() const { return this->size_; }
-	inline Uint32P GetAddressPtr() { return this->address_; }
-	inline Uint32 GetCountOfArguments() const { return this->arguments_; }
-	inline ClassPtr GetTemplateClass() { return this->templateClass; }
-	inline BufferRefC GetPath() const { return this->path; }
-	inline NodePtr GetNewNode() { return this->newNode_; }
-private:
-	Uint32 modificators_;
-	Uint32 arguments_;
+	Bool IsInt()     const;
+	Bool IsChar()    const;
+	Bool IsByte()    const;
+	Bool IsBoolean() const;
+	Bool IsShort()   const;
+	Bool IsInt8()    const;
+	Bool IsInt16()   const;
+	Bool IsInt32()   const;
+	Bool IsInt64()   const;
+	Bool IsLong()    const;
+	Bool IsFloat()   const;
+	Bool IsDouble()  const;
+	Bool IsString()  const;
+	Bool IsVoid()    const;
+	Bool IsObject()  const;
+public: /* Inline Getters */
+	inline BufferRefC GetName()       const { return this->name;      }
+	inline Type       GetType()       const { return this->type;      }
+	inline SegmentPtr GetSegment()    const { return this->segment_;  }
+	inline Uint32     GetAddress()    const { return *this->address_; }
+	inline Uint32     GetSize()       const { return this->size_;     }
+	inline Uint32P    GetAddressPtr()       { return this->address_;  }
+	inline ClassPtr   GetTemplate()         { return this->template_; }
+	inline BufferRefC GetPath()       const { return this->path;      }
+	inline NodePtr    GetNode()             { return this->node_;     }
+	inline Uint32     GetPosition()   const { return this->position_; }
+private: /* Private Variables */
+	Uint32     modificators_;
 	SegmentPtr segment_;
-	Uint32P address_;
-	Uint32 size_;
-	ClassPtr templateClass;
-	NodePtr node_;
-	NodePtr newNode_;
+	Uint32P    address_;
+	Uint32     size_;
+	ClassPtr   template_;
+	NodePtr    node_;
+	Uint32     position_;
 public:
 	Uint32 segmentCodePosition;
 	Bool wasInStack;

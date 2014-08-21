@@ -6,8 +6,6 @@
 LAME_BEGIN2(Compiler)
 
 class LAME_API ByteCodePrinter {
-	typedef Core::Buffer Buffer;
-	typedef Core::BufferRefC BufferRefC;
 public:
 	static ByteCodePrinterPtr GetInstance() {
 		return byteCodePrinter_;

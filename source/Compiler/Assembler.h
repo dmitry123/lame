@@ -153,23 +153,12 @@ enum Asm {
 	CALL
 };
 
-typedef Void(*AsmProc0)(Void);
-typedef Void(*AsmProc1)(VoidP a0);
-typedef Void(*AsmProc2)(VoidP a0, VoidP a1);
-typedef Void(*AsmProc3)(VoidP a0, VoidP a1, VoidP a2);
-
-typedef Void(*AsmProc)(
-	VoidP a0, VoidP a1, VoidP a2);
-
 typedef struct {
 	StringC name;
 	Uint8 command;
 	VoidP callback;
 	Uint8 arguments;
 } AsmInfo, *AsmInfoPtr;
-
-typedef Uint64  R, *RP;
-typedef Float64 F, *FP;
 
 class Assembler {
 public:

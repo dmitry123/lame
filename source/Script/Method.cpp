@@ -36,7 +36,7 @@ ObjectPtr Method::Clone(BufferRefC name, ObjectPtr parent) {
 
 Void Method::Trace(Uint32 offset) {
 
-	this->PrintModificators();
+	printf(this->GetModificatorString().data());
 
 	printf("%s %s::%s(",
 		this->returnClass->GetName().data(),

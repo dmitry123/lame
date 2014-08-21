@@ -197,8 +197,8 @@ NodeBuilder::Iterator NodeBuilder::_BuildFunction(NodePtr& parent, Iterator i) {
 			if (node->previous->lex->lex->id == kScriptLexReturn && node->lex->lex->IsUnknown()) {
 				node->previous->lex->args = 1;
 			}
-			this->nodeQueue_->push_back(node);
 			i = this->_Build(node, i);
+			this->nodeQueue_->push_back(node);
 			if ((*i)->lex->id == kScriptLexParenthesisR && this->nodeQueue_ == &parent->argList) {
 				__Dec(i);
 			}
@@ -873,6 +873,35 @@ NodeBuilder::Iterator NodeBuilder::_BuildNew(NodePtr& parent, Iterator i) {
 	return i;
 }
 
+NodeBuilder::Iterator NodeBuilder::_BuildEnum(NodePtr& parent, Iterator i) {
+
+	NodePtr enumField = NULL;
+
+	parent->flags |= kScriptFlagEnum;
+
+	__Inc(i);
+
+	if ((*i)->lex->id != kScriptLexDefault) {
+		PostSyntaxError((*i)->line, "Enum's name mustn't be reserved word or language token (%s)",
+			(*i)->word.data());
+	}
+
+	Node temporaryTypeNode((*i)->word, kScriptNodeDefault, *i, parent, parent);
+	parent->Type(&temporaryTypeNode);
+
+	__Inc(i);
+
+	if ((*i)->lex->id != kScriptLexBraceL) {
+		PostSyntaxError((*i)->line, "Lost left brace after enum's name (%s)",
+			(*i)->word.data());
+	}
+
+	__Dec(i);
+	__Dec(i);
+
+	return this->_BuildClass(parent, i);
+}
+
 Uint32 NodeBuilder::_GetCountOfArguments(Iterator i) {
 
 	/*	Function have the same architecture
@@ -998,6 +1027,12 @@ NodeBuilder::Iterator NodeBuilder::_Build(NodePtr& node, Iterator i) {
 
 	if (this->_IsNew(i)) {
 		i = this->_BuildNew(node, i);
+	}
+
+	/*	Enum */
+
+	if (this->_IsEnum(i)) {
+		i = this->_BuildEnum(node, i);
 	}
 
 	/*	Argument List Lex : 'int... argumentList;' */
@@ -1164,7 +1199,9 @@ NodePtr NodeBuilder::_CreateNode(LexNodePtrC lex, NodeID id) {
 
 	/*	Associate lex with it's node ID. */
 
-	if (lex->lex->id == kScriptLexClass) {
+	if (lex->lex->id == kScriptLexClass ||
+		lex->lex->id == kScriptLexEnum
+	) {
 		id = kScriptNodeClass;
 	}
 	else if (lex->lex->id == kScriptLexInterface) {
@@ -1181,10 +1218,10 @@ NodePtr NodeBuilder::_CreateNode(LexNodePtrC lex, NodeID id) {
 
 	/*	Check node for 'power' and save its parent. */
 
-	if (node->lex->lex->IsCondition() || (
-            node->lex->lex->IsLanguage() &&
-            node->lex->lex->id == kScriptLexClass
-        ) || node->id == kScriptNodeAnonymous
+	if (node->lex->lex->IsCondition() ||
+		node->id == kScriptNodeClass ||
+		node->id == kScriptNodeAnonymous ||
+		node->lex->lex->IsLanguage()
     ) {
 		this->parentNode_ = node;
 	}
@@ -1370,6 +1407,10 @@ NodeBuilder::NodeBuilder() {
 	this->_DeclareSequence(kScriptLexSequenceNew, {
 		kScriptLexNew,
 		kScriptLexDefault
+	});
+
+	this->_DeclareSequence(kScriptLexSequenceEnum, {
+		kScriptLexEnum
 	});
 }
 

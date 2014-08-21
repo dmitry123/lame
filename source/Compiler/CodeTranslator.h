@@ -16,10 +16,10 @@ public:
 private:
     Void OnBinary(VariablePtr left, VariablePtr right) override;
     Void OnUnary(VariablePtr var) override;
-    Void OnReturn(VariablePtr var) override;
+	Void OnReturn(ClassPtr var) override;
     Void OnLoad(VariablePtr var) override;
     Void OnStore(VariablePtr var) override;
-    Void OnCast(VariablePtr source, VariablePtr type) override;
+	Void OnCast(VariablePtr source, ClassPtr type) override;
 	Void OnInvoke(MethodPtr method) override;
 };
 

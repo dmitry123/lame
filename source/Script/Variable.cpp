@@ -112,7 +112,7 @@ ScriptNativeInt Variable::GetInteger(Void) {
 
 ScriptNativeFloat Variable::GetFloat(Void) {
 
-	if (this->varType == Var::Float) {
+	if (this->varType == Var::Integer) {
 		return (ScriptNativeFloat) this->v.intValue;
 	}
 
@@ -173,15 +173,13 @@ ObjectPtr Variable::Clone(BufferRefC name, ObjectPtr parent) {
 
 Void Variable::Trace(Uint32 offset) {
 
-	this->PrintModificators();
+	printf(this->GetModificatorString().data());
 
 	if (this->GetClass()) {
 		if (this->GetName().size() > 0) {
-			if (this->GetTemplateClass()) {
-				printf("%s<%s> %s = ",
-					this->GetClass()->GetName().data(),
-					this->GetTemplateClass()->GetName().data(),
-					this->GetName().data());
+			if (this->GetTemplate()) {
+				printf("%s<%s> %s = ", this->GetClass()->GetName().data(),
+					this->GetTemplate()->GetName().data(), this->GetName().data());
 			}
 			else {
 				printf("%s %s = ", this->GetClass()->GetName().data(), this->GetName().data());

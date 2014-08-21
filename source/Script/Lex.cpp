@@ -323,6 +323,10 @@ Map<LexID, Lex> Lex::lexMap = {
 			{ "class", P(0, 0), kScriptLexClass, 0,
 				kScriptLexFlagLanguage }
 		},
+		{ kScriptLexEnum,
+			{ "enum", P(0, 1), kScriptLexEnum, 0,
+				kScriptLexFlagLanguage }
+		},
 		{ kScriptLexInterface,
 			{ "interface", P(0, 0), kScriptLexInterface, 0,
 				kScriptLexFlagLanguage }

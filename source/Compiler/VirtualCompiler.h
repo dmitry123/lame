@@ -1,8 +1,6 @@
 #ifndef __LAME_COMPILER_VIRTUAL_COMPILER__
 #define __LAME_COMPILER_VIRTUAL_COMPILER__
 
-#include "LowLevelStack.h"
-#include "Register.h"
 #include "ByteCodePrinter.h"
 #include "VariableStack.h"
 
@@ -15,16 +13,17 @@ protected:
 protected:
 	virtual Void OnBinary(VariablePtr left, VariablePtr right) = 0;
     virtual Void OnUnary(VariablePtr var) = 0;
-    virtual Void OnReturn(VariablePtr var) = 0;
+    virtual Void OnReturn(ClassPtr var) = 0;
     virtual Void OnLoad(VariablePtr var) = 0;
     virtual Void OnStore(VariablePtr var) = 0;
-    virtual Void OnCast(VariablePtr source, VariablePtr type) = 0;
+	virtual Void OnCast(VariablePtr source, ClassPtr type) = 0;
 	virtual Void OnInvoke(MethodPtr method) = 0;
 protected:
 	Void Read(NodePtr node, VariablePtr& left, VariablePtr& right);
 	Void Run(NodeListRef nodeList);
 	Void Write(VariablePtr var);
 	Void Print(StringC message, ...);
+	Void Cast(VariablePtr var, ObjectPtr type);
 protected:
     VariableStack variableStack;
 	NodeBuilderPtr nodeBuilder;

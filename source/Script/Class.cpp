@@ -33,12 +33,12 @@ ObjectPtr Class::Clone(BufferRefC name, ObjectPtr parent) {
 
 Void Class::Trace(Uint32 offset) {
 
-	this->PrintModificators();
+	printf(this->GetModificatorString().data());
     
     StringC languageType = this->CheckType(Type::Class) ? "class" : "interface";
     
-	if (this->GetTemplateClass()) {
-		printf("%s %s <%s> ", languageType, this->GetName().data(), this->GetTemplateClass()->GetName().data());
+	if (this->GetTemplate()) {
+		printf("%s %s <%s> ", languageType, this->GetName().data(), this->GetTemplate()->GetName().data());
 	}
 	else {
 		if (!this->GetName().length()) {

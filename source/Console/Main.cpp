@@ -74,26 +74,25 @@ int main(int argc, char** argv) {
 		codeTranslator.Analize(&nodeBuilder, rootScope);
 	}
 	catch (SyntaxException& e) {
-		printf("\n---------------------------");
+		printf("\n+---------------------------+");
 		rootScope->Trace(0);
-		puts("\n---------------------------");
+		puts("\n+---------------------------+");
 		e.Debug();
 		puts("");
 		goto _AvoidTrace;
 	}
 	catch (Exception& e) {
-		printf("\n---------------------------");
-		rootScope->Trace(0);
+		printf("\n+---------------------------+\n");
 		e.Debug(Console::GetInstance());
-		puts("\n---------------------------");
+		printf("\n");
 		goto _AvoidTrace;
 	}
 	catch (ThrowableAdapter& e) {
-		printf("\n---------------------------");
+		printf("\n+---------------------------+");
 		rootScope->Trace(0);
-		puts("\n---------------------------");
+		puts("\n+---------------------------+");
 		e.Debug(Console::GetInstance());
-		puts("\n---------------------------");
+		puts("\n+---------------------------+");
 		goto _AvoidTrace;
 	}
 

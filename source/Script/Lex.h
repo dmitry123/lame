@@ -88,6 +88,7 @@ typedef enum {
 	kScriptLexBraceR,
 	/* Language Keywords */
 	kScriptLexClass,
+	kScriptLexEnum,
 	kScriptLexInterface,
 	kScriptLexImplements,
 	kScriptLexExtends,

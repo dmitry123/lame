@@ -247,16 +247,18 @@ Void ScopeBuilder::_ForEachNodeFind(NodePtr n) {
 Void ScopeBuilder::_ForEachClassPrototype(NodePtr n) {
 
 	if (n->id == kScriptNodeAnonymous) {
-		n->var = this->scope->Add(
-			new Class("", this->scope));
+		n->var = this->scope->Add(new Class("", this->scope));
 	}
-	else{
-		n->var = this->scope->Add(
-			new Class(n->typeNode->word, this->scope));
+	else {
+		n->var = this->scope->Add(new Class(n->typeNode->word, this->scope));
 	}
 
 	if (!n->var) {
 		PostSyntaxError(n->lex->line, "Class redeclaration (%s)", n->typeNode->word.data());
+	}
+
+	if ((n->flags & kScriptFlagEnum) != 0) {
+		n->var->SetModificator(Object::Modificator::Enum);
 	}
 
 	n->var->SetNode(n);
@@ -299,7 +301,7 @@ Void ScopeBuilder::_ForEachClassDeclare(NodePtr n) {
 	if (n->typeNode->templateNode) {
 		ClassPtr classT = n->var->Scope::Add(this->scope->classObject->Clone(
 			n->typeNode->templateNode->word, n->var))->SetModificator(Object::Modificator::Private)->GetClass();
-		n->var->SetTemplateClass(classT);
+		n->var->SetTemplate(classT);
 	}
 }
 
@@ -311,15 +313,20 @@ Void ScopeBuilder::_ForEachClassVariableDeclare(NodePtr n) {
 		return;
 	}
 
-	if (!n->typeNode) {
-		if (!(typeClass = scope->Find(n->word))) {
-			PostSyntaxError(n->lex->line, "Undeclared variable (%s)", n->word.data());
-		}
-		n->var = typeClass;
-		typeClass = typeClass->GetClass();
+	if ((n->parent->flags & kScriptFlagEnum) != 0) {
+		typeClass = Scope::classInt;
 	}
 	else {
-		typeClass = scope->Find(n->typeNode->word);
+		if (!n->typeNode) {
+			if (!(typeClass = scope->Find(n->word))) {
+				PostSyntaxError(n->lex->line, "Undeclared variable (%s)", n->word.data());
+			}
+			n->var = typeClass;
+			typeClass = typeClass->GetClass();
+		}
+		else {
+			typeClass = scope->Find(n->typeNode->word);
+		}
 	}
 
 	if (!typeClass) {
@@ -337,8 +344,12 @@ Void ScopeBuilder::_ForEachClassVariableDeclare(NodePtr n) {
 		PostSyntaxError(n->lex->line, "Variable redeclaration (%s)", n->word.data());
 	}
 
+	if ((n->parent->flags & kScriptFlagEnum) != 0) {
+		n->var->SetModificator(Object::Modificator::Final);
+	}
+
 	if (n->typeNode && n->typeNode->templateNode) {
-		if (!typeClass->GetTemplateClass()) {
+		if (!typeClass->GetTemplate()) {
 			PostSyntaxError(n->lex->line, "Class (%s) non-template", typeClass->GetName().data());
 		}
 		ObjectPtr classT = n->var->Find(n->typeNode->templateNode->word);
@@ -350,8 +361,8 @@ Void ScopeBuilder::_ForEachClassVariableDeclare(NodePtr n) {
 		}
 		ClassPtr classT2 = classT->GetClass();
 		n->var->Scope::Add(classT->Clone(
-			typeClass->GetTemplateClass()->GetName(), n->var));
-		n->var->SetTemplateClass(classT2);
+			typeClass->GetTemplate()->GetName(), n->var));
+		n->var->SetTemplate(classT2);
 	}
 }
 
@@ -603,7 +614,7 @@ Void ScopeBuilder::_ForEachVariableDeclare(NodePtr n) {
 		}
 
 		if (n->typeNode && n->typeNode->templateNode) {
-			if (!typeClass->GetTemplateClass()) {
+			if (!typeClass->GetTemplate()) {
 				PostSyntaxError(n->lex->line, "Class (%s) non-template", typeClass->GetName().data());
 			}
 			ObjectPtr classT = n->var->Find(n->typeNode->templateNode->word);
@@ -615,8 +626,8 @@ Void ScopeBuilder::_ForEachVariableDeclare(NodePtr n) {
 			}
 			ClassPtr classT2 = classT->GetClass();
 			n->var->Scope::Add(classT->Clone(
-				typeClass->GetTemplateClass()->GetName(), n->var));
-			n->var->SetTemplateClass(classT2);
+				typeClass->GetTemplate()->GetName(), n->var));
+			n->var->SetTemplate(classT2);
 		}
 	}
 	else if (n->id == kScriptNodeDefault) {
@@ -625,7 +636,7 @@ Void ScopeBuilder::_ForEachVariableDeclare(NodePtr n) {
 			if (!n->var) {
 				auto i = std::find(n->parent->blockList.begin(), n->parent->blockList.end(), n);
 				if (i != n->parent->blockList.end()) {
-					if ((*(i + 1))->lex->lex->id != kScriptLexDirected) {
+					if (n->parent->blockList.end() - i < 2 || (*(i + 1))->lex->lex->id != kScriptLexDirected) {
 						goto _UndeclaredVariable;
 					}
 				}
