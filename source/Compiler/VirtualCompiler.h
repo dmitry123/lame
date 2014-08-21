@@ -11,6 +11,8 @@ protected:
 	typedef Core::Deque<NodePtr> NodeList;
 	typedef Core::Deque<NodePtr>& NodeListRef;
 protected:
+	typedef Script::VariablePtr VariablePtr;
+protected:
 	virtual Void OnBinary(VariablePtr left, VariablePtr right) = 0;
     virtual Void OnUnary(VariablePtr var) = 0;
     virtual Void OnReturn(ClassPtr var) = 0;

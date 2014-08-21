@@ -387,7 +387,7 @@ Void CodeTranslator::OnReturn(ClassPtr var) {
 Void CodeTranslator::OnInvoke(MethodPtr method) {
 
 	this->byteCodePrinter->New(CALL)
-		->Write(method->segmentCodePosition);
+		->Write(method->GetPosition());
 }
 
 LAME_END2

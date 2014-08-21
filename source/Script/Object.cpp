@@ -50,7 +50,6 @@ Object::Object(BufferRefC name, ScopePtr parent, Type type) :
 	this->size_ = 0;
 	this->template_ = 0;
 	this->node_ = 0;
-	this->segmentCodePosition = 0;
 	this->wasInStack = 0;
 	this->position_ = 0;
 }

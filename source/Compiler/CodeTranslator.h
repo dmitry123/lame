@@ -5,9 +5,6 @@
 
 LAME_BEGIN2(Compiler)
 
-using namespace Core;
-using namespace Script;
-
 class LAME_API CodeTranslator : public VirtualCompiler {
 public:
     Void Analize(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {

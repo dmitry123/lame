@@ -169,7 +169,7 @@ Void VirtualCompiler::Analize(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
 
 	for (ObjectPtr i : this->methodList) {
 
-		i->segmentCodePosition = this->byteCodePrinter->GetPosition();
+		i->SetPosition(this->byteCodePrinter->GetPosition());
 
 		this->Print(" // %s%s(%s)\n", i->GetPath().data(), i->GetName().data(),
 			i->GetMethod()->GetFormattedArguments().data());

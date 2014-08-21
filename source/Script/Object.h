@@ -123,7 +123,6 @@ private: /* Private Variables */
 	NodePtr    node_;
 	Uint32     position_;
 public:
-	Uint32 segmentCodePosition;
 	Bool wasInStack;
 public:
 	enum {
