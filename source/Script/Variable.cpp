@@ -256,6 +256,7 @@ ClassPtr Variable::GetClass() {
 	if (this->objectValue) {
 		return this->objectValue;
 	}
+
 	return this->classType;
 }
 

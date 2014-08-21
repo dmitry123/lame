@@ -25,8 +25,9 @@ typedef class CodeTranslator *CodeTranslatorPtr, *const CodeTranslatorPtrC;
 typedef class CodeAnalizer *CodeAnalizerPtr, *const CodeAnalizerPtrC;
 typedef class LowLevelStack *LowLevelStackPtr, *const LowLevelStackPtrC;
 typedef class Register *RegisterPtr, *const RegisterPtrPtrC;
-typedef class ByteCodePrinter *ByteCodePrinterPtr, *const ByteCodePrinterPtrC;
+typedef class ByteCode *ByteCodePtr, *const ByteCodePrinterPtrC;
 typedef class VirtualCompiler *VirtualAnalizerPtr, *const VirtualAnalizerPtrC;
+typedef class VariableStack *VariableStackPtr, *const VariableStackPtrC;
 
 LAME_END2
 

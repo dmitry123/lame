@@ -56,6 +56,7 @@ public:
 	Uint32 flags;
 	Deque<NodePtr> argList;
 	Deque<NodePtr> blockList;
+	Deque<NodePtr> elseList;
 	Uint32 methodHash;
 public:
 	Node(Buffer word, NodeID id, LexNodePtr lex, NodePtr parent, NodePtr prev);

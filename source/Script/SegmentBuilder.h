@@ -14,11 +14,8 @@ public:
 	{
 		this->rootScope = rootScope;
 	}
-	~SegmentBuilder() {
-		delete this->dataSegment;
-		delete this->codeSegment;
-		delete this->textSegment;
-	}
+public:
+	~SegmentBuilder();
 public:
 	SegmentPtr BuildDataSegment(Void);
 	SegmentPtr BuildCodeSegment(Void);
@@ -27,11 +24,11 @@ private:
 	typedef Void (*ForEachScopeObject)(
 		SegmentPtr segment, VariablePtr object);
 	typedef Void(*ForEachScopeMethod)(
-		SegmentPtr segment, MethodPtr object);
+		SegmentPtr segment, ObjectPtr object);
 private:
 	Void _ForEachScopeObject(ForEachScopeObject callback, SegmentPtr segment, ScopePtr scope);
 	Void _ForEachScopeTemp(ForEachScopeObject callback, SegmentPtr segment, ScopePtr scope);
-	Void _ForEachScopeMethod(ForEachScopeMethod callback, SegmentPtr segment, ScopePtr scope);
+	Void _ForEachScopeVariable(ForEachScopeMethod callback, SegmentPtr segment, ScopePtr scope);
 public:
 	inline SegmentPtr GetDataSegment() {
 		return this->dataSegment;

@@ -5,9 +5,7 @@ LAME_BEGIN2(Compiler)
 using namespace Core;
 using namespace Script;
 
-Void VirtualCompiler::Run(NodeListRef nodeList) {
-
-	VariableStack variableStackBacup = this->variableStack;
+Void VirtualCompiler::_Run(NodeListRef nodeList) {
 
 	for (NodePtr n : nodeList) {
 		this->currentNode = n;
@@ -19,21 +17,21 @@ Void VirtualCompiler::Run(NodeListRef nodeList) {
 				continue;
 			}
 			else if (n->lex->lex->id == kScriptLexReturn) {
-				this->_AnalizeReturn(n);
+				this->_Return(n);
 			}
 			else if (n->id == kScriptNodeCondition) {
-				this->_AnalizeCondition(n);
+				this->_Condition(n);
 			}
 			else if (n->id == kScriptNodeInvoke) {
 				if (!n->var) {
 					PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->word.data());
 				}
 				if (n->lex->args == 1 && n->var->CheckType(Class::Type::Class)) {
-					this->_AnalizeCast(n);
+					this->_Cast(n);
 				}
 				else {
 					if (!n->var->CheckType(Object::Type::Class)) {
-						this->_AnalizeInvoke(n);
+						this->_Invoke(n);
 					}
 					else {
 						goto _SaveNode;
@@ -44,7 +42,7 @@ Void VirtualCompiler::Run(NodeListRef nodeList) {
 				if (!n->var) {
 					PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->word.data());
 				}
-				this->_AnalizeInvoke(n);
+				this->_Invoke(n);
 				if (n->parent->id != kScriptNodeClass) {
 					goto _SaveNode;
 				}
@@ -62,20 +60,23 @@ Void VirtualCompiler::Run(NodeListRef nodeList) {
 				this->variableStack.Clear();
 			}
 			else if (n->lex->lex->id == kScriptLexNew) {
-				this->_AnalizeNew(n);
+				this->_New(n);
 			}
 			else if (n->lex->lex->id == kScriptLexDirected) {
-				this->_AnalizeSelection(n);
+				this->_Selection(n);
 			}
 			else if (n->lex->lex->IsMath() || n->lex->lex->IsBool()) {
 				if (n->lex->args == 1) {
-					this->_AnalizeUnary(n);
+					this->_Unary(n);
 				}
 				else if (n->lex->args == 2) {
-					this->_AnalizeBinary(n);
+					this->_Binary(n);
+				}
+				else if (n->lex->args == 3 && n->lex->lex->id == kScriptLexTernary) {
+					this->_Ternary(n);
 				}
 				else {
-					this->_AnalizeInvoke(n);
+					this->_Invoke(n);
 				}
 			}
 		}
@@ -86,11 +87,9 @@ Void VirtualCompiler::Run(NodeListRef nodeList) {
 			throw SyntaxException(n->lex->line, e.GetErrorBuffer());
 		}
 	}
-
-	this->variableStack = variableStackBacup;
 }
 
-Void VirtualCompiler::Read(NodePtr n, VariablePtr& left, VariablePtr& right) {
+Void VirtualCompiler::_Read(NodePtr n, VariablePtr& left, VariablePtr& right) {
 
 	if (this->variableStack.Size() < n->lex->args || !n->lex->args) {
 		PostSyntaxError(n->lex->line, "Invalid operator parameters, \"%s\" requires %d arguments", n->word.data(), n->lex->args);
@@ -121,13 +120,13 @@ Void VirtualCompiler::Read(NodePtr n, VariablePtr& left, VariablePtr& right) {
 	}
 }
 
-Void VirtualCompiler::Write(VariablePtr var) {
+Void VirtualCompiler::_Write(VariablePtr var) {
 
 	this->variableStack.Push(var);
 	this->OnLoad(var);
 }
 
-Void VirtualCompiler::Print(StringC message, ...) {
+Void VirtualCompiler::_Print(StringC message, ...) {
 
 	VaList vaList;
 
@@ -136,17 +135,31 @@ Void VirtualCompiler::Print(StringC message, ...) {
 	va_end(vaList);
 }
 
-Void VirtualCompiler::Cast(VariablePtr var, ObjectPtr type) {
+Void VirtualCompiler::_Cast(VariablePtr var, ObjectPtr type) {
 
 	ClassPtr left = var->GetClass();
 	ClassPtr right = type->GetClass();
 
+	if ((left->IsIntegerLike()  || left->IsFloatLike()) &&
+		(right->IsIntegerLike() || right->IsFloatLike())
+	) {
+		if (left->GetPriority() > right->GetPriority()) {
+			goto _CastError;
+		}
+	}
+	goto _CastOk;
 
+_CastError:
+
+	PostSyntaxError(this->currentNode->lex->line, "Unable to cast from (%s) to (%s)",
+		right->GetName().data(), left->GetName().data());
+
+_CastOk:
 
 	this->OnCast(var, type->GetClass());
 }
 
-Void VirtualCompiler::Analize(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
+Void VirtualCompiler::Run(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
 
 	this->nodeBuilder = nodeBuilder;
 	this->rootScope = rootScope;
@@ -163,15 +176,18 @@ Void VirtualCompiler::Analize(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
 			}
 		}
 		else {
-			this->Run(i->GetNode()->blockList);
+			this->_Run(i->GetNode()->blockList);
 		}
 	}
 
+	this->currentSegment = ObjectPtr(rootScope)->GetSegment();
+	this->byteCode = new ByteCode(this->currentSegment);
+
 	for (ObjectPtr i : this->methodList) {
 
-		i->SetPosition(this->byteCodePrinter->GetPosition());
+		i->SetPosition(ObjectPtr(rootScope)->GetSegment()->GetPosition());
 
-		this->Print(" // %s%s(%s)\n", i->GetPath().data(), i->GetName().data(),
+		this->_Print(" // %s%s(%s)\n", i->GetPath().data(), i->GetName().data(),
 			i->GetMethod()->GetFormattedArguments().data());
 
 		NodePtr n = i->GetMethod()->GetRootNode();
@@ -183,7 +199,7 @@ Void VirtualCompiler::Analize(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
 			this->OnStore(n2->var->GetVariable());
 		}
 
-		this->Run(i->GetMethod()->GetRootNode()->blockList);
+		this->_Run(i->GetMethod()->GetRootNode()->blockList);
 
 		if (i->GetMethod()->GetReturnType()->IsVoid()) {
 			this->OnReturn(NULL);
@@ -198,7 +214,7 @@ Void VirtualCompiler::Analize(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
 		}
 	}
 
-	this->Run(this->nodeBuilder->GetRootNode()->blockList);
+	this->_Run(this->nodeBuilder->GetRootNode()->blockList);
 }
 
 Void VirtualCompiler::_ForEachClass(ScopePtr rootScope) {
@@ -229,7 +245,7 @@ Void VirtualCompiler::_ForEachMethod(ScopePtr rootScope) {
 	}
 }
 
-Void VirtualCompiler::_AnalizeBinary(NodePtr n) {
+Void VirtualCompiler::_Binary(NodePtr n) {
 
 	VariablePtr sourceVar;
 	VariablePtr leftVar;
@@ -239,12 +255,12 @@ Void VirtualCompiler::_AnalizeBinary(NodePtr n) {
 
 	leftVar2 = this->variableStack.Back();
 
-	this->Read(n, leftVar, rightVar);
+	this->_Read(n, leftVar, rightVar);
 
 	leftVar2 = leftVar;
 	rightVar2 = rightVar;
 
-	this->Print(" // - %s %s %s\n", leftVar->GetName().data(),
+	this->_Print(" // - %s %s %s\n", leftVar->GetName().data(),
 		n->word.data(), rightVar->GetName().data());
 
 	if (n->lex->lex->IsRight()) {
@@ -258,7 +274,7 @@ Void VirtualCompiler::_AnalizeBinary(NodePtr n) {
 
 		if (leftVar->GetClass()->Hash() != rightVar->GetClass()->Hash()) {
 			if (leftVar->GetClass()->Hash() != sourceVar->GetClass()->Hash()) {
-				this->Cast(sourceVar, leftVar->GetClass());
+				this->_Cast(leftVar, sourceVar->GetClass());
 			}
 		}
 
@@ -268,7 +284,7 @@ Void VirtualCompiler::_AnalizeBinary(NodePtr n) {
 
 		if (leftVar->GetClass()->Hash() != rightVar->GetClass()->Hash()) {
 			if (rightVar->GetClass()->Hash() != sourceVar->GetClass()->Hash()) {
-				this->Cast(sourceVar, rightVar->GetClass());
+				this->_Cast(rightVar, sourceVar->GetClass());
 			}
 		}
 
@@ -282,7 +298,7 @@ Void VirtualCompiler::_AnalizeBinary(NodePtr n) {
 		rightVar->wasInStack = FALSE;
 
 		if (leftVar->GetClass()->Hash() != rightVar->GetClass()->Hash()) {
-			this->Cast(leftVar, rightVar->GetClass());
+			this->_Cast(leftVar, rightVar->GetClass());
 		}
 
 		sourceVar = leftVar2;
@@ -316,14 +332,14 @@ Void VirtualCompiler::_AnalizeBinary(NodePtr n) {
 	}
 }
 
-Void VirtualCompiler::_AnalizeUnary(NodePtr n) {
+Void VirtualCompiler::_Unary(NodePtr n) {
 
 	VariablePtr leftVar;
 
-	this->Read(n, leftVar, leftVar);
+	this->_Read(n, leftVar, leftVar);
 
-	//this->Print(" // %s%s\n", n->word.data(),
-	//	leftVar->GetName().data());
+	this->_Print(" // - %s%s\n", n->word.data(),
+		leftVar->GetName().data());
 
 	this->OnLoad(leftVar);
 	this->OnUnary(leftVar);
@@ -332,15 +348,31 @@ Void VirtualCompiler::_AnalizeUnary(NodePtr n) {
 	this->variableStack.Push(leftVar);
 }
 
-Void VirtualCompiler::_AnalizeNew(NodePtr n) {
+Void VirtualCompiler:: _Ternary(NodePtr n) {
+
+	VariablePtr backVar;
+
+	backVar = this->GetStack()->Back();
+	backVar->wasInStack = TRUE;
+
+	this->_Run(n->blockList);
+	this->OnLoad(backVar);
+	this->OnTernary(n, TRUE);
+
+	this->_Run(n->elseList);
+	this->OnLoad(backVar);
+	this->OnTernary(n, FALSE);
+}
+
+Void VirtualCompiler::_New(NodePtr n) {
 
 	VariablePtr leftVar;
 	VariablePtr rightVar;
 
-	this->Read(n, leftVar, leftVar);
+	this->_Read(n, leftVar, leftVar);
 
 	if (leftVar->CheckModificator(Object::Modificator::Primitive)) {
-		this->Read(n, rightVar, rightVar);
+		this->_Read(n, rightVar, rightVar);
 		if (!rightVar->CheckType(Object::Type::Variable)) {
 			PostSyntaxError(n->lex->line, "Array parameter must be variable (%s)", rightVar->GetName().data());
 		}
@@ -359,12 +391,12 @@ Void VirtualCompiler::_AnalizeNew(NodePtr n) {
 		// push
 		if (classVar->GetNode()) {
 			for (NodePtr n2 : classVar->GetNode()->blockList) {
-				this->Run(n2->blockList);
+				this->_Run(n2->blockList);
 			}
 		}
 		if (constructorVar && FALSE) {
 			if (constructorVar->GetMethod()->GetRootNode()) {
-				this->Run(constructorVar->GetMethod()->GetRootNode()->blockList);
+				this->_Run(constructorVar->GetMethod()->GetRootNode()->blockList);
 			}
 			else if (constructorVar->GetMethod()->GetNativeMethod()) {
 				constructorVar->GetMethod()->GetNativeMethod()(constructorVar->GetMethod());
@@ -379,14 +411,14 @@ Void VirtualCompiler::_AnalizeNew(NodePtr n) {
 	this->variableStack.Push(leftVar);
 }
 
-Void VirtualCompiler::_AnalizeSelection(NodePtr n) {
+Void VirtualCompiler::_Selection(NodePtr n) {
 
 	VariablePtr leftVar;
 	VariablePtr rightVar;
 	Buffer fieldName;
 	ObjectPtr fieldObject;
 
-	this->Read(n, leftVar, rightVar);
+	this->_Read(n, leftVar, rightVar);
 
 	fieldName = this->variableStack.GetNameList().back();
 
@@ -411,7 +443,7 @@ Void VirtualCompiler::_AnalizeSelection(NodePtr n) {
 	//	nameStack.push_back(fieldName);
 }
 
-Void VirtualCompiler::_AnalizeCondition(NodePtr n) {
+Void VirtualCompiler::_Condition(NodePtr n) {
 
 	VariablePtr var0;
 	//	VariablePtr var1;
@@ -419,12 +451,12 @@ Void VirtualCompiler::_AnalizeCondition(NodePtr n) {
 
 	switch (n->lex->lex->id) {
 	case kScriptLexIf:
-		this->Read(n, var0, var0);
+		this->_Read(n, var0, var0);
 		break;
 	case kScriptLexElse:
 		break;
 	case kScriptLexWhile:
-		this->Read(n, var0, var0);
+		this->_Read(n, var0, var0);
 		break;
 	case kScriptLexDo:
 		break;
@@ -441,12 +473,12 @@ Void VirtualCompiler::_AnalizeCondition(NodePtr n) {
 	}
 }
 
-Void VirtualCompiler::_AnalizeCast(NodePtr n) {
+Void VirtualCompiler::_Cast(NodePtr n) {
 
 	VariablePtr leftVar;
 	ClassPtr rightVar;
 
-	this->Read(n, leftVar, leftVar);
+	this->_Read(n, leftVar, leftVar);
 
 	rightVar = n->var->GetClass();
 
@@ -455,7 +487,7 @@ Void VirtualCompiler::_AnalizeCast(NodePtr n) {
 	this->variableStack.Push(leftVar);
 }
 
-Void VirtualCompiler::_AnalizeInvoke(NodePtr n) {
+Void VirtualCompiler::_Invoke(NodePtr n) {
 
 	VariablePtr leftVar;
 	ObjectPtr methodVar;
@@ -465,7 +497,7 @@ Void VirtualCompiler::_AnalizeInvoke(NodePtr n) {
 	Buffer formattedParameters;
 
 	if (n->var->CheckModificator(Object::Modificator::Primitive)) {
-		this->Read(n, leftVar, leftVar);
+		this->_Read(n, leftVar, leftVar);
 		if (!leftVar->CheckType(Object::Type::Variable)) {
 			PostSyntaxError(n->lex->line, "Array parameter must be variable (%s)", leftVar->GetName().data());
 		}
@@ -485,7 +517,7 @@ Void VirtualCompiler::_AnalizeInvoke(NodePtr n) {
 			}
 		}
 
-		this->Print(" // - %s(%s)\n", n->word.data(), formattedParameters.data());
+		this->_Print(" // - %s(%s)\n", n->word.data(), formattedParameters.data());
 
 		for (Uint32 i = 0; i < n->lex->args; i++) {
 			this->OnLoad(this->variableStack.Pop());
@@ -536,7 +568,7 @@ Void VirtualCompiler::_AnalizeInvoke(NodePtr n) {
 	}
 }
 
-Void VirtualCompiler::_AnalizeReturn(NodePtr n) {
+Void VirtualCompiler::_Return(NodePtr n) {
 
 	VariablePtr returnVar;
 	ClassPtr returnType;
@@ -576,7 +608,7 @@ Void VirtualCompiler::_AnalizeReturn(NodePtr n) {
 	returnVar = NULL;
 
 	if (n->lex->args > 0) {
-		this->Read(n, returnVar, returnVar);
+		this->_Read(n, returnVar, returnVar);
 	}
 	
 	if (returnVar) {
@@ -586,7 +618,7 @@ Void VirtualCompiler::_AnalizeReturn(NodePtr n) {
 	returnType = methodVar->GetReturnType();
 	methodVar->returnVar = returnVar;
 
-	this->Cast(methodVar->returnVar, methodVar->GetReturnType());
+	OnCast(methodVar->returnVar, methodVar->GetReturnType());
 
 	if (returnVar) {
 		this->OnReturn(methodVar->GetReturnType());

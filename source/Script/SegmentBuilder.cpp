@@ -4,6 +4,21 @@
 
 LAME_BEGIN2(Script)
 
+SegmentBuilder::~SegmentBuilder() {
+
+	delete this->dataSegment;
+	delete this->textSegment;
+
+	if (this->codeSegment) {
+
+		_ForEachScopeVariable([](SegmentPtr segment, ObjectPtr object) {
+			delete object->GetSegment(); object->SetSegment(NULL);
+		}, this->codeSegment, NULL);
+
+		delete this->codeSegment;
+	}
+}
+
 SegmentPtr SegmentBuilder::BuildDataSegment(Void) {
 
 	if (this->dataSegment) {
@@ -16,7 +31,8 @@ SegmentPtr SegmentBuilder::BuildDataSegment(Void) {
 	this->dataSegment->Allocate();
 
 	_ForEachScopeObject([](SegmentPtr segment, VariablePtr object) {
-		object->SetSegment(segment, segment->Write(object));
+		object->SetAddress(*segment->Write(object));
+		object->SetSize(segment->GetLastSize());
 	}, this->dataSegment, NULL);
 
 	this->dataSegment->Flush();
@@ -35,8 +51,10 @@ SegmentPtr SegmentBuilder::BuildCodeSegment(Void) {
 
 	this->codeSegment->Allocate();
 
-	_ForEachScopeMethod([](SegmentPtr segment, MethodPtr object) {
-		object->SetSegment(segment, segment->Write(object));
+	_ForEachScopeVariable([](SegmentPtr segment, ObjectPtr object) {
+		if (!object->GetSegment()) {
+			object->SetSegment(new Segment(object->GetName()));
+		}
 	}, this->codeSegment, NULL);
 
 	this->codeSegment->Flush();
@@ -56,7 +74,8 @@ SegmentPtr SegmentBuilder::BuildTextSegment(Void) {
 	this->textSegment->Allocate();
 
 	_ForEachScopeTemp([](SegmentPtr segment, VariablePtr object) {
-		object->SetSegment(segment, segment->Write(object));
+		object->SetAddress(*segment->Write(object));
+		object->SetSize(segment->GetLastSize());
 	}, this->textSegment, NULL);
 
 	this->textSegment->Flush();
@@ -114,21 +133,16 @@ Void SegmentBuilder::_ForEachScopeTemp(ForEachScopeObject callback, SegmentPtr s
 	}
 }
 
-Void SegmentBuilder::_ForEachScopeMethod(ForEachScopeMethod callback, SegmentPtr segment, ScopePtr scope) {
+Void SegmentBuilder::_ForEachScopeVariable(ForEachScopeMethod callback, SegmentPtr segment, ScopePtr scope) {
 
 	if (!scope) {
 		scope = this->rootScope;
 	}
 
-	for (ObjectPtr i : scope->GetClassSet()) {
-		for (ObjectPtr j : i->GetMethodSet()) {
-			if (!j->CheckModificator(Class::Modificator::Native) &&
-				!j->CheckModificator(Class::Modificator::Abstract)
-			) {
-				callback(segment, j->GetMethod());
-			}
-		}
-		_ForEachScopeMethod(callback, segment, i);
+	callback(segment, ObjectPtr(scope));
+
+	for (auto i : scope->GetHashMap()) {
+		_ForEachScopeVariable(callback, segment, i.second);
 	}
 }
 

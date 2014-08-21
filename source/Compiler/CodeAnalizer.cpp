@@ -8,6 +8,9 @@ Void CodeAnalizer::OnBinary(VariablePtr left, VariablePtr right) {
 Void CodeAnalizer::OnUnary(VariablePtr var) {
 }
 
+Void CodeAnalizer::OnTernary(NodePtr node, Bool state) {
+}
+
 Void CodeAnalizer::OnReturn(ClassPtr var) {
 }
 

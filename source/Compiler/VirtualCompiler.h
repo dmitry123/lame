@@ -1,56 +1,70 @@
 #ifndef __LAME_COMPILER_VIRTUAL_COMPILER__
 #define __LAME_COMPILER_VIRTUAL_COMPILER__
 
-#include "ByteCodePrinter.h"
+#include "ByteCode.h"
 #include "VariableStack.h"
 
 LAME_BEGIN2(Compiler)
 
 class LAME_API VirtualCompiler {
-protected:
+protected: /* Core Typedefs */
 	typedef Core::Deque<NodePtr> NodeList;
 	typedef Core::Deque<NodePtr>& NodeListRef;
-protected:
+protected: /* Script Typedefs */
 	typedef Script::VariablePtr VariablePtr;
-protected:
+protected: /* Strict Virtual Methods */
 	virtual Void OnBinary(VariablePtr left, VariablePtr right) = 0;
     virtual Void OnUnary(VariablePtr var) = 0;
+	virtual Void OnTernary(NodePtr node, Bool state) = 0;
     virtual Void OnReturn(ClassPtr var) = 0;
     virtual Void OnLoad(VariablePtr var) = 0;
     virtual Void OnStore(VariablePtr var) = 0;
 	virtual Void OnCast(VariablePtr source, ClassPtr type) = 0;
 	virtual Void OnInvoke(MethodPtr method) = 0;
 protected:
-	Void Read(NodePtr node, VariablePtr& left, VariablePtr& right);
-	Void Run(NodeListRef nodeList);
-	Void Write(VariablePtr var);
-	Void Print(StringC message, ...);
-	Void Cast(VariablePtr var, ObjectPtr type);
+	Void _Read(NodePtr node, VariablePtr& left, VariablePtr& right);
+	Void _Run(NodeListRef nodeList);
+	Void _Write(VariablePtr var);
+	Void _Print(StringC message, ...);
+	Void _Cast(VariablePtr var, ObjectPtr type);
+public:
+	inline SegmentPtr GetSegment() { return this->currentSegment; }
+	inline NodePtr GetNode() { return this->currentNode; }
+	inline ScopePtr GetRoot() { return this->rootScope; }
+	inline VariableStackPtr GetStack() { return &this->variableStack; }
+	inline ByteCodePtr GetByteCode() { return this->byteCode; }
 protected:
     VariableStack variableStack;
 	NodeBuilderPtr nodeBuilder;
 	Uint32 methodHash;
 	ScopePtr rootScope;
 	NodePtr currentNode;
-	ByteCodePrinterPtr byteCodePrinter;
+	Set<SegmentPtr> segmentList;
+	SegmentPtr currentSegment;
+	ByteCodePtr byteCode;
 public:
 	VirtualCompiler() {
-		this->byteCodePrinter = ByteCodePrinter::GetInstance();
+		this->byteCode = NULL;
+	}
+public:
+	virtual ~VirtualCompiler() {
+		delete this->byteCode;
 	}
 protected:
-	Void Analize(NodeBuilderPtr nodeBuilder, ScopePtr rootScope);
+	Void Run(NodeBuilderPtr nodeBuilder, ScopePtr rootScope);
 private:
 	Void _ForEachClass(ScopePtr rootScope);
 	Void _ForEachMethod(ScopePtr rootScope);
 private:
-	Void _AnalizeBinary(NodePtr n);
-	Void _AnalizeUnary(NodePtr n);
-	Void _AnalizeNew(NodePtr n);
-	Void _AnalizeSelection(NodePtr n);
-	Void _AnalizeCondition(NodePtr n);
-	Void _AnalizeCast(NodePtr n);
-	Void _AnalizeInvoke(NodePtr n);
-	Void _AnalizeReturn(NodePtr n);
+	Void _Binary(NodePtr n);
+	Void _Unary(NodePtr n);
+	Void _Ternary(NodePtr n);
+	Void _New(NodePtr n);
+	Void _Selection(NodePtr n);
+	Void _Condition(NodePtr n);
+	Void _Cast(NodePtr n);
+	Void _Invoke(NodePtr n);
+	Void _Return(NodePtr n);
 private:
     Vector<ObjectPtr> classList;
 	Vector<ObjectPtr> methodList;

@@ -902,6 +902,35 @@ NodeBuilder::Iterator NodeBuilder::_BuildEnum(NodePtr& parent, Iterator i) {
 	return this->_BuildClass(parent, i);
 }
 
+NodeBuilder::Iterator NodeBuilder::_BuildTernary(NodePtr& parent, Iterator i) {
+
+	NodePtr ternaryNode = NULL;
+
+	__Inc(i);
+
+	while ((*i)->lex->id != kScriptLexColon) {
+		ternaryNode = this->_CreateNode(*i, kScriptNodeDefault);
+		i = this->_Build(ternaryNode, i);
+		parent->blockList.push_back(ternaryNode);
+		__Inc(i);
+	}
+
+	__Inc(i);
+
+	while ((*i)->lex->id != kScriptLexSemicolon) {
+		ternaryNode = this->_CreateNode(*i, kScriptNodeDefault);
+		i = this->_Build(ternaryNode, i);
+		parent->elseList.push_back(ternaryNode);
+		__Inc(i);
+	}
+
+	if (parent->blockList.empty() || parent->elseList.empty()) {
+		PostSyntaxError((*i)->line, "Lost expression in ternary operator", 0);
+	}
+
+	return i;
+}
+
 Uint32 NodeBuilder::_GetCountOfArguments(Iterator i) {
 
 	/*	Function have the same architecture
@@ -1033,6 +1062,12 @@ NodeBuilder::Iterator NodeBuilder::_Build(NodePtr& node, Iterator i) {
 
 	if (this->_IsEnum(i)) {
 		i = this->_BuildEnum(node, i);
+	}
+
+	/*	Ternary */
+
+	if (this->_IsTernary(i)) {
+		i = this->_BuildTernary(node, i);
 	}
 
 	/*	Argument List Lex : 'int... argumentList;' */
@@ -1219,10 +1254,12 @@ NodePtr NodeBuilder::_CreateNode(LexNodePtrC lex, NodeID id) {
 	/*	Check node for 'power' and save its parent. */
 
 	if (node->lex->lex->IsCondition() ||
+		node->id == kScriptNodeFunction ||
 		node->id == kScriptNodeClass ||
 		node->id == kScriptNodeAnonymous ||
-		node->lex->lex->IsLanguage()
-    ) {
+		node->id == kScriptNodeInterface ||
+		node->id == kScriptNodeCondition
+	) {
 		this->parentNode_ = node;
 	}
 
@@ -1411,6 +1448,10 @@ NodeBuilder::NodeBuilder() {
 
 	this->_DeclareSequence(kScriptLexSequenceEnum, {
 		kScriptLexEnum
+	});
+
+	this->_DeclareSequence(kScriptLexSequenceTernary, {
+		kScriptLexTernary
 	});
 }
 

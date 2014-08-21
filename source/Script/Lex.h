@@ -75,6 +75,7 @@ typedef enum {
 	kScriptLexNotEqual,
 	kScriptLexAnd,
 	kScriptLexOr,
+	kScriptLexTernary,
 	/* Others */
 	kScriptLexComma,
 	kScriptLexCommentL,

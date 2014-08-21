@@ -9,9 +9,6 @@
     <ClCompile Include="..\..\source\Compiler\Assembler.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\Compiler\ByteCodePrinter.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\Compiler\CodeAnalizer.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -39,12 +36,12 @@
     <ClCompile Include="..\..\source\Compiler\VirtualCompiler.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\Compiler\ByteCode.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\Compiler\Assembler.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Compiler\ByteCodePrinter.h">
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Compiler\CodeAnalizer.h">
@@ -72,6 +69,9 @@
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Compiler\VirtualCompiler.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Compiler\ByteCode.h">
       <Filter>source</Filter>
     </ClInclude>
   </ItemGroup>

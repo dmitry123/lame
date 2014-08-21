@@ -16,7 +16,7 @@ ObjectPtr Scope::Add(ObjectPtr object) {
 	HashMap::iterator i;
 	Hash hash = object->Hash();
 
-	if (Lex::Find(object->GetName()) != NULL) {
+	if (Lex::Find(object->GetName()) != NULL && Lex::Find(object->GetName())->id != kScriptLexTernary) {
 		PostSyntaxError(0, "Reserved name (%s)", object->GetName().data());
 	}
 
@@ -282,10 +282,16 @@ Buffer Scope::Path(Void) {
 
 	ScopePtr root = this;
 	Buffer resultPath;
+	Stack<ScopePtr> scopeStack;
 
 	while (root && root->parentScope_) {
-		resultPath += root->GetName() + '/';
+		scopeStack.push(root);
 		root = root->parentScope_;
+	}
+
+	while (!scopeStack.empty()) {
+		resultPath += scopeStack.top()->GetName() + '/';
+		scopeStack.pop();
 	}
 
 	return resultPath;
@@ -415,9 +421,9 @@ ScopePtr Scope::CreateRootScope(Void) {
 	classVoid->SetPriority(0);
 	classString->SetPriority(6);
 	classObject->SetPriority(7);
-	classClass->SetPriority(0);
-	classUnknown->SetPriority(0);
-	classArray->SetPriority(0);
+	classClass->SetPriority(7);
+	classUnknown->SetPriority(7);
+	classArray->SetPriority(7);
 
 	return ScopePtr(rootScope);
 }

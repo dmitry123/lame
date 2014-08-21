@@ -22,17 +22,18 @@ static Bool _MoveNode(NodePtr node, Bool isMoveConstruciton = FALSE) {
 		whereupon we'll swap our expressions and push in one stack. Final
 		view should be : '1 if'. We've saved count of arguments in node 'new' */
 
-	if (node->id == kScriptNodeFunction ||
-		(node->id == kScriptNodeCondition && !isMoveConstruciton) ||
-		node->lex->lex->id == kScriptLexCatch
+	if ((node->id == kScriptNodeCondition && !isMoveConstruciton) ||
+		node->id == kScriptNodeFunction || node->lex->lex->id == kScriptLexCatch
 	) {
 		goto _Seek;
 	}
 
-	if (node->parent != NULL &&
-		node->parent->blockList.size() > 0 &&
-		node->argList.size() > 0
-	) {
+	if (node->id == kScriptNodeVariable) {
+
+	}
+
+	if (node->parent != NULL && (node->parent->blockList.size() > 0 && node->argList.size() > 0)) {
+
 		Deque<NodePtr>* nodeStack = NULL;
 
 		/*	Get element from parent's stack */
@@ -733,6 +734,9 @@ Void ScopeBuilder::_ForEachNode(NodePtr node, ScopePtr scope, ForEachNode callba
 		_ForEachNode(n, scope, callback, id);
 	}
 	for (NodePtr n : node->blockList) {
+		_ForEachNode(n, scope, callback, id);
+	}
+	for (NodePtr n : node->elseList) {
 		_ForEachNode(n, scope, callback, id);
 	}
 

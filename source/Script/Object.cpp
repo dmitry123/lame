@@ -1,8 +1,5 @@
 #include "Object.h"
-#include "Segment.h"
 #include "Lex.h"
-
-#include <stdint.h>
 
 LAME_BEGIN2(Script)
 
@@ -12,11 +9,7 @@ static Buffer _GetRandomScopeName() {
 
 	for (Uint32 i = 0; i < sizeof(result) * 8; i++) {
 		if (rand() % 2) {
-#ifdef LAME_MSVC
-			result |= 0x01ui64 << i;
-#else
             result |= Uint64(0x01) << i;
-#endif
 		}
 	}
 
@@ -44,12 +37,13 @@ Object::Object(BufferRefC name, ScopePtr parent, Type type) :
 	path(parent->Path()),
 	type(type)
 {
+	this->segment_ = NULL;
+	this->template_ = NULL;
+	this->node_ = NULL;
+
 	this->modificators_ = 0;
-	this->segment_ = 0;
 	this->address_ = 0;
 	this->size_ = 0;
-	this->template_ = 0;
-	this->node_ = 0;
 	this->wasInStack = 0;
 	this->position_ = 0;
 }
@@ -61,15 +55,6 @@ ObjectPtr Object::SetModificator(Modificator modificator, Bool state) {
 		this->modificators_ &= ~(Uint32)modificator;
 
 	this->Notify(TRUE);
-
-	return this;
-}
-
-ObjectPtr Object::SetSegment(SegmentPtr segment, Uint32P address) {
-
-	this->address_ = address;
-	this->size_ = segment->GetLastSize();;
-	this->segment_ = segment;
 
 	return this;
 }
@@ -140,24 +125,6 @@ Bool Object::IsBoolean() const {
 
 Bool Object::IsShort() const {
 	return ClassPtr(this) == this->classShort;
-}
-
-Bool Object::IsInt8() const {
-	return
-		ClassPtr(this) == this->classChar ||
-		ClassPtr(this) == this->classByte;
-}
-
-Bool Object::IsInt16() const {
-	return ClassPtr(this) == this->classShort;
-}
-
-Bool Object::IsInt32() const {
-	return ClassPtr(this) == this->classInt;
-}
-
-Bool Object::IsInt64() const {
-	return ClassPtr(this) == this->classLong;
 }
 
 Bool Object::IsLong() const {

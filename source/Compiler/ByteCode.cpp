@@ -1,11 +1,8 @@
-#include "ByteCodePrinter.h"
+#include "ByteCode.h"
 
 LAME_BEGIN2(Compiler)
 
-ByteCodePrinterPtr ByteCodePrinter::byteCodePrinter_
-	= new ByteCodePrinter();
-
-ByteCodePrinterPtr ByteCodePrinter::New(Asm command) {
+ByteCodePtr ByteCode::New(Asm command) {
 
 	if (!this->infoList.empty()) {
 		this->Flush();
@@ -25,11 +22,9 @@ ByteCodePrinterPtr ByteCodePrinter::New(Asm command) {
 	return this;
 }
 
-ByteCodePrinterPtr ByteCodePrinter::Write(Uint32 address, LineType lineType) {
+ByteCodePtr ByteCode::Write(Uint32 address) {
 
-	this->infoList.push_back({
-		lineType, address
-	});
+	this->infoList.push_back(address);
 
 	if (asmInfo->arguments == this->infoList.size()) {
 		this->Flush();
@@ -38,20 +33,7 @@ ByteCodePrinterPtr ByteCodePrinter::Write(Uint32 address, LineType lineType) {
 	return this;
 }
 
-ByteCodePrinterPtr ByteCodePrinter::Write(BufferRefC registerName) {
-
-	this->infoList.push_back({
-		LineType::Register, 0x00, registerName
-	});
-
-	if (asmInfo->arguments == this->infoList.size()) {
-		this->Flush();
-	}
-
-	return this;
-}
-
-ByteCodePrinterPtr ByteCodePrinter::Flush(Void) {
+ByteCodePtr ByteCode::Flush(Void) {
 
 	Uint32 address = 0;
 
@@ -60,14 +42,14 @@ ByteCodePrinterPtr ByteCodePrinter::Flush(Void) {
 	}
 
 	if (!infoList.empty()) {
-		address = infoList[0].address;
+		address = infoList[0];
 	}
 
 	if (strlen(asmInfo->name) >= 7) {
-		printf("0x%.4x : %s\t", this->currentPosition, asmInfo->name);
+		printf("0x%.4x : %s\t", this->position, asmInfo->name);
 	}
 	else {
-		printf("0x%.4x : %s\t\t", this->currentPosition, asmInfo->name);
+		printf("0x%.4x : %s\t\t", this->position, asmInfo->name);
 	}
 //	printf("0x%.4x : 0x%.2x ", this->currentPosition, asmInfo->command);
 	if (asmInfo->arguments > 0) {
@@ -86,8 +68,7 @@ ByteCodePrinterPtr ByteCodePrinter::Flush(Void) {
 	}
 	puts("");
 
-	this->currentPosition += asmInfo->arguments * 4 + 1;
-
+	this->position += asmInfo->arguments * 4 + 1;
 	this->infoList.clear();
 
 	return this;

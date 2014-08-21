@@ -1,24 +1,17 @@
 #include "Segment.h"
-#include "Variable.h"
-#include "Method.h"
 
 LAME_BEGIN2(Script)
 
 static Uint32 ZeroByte32 = 0;
 
 Segment::Segment(StringC name) :
-	name(name)
+	name(name), data(NULL)
 {
-	this->size = 0;
-	this->data = 0;
-	this->lastSize = 0;
+	this->Clear();
 }
 
 Segment::~Segment(Void) {
-
-	if (this->data) {
-		delete this->data;
-	}
+	this->Clear();
 }
 
 Void Segment::Write(VoidP block, Uint32 size) {
@@ -114,7 +107,6 @@ Void Segment::Trace(Uint32 columns) {
             printf("%d    ", h.name[0]);
 		}
 		else {
-		_Print:
 			if (nameLength > 5) {
 				for (Uint32 i = 0; i < 4; i++) {
 					printf("%c", h.name.data()[i]);
@@ -191,6 +183,34 @@ Void Segment::Flush(Void) {
 
 Uint8P Segment::GetBlockAt(Uint32 offset) {
 	return this->data + offset;
+}
+
+Void Segment::Clear(Void) {
+
+	if (this->data) {
+		delete this->data;
+	}
+
+	this->size = 0;
+	this->data = 0;
+	this->lastSize = 0;
+}
+
+Void Segment::Merge(SegmentPtr segment) {
+
+	Uint32 mergeOffset = this->GetPosition();
+
+	for (History& h : segment->history) {
+
+		h.offset += mergeOffset;
+
+		this->history.push_back(h);
+		this->position += h.size;
+	}
+
+	for (History& h : segment->history) {
+		h.offset -= mergeOffset;
+	}
 }
 
 LAME_END2

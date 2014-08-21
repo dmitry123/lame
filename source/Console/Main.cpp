@@ -28,10 +28,13 @@ int main(int argc, char** argv) {
 	CodeTranslator codeTranslator;
 	CodeAnalizer codeAnalizer;
 
-	rootScope = Scope::CreateRootScope();
-	time = Time::GetTime();
-
 	try {
+		/* Launch timer */
+		time = Time::GetTime();
+
+		/* Initialize root scope */
+		rootScope = Scope::CreateRootScope();
+
 		/* Load and parser file */
 		fileParser.Load(fileName);
 
@@ -40,7 +43,7 @@ int main(int argc, char** argv) {
 		scopeBuilder.Build(&nodeBuilder, rootScope);
 
 		/* Run code analizer */
-		//        codeAnalizer.Analize(&nodeBuilder, rootScope);
+		//codeAnalizer.Analize(&nodeBuilder, rootScope);
 
 		puts("");
 		for (Uint32 i = 0; i < 79; i++) {
@@ -55,6 +58,7 @@ int main(int argc, char** argv) {
 		/* Build segments */
 		segmentBuilder->BuildTextSegment();
 		segmentBuilder->BuildDataSegment();
+		segmentBuilder->BuildCodeSegment();
 
 		/* Link segments */
 		segmentLinker.Add(segmentBuilder->GetTextSegment());
@@ -66,12 +70,8 @@ int main(int argc, char** argv) {
 		//segmentBuilder->GetDataSegment()->Trace();
 		//printf("\n");
 
-		/* Set code segment offset */
-		ByteCodePrinter::GetInstance()
-			->SetPosition(segmentLinker.GetPosition());
-
 		/* Run translator */
-		codeTranslator.Analize(&nodeBuilder, rootScope);
+		codeTranslator.Run(&nodeBuilder, rootScope);
 	}
 	catch (SyntaxException& e) {
 		printf("\n+---------------------------+");

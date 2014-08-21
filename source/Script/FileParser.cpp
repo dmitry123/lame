@@ -9,7 +9,7 @@ static StringC allowedTokens = "@$_=/|&><+-*[].";
 static StringC wordTokens = "_$@";
 static StringC writeSpaces = "\a\b\t\n\r";
 
-static LexPtrC _ParseLex(StringC* wordPtr, Buffer* name, Uint32 line) {
+static LexPtrC _ParseLex(StringC* wordPtr, Buffer* name, Uint32 line, Bool isCommentLock) {
 
 	StringC savedWord = *wordPtr;
 	StringC word = *wordPtr;
@@ -17,7 +17,7 @@ static LexPtrC _ParseLex(StringC* wordPtr, Buffer* name, Uint32 line) {
 	LexPtr lex = LAME_NULL;
 	Bool isWord;
 
-	if (*word == '\"' || *word == '\'') {
+	if (!isCommentLock && (*word == '\"' || *word == '\'')) {
 
 		Bool isCharacterLike = (*word == '\'');
 
@@ -42,9 +42,6 @@ static LexPtrC _ParseLex(StringC* wordPtr, Buffer* name, Uint32 line) {
 				}
 				lexWord.resize(1);
 				lexWord[0] = symbol;
-			}
-			if (lexWord.length() != 1) {
-//				PostSyntaxError(line, "Character's length must be 1 symbol (%s)", lexWord.data());
 			}
 			lex = (LexPtr)Lex::Find(kScriptLexCharacter);
 		}
@@ -155,7 +152,7 @@ Void FileParser::Parse(StringC script) {
 
 	while (*script) {
 
-		LexNodePtr node = new LexNode(lexWord, line, _ParseLex(&script, &lexWord, line));
+		LexNodePtr node = new LexNode(lexWord, line, _ParseLex(&script, &lexWord, line, isCommentLock));
 
 		if (!node->lex) {
 			delete(node); continue;

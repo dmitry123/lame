@@ -7,11 +7,13 @@ LAME_BEGIN2(Compiler)
     (s->GetClass()->IsInt() ? i : s->GetClass()->IsLong() ? l : s->GetClass()->IsFloat() ? f : s->GetClass()->IsDouble() ? d : r)
 
 #define BCPNEW(s, r, i, l, d, f) \
-    this->byteCodePrinter->New(RILFD(s, r, i, l, f, d))
+    this->GetByteCode()->New(RILFD(s, r, i, l, f, d))
 
 Void CodeTranslator::OnBinary(VariablePtr left, VariablePtr right) {
     
     Sint64 intValue;
+
+	ByteCodePtr bc = this->GetByteCode();
     
 	switch (this->currentNode->lex->lex->id) {
         case kScriptLexMul:
@@ -60,224 +62,224 @@ Void CodeTranslator::OnBinary(VariablePtr left, VariablePtr right) {
             break;
         case kScriptLexBellow:
 			if (left->GetClass()->IsInt()) {
-                this->byteCodePrinter->New(ICMPJNB)
-                    ->Write(this->byteCodePrinter->GetPosition() + 11);
-                this->byteCodePrinter->New(ICONST1);
-                this->byteCodePrinter->New(JUMP)
-                    ->Write(this->byteCodePrinter->GetPosition() + 6);
-                this->byteCodePrinter->New(ICONST0);
+				bc->New(ICMPJNB)
+					->Write(bc->GetPosition() + 11);
+				bc->New(ICONST1);
+				bc->New(JUMP)
+                    ->Write(bc->GetPosition() + 6);
+                bc->New(ICONST0);
             }
 			else if (left->GetClass()->IsLong()) {
-                this->byteCodePrinter->New(LCMP);
-                this->byteCodePrinter->New(JNB)
-                    ->Write(this->byteCodePrinter->GetPosition() + 11);
-                this->byteCodePrinter->New(LCONST1);
-                this->byteCodePrinter->New(JUMP)
-                    ->Write(this->byteCodePrinter->GetPosition() + 6);
-                this->byteCodePrinter->New(LCONST0);
+                bc->New(LCMP);
+                bc->New(JNB)
+                    ->Write(bc->GetPosition() + 11);
+                bc->New(LCONST1);
+                bc->New(JUMP)
+                    ->Write(bc->GetPosition() + 6);
+                bc->New(LCONST0);
             }
             else if (left->GetClass()->IsFloat()) {
-                this->byteCodePrinter->New(FCMP);
-                this->byteCodePrinter->New(JNB)
-                    ->Write(this->byteCodePrinter->GetPosition() + 11);
-                this->byteCodePrinter->New(FCONST1);
-                this->byteCodePrinter->New(JUMP)
-                    ->Write(this->byteCodePrinter->GetPosition() + 6);
-                this->byteCodePrinter->New(FCONST0);
+                bc->New(FCMP);
+                bc->New(JNB)
+                    ->Write(bc->GetPosition() + 11);
+                bc->New(FCONST1);
+                bc->New(JUMP)
+                    ->Write(bc->GetPosition() + 6);
+                bc->New(FCONST0);
             }
             else if (left->GetClass()->IsDouble()) {
-                this->byteCodePrinter->New(DCMP);
-                this->byteCodePrinter->New(JNB)
-                    ->Write(this->byteCodePrinter->GetPosition() + 11);
-                this->byteCodePrinter->New(DCONST1);
-                this->byteCodePrinter->New(JUMP)
-                    ->Write(this->byteCodePrinter->GetPosition() + 6);
-                this->byteCodePrinter->New(DCONST0);
+                bc->New(DCMP);
+                bc->New(JNB)
+                    ->Write(bc->GetPosition() + 11);
+                bc->New(DCONST1);
+                bc->New(JUMP)
+                    ->Write(bc->GetPosition() + 6);
+                bc->New(DCONST0);
             }
             break;
         case kScriptLexAbove:
             if (left->GetClass()->IsInt()) {
-                this->byteCodePrinter->New(ICMPJNA)
-                    ->Write(this->byteCodePrinter->GetPosition() + 11);
-                this->byteCodePrinter->New(ICONST1);
-                this->byteCodePrinter->New(JUMP)
-                    ->Write(this->byteCodePrinter->GetPosition() + 6);
-                this->byteCodePrinter->New(ICONST0);
+                bc->New(ICMPJNA)
+                    ->Write(bc->GetPosition() + 11);
+                bc->New(ICONST1);
+                bc->New(JUMP)
+                    ->Write(bc->GetPosition() + 6);
+                bc->New(ICONST0);
             }
             else if (left->GetClass()->IsLong()) {
-                this->byteCodePrinter->New(LCMP);
-                this->byteCodePrinter->New(JNA)
-                    ->Write(this->byteCodePrinter->GetPosition() + 11);
-                this->byteCodePrinter->New(LCONST1);
-                this->byteCodePrinter->New(JUMP)
-                    ->Write(this->byteCodePrinter->GetPosition() + 6);
-                this->byteCodePrinter->New(LCONST0);
+                bc->New(LCMP);
+                bc->New(JNA)
+                    ->Write(bc->GetPosition() + 11);
+                bc->New(LCONST1);
+                bc->New(JUMP)
+                    ->Write(bc->GetPosition() + 6);
+                bc->New(LCONST0);
             }
             else if (left->GetClass()->IsFloat()) {
-                this->byteCodePrinter->New(FCMP);
-                this->byteCodePrinter->New(JNA)
-                    ->Write(this->byteCodePrinter->GetPosition() + 11);
-                this->byteCodePrinter->New(FCONST1);
-                this->byteCodePrinter->New(JUMP)
-                    ->Write(this->byteCodePrinter->GetPosition() + 6);
-                this->byteCodePrinter->New(FCONST0);
+                bc->New(FCMP);
+                bc->New(JNA)
+                    ->Write(bc->GetPosition() + 11);
+                bc->New(FCONST1);
+                bc->New(JUMP)
+                    ->Write(bc->GetPosition() + 6);
+                bc->New(FCONST0);
             }
             else if (left->GetClass()->IsDouble()) {
-                this->byteCodePrinter->New(DCMP);
-                this->byteCodePrinter->New(JNA)
-                    ->Write(this->byteCodePrinter->GetPosition() + 11);
-                this->byteCodePrinter->New(DCONST1);
-                this->byteCodePrinter->New(JUMP)
-                    ->Write(this->byteCodePrinter->GetPosition() + 6);
-                this->byteCodePrinter->New(DCONST0);
+                bc->New(DCMP);
+                bc->New(JNA)
+                    ->Write(bc->GetPosition() + 11);
+                bc->New(DCONST1);
+                bc->New(JUMP)
+                    ->Write(bc->GetPosition() + 6);
+                bc->New(DCONST0);
             }
             break;
         case kScriptLexBellowEqual:
             if (left->GetClass()->IsInt()) {
-                this->byteCodePrinter->New(ICMPJNE)
-                    ->Write(this->byteCodePrinter->GetPosition() + 11);
-                this->byteCodePrinter->New(ICONST1);
-                this->byteCodePrinter->New(JUMP)
-                    ->Write(this->byteCodePrinter->GetPosition() + 6);
-                this->byteCodePrinter->New(ICONST0);
+                bc->New(ICMPJNE)
+                    ->Write(bc->GetPosition() + 11);
+                bc->New(ICONST1);
+                bc->New(JUMP)
+                    ->Write(bc->GetPosition() + 6);
+                bc->New(ICONST0);
             }
             else if (left->GetClass()->IsLong()) {
-                this->byteCodePrinter->New(LCMP);
-                this->byteCodePrinter->New(JNE)
-                    ->Write(this->byteCodePrinter->GetPosition() + 11);
-                this->byteCodePrinter->New(LCONST1);
-                this->byteCodePrinter->New(JUMP)
-                    ->Write(this->byteCodePrinter->GetPosition() + 6);
-                this->byteCodePrinter->New(LCONST0);
+                bc->New(LCMP);
+                bc->New(JNE)
+                    ->Write(bc->GetPosition() + 11);
+                bc->New(LCONST1);
+                bc->New(JUMP)
+                    ->Write(bc->GetPosition() + 6);
+                bc->New(LCONST0);
             }
             else if (left->GetClass()->IsFloat()) {
-                this->byteCodePrinter->New(FCMP);
-                this->byteCodePrinter->New(JNE)
-                    ->Write(this->byteCodePrinter->GetPosition() + 11);
-                this->byteCodePrinter->New(FCONST1);
-                this->byteCodePrinter->New(JUMP)
-                    ->Write(this->byteCodePrinter->GetPosition() + 6);
-                this->byteCodePrinter->New(FCONST0);
+                bc->New(FCMP);
+                bc->New(JNE)
+                    ->Write(bc->GetPosition() + 11);
+                bc->New(FCONST1);
+                bc->New(JUMP)
+                    ->Write(bc->GetPosition() + 6);
+                bc->New(FCONST0);
             }
             else if (left->GetClass()->IsDouble()) {
-                this->byteCodePrinter->New(DCMP);
-                this->byteCodePrinter->New(JNE)
-                    ->Write(this->byteCodePrinter->GetPosition() + 11);
-                this->byteCodePrinter->New(DCONST1);
-                this->byteCodePrinter->New(JUMP)
-                    ->Write(this->byteCodePrinter->GetPosition() + 6);
-                this->byteCodePrinter->New(DCONST0);
+                bc->New(DCMP);
+                bc->New(JNE)
+                    ->Write(bc->GetPosition() + 11);
+                bc->New(DCONST1);
+                bc->New(JUMP)
+                    ->Write(bc->GetPosition() + 6);
+                bc->New(DCONST0);
             }
             break;
         case kScriptLexAboveEqual:
             if (left->GetClass()->IsInt()) {
-                this->byteCodePrinter->New(ICMPJNAE)
-                    ->Write(this->byteCodePrinter->GetPosition() + 11);
-                this->byteCodePrinter->New(ICONST1);
-                this->byteCodePrinter->New(JUMP)
-                    ->Write(this->byteCodePrinter->GetPosition() + 6);
-                this->byteCodePrinter->New(ICONST0);
+                bc->New(ICMPJNAE)
+                    ->Write(bc->GetPosition() + 11);
+                bc->New(ICONST1);
+                bc->New(JUMP)
+                    ->Write(bc->GetPosition() + 6);
+                bc->New(ICONST0);
             }
             else if (left->GetClass()->IsLong()) {
-                this->byteCodePrinter->New(LCMP);
-                this->byteCodePrinter->New(JNAE)
-                    ->Write(this->byteCodePrinter->GetPosition() + 11);
-                this->byteCodePrinter->New(LCONST1);
-                this->byteCodePrinter->New(JUMP)
-                    ->Write(this->byteCodePrinter->GetPosition() + 6);
-                this->byteCodePrinter->New(LCONST0);
+                bc->New(LCMP);
+                bc->New(JNAE)
+                    ->Write(bc->GetPosition() + 11);
+                bc->New(LCONST1);
+                bc->New(JUMP)
+                    ->Write(bc->GetPosition() + 6);
+                bc->New(LCONST0);
             }
             else if (left->GetClass()->IsFloat()) {
-                this->byteCodePrinter->New(FCMP);
-                this->byteCodePrinter->New(JNAE)
-                    ->Write(this->byteCodePrinter->GetPosition() + 11);
-                this->byteCodePrinter->New(FCONST1);
-                this->byteCodePrinter->New(JUMP)
-                    ->Write(this->byteCodePrinter->GetPosition() + 6);
-                this->byteCodePrinter->New(FCONST0);
+                bc->New(FCMP);
+                bc->New(JNAE)
+                    ->Write(bc->GetPosition() + 11);
+                bc->New(FCONST1);
+                bc->New(JUMP)
+                    ->Write(bc->GetPosition() + 6);
+                bc->New(FCONST0);
             }
             else if (left->GetClass()->IsDouble()) {
-                this->byteCodePrinter->New(DCMP);
-                this->byteCodePrinter->New(JNAE)
-                    ->Write(this->byteCodePrinter->GetPosition() + 11);
-                this->byteCodePrinter->New(DCONST1);
-                this->byteCodePrinter->New(JUMP)
-                    ->Write(this->byteCodePrinter->GetPosition() + 6);
-                this->byteCodePrinter->New(DCONST0);
+                bc->New(DCMP);
+                bc->New(JNAE)
+                    ->Write(bc->GetPosition() + 11);
+                bc->New(DCONST1);
+                bc->New(JUMP)
+                    ->Write(bc->GetPosition() + 6);
+                bc->New(DCONST0);
             }
             break;
         case kScriptLexEqual:
             if (left->GetClass()->IsInt()) {
-                this->byteCodePrinter->New(ICMPJNE)
-                    ->Write(this->byteCodePrinter->GetPosition() + 11);
-                this->byteCodePrinter->New(ICONST1);
-                this->byteCodePrinter->New(JUMP)
-                    ->Write(this->byteCodePrinter->GetPosition() + 6);
-                this->byteCodePrinter->New(ICONST0);
+                bc->New(ICMPJNE)
+                    ->Write(bc->GetPosition() + 11);
+                bc->New(ICONST1);
+                bc->New(JUMP)
+                    ->Write(bc->GetPosition() + 6);
+                bc->New(ICONST0);
             }
             else if (left->GetClass()->IsLong()) {
-                this->byteCodePrinter->New(LCMP);
-                this->byteCodePrinter->New(JNE)
-                    ->Write(this->byteCodePrinter->GetPosition() + 11);
-                this->byteCodePrinter->New(LCONST1);
-                this->byteCodePrinter->New(JUMP)
-                    ->Write(this->byteCodePrinter->GetPosition() + 6);
-                this->byteCodePrinter->New(LCONST0);
+                bc->New(LCMP);
+                bc->New(JNE)
+                    ->Write(bc->GetPosition() + 11);
+                bc->New(LCONST1);
+                bc->New(JUMP)
+                    ->Write(bc->GetPosition() + 6);
+                bc->New(LCONST0);
             }
             else if (left->GetClass()->IsFloat()) {
-                this->byteCodePrinter->New(FCMP);
-                this->byteCodePrinter->New(JNE)
-                    ->Write(this->byteCodePrinter->GetPosition() + 11);
-                this->byteCodePrinter->New(FCONST1);
-                this->byteCodePrinter->New(JUMP)
-                    ->Write(this->byteCodePrinter->GetPosition() + 6);
-                this->byteCodePrinter->New(FCONST0);
+                bc->New(FCMP);
+                bc->New(JNE)
+                    ->Write(bc->GetPosition() + 11);
+                bc->New(FCONST1);
+                bc->New(JUMP)
+                    ->Write(bc->GetPosition() + 6);
+                bc->New(FCONST0);
             }
             else if (left->GetClass()->IsDouble()) {
-                this->byteCodePrinter->New(DCMP);
-                this->byteCodePrinter->New(JNE)
-                    ->Write(this->byteCodePrinter->GetPosition() + 11);
-                this->byteCodePrinter->New(DCONST1);
-                this->byteCodePrinter->New(JUMP)
-                    ->Write(this->byteCodePrinter->GetPosition() + 6);
-                this->byteCodePrinter->New(DCONST0);
+                bc->New(DCMP);
+                bc->New(JNE)
+                    ->Write(bc->GetPosition() + 11);
+                bc->New(DCONST1);
+                bc->New(JUMP)
+                    ->Write(bc->GetPosition() + 6);
+                bc->New(DCONST0);
             }
             break;
         case kScriptLexNotEqual:
             if (left->GetClass()->IsInt()) {
-                this->byteCodePrinter->New(ICMPJE)
-                    ->Write(this->byteCodePrinter->GetPosition() + 11);
-                this->byteCodePrinter->New(ICONST1);
-                this->byteCodePrinter->New(JUMP)
-                    ->Write(this->byteCodePrinter->GetPosition() + 6);
-                this->byteCodePrinter->New(ICONST0);
+                bc->New(ICMPJE)
+                    ->Write(bc->GetPosition() + 11);
+                bc->New(ICONST1);
+                bc->New(JUMP)
+                    ->Write(bc->GetPosition() + 6);
+                bc->New(ICONST0);
             }
             else if (left->GetClass()->IsLong()) {
-                this->byteCodePrinter->New(LCMP);
-                this->byteCodePrinter->New(JE)
-                    ->Write(this->byteCodePrinter->GetPosition() + 11);
-                this->byteCodePrinter->New(LCONST1);
-                this->byteCodePrinter->New(JUMP)
-                    ->Write(this->byteCodePrinter->GetPosition() + 6);
-                this->byteCodePrinter->New(LCONST0);
+                bc->New(LCMP);
+                bc->New(JE)
+                    ->Write(bc->GetPosition() + 11);
+                bc->New(LCONST1);
+                bc->New(JUMP)
+                    ->Write(bc->GetPosition() + 6);
+                bc->New(LCONST0);
             }
             else if (left->GetClass()->IsFloat()) {
-                this->byteCodePrinter->New(FCMP);
-                this->byteCodePrinter->New(JE)
-                    ->Write(this->byteCodePrinter->GetPosition() + 11);
-                this->byteCodePrinter->New(FCONST1);
-                this->byteCodePrinter->New(JUMP)
-                    ->Write(this->byteCodePrinter->GetPosition() + 6);
-                this->byteCodePrinter->New(FCONST0);
+                bc->New(FCMP);
+                bc->New(JE)
+                    ->Write(bc->GetPosition() + 11);
+                bc->New(FCONST1);
+                bc->New(JUMP)
+                    ->Write(bc->GetPosition() + 6);
+                bc->New(FCONST0);
             }
             else if (left->GetClass()->IsDouble()) {
-                this->byteCodePrinter->New(DCMP);
-                this->byteCodePrinter->New(JE)
-                    ->Write(this->byteCodePrinter->GetPosition() + 11);
-                this->byteCodePrinter->New(DCONST1);
-                this->byteCodePrinter->New(JUMP)
-                    ->Write(this->byteCodePrinter->GetPosition() + 6);
-                this->byteCodePrinter->New(DCONST0);
+                bc->New(DCMP);
+                bc->New(JE)
+                    ->Write(bc->GetPosition() + 11);
+                bc->New(DCONST1);
+                bc->New(JUMP)
+                    ->Write(bc->GetPosition() + 6);
+                bc->New(DCONST0);
             }
             break;
         case kScriptLexAnd:
@@ -285,14 +287,14 @@ Void CodeTranslator::OnBinary(VariablePtr left, VariablePtr right) {
 				PostSyntaxError(this->currentNode->lex->line, "Unable to apply '&&' for non-boolean type (%s)",
 					left->GetClass()->GetName().data());
 			}
-			this->byteCodePrinter->New(IAND);
+			bc->New(IAND);
             break;
         case kScriptLexOr:
 			if (!left->IsBooleanLike()) {
 				PostSyntaxError(this->currentNode->lex->line, "Unable to apply '||' for non-boolean type (%s)",
 					left->GetClass()->GetName().data());
 			}
-			this->byteCodePrinter->New(IOR);
+			bc->New(IOR);
             break;
 	}
 }
@@ -330,6 +332,20 @@ Void CodeTranslator::OnUnary(VariablePtr left) {
     }
 }
 
+Void CodeTranslator::OnTernary(NodePtr node, Bool state) {
+
+	ByteCodePtr bc = this->GetByteCode();
+
+	if (state) {
+		bc->New(ICONST1);
+		bc->New(ICMP);
+		bc->New(JNE)->Write(-1 & 0xffff);
+	}
+	else {
+		bc->New(JUMP)->Write(-1 & 0xffff);
+	}
+}
+
 Void CodeTranslator::OnCast(VariablePtr source, ClassPtr type) {
     
 	if (source->GetClass()->IsInt()) {
@@ -356,17 +372,22 @@ Void CodeTranslator::OnCast(VariablePtr source, ClassPtr type) {
 
 Void CodeTranslator::OnLoad(VariablePtr var) {
     
-	if (var->GetClass()->IsInt8()) {
-		this->byteCodePrinter->New(BIPUSH);
+	ByteCodePtr bc = this->GetByteCode();
+
+	if (var->GetClass()->IsByte()) {
+		bc->New(BIPUSH);
 	}
-	else if (var->GetClass()->IsInt16()) {
-		this->byteCodePrinter->New(SIPUSH);
+	else if (
+		var->GetClass()->IsShort() ||
+		var->GetClass()->IsChar()
+	) {
+		bc->New(SIPUSH);
 	}
 	else {
 		BCPNEW(var, RLOAD, ILOAD, LLOAD, DLOAD, FLOAD);
 	}
     
-	this->byteCodePrinter->Write(var->GetAddress());
+	bc->Write(var->GetAddress());
 }
 
 Void CodeTranslator::OnStore(VariablePtr var) {
@@ -380,13 +401,13 @@ Void CodeTranslator::OnReturn(ClassPtr var) {
     if (var) {
         BCPNEW(var, RRET, IRET, LRET, DRET, FRET);
     } else {
-        this->byteCodePrinter->New(LEAVE);
+		this->GetByteCode()->New(LEAVE);
     }
 }
 
 Void CodeTranslator::OnInvoke(MethodPtr method) {
 
-	this->byteCodePrinter->New(CALL)
+	this->GetByteCode()->New(CALL)
 		->Write(method->GetPosition());
 }
 

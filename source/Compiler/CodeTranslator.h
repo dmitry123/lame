@@ -7,12 +7,13 @@ LAME_BEGIN2(Compiler)
 
 class LAME_API CodeTranslator : public VirtualCompiler {
 public:
-    Void Analize(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
-        this->VirtualCompiler::Analize(nodeBuilder, rootScope);
+	Void Run(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
+		this->VirtualCompiler::Run(nodeBuilder, rootScope);
     }
 private:
     Void OnBinary(VariablePtr left, VariablePtr right) override;
     Void OnUnary(VariablePtr var) override;
+	Void OnTernary(NodePtr node, Bool state) override;
 	Void OnReturn(ClassPtr var) override;
     Void OnLoad(VariablePtr var) override;
     Void OnStore(VariablePtr var) override;

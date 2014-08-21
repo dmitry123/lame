@@ -18,6 +18,7 @@ typedef enum {
 	kScriptLexSequenceAlloc,
 	kScriptLexSequenceNew,
 	kScriptLexSequenceEnum,
+	kScriptLexSequenceTernary,
 	kScriptLexSequenceAmount
 } LexSequenceID;
 
@@ -28,9 +29,8 @@ public:
 	typedef Deque<LexNodePtr>::iterator
 		Iterator;
 public:
-	inline NodePtr GetRootNode() {
-		return this->rootNode_;
-	}
+	inline NodePtr GetRootNode() { return this->rootNode_; }
+	inline Vector<NodePtr>& GetNodeList() { return this->nodeList_; }
 private:
 	Iterator _BuildFunction(NodePtr& parent, Iterator i);
 	Iterator _BuildVariable(NodePtr& parent, Iterator i);
@@ -43,6 +43,7 @@ private:
 	Iterator _BuildCatch(NodePtr& parent, Iterator i);
 	Iterator _BuildNew(NodePtr& parent, Iterator i);
 	Iterator _BuildEnum(NodePtr& parent, Iterator i);
+	Iterator _BuildTernary(NodePtr& parent, Iterator i);
 private:
 	Uint32 _GetCountOfArguments(Iterator i);
 	Iterator _SkipArguments(Iterator i);
@@ -57,39 +58,18 @@ private:
 	Bool _CheckSequence(Iterator i, LexSequenceID id);
 	Void _ApplySemicolon(Void);
 private:
-	inline Bool _IsDefault(Iterator i) {
-		return this->_CheckSequence(i, kScriptLexSequenceDefault);
-	}
-	inline Bool _IsArray(Iterator i) {
-		return this->_CheckSequence(i, kScriptLexSequenceArray);
-	}
-	inline Bool _IsArguments(Iterator i) {
-		return this->_CheckSequence(i, kScriptLexSequenceArguments);
-	}
-	inline Bool _IsTemplate(Iterator i) {
-		return this->_CheckSequence(i, kScriptLexSequenceTemplate);
-	}
-	inline Bool _IsCast(Iterator i) {
-		return this->_CheckSequence(i, kScriptLexSequenceCast);
-	}
-	inline Bool _IsMethod(Iterator i) {
-		return this->_CheckSequence(i, kScriptLexSequenceMethod);
-	}
-	inline Bool _IsVariable(Iterator i) {
-		return this->_CheckSequence(i, kScriptLexSequenceVariable);
-	}
-	inline Bool _IsInvoke(Iterator i) {
-		return this->_CheckSequence(i, kScriptLexSequenceInvoke);
-	}
-	inline Bool _IsAlloc(Iterator i) {
-		return this->_CheckSequence(i, kScriptLexSequenceAlloc);
-	}
-	inline Bool _IsNew(Iterator i) {
-		return this->_CheckSequence(i, kScriptLexSequenceNew);
-	}
-	inline Bool _IsEnum(Iterator i) {
-		return this->_CheckSequence(i, kScriptLexSequenceEnum);
-	}
+	inline Bool _IsDefault(Iterator i)   { return this->_CheckSequence(i, kScriptLexSequenceDefault);   }
+	inline Bool _IsArray(Iterator i)     { return this->_CheckSequence(i, kScriptLexSequenceArray);     }
+	inline Bool _IsArguments(Iterator i) { return this->_CheckSequence(i, kScriptLexSequenceArguments); }
+	inline Bool _IsTemplate(Iterator i)  { return this->_CheckSequence(i, kScriptLexSequenceTemplate);  }
+	inline Bool _IsCast(Iterator i)      { return this->_CheckSequence(i, kScriptLexSequenceCast);      }
+	inline Bool _IsMethod(Iterator i)    { return this->_CheckSequence(i, kScriptLexSequenceMethod);    }
+	inline Bool _IsVariable(Iterator i)  { return this->_CheckSequence(i, kScriptLexSequenceVariable);  }
+	inline Bool _IsInvoke(Iterator i)    { return this->_CheckSequence(i, kScriptLexSequenceInvoke);    }
+	inline Bool _IsAlloc(Iterator i)     { return this->_CheckSequence(i, kScriptLexSequenceAlloc);     }
+	inline Bool _IsNew(Iterator i)       { return this->_CheckSequence(i, kScriptLexSequenceNew);       }
+	inline Bool _IsEnum(Iterator i)      { return this->_CheckSequence(i, kScriptLexSequenceEnum);      }
+	inline Bool _IsTernary(Iterator i)   { return this->_CheckSequence(i, kScriptLexSequenceTernary);   }
 private:
 	Vector<NodePtr> nodeList_;
 	NodePtr parentNode_;

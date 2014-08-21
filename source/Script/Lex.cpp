@@ -273,6 +273,10 @@ Map<LexID, Lex> Lex::lexMap = {
 			{ "||", P(14, 1), kScriptLexOr, 2,
 				kScriptLexFlagRight | kScriptLexFlagBool }
 		},
+		{ kScriptLexTernary,
+			{ "?", P(15, 1), kScriptLexTernary, 3,
+				kScriptLexFlagDefault | kScriptLexFlagMath }
+		},
 
 		/* Others */
 

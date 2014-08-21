@@ -8,7 +8,9 @@ LAME_BEGIN2(Script)
 class LAME_API Object :
 	public Hashable64,
 	public Observable<Object>,
-	public Scope {
+	public Scope
+{
+	friend class Segment;
 public: /* Flags & States */
 	enum class Modificator : Uint32 {
 		Unknown    = 0x000000,
@@ -64,12 +66,15 @@ public: /* Weak virtual Methods */
 	virtual MethodPtr    GetMethod()    { return NULL; }
 	virtual InterfacePtr GetInterface() { return NULL; }
 public: /* Setters */
-	ObjectPtr SetModificator(Modificator modificator, Bool state = TRUE);
-	ObjectPtr SetSegment(SegmentPtr segment, Uint32P address);
+	ObjectPtr SetModificator(Modificator modificator,
+		Bool state = TRUE);
 public:
 	inline Void SetTemplate(ClassPtr tamplate) { this->template_ = tamplate; }
 	inline Void SetNode(NodePtr node)          { this->node_     = node;     }
 	inline Void SetPosition(Uint32 position)   { this->position_ = position; }
+	inline Void SetAddress(Uint32 address)     { this->address_  = address;  }
+	inline Void SetSegment(SegmentPtr segment) { this->segment_  = segment;  }
+	inline Void SetSize(Uint32 size)           { this->size_     = size;     }
 public: /* Getters */
 	Buffer GetModificatorString(Void);
 	Uint64 GetHash64(Void);
@@ -93,10 +98,6 @@ public:
 	Bool IsByte()    const;
 	Bool IsBoolean() const;
 	Bool IsShort()   const;
-	Bool IsInt8()    const;
-	Bool IsInt16()   const;
-	Bool IsInt32()   const;
-	Bool IsInt64()   const;
 	Bool IsLong()    const;
 	Bool IsFloat()   const;
 	Bool IsDouble()  const;
@@ -107,9 +108,8 @@ public: /* Inline Getters */
 	inline BufferRefC GetName()       const { return this->name;      }
 	inline Type       GetType()       const { return this->type;      }
 	inline SegmentPtr GetSegment()    const { return this->segment_;  }
-	inline Uint32     GetAddress()    const { return *this->address_; }
+	inline Uint32     GetAddress()    const { return this->address_;  }
 	inline Uint32     GetSize()       const { return this->size_;     }
-	inline Uint32P    GetAddressPtr()       { return this->address_;  }
 	inline ClassPtr   GetTemplate()         { return this->template_; }
 	inline BufferRefC GetPath()       const { return this->path;      }
 	inline NodePtr    GetNode()             { return this->node_;     }
@@ -117,7 +117,7 @@ public: /* Inline Getters */
 private: /* Private Variables */
 	Uint32     modificators_;
 	SegmentPtr segment_;
-	Uint32P    address_;
+	Uint32     address_;
 	Uint32     size_;
 	ClassPtr   template_;
 	NodePtr    node_;
