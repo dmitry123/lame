@@ -1,7 +1,7 @@
-#ifndef __LAME_SCRIPT__CORE_SEGMENT_LINKER__
-#define __LAME_SCRIPT__CORE_SEGMENT_LINKER__
+#ifndef __LAME_COMPILER_SEGMENT_LINKER__
+#define __LAME_COMPILER_SEGMENT_LINKER__
 
-#include "Segment.h"
+#include "Define.h"
 
 LAME_BEGIN2(Script)
 
@@ -42,4 +42,4 @@ private:
 
 LAME_END2
 
-#endif // ~__LAME_SCRIPT__CORE_SEGMENT_LINKER__
+#endif // ~__LAME_COMPILER_SEGMENT_LINKER__

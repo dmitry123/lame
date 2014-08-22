@@ -5,7 +5,7 @@ LAME_BEGIN2(Script)
 static Uint32 ZeroByte32 = 0;
 
 Segment::Segment(StringC name) :
-name(name), data(NULL)
+	name(name), data(NULL), isCode(FALSE)
 {
 	this->Clear();
 }
@@ -22,22 +22,22 @@ Void Segment::Write(VoidP block, Uint32 size) {
 		this->Allocate(size);
 	}
 
-	if (this->position + size > this->size) {
+	if (this->size + size > this->capacity) {
 
 		if (size > GROW) {
 			GROW = size;
 		}
 
-		this->data = (Uint8P)realloc(this->data, this->size + GROW);
-		this->size += GROW;
+		this->data = (Uint8P)realloc(this->data, this->capacity + GROW);
+		this->capacity += GROW;
 	}
 
-	memcpy(this->data + this->position, block, size);
+	memcpy(this->data + this->size, block, size);
 
-	this->history.push_back({ "", this->position, size });
+	this->history.push_back({ "", this->size, size });
 
 	this->lastSize = size;
-	this->position += size;
+	this->size += size;
 }
 
 Uint32P Segment::Write(VariablePtr var) {
@@ -72,9 +72,10 @@ Uint32P Segment::Write(VariablePtr var) {
 	if (copyBuffer) {
 		this->Write(copyBuffer, bufferSize);
 		this->history.back().name = var->GetName();
+		this->history.back().object = var;
 	}
 	else {
-		this->position += bufferSize;
+		this->size += bufferSize;
 	}
 
 	return &this->history.back().offset;
@@ -85,12 +86,12 @@ Void Segment::Trace(Bool asFlat) {
 	Uint32 i = 0;
 
 	puts("+----------------------------+");
-	printf("| Segment \"%s\" : %d", this->name.data(), this->position);
+	printf("| Segment \"%s\" : %d", this->name.data(), this->size);
 	printf(" bytes");
-	if (this->position < 10) {
+	if (this->size < 10) {
 		printf("  ");
 	}
-	else if (this->position < 100) {
+	else if (this->size < 100) {
 		printf(" ");
 	}
 	printf(" |");
@@ -98,11 +99,11 @@ Void Segment::Trace(Bool asFlat) {
 
 	static StringC whiteSpaces = "\t\n\a\b\v";
 
-	if (asFlat && this->data) {
+	if (asFlat && this->size) {
 
 		printf("| ");
 
-		for (i = 0; i < this->position; i++) {
+		for (i = 0; i < this->size; i++) {
 			if (i && !(i % 9)) {
 				printf("| \n| ");
 			}
@@ -180,29 +181,35 @@ Void Segment::Trace(Bool asFlat) {
 Void Segment::Allocate(Uint32 size) {
 
 	if (!size) {
-		size = this->size;
+		size = this->capacity;
 	}
 	else {
-		this->size = size;
+		this->capacity = size;
 	}
 
 	if (!size) {
 		size = 64;
 	}
 
-	this->position = 0;
+	this->size = 0;
 	this->offset = 0;
 
 	this->data = ZeroMemory(new Uint8[size], size);
 }
 
 Void Segment::Flush(Void) {
-	this->size = this->position;
+
+	if (this->capacity == this->size) {
+		return;
+	}
+
+	this->data = (Uint8P)realloc(this->data, this->size);
+	this->capacity = this->size;
 }
 
 Uint8P Segment::GetBlockAt(Uint32 offset) {
 
-	if (offset > this->position) {
+	if (offset > this->size) {
 		return NULL;
 	}
 
@@ -215,26 +222,34 @@ Void Segment::Clear(Void) {
 		delete this->data;
 	}
 
-	this->size = 0;
-	this->data = 0;
-	this->lastSize = 0;
-	this->position = 0;
-}
-
-Void Segment::Move(SegmentPtr segment) {
-
-	Uint32 mergeOffset = this->GetPosition();
-
-	for (History& h : segment->history) {
-
-		h.offset += mergeOffset;
-
-		this->history.push_back(h);
-		this->position += h.size;
+	for (History& h : this->history) {
+		if (h.object) {
+			h.object->SetAddress(-1);
+		}
 	}
 
+	this->history.clear();
+
+	this->capacity = 0;
+	this->data = 0;
+	this->lastSize = 0;
+	this->size = 0;
+}
+
+Void Segment::Merge(SegmentPtr segment) {
+
+	if (this == segment) {
+		return;
+	}
+
+	Uint32 mergeOffset = this->GetSize();
+
 	for (History& h : segment->history) {
-		h.offset -= mergeOffset;
+		this->history.push_back(h.Offset(mergeOffset));
+	}
+
+	if (segment->size) {
+		this->Write(segment->data, segment->size);
 	}
 
 	segment->Clear();

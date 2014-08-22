@@ -16,6 +16,8 @@ public:
 	ByteCodePtr Write(Uint32 address);
 	ByteCodePtr Flush(Void);
 public:
+	static Void Trace(SegmentPtr segment);
+public:
 	inline Uint32     GetPosition() { return this->position; }
 	inline SegmentPtr GetSegment()  { return this->segment;  }
 public:

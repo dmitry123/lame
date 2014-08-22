@@ -225,6 +225,8 @@
     <ClCompile Include="..\..\source\Compiler\Internal.cpp" />
     <ClCompile Include="..\..\source\Compiler\LowLevelStack.cpp" />
     <ClCompile Include="..\..\source\Compiler\Register.cpp" />
+    <ClCompile Include="..\..\source\Compiler\SegmentBuilder.cpp" />
+    <ClCompile Include="..\..\source\Compiler\SegmentLinker.cpp" />
     <ClCompile Include="..\..\source\Compiler\VariableStack.cpp" />
     <ClCompile Include="..\..\source\Compiler\VirtualCompiler.cpp" />
   </ItemGroup>
@@ -238,6 +240,8 @@
     <ClInclude Include="..\..\source\Compiler\Internal.h" />
     <ClInclude Include="..\..\source\Compiler\LowLevelStack.h" />
     <ClInclude Include="..\..\source\Compiler\Register.h" />
+    <ClInclude Include="..\..\source\Compiler\SegmentBuilder.h" />
+    <ClInclude Include="..\..\source\Compiler\SegmentLinker.h" />
     <ClInclude Include="..\..\source\Compiler\VariableStack.h" />
     <ClInclude Include="..\..\source\Compiler\VirtualCompiler.h" />
   </ItemGroup>

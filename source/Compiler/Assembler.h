@@ -160,11 +160,9 @@ typedef struct {
 	Uint8 arguments;
 } AsmInfo, *AsmInfoPtr;
 
-class Assembler {
+class LAME_API Assembler {
 public:
-	Assembler();
-public:
-	AsmInfoPtr GetAsmInfo(Uint8 command);
+	static AsmInfoPtr GetAsmInfo(Uint8 command);
 };
 
 LAME_END2

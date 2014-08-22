@@ -9,44 +9,6 @@ enum {
 	FSTACK_SIZE = 1024
 };
 
-//static R r0 = 0;
-//static R r1 = 0;
-//static R r2 = 0;
-//static R r3 = 0;
-//static R r4 = 0;
-//static R r5 = 0;
-//static R r6 = 0;
-//static R r7 = 0;
-//static R r8 = 0;
-//static R r9 = 0;
-//static R rc = 0;
-//static R rt = 0;
-//static R rn = 0;
-//static R rp = 0;
-//
-//static R cr0 = 0;
-//static R cr1 = 0;
-//static F cf0 = 0;
-//static F cf1 = 0;
-//
-//static F f0 = 0;
-//static F f1 = 0;
-//static F f2 = 0;
-//static F f3 = 0;
-//static F f4 = 0;
-//static F f5 = 0;
-//static F f6 = 0;
-//static F f7 = 0;
-//static F f8 = 0;
-//static F f9 = 0;
-//
-//static R rStack[RSTACK_SIZE];
-//static F fStack[FSTACK_SIZE];
-//
-//static Uint32 rStackDepth = 0;
-//static Uint32 fStackDepth = 0;
-//
-//static Uint32 cmpFlags = 0;
 static AsmInfo asmArray[0xff];
 
 static Void _SetAsm(Uint8 command, StringC name, Uint8 arguments) {
@@ -56,7 +18,7 @@ static Void _SetAsm(Uint8 command, StringC name, Uint8 arguments) {
 	asmArray[command].arguments = arguments;
 }
 
-static Void _InitializeVirtualMachine() {
+static Void _InitializeAssembler() {
 
 	isVirtualMachineInitialized = TRUE;
 
@@ -207,14 +169,12 @@ static Void _InitializeVirtualMachine() {
 	_SetAsm(CALL, "call", 1);
 }
 
-Assembler::Assembler() {
+AsmInfoPtr Assembler::GetAsmInfo(Uint8 command) {
 
 	if (!isVirtualMachineInitialized) {
-		_InitializeVirtualMachine();
+		_InitializeAssembler();
 	}
-}
 
-AsmInfoPtr Assembler::GetAsmInfo(Uint8 command) {
 	return &asmArray[command];
 }
 

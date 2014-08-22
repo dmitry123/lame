@@ -28,6 +28,8 @@ typedef class Register *RegisterPtr, *const RegisterPtrPtrC;
 typedef class ByteCode *ByteCodePtr, *const ByteCodePrinterPtrC;
 typedef class VirtualCompiler *VirtualAnalizerPtr, *const VirtualAnalizerPtrC;
 typedef class VariableStack *VariableStackPtr, *const VariableStackPtrC;
+typedef class SegmentBuilder *SegmentBuilderPtr, *const SegmentBuilderPtrC;
+typedef class SegmentLinker *SegmentLinkerPtr, *const SegmentLinkerPtrC;
 
 LAME_END2
 

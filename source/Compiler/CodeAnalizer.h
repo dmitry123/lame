@@ -8,7 +8,7 @@ LAME_BEGIN2(Compiler)
 class LAME_API CodeAnalizer : private VirtualCompiler {
 public:
 	Void Run(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
-		this->VirtualCompiler::Run(nodeBuilder, rootScope);
+		this->VirtualCompiler::Run(nodeBuilder, rootScope, NULL);
     }
 private:
     Void OnBinary(VariablePtr left, VariablePtr right) override;

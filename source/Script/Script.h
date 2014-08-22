@@ -15,8 +15,6 @@
 #include "Scope.h"
 #include "ScopeBuilder.h"
 #include "Segment.h"
-#include "SegmentBuilder.h"
-#include "SegmentLinker.h"
 #include "Variable.h"
 
 #endif // ~__LAME_SCRIPT__

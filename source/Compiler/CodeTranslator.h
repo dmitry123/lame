@@ -7,8 +7,8 @@ LAME_BEGIN2(Compiler)
 
 class LAME_API CodeTranslator : public VirtualCompiler {
 public:
-	Void Run(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
-		this->VirtualCompiler::Run(nodeBuilder, rootScope);
+	Void Run(NodeBuilderPtr nodeBuilder, ScopePtr rootScope, SegmentPtr codeSegment) {
+		this->VirtualCompiler::Run(nodeBuilder, rootScope, codeSegment);
     }
 private:
     Void OnBinary(VariablePtr left, VariablePtr right) override;

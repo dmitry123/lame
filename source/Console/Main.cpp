@@ -22,7 +22,6 @@ int main(int argc, char** argv) {
 	FileParser fileParser;
 	ScopeBuilder scopeBuilder;
 	ScopePtr rootScope;
-	LowLevelStackPtr lowLevelStack;
 	SegmentLinker segmentLinker;
 	SegmentBuilderPtr segmentBuilder;
 	CodeTranslator codeTranslator;
@@ -32,13 +31,14 @@ int main(int argc, char** argv) {
 		/* Launch timer */
 		time = Time::GetTime();
 
-		/* Initialize root scope */
+		/* Initialize root scope and segment builder */
 		rootScope = Scope::CreateRootScope();
+		segmentBuilder = new SegmentBuilder(rootScope);
 
 		/* Load and parser file */
 		fileParser.Load(fileName);
 
-		/* File node and scope trees */
+		/* Build node and scope trees */
 		nodeBuilder.Build(&fileParser);
 		scopeBuilder.Build(&nodeBuilder, rootScope);
 
@@ -51,57 +51,52 @@ int main(int argc, char** argv) {
 		}
 		puts("\n");
 
-		/* Allocate memory for segment builder and low level stack */
-		lowLevelStack = new LowLevelStack(rootScope);
-		segmentBuilder = new SegmentBuilder(rootScope);
-
 		/* Build segments */
 		segmentBuilder->BuildTextSegment();
 		segmentBuilder->BuildDataSegment();
 		segmentBuilder->BuildCodeSegment();
 
-		/* Link segments */
+		/* Link data and text segments */
 		segmentLinker.Add(segmentBuilder->GetTextSegment());
 		segmentLinker.Add(segmentBuilder->GetDataSegment());
+
+		/* Move code segment to nessesary position */
+		segmentBuilder->GetCodeSegment()->SetOffset(
+			segmentLinker.GetPosition());
+
+		/* Run translator and compile code */
+		codeTranslator.Run(&nodeBuilder, rootScope,
+			segmentBuilder->GetCodeSegment());
+
+		/* Link code segment */
+		segmentLinker.Add(segmentBuilder->GetCodeSegment());
 
 		/* Trace segments */
 		segmentBuilder->GetTextSegment()->Trace();
 		printf("\n");
 		segmentBuilder->GetDataSegment()->Trace();
 		printf("\n");
+		segmentBuilder->GetCodeSegment()->Trace(TRUE);
+		printf("\n");
 
-		/* Run translator */
-		codeTranslator.Run(&nodeBuilder, rootScope);
+		/* Trace opcode */
+		ByteCode::Trace(segmentBuilder->GetCodeSegment());
 	}
 	catch (SyntaxException& e) {
-		printf("\n+---------------------------+");
-		rootScope->Trace(0);
 		puts("\n+---------------------------+");
 		e.Debug();
 		puts("");
-		goto _AvoidTrace;
 	}
 	catch (Exception& e) {
 		printf("\n+---------------------------+\n");
 		e.Debug(Console::GetInstance());
 		printf("\n");
-		goto _AvoidTrace;
 	}
 	catch (ThrowableAdapter& e) {
-		printf("\n+---------------------------+");
-		rootScope->Trace(0);
 		puts("\n+---------------------------+");
 		e.Debug(Console::GetInstance());
 		puts("\n+---------------------------+");
-		goto _AvoidTrace;
 	}
-
-	ObjectPtr(rootScope)->GetSegment()
-		->Trace(TRUE);
-
-	rootScope->Trace(0);
-	puts("\n");
-_AvoidTrace:
 
 #pragma push_macro("printf")
 #pragma push_macro("puts")

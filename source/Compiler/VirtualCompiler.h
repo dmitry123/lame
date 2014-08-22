@@ -28,7 +28,6 @@ protected:
 	Void _Print(StringC message, ...);
 	Void _Cast(VariablePtr var, ObjectPtr type);
 public:
-	inline SegmentPtr GetSegment() { return this->currentSegment; }
 	inline NodePtr GetNode() { return this->currentNode; }
 	inline ScopePtr GetRoot() { return this->rootScope; }
 	inline VariableStackPtr GetStack() { return &this->variableStack; }
@@ -39,8 +38,6 @@ protected:
 	Uint32 methodHash;
 	ScopePtr rootScope;
 	NodePtr currentNode;
-	Set<SegmentPtr> segmentList;
-	SegmentPtr currentSegment;
 	ByteCodePtr byteCode;
 public:
 	VirtualCompiler() {
@@ -51,7 +48,10 @@ public:
 		delete this->byteCode;
 	}
 protected:
-	Void Run(NodeBuilderPtr nodeBuilder, ScopePtr rootScope);
+	Void Run(
+		NodeBuilderPtr nodeBuilder,
+		ScopePtr       rootScope,
+		SegmentPtr     codeSegment);
 private:
 	Void _ForEachClass(ScopePtr rootScope);
 	Void _ForEachMethod(ScopePtr rootScope);
@@ -66,10 +66,17 @@ private:
 	Void _StrongCast(VariablePtr var, ClassPtr type);
 	Void _Invoke(NodePtr n);
 	Void _Return(NodePtr n);
+	Void _Finish(NodePtr n);
+private:
+	Void _Push(SegmentPtr segment);
+	SegmentPtr _Pop(Void);
 private:
     Vector<ObjectPtr> classList;
 	Vector<ObjectPtr> methodList;
 	Vector<Uint32> addressStack;
+	Stack<SegmentPtr> segmentStack;
+	Vector<SegmentPtr> segmentList;
+	Uint32 segmentOffset;
 };
 
 LAME_END2

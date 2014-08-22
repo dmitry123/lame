@@ -8,7 +8,9 @@ using namespace Script;
 Void VirtualCompiler::_Run(NodeListRef nodeList) {
 
 	for (NodePtr n : nodeList) {
+
 		this->currentNode = n;
+
 		try {
 			if (n->id == kScriptNodeClass ||
 				n->id == kScriptNodeInterface ||
@@ -16,7 +18,8 @@ Void VirtualCompiler::_Run(NodeListRef nodeList) {
 			) {
 				continue;
 			}
-			else if (n->lex->lex->id == kScriptLexReturn) {
+
+			if (n->lex->lex->id == kScriptLexReturn) {
 				this->_Return(n);
 			}
 			else if (n->id == kScriptNodeCondition) {
@@ -24,6 +27,15 @@ Void VirtualCompiler::_Run(NodeListRef nodeList) {
 			}
 			else if (n->id == kScriptNodeInvoke) {
 				this->_Invoke(n);
+			}
+			else if (n->lex->lex->id == kScriptLexSemicolon) {
+				this->_Finish(n);
+			}
+			else if (n->lex->lex->id == kScriptLexNew) {
+				this->_New(n);
+			}
+			else if (n->lex->lex->id == kScriptLexDirected) {
+				this->_Selection(n);
 			}
 			else if (n->id == kScriptNodeAlloc) {
 				if (!n->var) {
@@ -36,26 +48,7 @@ Void VirtualCompiler::_Run(NodeListRef nodeList) {
 			}
 			else if (n->lex->lex->IsUnknown() || n->lex->lex->IsConst()) {
 			_SaveNode:
-				if (n->id == kScriptNodeVariable) {
-					this->variableStack.Push(VariablePtr(n->var));
-				}
-				else {
-					this->variableStack.Push(VariablePtr(n->var));
-				}
-			}
-			else if (n->lex->lex->id == kScriptLexSemicolon) {
-				if (this->variableStack.Size() > 1) {
-					this->variableStack.Pop();
-					PostSyntaxError(this->variableStack.Back()->GetNode()->lex->line, "Unexcepted token in expression (%s)",
-						this->variableStack.Back()->GetNode()->lex->line);
-				}
-				this->variableStack.Clear();
-			}
-			else if (n->lex->lex->id == kScriptLexNew) {
-				this->_New(n);
-			}
-			else if (n->lex->lex->id == kScriptLexDirected) {
-				this->_Selection(n);
+				this->variableStack.Push(VariablePtr(n->var));
 			}
 			else if (n->lex->lex->IsMath() || n->lex->lex->IsBool()) {
 				if (n->lex->args == 1) {
@@ -132,26 +125,36 @@ Void VirtualCompiler::_Cast(VariablePtr var, ObjectPtr type) {
 	ClassPtr left = var->GetClass();
 	ClassPtr right = type->GetClass();
 
-	if ((left->IsIntegerLike()  || left->IsFloatLike()) &&
-		(right->IsIntegerLike() || right->IsFloatLike())
-	) {
-		if (left->GetPriority() < right->GetPriority()) {
-			if (var->CheckModificator(Object::Modificator::Constant)) {
-				goto _CastOk;
-			}
+	if (left->IsFloatLike()) {
+		if (right->IsFloatLike() && right->GetPriority() > left->GetPriority()) {
+			goto _CastOk;
+		}
+		if (right->IsIntegerLike()) {
 			goto _CastError;
 		}
 	}
-	else {
-		goto _CastError;
+	else if (left->IsIntegerLike()) {
+		if (right->IsIntegerLike() && right->GetPriority() > left->GetPriority()) {
+			goto _CastOk;
+		}
+		if (right->IsFloatLike() && right->GetPriority() > left->GetPriority()) {
+			goto _CastOk;
+		}
 	}
 
+	goto _CastError;
 	goto _CastOk;
 
 _CastError:
 
+	if (var->CheckModificator(Object::Modificator::Constant)) {
+		if (right->GetPriority() <= left->GetPriority()) {
+			goto _CastOk;
+		}
+	}
+
 	PostSyntaxError(this->currentNode->lex->line, "Unable to cast from (%s) to (%s)",
-		right->GetName().data(), left->GetName().data());
+		left->GetName().data(), right->GetName().data());
 
 _CastOk:
 
@@ -165,7 +168,7 @@ Void VirtualCompiler::_StrongCast(VariablePtr var, ClassPtr type) {
 
 	if ((left->IsIntegerLike() || left->IsFloatLike()) &&
 		(right->IsIntegerLike() || right->IsFloatLike())
-	) {
+		) {
 		goto _CastOk;
 	}
 	else {
@@ -186,17 +189,24 @@ _CastOk:
 	if (!type->wasInStack) {
 		type->wasInStack = TRUE;
 	}
-	
+
 	this->GetStack()->Push(VariablePtr(type));
 }
 
-Void VirtualCompiler::Run(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
+Void VirtualCompiler::Run(NodeBuilderPtr nodeBuilder, ScopePtr rootScope, SegmentPtr codeSegment) {
 
 	this->nodeBuilder = nodeBuilder;
 	this->rootScope = rootScope;
 
 	this->_ForEachClass(this->rootScope);
 	this->_ForEachMethod(this->rootScope);
+
+	if (!ObjectPtr(rootScope)->GetSegment()) {
+		throw ScriptException("Root scope must have segment, run scope builder");
+	}
+
+	this->byteCode = new ByteCode(codeSegment);
+	this->_Push(codeSegment);
 
 	Sint64 previousEnumValue = -1;
 
@@ -207,18 +217,17 @@ Void VirtualCompiler::Run(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
 			}
 		}
 		else {
-			this->_Run(i->GetNode()->blockList);
+			if (i->GetNode()->id != kScriptNodeCondition) {
+				this->_Run(i->GetNode()->blockList);
+			}
 		}
 	}
 
-	this->currentSegment = ObjectPtr(rootScope)->GetSegment();
-	this->byteCode = new ByteCode(this->currentSegment);
-
 	for (ObjectPtr i : this->methodList) {
 
-		i->SetPosition(ObjectPtr(rootScope)->GetSegment()->GetPosition());
+		i->SetPosition(ObjectPtr(rootScope)->GetSegment()->GetSize());
 
-		this->_Print(" // %s%s(%s)\n", i->GetPath().data(), i->GetName().data(),
+		this->_Print(" // %s%s (%s)\n", i->GetPath().data(), i->GetName().data(),
 			i->GetMethod()->GetFormattedArguments().data());
 
 		NodePtr n = i->GetMethod()->GetRootNode();
@@ -241,7 +250,6 @@ Void VirtualCompiler::Run(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
 				PostSyntaxError(n->lex->line, "Non-void method (%s) must return (%s)", i->GetName().data(),
 					i->GetMethod()->GetReturnType()->GetName().data());
 			}
-			//this->variableStack.Push(i->GetMethod()->returnVar);
 		}
 	}
 
@@ -315,7 +323,7 @@ Void VirtualCompiler::_Binary(NodePtr n) {
 		sourceVar->wasInStack = TRUE;
 	}
 	else {
-		VariablePtr leftVar2 = leftVar;
+		sourceVar = leftVar;
 
 		if (!rightVar->wasInStack) {
 			this->OnLoad(rightVar);
@@ -324,10 +332,8 @@ Void VirtualCompiler::_Binary(NodePtr n) {
 		rightVar->wasInStack = FALSE;
 
 		if (leftVar->GetClass()->Hash() != rightVar->GetClass()->Hash()) {
-			this->_Cast(leftVar, rightVar->GetClass());
+			this->_Cast(rightVar, sourceVar->GetClass());
 		}
-
-		sourceVar = leftVar2;
 	}
 
 	if (n->lex->lex->IsLogic()) {
@@ -389,7 +395,7 @@ Void VirtualCompiler::_Unary(NodePtr n) {
 	}
 }
 
-Void VirtualCompiler:: _Ternary(NodePtr n) {
+Void VirtualCompiler::_Ternary(NodePtr n) {
 
 	VariablePtr backVar;
 
@@ -492,16 +498,44 @@ Void VirtualCompiler::_Condition(NodePtr n) {
 
 	VariablePtr var0;
 
+	SegmentPtr ifSegment = NULL;
+	SegmentPtr mySegment = NULL;
+
+	if (this->segmentStack.empty()) {
+		goto _SegmentError;
+	}
+
+	mySegment = this->segmentStack.top();
+
 	switch (n->lex->lex->id) {
 	case kScriptLexIf:
 		this->_Read(n, var0, var0);
+		if (!var0->GetClass()->IsBooleanLike()) {
+			goto _BooleanError;
+		}
+		if (!var0->wasInStack) {
+			this->OnLoad(var0);
+		}
+		if (n->var && n->var->GetSegment()) {
+			this->_Push(n->var->GetSegment());
+		}
 		this->_Run(n->blockList);
+		ifSegment = this->GetByteCode()->GetSegment();
+		if (this->_Pop() != n->var->GetSegment()) {
+			goto _SegmentError;
+		}
+		this->GetByteCode()->New(JNZ)->Write(mySegment->GetSize() +
+			mySegment->GetOffset() + ifSegment->GetSize() - 2);
+		mySegment->Merge(ifSegment);
 		break;
 	case kScriptLexElse:
 		this->_Run(n->blockList);
 		break;
 	case kScriptLexWhile:
 		this->_Read(n, var0, var0);
+		if (!var0->GetClass()->IsBooleanLike()) {
+			goto _BooleanError;
+		}
 		break;
 	case kScriptLexDo:
 		break;
@@ -516,6 +550,17 @@ Void VirtualCompiler::_Condition(NodePtr n) {
 	default:
 		break;
 	}
+
+	goto _SkipErrors;
+
+_BooleanError:
+	PostSyntaxError(n->lex->line, "Construction (%s) requires boolean argument", n->word.data());
+
+_SegmentError:
+	PostSyntaxError(n->lex->line, "Segments mismatched at (%s)", n->word.data());
+
+_SkipErrors:
+	;
 }
 
 Void VirtualCompiler::_Invoke(NodePtr n) {
@@ -642,7 +687,7 @@ Void VirtualCompiler::_Return(NodePtr n) {
 	if (n->lex->args > 0) {
 		this->_Read(n, returnVar, returnVar);
 	}
-	
+
 	if (returnVar) {
 		//this->variableStack.Push(returnVar);
 	}
@@ -655,6 +700,57 @@ Void VirtualCompiler::_Return(NodePtr n) {
 	if (returnVar) {
 		this->OnReturn(methodVar->GetReturnType());
 	}
+}
+
+Void VirtualCompiler::_Finish(NodePtr n) {
+
+	if (this->variableStack.Size() > 1) {
+
+		this->variableStack.Pop();
+
+		PostSyntaxError(this->variableStack.Back()->GetNode()->lex->line, "Unexcepted token in expression (%s)",
+			this->variableStack.Back()->GetNode()->lex->line);
+	}
+
+	this->variableStack.Clear();
+}
+
+Void VirtualCompiler::_Push(SegmentPtr segment) {
+
+	if (!segment) {
+		throw ScriptException("Lost object's segment, can't push NULL object");
+	}
+
+	if (!this->byteCode) {
+		this->byteCode = new ByteCode(segment);
+	}
+	else {
+		this->GetByteCode()->SetSegment(segment);
+	}
+
+	if (this->segmentList.empty()) {
+		this->segmentOffset = segment->GetOffset();
+	}
+
+	this->segmentList.push_back(segment);
+	this->segmentStack.push(segment);
+}
+
+SegmentPtr VirtualCompiler::_Pop(Void) {
+
+	SegmentPtr segment;
+	SegmentPtr next;
+
+	if (this->segmentStack.empty() || !this->byteCode) {
+		throw ScriptException("Unable to pop segment from stack, stack is empty");
+	}
+
+	segment = this->segmentStack.top();
+	this->segmentStack.pop();
+	next = this->segmentStack.top();
+	this->GetByteCode()->SetSegment(next);
+
+	return segment;
 }
 
 LAME_END2

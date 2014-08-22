@@ -39,6 +39,12 @@
     <ClCompile Include="..\..\source\Compiler\ByteCode.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\Compiler\SegmentBuilder.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Compiler\SegmentLinker.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\Compiler\Assembler.h">
@@ -72,6 +78,12 @@
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Compiler\ByteCode.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Compiler\SegmentBuilder.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Compiler\SegmentLinker.h">
       <Filter>source</Filter>
     </ClInclude>
   </ItemGroup>

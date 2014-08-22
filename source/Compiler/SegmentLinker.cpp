@@ -22,13 +22,18 @@ Bool SegmentLinker::Add(SegmentPtr segment) {
 		return FALSE;
 	}
 
+	if (this->GetPosition() == segment->GetOffset()) {
+		segment->SetOffset(0);
+	}
+
 	this->segmentList.push_back(segment);
 
 	for (Segment::History& h : segment->history) {
-		h.offset += this->position;
+		h.Offset(this->position);
 	}
 
-	this->position += segment->size;
+	segment->SetOffset(this->position);
+	this->position += segment->capacity;
 
 	return TRUE;
 }
@@ -73,7 +78,7 @@ Void SegmentLinker::Load(StringC fileName) {
 
 		Uint32 filePosition = file.GetPosition();
 		file.SetPosition(segment.position);
-		file.Read(segmentObject->data, segmentObject->size);
+		file.Read(segmentObject->data, segmentObject->capacity);
 		file.SetPosition(filePosition);
 
 		this->segmentList.push_back(segmentObject);
@@ -107,18 +112,18 @@ Void SegmentLinker::Save(StringC fileName) {
 
 		SegmentInfo segment = {
 			positionOffset,
-			s->size,
+			s->capacity,
 			nameLength
 		};
 
 		file.Write(&segment, sizeof(SegmentInfo));
 		file.Write(VoidP(s->name.data()), nameLength);
 
-		positionOffset += s->size;
+		positionOffset += s->capacity;
 	}
 
 	for (SegmentPtr s : this->segmentList) {
-		file.Write(s->data, s->size);
+		file.Write(s->data, s->capacity);
 	}
 
 	file.Close();

@@ -35,8 +35,6 @@ typedef class Method *MethodPtr, *const MethodPtrC;
 typedef class Scope *ScopePtr, *const ScopePtrC;
 typedef class ScopeBuilder *ScopeBuilderPtr, *const ScopeBuilderPtrC;
 typedef class Segment *SegmentPtr, *const SegmentPtrC;
-typedef class SegmentBuilder *SegmentBuilderPtr, *const SegmentBuilderPtrC;
-typedef class SegmentLinker *SegmentLinkerPtr, *const SegmentLinkerPtrC;
 
 typedef Buffer ScriptNativeString;
 typedef Sint64 ScriptNativeInt;

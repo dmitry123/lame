@@ -1,6 +1,4 @@
 #include "SegmentBuilder.h"
-#include "Method.h"
-#include "Variable.h"
 
 LAME_BEGIN2(Script)
 
@@ -49,10 +47,11 @@ SegmentPtr SegmentBuilder::BuildCodeSegment(Void) {
 	this->codeSegment
 		= new Segment("code");
 
+	this->codeSegment->isCode = TRUE;
 	this->codeSegment->Allocate();
 
 	_ForEachScopeVariable([](SegmentPtr segment, ObjectPtr object) {
-		if (!object->GetSegment()) {
+		if (!object->GetSegment() && !object->CheckType(Object::Type::Variable)) {
 			object->SetSegment(new Segment(object->GetName()));
 		}
 	}, this->codeSegment, NULL);

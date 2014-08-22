@@ -47,39 +47,41 @@ ByteCodePtr ByteCode::Flush(Void) {
 		address = infoList[0];
 	}
 
-	if (strlen(asmInfo->name) >= 7) {
-		printf("0x%.4x : %s\t", this->position, asmInfo->name);
-	}
-	else {
-		printf("0x%.4x : %s\t\t", this->position, asmInfo->name);
-	}
-
-	if (asmInfo->arguments > 0) {
-		printf("0x");
-	}
+	//printf(" + %s  \t", asmInfo->name);
 
 	for (Sint32 i = 0; i < asmInfo->arguments; i++) {
-
-		address = infoList[i];
-
-		this->segment->Write(&address, 4);
-
-		if (address <= 0xff) {
-			printf("%.4x ", address);
-		}
-		else if (address <= 0xffff) {
-			printf("%.4x ", address);
-		}
-		else {
-			printf("%.4x ", address);
-		}
+		//printf("0x%.4x ", infoList[i]);
+		this->segment->Write(&infoList[i], 4);
 	}
-	puts("");
+
+	//printf("\n");
 
 	this->position += asmInfo->arguments * 4 + 1;
 	this->infoList.clear();
 
 	return this;
+}
+
+Void ByteCode::Trace(SegmentPtr segment) {
+
+	for (Uint32 i = 0; i < segment->GetSize();) {
+
+		AsmInfoPtr asmInfo = Assembler::GetAsmInfo(*segment->GetBlockAt(i++));
+		Uint32 argCount = asmInfo->arguments;
+
+		if (strlen(asmInfo->name) >= 7) {
+			printf("0x%.4x : %s\t", i + segment->GetOffset(), asmInfo->name);
+		}
+		else {
+			printf("0x%.4x : %s\t\t", i + segment->GetOffset(), asmInfo->name);
+		}
+
+		while (argCount--) {
+			printf("0x%.4x ", *Uint32P(segment->GetBlockAt(i)) + 8);
+			i += 4;
+		}
+		printf("\n");
+	}
 }
 
 LAME_END2

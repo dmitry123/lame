@@ -54,13 +54,7 @@
     <ClCompile Include="..\..\source\Script\Segment.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\Script\SegmentBuilder.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\Script\Script.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\Script\SegmentLinker.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -113,13 +107,7 @@
     <ClInclude Include="..\..\source\Script\Segment.h">
       <Filter>source</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\source\Script\SegmentBuilder.h">
-      <Filter>source</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\source\Script\Script.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Script\SegmentLinker.h">
       <Filter>source</Filter>
     </ClInclude>
   </ItemGroup>

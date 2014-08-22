@@ -24,4 +24,11 @@ VariablePtr VariableStack::Pop(Void) {
     return var;
 }
 
+Void VariableStack::Clear() {
+
+	while (this->Size()) {
+		this->Pop();
+	}
+}
+
 LAME_END2

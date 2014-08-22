@@ -11,7 +11,9 @@ class LAME_API Segment {
 	friend class SegmentLinker;
 	friend class SegmentBuilder;
 public:
-	inline Segment(Buffer name) : Segment(name.data()) {
+	inline Segment(Buffer name) :
+		Segment(name.data())
+	{
 	}
 public:
 	Segment(StringC name);
@@ -24,31 +26,48 @@ public:
 	Void Flush(Void);
 	Uint8P GetBlockAt(Uint32 offset);
 	Void Clear(Void);
-	Void Move(SegmentPtr segment);
+	Void Merge(SegmentPtr segment);
 public:
 	inline Void SetOffset(Uint32 offset) {
 		this->offset = offset;
 	}
 public:
-	inline Uint32 GetPosition() {
-		return this->position;
-	}
-	inline Uint32 GetLastSize() {
-		return this->lastSize;
+	inline Uint32 GetCapacity() const { return this->capacity; }
+	inline Uint32 GetSize()     const { return this->size;     }
+	inline Uint32 GetOffset()   const { return this->offset;   }
+	inline Uint32 GetLastSize() const { return this->lastSize; }
+public:
+	inline Bool IsCodeSegment() const {
+		return this->isCode;
 	}
 private:
-	typedef struct {
+	struct History {
+	public:
 		Buffer name;
 		Uint32 offset;
 		Uint32 size;
-	} History;
+	public:
+		History& Offset(Uint32 offset) {
+
+			this->offset += offset;
+
+			if (this->object) {
+				this->object->SetAddress(this->offset);
+			}
+
+			return *this;
+		}
+	public:
+		ObjectPtr object;
+	};
 private:
 	Buffer name;
-	Uint32 position;
+	Uint32 size;
 	Uint32 offset;
 	Uint8P data;
-	Uint32 size;
+	Uint32 capacity;
 	Uint32 lastSize;
+	Bool   isCode;
 private:
 	List<History> history;
 };

@@ -1,7 +1,7 @@
-#ifndef __LAME_SCRIPT_SEGMENT_BUILDER__
-#define __LAME_SCRIPT_SEGMENT_BUILDER__
+#ifndef __LAME_COMPILER_SEGMENT_BUILDER__
+#define __LAME_COMPILER_SEGMENT_BUILDER__
 
-#include "Segment.h"
+#include "Define.h"
 
 LAME_BEGIN2(Script)
 
@@ -49,4 +49,4 @@ private:
 
 LAME_END2
 
-#endif // ~__LAME_SCRIPT_SEGMENT_BUILDER__
+#endif // ~__LAME_COMPILER_SEGMENT_BUILDER__

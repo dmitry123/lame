@@ -9,13 +9,10 @@ class LAME_API VariableStack {
 public:
     Void Push(VariablePtr var);
     VariablePtr Pop(Void);
+	Void Clear(Void);
 public:
     inline VariablePtr Back() {
         return this->varList.back();
-    }
-    inline Void Clear() {
-        this->varList.clear();
-        this->nameList.clear();
     }
     inline Uint32 Size() {
         return Uint32(this->varList.size());
