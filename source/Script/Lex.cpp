@@ -54,8 +54,8 @@ Map<LexID, Lex> Lex::lexMap = {
 		/* Specials */
 
 		{ kScriptLexCast, {
-			"#", P(3, 1), kScriptLexCast, 0,
-				kScriptLexFlagRight | kScriptLexFlagUnknown }
+			"#", P(3, 1), kScriptLexCast, 1,
+				kScriptLexFlagRight | kScriptLexFlagMath }
 		},
 		{ kScriptLexArray,
 			{ "[]", P(0, 0), kScriptLexArray, 0,

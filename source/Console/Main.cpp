@@ -65,10 +65,10 @@ int main(int argc, char** argv) {
 		segmentLinker.Add(segmentBuilder->GetDataSegment());
 
 		/* Trace segments */
-		//segmentBuilder->GetTextSegment()->Trace();
-		//printf("\n");
-		//segmentBuilder->GetDataSegment()->Trace();
-		//printf("\n");
+		segmentBuilder->GetTextSegment()->Trace();
+		printf("\n");
+		segmentBuilder->GetDataSegment()->Trace();
+		printf("\n");
 
 		/* Run translator */
 		codeTranslator.Run(&nodeBuilder, rootScope);
@@ -96,7 +96,10 @@ int main(int argc, char** argv) {
 		goto _AvoidTrace;
 	}
 
-	//rootScope->Trace(0);
+	ObjectPtr(rootScope)->GetSegment()
+		->Trace(TRUE);
+
+	rootScope->Trace(0);
 	puts("\n");
 _AvoidTrace:
 

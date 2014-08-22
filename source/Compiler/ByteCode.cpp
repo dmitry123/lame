@@ -15,6 +15,8 @@ ByteCodePtr ByteCode::New(Asm command) {
 	asmInfo = assembler.GetAsmInfo(
 		command);
 
+	this->segment->Write(&asmInfo->command, 1);
+
 	if (asmInfo->arguments == this->infoList.size()) {
 		this->Flush();
 	}
@@ -51,11 +53,17 @@ ByteCodePtr ByteCode::Flush(Void) {
 	else {
 		printf("0x%.4x : %s\t\t", this->position, asmInfo->name);
 	}
-//	printf("0x%.4x : 0x%.2x ", this->currentPosition, asmInfo->command);
+
 	if (asmInfo->arguments > 0) {
 		printf("0x");
 	}
+
 	for (Sint32 i = 0; i < asmInfo->arguments; i++) {
+
+		address = infoList[i];
+
+		this->segment->Write(&address, 4);
+
 		if (address <= 0xff) {
 			printf("%.4x ", address);
 		}

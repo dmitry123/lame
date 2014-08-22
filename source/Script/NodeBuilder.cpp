@@ -1102,11 +1102,11 @@ NodeBuilder::Iterator NodeBuilder::_Build(NodePtr& node, Iterator i) {
 
 	if (this->_IsCast(i + 1)) {
 		__Inc(i);
-        __Inc(i);
+		i = this->parser_->GetLexList().erase(i);
         LexNodePtr castLex = new LexNode((*i)->word, (*i)->line, Lex::Find(kScriptLexCast));
         i = this->parser_->GetLexList().erase(i);
+		i = this->parser_->GetLexList().erase(i);
         i = this->parser_->GetLexList().insert(i, castLex);
-		__Dec(i);
 		__Dec(i);
 	}
 

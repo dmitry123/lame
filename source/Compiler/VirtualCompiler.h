@@ -63,6 +63,7 @@ private:
 	Void _Selection(NodePtr n);
 	Void _Condition(NodePtr n);
 	Void _Cast(NodePtr n);
+	Void _StrongCast(VariablePtr var, ClassPtr type);
 	Void _Invoke(NodePtr n);
 	Void _Return(NodePtr n);
 private:

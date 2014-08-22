@@ -80,7 +80,7 @@ private:
 			this->opStack.top()->lex->lex->id != kScriptLexParenthesisL &&
 			this->opStack.top()->lex->lex->id != kScriptLexBracketL)
 		) {
-            this->SaveResult(this->opStack.top());
+			this->SaveResult(this->opStack.top());
 			this->opStack.pop();
 		}
 		if (this->opStack.empty() || (!this->opStack.empty() && (

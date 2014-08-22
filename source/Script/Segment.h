@@ -19,14 +19,12 @@ public:
 public:
 	Void Write(VoidP block, Uint32 size);
 	Uint32P Write(VariablePtr var);
-	Uint32P Write(MethodPtr method);
-	Void Trace(Uint32 columns = 10);
+	Void Trace(Bool asFlat = FALSE);
 	Void Allocate(Uint32 size = 0);
-	Void Grow(Uint32 size);
 	Void Flush(Void);
 	Uint8P GetBlockAt(Uint32 offset);
 	Void Clear(Void);
-	Void Merge(SegmentPtr segment);
+	Void Move(SegmentPtr segment);
 public:
 	inline Void SetOffset(Uint32 offset) {
 		this->offset = offset;
@@ -43,7 +41,6 @@ private:
 		Buffer name;
 		Uint32 offset;
 		Uint32 size;
-		VoidP  block;
 	} History;
 private:
 	Buffer name;

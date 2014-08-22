@@ -34,12 +34,13 @@ inline VoidP Realloc(VoidP pointer, Uint32 size) {
 	return realloc(pointer, size);
 }
 
-inline volatile VoidP ZeroMemory(VoidP pointer, Uint32 size) {
-	return memset(pointer, 0, size);
+template <class T>
+inline T* ZeroMemory(T* pointer, Uint32 size) {
+	return (T*)memset(pointer, 0, size);
 }
 
-inline volatile VoidP ZeroAlloc(Uint32 size) {
-	return ZeroMemory(Malloc(size), size);
+inline VoidP ZeroAlloc(Uint32 size) {
+	return (VoidP)ZeroMemory(Malloc(size), size);
 }
 
 typedef struct StrongWeakCounter {

@@ -23,20 +23,7 @@ Void VirtualCompiler::_Run(NodeListRef nodeList) {
 				this->_Condition(n);
 			}
 			else if (n->id == kScriptNodeInvoke) {
-				if (!n->var) {
-					PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->word.data());
-				}
-				if (n->lex->args == 1 && n->var->CheckType(Class::Type::Class)) {
-					this->_Cast(n);
-				}
-				else {
-					if (!n->var->CheckType(Object::Type::Class)) {
-						this->_Invoke(n);
-					}
-					else {
-						goto _SaveNode;
-					}
-				}
+				this->_Invoke(n);
 			}
 			else if (n->id == kScriptNodeAlloc) {
 				if (!n->var) {
@@ -57,6 +44,11 @@ Void VirtualCompiler::_Run(NodeListRef nodeList) {
 				}
 			}
 			else if (n->lex->lex->id == kScriptLexSemicolon) {
+				if (this->variableStack.Size() > 1) {
+					this->variableStack.Pop();
+					PostSyntaxError(this->variableStack.Back()->GetNode()->lex->line, "Unexcepted token in expression (%s)",
+						this->variableStack.Back()->GetNode()->lex->line);
+				}
 				this->variableStack.Clear();
 			}
 			else if (n->lex->lex->id == kScriptLexNew) {
@@ -143,10 +135,17 @@ Void VirtualCompiler::_Cast(VariablePtr var, ObjectPtr type) {
 	if ((left->IsIntegerLike()  || left->IsFloatLike()) &&
 		(right->IsIntegerLike() || right->IsFloatLike())
 	) {
-		if (left->GetPriority() > right->GetPriority()) {
+		if (left->GetPriority() < right->GetPriority()) {
+			if (var->CheckModificator(Object::Modificator::Constant)) {
+				goto _CastOk;
+			}
 			goto _CastError;
 		}
 	}
+	else {
+		goto _CastError;
+	}
+
 	goto _CastOk;
 
 _CastError:
@@ -157,6 +156,38 @@ _CastError:
 _CastOk:
 
 	this->OnCast(var, type->GetClass());
+}
+
+Void VirtualCompiler::_StrongCast(VariablePtr var, ClassPtr type) {
+
+	ClassPtr left = type->GetClass();
+	ClassPtr right = var->GetClass();
+
+	if ((left->IsIntegerLike() || left->IsFloatLike()) &&
+		(right->IsIntegerLike() || right->IsFloatLike())
+	) {
+		goto _CastOk;
+	}
+	else {
+		goto _CastError;
+	}
+
+	goto _CastOk;
+
+_CastError:
+
+	PostSyntaxError(this->currentNode->lex->line, "Unable to cast from (%s) to (%s)",
+		right->GetName().data(), left->GetName().data());
+
+_CastOk:
+
+	this->OnCast(var, type->GetClass());
+
+	if (!type->wasInStack) {
+		type->wasInStack = TRUE;
+	}
+	
+	this->GetStack()->Push(VariablePtr(type));
 }
 
 Void VirtualCompiler::Run(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
@@ -210,7 +241,7 @@ Void VirtualCompiler::Run(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
 				PostSyntaxError(n->lex->line, "Non-void method (%s) must return (%s)", i->GetName().data(),
 					i->GetMethod()->GetReturnType()->GetName().data());
 			}
-			this->variableStack.Push(i->GetMethod()->returnVar);
+			//this->variableStack.Push(i->GetMethod()->returnVar);
 		}
 	}
 
@@ -249,19 +280,12 @@ Void VirtualCompiler::_Binary(NodePtr n) {
 
 	VariablePtr sourceVar;
 	VariablePtr leftVar;
-	VariablePtr leftVar2;
 	VariablePtr rightVar;
-	VariablePtr rightVar2;
-
-	leftVar2 = this->variableStack.Back();
 
 	this->_Read(n, leftVar, rightVar);
 
-	leftVar2 = leftVar;
-	rightVar2 = rightVar;
-
-	this->_Print(" // - %s %s %s\n", leftVar->GetName().data(),
-		n->word.data(), rightVar->GetName().data());
+	//this->_Print(" // - %s %s %s\n", leftVar->GetName().data(),
+	//	n->word.data(), rightVar->GetName().data());
 
 	if (n->lex->lex->IsRight()) {
 
@@ -291,6 +315,8 @@ Void VirtualCompiler::_Binary(NodePtr n) {
 		sourceVar->wasInStack = TRUE;
 	}
 	else {
+		VariablePtr leftVar2 = leftVar;
+
 		if (!rightVar->wasInStack) {
 			this->OnLoad(rightVar);
 		}
@@ -338,14 +364,29 @@ Void VirtualCompiler::_Unary(NodePtr n) {
 
 	this->_Read(n, leftVar, leftVar);
 
-	this->_Print(" // - %s%s\n", n->word.data(),
-		leftVar->GetName().data());
+	//this->_Print(" // - %s%s\n", n->word.data(),
+	//	leftVar->GetName().data());
 
-	this->OnLoad(leftVar);
-	this->OnUnary(leftVar);
+	if (!leftVar->wasInStack) {
+		this->OnLoad(leftVar);
+	}
 
-	leftVar->wasInStack = TRUE;
-	this->variableStack.Push(leftVar);
+	if (n->lex->lex->id == kScriptLexCast) {
+		if (!n->var->CheckType(Object::Type::Class)) {
+			PostSyntaxError(n->lex->line, "Unable to apply strong cast to non-class object (%s)",
+				n->var->GetName().data());
+		}
+		this->_StrongCast(leftVar, n->var->GetClass());
+	}
+	else {
+		this->OnUnary(leftVar);
+
+		if (!leftVar->wasInStack) {
+			leftVar->wasInStack = TRUE;
+		}
+
+		this->variableStack.Push(leftVar);
+	}
 }
 
 Void VirtualCompiler:: _Ternary(NodePtr n) {
@@ -356,11 +397,15 @@ Void VirtualCompiler:: _Ternary(NodePtr n) {
 	backVar->wasInStack = TRUE;
 
 	this->_Run(n->blockList);
-	this->OnLoad(backVar);
+	if (!backVar->wasInStack) {
+		this->OnLoad(backVar);
+	}
 	this->OnTernary(n, TRUE);
 
 	this->_Run(n->elseList);
-	this->OnLoad(backVar);
+	if (!backVar->wasInStack) {
+		this->OnLoad(backVar);
+	}
 	this->OnTernary(n, FALSE);
 }
 
@@ -446,14 +491,14 @@ Void VirtualCompiler::_Selection(NodePtr n) {
 Void VirtualCompiler::_Condition(NodePtr n) {
 
 	VariablePtr var0;
-	//	VariablePtr var1;
-	//	VariablePtr var2;
 
 	switch (n->lex->lex->id) {
 	case kScriptLexIf:
 		this->_Read(n, var0, var0);
+		this->_Run(n->blockList);
 		break;
 	case kScriptLexElse:
+		this->_Run(n->blockList);
 		break;
 	case kScriptLexWhile:
 		this->_Read(n, var0, var0);
@@ -471,20 +516,6 @@ Void VirtualCompiler::_Condition(NodePtr n) {
 	default:
 		break;
 	}
-}
-
-Void VirtualCompiler::_Cast(NodePtr n) {
-
-	VariablePtr leftVar;
-	ClassPtr rightVar;
-
-	this->_Read(n, leftVar, leftVar);
-
-	rightVar = n->var->GetClass();
-
-	__asm int 3
-
-	this->variableStack.Push(leftVar);
 }
 
 Void VirtualCompiler::_Invoke(NodePtr n) {
@@ -565,6 +596,7 @@ Void VirtualCompiler::_Invoke(NodePtr n) {
 		}
 
 		this->OnInvoke(methodVar->GetMethod());
+		this->variableStack.Push(methodVar->GetMethod()->returnVar);
 	}
 }
 
@@ -612,7 +644,7 @@ Void VirtualCompiler::_Return(NodePtr n) {
 	}
 	
 	if (returnVar) {
-		this->variableStack.Push(returnVar);
+		//this->variableStack.Push(returnVar);
 	}
 
 	returnType = methodVar->GetReturnType();
