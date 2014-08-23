@@ -10,7 +10,7 @@
 
 LAME_BEGIN2(Script)
 
-static Bool _MoveNode(NodePtr node, Bool isMoveConstruciton = FALSE) {
+static Bool _MoveNode(NodePtr node) {
 
 	Bool result = FALSE;
 
@@ -22,14 +22,10 @@ static Bool _MoveNode(NodePtr node, Bool isMoveConstruciton = FALSE) {
 		whereupon we'll swap our expressions and push in one stack. Final
 		view should be : '1 if'. We've saved count of arguments in node 'new' */
 
-	if ((node->id == kScriptNodeCondition && !isMoveConstruciton) ||
-		node->id == kScriptNodeFunction || node->lex->lex->id == kScriptLexCatch
+	if (node->id == kScriptNodeCondition || node->id == kScriptNodeFunction ||
+		node->lex->lex->id == kScriptLexCatch
 	) {
 		goto _Seek;
-	}
-
-	if (node->id == kScriptNodeVariable) {
-
 	}
 
 	if (node->parent != NULL && (node->parent->blockList.size() > 0 && node->argList.size() > 0)) {
@@ -72,7 +68,7 @@ static Bool _MoveNode(NodePtr node, Bool isMoveConstruciton = FALSE) {
 _Seek:
 	if (node->id == kScriptNodeCondition) {
 		for (NodePtr n : node->argList) {
-			if (_MoveNode(n, isMoveConstruciton)) {
+			if (_MoveNode(n)) {
 				goto _Seek;
 			}
 		}
@@ -80,7 +76,7 @@ _Seek:
 
 _Again:
 	for (NodePtr n : node->blockList) {
-		if (_MoveNode(n, isMoveConstruciton)) {
+		if (_MoveNode(n)) {
 			goto _Again;
 		}
 	}
@@ -177,12 +173,19 @@ Void ScopeBuilder::Build(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
 		view : 'i 0 = ... for' and we won't have any conflicts with other language
 		constructions. */
 
+#if 0
 	_MoveNode(rootNode, TRUE);
+#endif
 
 	/*	Node trace (only for debugging) */
     
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachNodeTrace, this), kScriptNodeUnknown);
     this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachNodeFlush, this), kScriptNodeUnknown);
+
+	if (lastVar && lastVar->GetNode() && lastVar->GetNode()->lex->lex->id == kScriptLexDo) {
+		PostSyntaxError(lastVar->GetNode()->lex->line, "Do must have While block (%s)",
+			lastVar->GetNode()->word.data());
+	}
 }
 
 Void ScopeBuilder::_ForEachNodeTrace(NodePtr n) {
@@ -480,7 +483,7 @@ Void ScopeBuilder::_ForEachConstDeclare(NodePtr n) {
         Float64 floatValue = ParseFloatValue(n->word.data());
         ClassPtr floatClass;
         
-        if (floatValue >= FLT_MIN && floatValue <= FLT_MAX) {
+		if (floatValue >= -FLT_MAX && floatValue <= FLT_MAX) {
             floatClass = globalScope->classFloat;
         } else {
             floatClass = globalScope->classDouble;

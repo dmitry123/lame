@@ -544,12 +544,12 @@ NodeBuilder::Iterator NodeBuilder::_BuildCondition(NodePtr& parent, Iterator i) 
 		error in expression, cuz language constructions has
 		lower priority, then other blocks. Btw we can grow it's
 		priority and write language constructions likes in swift
-		or lua lanugages : 'if a > b' { ... }', but its Java and
-		not needed. */
+		or lua lanugages : 'if a > b { ... }', but its Java-Like syntax
+		and not needed. */
 
-	if ((parent->lex->lex->flags & kScriptLexFlagWoParentheses) == 0) {
+	if (!(parent->lex->lex->flags & kScriptLexFlagWoParentheses)) {
 		if ((*i)->lex->id != kScriptLexParenthesisL) {
-			PostSyntaxError((*i)->line, "Left parenthesis has been lost", 1);
+			PostSyntaxError((*(i - 1))->line, "Left parenthesis has been lost", 1);
 		}
 	}
 
@@ -647,7 +647,7 @@ NodeBuilder::Iterator NodeBuilder::_BuildCondition(NodePtr& parent, Iterator i) 
 			block. */
 
 		else if ((*i)->lex->id == kScriptLexSemicolon) {
-			if (parent->word == "for") {
+			if (parent->lex->lex->id == kScriptLexFor) {
 				if (expressionLength > 0) {
 					parent->lex->args++;
 				}
@@ -692,7 +692,7 @@ NodeBuilder::Iterator NodeBuilder::_BuildCondition(NodePtr& parent, Iterator i) 
 		parent->lex->args = 2;
 		parent->flags |= kScriptFlagForEach;
 	}
-	else if (parent->word == "for") {
+	else if (parent->lex->lex->id == kScriptLexFor) {
 		if (expressionLength > 0) {
 			parent->lex->args++;
 		}
@@ -1100,7 +1100,7 @@ NodeBuilder::Iterator NodeBuilder::_Build(NodePtr& node, Iterator i) {
 
 	/*	Fix for cast */
 
-	if (this->_IsCast(i + 1)) {
+	if ((*i)->lex->IsUnknown() && this->_IsCast(i + 1)) {
 		__Inc(i);
 		i = this->parser_->GetLexList().erase(i);
         LexNodePtr castLex = new LexNode((*i)->word, (*i)->line, Lex::Find(kScriptLexCast));

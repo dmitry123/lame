@@ -331,7 +331,7 @@ ScopePtr Scope::CreateRootScope(Void) {
 	Script::ClassPtr rootScope = new Script::Class("Root", NULL, 0);
     
     if (classChar != NULL) {
-        return ScopePtr(rootScope);
+		goto _ReturnScope;
     }
 
 	classChar = rootScope->Scope::Add(new Script::Class("char", rootScope, 2))->GetClass();
@@ -424,6 +424,17 @@ ScopePtr Scope::CreateRootScope(Void) {
 	classClass->SetPriority(7);
 	classUnknown->SetPriority(7);
 	classArray->SetPriority(7);
+
+_ReturnScope:
+
+	rootScope->Add(new Variable("true", rootScope, classBoolean))
+		->GetVariable()->SetBoolean(TRUE)->SetModificator(Object::Modificator::Internal);
+
+	rootScope->Add(new Variable("false", rootScope, classBoolean))
+		->GetVariable()->SetBoolean(FALSE)->SetModificator(Object::Modificator::Internal);
+
+	rootScope->Add(new Variable("null", rootScope, classObject))
+		->GetVariable()->SetObject(NULL)->SetModificator(Object::Modificator::Internal);
 
 	return ScopePtr(rootScope);
 }

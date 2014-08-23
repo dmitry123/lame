@@ -11,6 +11,9 @@ class LAME_API Segment {
 	friend class SegmentLinker;
 	friend class SegmentBuilder;
 public:
+	inline Segment() : Segment("")
+	{
+	}
 	inline Segment(Buffer name) :
 		Segment(name.data())
 	{
@@ -20,7 +23,7 @@ public:
 	~Segment(Void);
 public:
 	Void Write(VoidP block, Uint32 size);
-	Uint32P Write(VariablePtr var);
+	Void Write(VariablePtr var);
 	Void Trace(Bool asFlat = FALSE);
 	Void Allocate(Uint32 size = 0);
 	Void Flush(Void);
@@ -37,8 +40,8 @@ public:
 	inline Uint32 GetOffset()   const { return this->offset;   }
 	inline Uint32 GetLastSize() const { return this->lastSize; }
 public:
-	inline Bool IsCodeSegment() const {
-		return this->isCode;
+	inline Uint32 GetPosition() const {
+		return this->GetSize() + this->GetOffset();
 	}
 private:
 	struct History {
@@ -67,7 +70,6 @@ private:
 	Uint8P data;
 	Uint32 capacity;
 	Uint32 lastSize;
-	Bool   isCode;
 private:
 	List<History> history;
 };

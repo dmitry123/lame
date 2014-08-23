@@ -10,8 +10,6 @@ class LAME_API VirtualCompiler {
 protected: /* Core Typedefs */
 	typedef Core::Deque<NodePtr> NodeList;
 	typedef Core::Deque<NodePtr>& NodeListRef;
-protected: /* Script Typedefs */
-	typedef Script::VariablePtr VariablePtr;
 protected: /* Strict Virtual Methods */
 	virtual Void OnBinary(VariablePtr left, VariablePtr right) = 0;
     virtual Void OnUnary(VariablePtr var) = 0;

@@ -9,7 +9,7 @@ ByteCodePtr ByteCode::New(Asm command) {
 	}
 
 	if (command == NOOP) {
-		return this;
+		//return this;
 	}
 
 	asmInfo = assembler.GetAsmInfo(
@@ -56,7 +56,6 @@ ByteCodePtr ByteCode::Flush(Void) {
 
 	//printf("\n");
 
-	this->position += asmInfo->arguments * 4 + 1;
 	this->infoList.clear();
 
 	return this;
@@ -69,7 +68,10 @@ Void ByteCode::Trace(SegmentPtr segment) {
 		AsmInfoPtr asmInfo = Assembler::GetAsmInfo(*segment->GetBlockAt(i++));
 		Uint32 argCount = asmInfo->arguments;
 
-		if (strlen(asmInfo->name) >= 7) {
+		if (strlen(asmInfo->name) <= 2) {
+			printf("0x%.4x : %s\t\t\t", i + segment->GetOffset(), asmInfo->name);
+		}
+		else if (strlen(asmInfo->name) >= 7) {
 			printf("0x%.4x : %s\t", i + segment->GetOffset(), asmInfo->name);
 		}
 		else {
@@ -77,9 +79,9 @@ Void ByteCode::Trace(SegmentPtr segment) {
 		}
 
 		while (argCount--) {
-			printf("0x%.4x ", *Uint32P(segment->GetBlockAt(i)) + 8);
-			i += 4;
+			printf("0x%.4x ", *Uint32P(segment->GetBlockAt(i)) + 8); i += 4;
 		}
+
 		printf("\n");
 	}
 }

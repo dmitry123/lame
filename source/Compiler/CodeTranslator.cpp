@@ -9,6 +9,61 @@ LAME_BEGIN2(Compiler)
 #define BCPNEW(s, r, i, l, d, f) \
     this->GetByteCode()->New(RILFD(s, r, i, l, f, d))
 
+Void _CompileBool(ByteCodePtr bc, Script::VariablePtr left, LexID lexID) {
+
+	Asm command = NOOP;
+
+	switch (lexID) {
+		case kScriptLexAbove:       command = JNA;  break;
+		case kScriptLexBellow:      command = JNB;  break;
+		case kScriptLexAboveEqual:  command = JNAE; break;
+		case kScriptLexBellowEqual: command = JNBE; break;
+		case kScriptLexEqual:       command = JNE;  break;
+		case kScriptLexNotEqual:    command = JE;   break;
+	}
+
+	if (command == NOOP) {
+		__asm int 3
+	}
+
+	if (left->GetClass()->IsInt()) {
+		bc->New(ICMP);
+		bc->New(command)
+			->Write(bc->GetPosition() + 11);
+		bc->New(ICONST1);
+		bc->New(JUMP)
+			->Write(bc->GetPosition() + 6);
+		bc->New(ICONST0);
+	}
+	else if (left->GetClass()->IsLong()) {
+		bc->New(LCMP);
+		bc->New(command)
+			->Write(bc->GetPosition() + 11);
+		bc->New(LCONST1);
+		bc->New(JUMP)
+			->Write(bc->GetPosition() + 6);
+		bc->New(LCONST0);
+	}
+	else if (left->GetClass()->IsFloat()) {
+		bc->New(FCMP);
+		bc->New(command)
+			->Write(bc->GetPosition() + 11);
+		bc->New(FCONST1);
+		bc->New(JUMP)
+			->Write(bc->GetPosition() + 6);
+		bc->New(FCONST0);
+	}
+	else if (left->GetClass()->IsDouble()) {
+		bc->New(DCMP);
+		bc->New(command)
+			->Write(bc->GetPosition() + 11);
+		bc->New(DCONST1);
+		bc->New(JUMP)
+			->Write(bc->GetPosition() + 6);
+		bc->New(DCONST0);
+	}
+}
+
 Void CodeTranslator::OnBinary(VariablePtr left, VariablePtr right) {
 
 	ByteCodePtr bc = this->GetByteCode();
@@ -59,226 +114,12 @@ Void CodeTranslator::OnBinary(VariablePtr left, VariablePtr right) {
 			->Write(left->GetAddress());
 		break;
 	case kScriptLexBellow:
-		if (left->GetClass()->IsInt()) {
-			bc->New(ICMPJNB)
-				->Write(bc->GetPosition() + 11);
-			bc->New(ICONST1);
-			bc->New(JUMP)
-				->Write(bc->GetPosition() + 6);
-			bc->New(ICONST0);
-		}
-		else if (left->GetClass()->IsLong()) {
-			bc->New(LCMP);
-			bc->New(JNB)
-				->Write(bc->GetPosition() + 11);
-			bc->New(LCONST1);
-			bc->New(JUMP)
-				->Write(bc->GetPosition() + 6);
-			bc->New(LCONST0);
-		}
-		else if (left->GetClass()->IsFloat()) {
-			bc->New(FCMP);
-			bc->New(JNB)
-				->Write(bc->GetPosition() + 11);
-			bc->New(FCONST1);
-			bc->New(JUMP)
-				->Write(bc->GetPosition() + 6);
-			bc->New(FCONST0);
-		}
-		else if (left->GetClass()->IsDouble()) {
-			bc->New(DCMP);
-			bc->New(JNB)
-				->Write(bc->GetPosition() + 11);
-			bc->New(DCONST1);
-			bc->New(JUMP)
-				->Write(bc->GetPosition() + 6);
-			bc->New(DCONST0);
-		}
-		break;
 	case kScriptLexAbove:
-		if (left->GetClass()->IsInt()) {
-			bc->New(ICMPJNA)
-				->Write(bc->GetPosition() + 11);
-			bc->New(ICONST1);
-			bc->New(JUMP)
-				->Write(bc->GetPosition() + 6);
-			bc->New(ICONST0);
-		}
-		else if (left->GetClass()->IsLong()) {
-			bc->New(LCMP);
-			bc->New(JNA)
-				->Write(bc->GetPosition() + 11);
-			bc->New(LCONST1);
-			bc->New(JUMP)
-				->Write(bc->GetPosition() + 6);
-			bc->New(LCONST0);
-		}
-		else if (left->GetClass()->IsFloat()) {
-			bc->New(FCMP);
-			bc->New(JNA)
-				->Write(bc->GetPosition() + 11);
-			bc->New(FCONST1);
-			bc->New(JUMP)
-				->Write(bc->GetPosition() + 6);
-			bc->New(FCONST0);
-		}
-		else if (left->GetClass()->IsDouble()) {
-			bc->New(DCMP);
-			bc->New(JNA)
-				->Write(bc->GetPosition() + 11);
-			bc->New(DCONST1);
-			bc->New(JUMP)
-				->Write(bc->GetPosition() + 6);
-			bc->New(DCONST0);
-		}
-		break;
 	case kScriptLexBellowEqual:
-		if (left->GetClass()->IsInt()) {
-			bc->New(ICMPJNE)
-				->Write(bc->GetPosition() + 11);
-			bc->New(ICONST1);
-			bc->New(JUMP)
-				->Write(bc->GetPosition() + 6);
-			bc->New(ICONST0);
-		}
-		else if (left->GetClass()->IsLong()) {
-			bc->New(LCMP);
-			bc->New(JNE)
-				->Write(bc->GetPosition() + 11);
-			bc->New(LCONST1);
-			bc->New(JUMP)
-				->Write(bc->GetPosition() + 6);
-			bc->New(LCONST0);
-		}
-		else if (left->GetClass()->IsFloat()) {
-			bc->New(FCMP);
-			bc->New(JNE)
-				->Write(bc->GetPosition() + 11);
-			bc->New(FCONST1);
-			bc->New(JUMP)
-				->Write(bc->GetPosition() + 6);
-			bc->New(FCONST0);
-		}
-		else if (left->GetClass()->IsDouble()) {
-			bc->New(DCMP);
-			bc->New(JNE)
-				->Write(bc->GetPosition() + 11);
-			bc->New(DCONST1);
-			bc->New(JUMP)
-				->Write(bc->GetPosition() + 6);
-			bc->New(DCONST0);
-		}
-		break;
 	case kScriptLexAboveEqual:
-		if (left->GetClass()->IsInt()) {
-			bc->New(ICMPJNAE)
-				->Write(bc->GetPosition() + 11);
-			bc->New(ICONST1);
-			bc->New(JUMP)
-				->Write(bc->GetPosition() + 6);
-			bc->New(ICONST0);
-		}
-		else if (left->GetClass()->IsLong()) {
-			bc->New(LCMP);
-			bc->New(JNAE)
-				->Write(bc->GetPosition() + 11);
-			bc->New(LCONST1);
-			bc->New(JUMP)
-				->Write(bc->GetPosition() + 6);
-			bc->New(LCONST0);
-		}
-		else if (left->GetClass()->IsFloat()) {
-			bc->New(FCMP);
-			bc->New(JNAE)
-				->Write(bc->GetPosition() + 11);
-			bc->New(FCONST1);
-			bc->New(JUMP)
-				->Write(bc->GetPosition() + 6);
-			bc->New(FCONST0);
-		}
-		else if (left->GetClass()->IsDouble()) {
-			bc->New(DCMP);
-			bc->New(JNAE)
-				->Write(bc->GetPosition() + 11);
-			bc->New(DCONST1);
-			bc->New(JUMP)
-				->Write(bc->GetPosition() + 6);
-			bc->New(DCONST0);
-		}
-		break;
 	case kScriptLexEqual:
-		if (left->GetClass()->IsInt()) {
-			bc->New(ICMPJNE)
-				->Write(bc->GetPosition() + 11);
-			bc->New(ICONST1);
-			bc->New(JUMP)
-				->Write(bc->GetPosition() + 6);
-			bc->New(ICONST0);
-		}
-		else if (left->GetClass()->IsLong()) {
-			bc->New(LCMP);
-			bc->New(JNE)
-				->Write(bc->GetPosition() + 11);
-			bc->New(LCONST1);
-			bc->New(JUMP)
-				->Write(bc->GetPosition() + 6);
-			bc->New(LCONST0);
-		}
-		else if (left->GetClass()->IsFloat()) {
-			bc->New(FCMP);
-			bc->New(JNE)
-				->Write(bc->GetPosition() + 11);
-			bc->New(FCONST1);
-			bc->New(JUMP)
-				->Write(bc->GetPosition() + 6);
-			bc->New(FCONST0);
-		}
-		else if (left->GetClass()->IsDouble()) {
-			bc->New(DCMP);
-			bc->New(JNE)
-				->Write(bc->GetPosition() + 11);
-			bc->New(DCONST1);
-			bc->New(JUMP)
-				->Write(bc->GetPosition() + 6);
-			bc->New(DCONST0);
-		}
-		break;
 	case kScriptLexNotEqual:
-		if (left->GetClass()->IsInt()) {
-			bc->New(ICMPJE)
-				->Write(bc->GetPosition() + 11);
-			bc->New(ICONST1);
-			bc->New(JUMP)
-				->Write(bc->GetPosition() + 6);
-			bc->New(ICONST0);
-		}
-		else if (left->GetClass()->IsLong()) {
-			bc->New(LCMP);
-			bc->New(JE)
-				->Write(bc->GetPosition() + 11);
-			bc->New(LCONST1);
-			bc->New(JUMP)
-				->Write(bc->GetPosition() + 6);
-			bc->New(LCONST0);
-		}
-		else if (left->GetClass()->IsFloat()) {
-			bc->New(FCMP);
-			bc->New(JE)
-				->Write(bc->GetPosition() + 11);
-			bc->New(FCONST1);
-			bc->New(JUMP)
-				->Write(bc->GetPosition() + 6);
-			bc->New(FCONST0);
-		}
-		else if (left->GetClass()->IsDouble()) {
-			bc->New(DCMP);
-			bc->New(JE)
-				->Write(bc->GetPosition() + 11);
-			bc->New(DCONST1);
-			bc->New(JUMP)
-				->Write(bc->GetPosition() + 6);
-			bc->New(DCONST0);
-		}
+		_CompileBool(this->GetByteCode(), left, this->currentNode->lex->lex->id);
 		break;
 	case kScriptLexAnd:
 		if (!left->IsBooleanLike()) {
@@ -347,16 +188,24 @@ Void CodeTranslator::OnTernary(NodePtr node, Bool state) {
 Void CodeTranslator::OnCast(VariablePtr source, ClassPtr type) {
 
 	if (source->GetClass()->IsInt()) {
-		BCPNEW(type, NOOP, NOOP, ITL, ITD, ITF);
+		if (!type->IsIntegerLike() && !type->IsLong()) {
+			BCPNEW(type, NOOP, NOOP, ITL, ITD, ITF);
+		}
 	}
 	else if (source->GetClass()->IsLong()) {
-		BCPNEW(type, NOOP, LTI, NOOP, LTD, LTF);
+		if (!type->IsLong()) {
+			BCPNEW(type, NOOP, LTI, NOOP, LTD, LTF);
+		}
 	}
 	else if (source->GetClass()->IsFloat()) {
-		BCPNEW(type, NOOP, FTI, FTL, FTD, NOOP);
+		if (!type->IsFloat()) {
+			BCPNEW(type, NOOP, FTI, FTL, FTD, NOOP);
+		}
 	}
 	else if (source->GetClass()->IsDouble()) {
-		BCPNEW(type, NOOP, DTI, DTL, NOOP, DTF);
+		if (!type->IsDouble()) {
+			BCPNEW(type, NOOP, DTI, DTL, NOOP, DTF);
+		}
 	}
 	else if (source->GetClass()->IsObject()) {
 		if (type->GetClass()->IsObject()) {
@@ -372,20 +221,65 @@ Void CodeTranslator::OnLoad(VariablePtr var) {
 
 	ByteCodePtr bc = this->GetByteCode();
 
-	if (var->GetClass()->IsByte()) {
-		bc->New(BIPUSH);
+	if (var->GetName() == "true") {
+		bc->New(ICONST1);
 	}
-	else if (
-		var->GetClass()->IsShort() ||
-		var->GetClass()->IsChar()
-		) {
-		bc->New(SIPUSH);
+	else if (var->GetName() == "false") {
+		bc->New(ICONST0);
+	}
+	else if (var->GetName() == "null") {
+		bc->New(RCONST0);
 	}
 	else {
-		BCPNEW(var, RLOAD, ILOAD, LLOAD, DLOAD, FLOAD);
+		if (var->CheckModificator(Object::Modificator::Constant)) {
+			if (var->GetClass()->IsIntegerLike() ||
+				var->GetClass()->IsBooleanLike()
+			) {
+				if (var->v.intValue == 0) {
+					bc->New(ICONST0);
+				}
+				else if (var->v.intValue == 1) {
+					bc->New(ICONST1);
+				}
+				else if (var->v.intValue == -1) {
+					bc->New(ICONST1)->New(INEG);
+				}
+				else {
+					goto _LoadVar;
+				}
+			}
+			else if (var->GetClass()->IsFloatLike()) {
+				if (var->v.floatValue == 0) {
+					bc->New(FCONST0);
+				}
+				else if (var->v.floatValue == 1) {
+					bc->New(FCONST1);
+				}
+				else if (var->v.floatValue == -1) {
+					bc->New(FCONST1)->New(FNEG);
+				}
+				else {
+					goto _LoadVar;
+				}
+			}
+		}
+		else {
+		_LoadVar:
+			if (var->GetClass()->IsByte()) {
+				bc->New(BIPUSH);
+			}
+			else if (
+				var->GetClass()->IsShort() ||
+				var->GetClass()->IsChar()
+			) {
+				bc->New(SIPUSH);
+			}
+			else {
+				BCPNEW(var, RLOAD, ILOAD, LLOAD, DLOAD, FLOAD);
+			}
+			bc->Write(var->GetAddress());
+		}
 	}
-
-	bc->Write(var->GetAddress());
 }
 
 Void CodeTranslator::OnStore(VariablePtr var) {

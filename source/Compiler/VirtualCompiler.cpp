@@ -183,12 +183,7 @@ _CastError:
 		right->GetName().data(), left->GetName().data());
 
 _CastOk:
-
 	this->OnCast(var, type->GetClass());
-
-	if (!type->wasInStack) {
-		type->wasInStack = TRUE;
-	}
 
 	this->GetStack()->Push(VariablePtr(type));
 }
@@ -320,7 +315,7 @@ Void VirtualCompiler::_Binary(NodePtr n) {
 			}
 		}
 
-		sourceVar->wasInStack = TRUE;
+		//sourceVar->wasInStack = TRUE;
 	}
 	else {
 		sourceVar = leftVar;
@@ -329,11 +324,11 @@ Void VirtualCompiler::_Binary(NodePtr n) {
 			this->OnLoad(rightVar);
 		}
 
-		rightVar->wasInStack = FALSE;
-
 		if (leftVar->GetClass()->Hash() != rightVar->GetClass()->Hash()) {
 			this->_Cast(rightVar, sourceVar->GetClass());
 		}
+
+		rightVar->wasInStack = FALSE;
 	}
 
 	if (n->lex->lex->IsLogic()) {
@@ -356,11 +351,10 @@ Void VirtualCompiler::_Binary(NodePtr n) {
 	}
 
 	if (n->lex->lex->IsBool()) {
-		Scope::classBoolean->wasInStack = TRUE;
-		this->variableStack.Push(VariablePtr(Scope::classBoolean));
+		this->variableStack.Return(VariablePtr(Scope::classBoolean));
 	}
 	else {
-		this->variableStack.Push(sourceVar);
+		this->variableStack.Return(sourceVar);
 	}
 }
 
@@ -386,12 +380,7 @@ Void VirtualCompiler::_Unary(NodePtr n) {
 	}
 	else {
 		this->OnUnary(leftVar);
-
-		if (!leftVar->wasInStack) {
-			leftVar->wasInStack = TRUE;
-		}
-
-		this->variableStack.Push(leftVar);
+		this->variableStack.Return(leftVar);
 	}
 }
 
@@ -400,15 +389,16 @@ Void VirtualCompiler::_Ternary(NodePtr n) {
 	VariablePtr backVar;
 
 	backVar = this->GetStack()->Back();
-	backVar->wasInStack = TRUE;
 
 	this->_Run(n->blockList);
+
 	if (!backVar->wasInStack) {
 		this->OnLoad(backVar);
 	}
 	this->OnTernary(n, TRUE);
 
 	this->_Run(n->elseList);
+
 	if (!backVar->wasInStack) {
 		this->OnLoad(backVar);
 	}
@@ -459,7 +449,7 @@ Void VirtualCompiler::_New(NodePtr n) {
 		// pop
 	}
 
-	this->variableStack.Push(leftVar);
+	this->variableStack.Return(leftVar);
 }
 
 Void VirtualCompiler::_Selection(NodePtr n) {
@@ -489,7 +479,7 @@ Void VirtualCompiler::_Selection(NodePtr n) {
 
 	// selection
 
-	this->variableStack.Push(rightVar);
+	this->variableStack.Return(rightVar);
 	//	varStack.push_back(rightVar);
 	//	nameStack.push_back(fieldName);
 }
@@ -498,8 +488,9 @@ Void VirtualCompiler::_Condition(NodePtr n) {
 
 	VariablePtr var0;
 
-	SegmentPtr ifSegment = NULL;
+	SegmentPtr blockSegment = NULL;
 	SegmentPtr mySegment = NULL;
+	Segment    argSegment;
 
 	if (this->segmentStack.empty()) {
 		goto _SegmentError;
@@ -509,33 +500,101 @@ Void VirtualCompiler::_Condition(NodePtr n) {
 
 	switch (n->lex->lex->id) {
 	case kScriptLexIf:
+
+		/* Set segment's offset */
+		argSegment.SetOffset(mySegment->GetPosition() - 7);
+
+		/* Compile list with arguments */
+		this->_Push(&argSegment);
+		this->_Run(n->argList);
+		this->_Pop();
+
+		/* Read result */
 		this->_Read(n, var0, var0);
+
+		/* Check result for boolean type */
 		if (!var0->GetClass()->IsBooleanLike()) {
 			goto _BooleanError;
 		}
+
+		/* Load result from stack if needed */
 		if (!var0->wasInStack) {
 			this->OnLoad(var0);
 		}
-		if (n->var && n->var->GetSegment()) {
-			this->_Push(n->var->GetSegment());
-		}
+
+		blockSegment = n->var->GetSegment();
+
+		/* Compile construction's block */
+		this->_Push(blockSegment);
 		this->_Run(n->blockList);
-		ifSegment = this->GetByteCode()->GetSegment();
-		if (this->_Pop() != n->var->GetSegment()) {
-			goto _SegmentError;
-		}
+		this->_Pop();
+
+		/* Move arguments segment to parent's */
+		mySegment->Merge(&argSegment);
+
+		/* Set jump before compiled block */
 		this->GetByteCode()->New(JNZ)->Write(mySegment->GetSize() +
-			mySegment->GetOffset() + ifSegment->GetSize() - 2);
-		mySegment->Merge(ifSegment);
+			mySegment->GetOffset() + blockSegment->GetSize() - 2);
+
+		/* Move block segment to parent's */
+		mySegment->Merge(blockSegment);
+
+		/* For debug */
+		this->GetByteCode()->New(NOOP);
+
 		break;
 	case kScriptLexElse:
-		this->_Run(n->blockList);
 		break;
 	case kScriptLexWhile:
+
+		/*	Set segment's offset, where 7 is 
+			segment's offset (5 + 2). Digit two is
+			magic (its really magic) and 5 is size
+			of jump instruction. */
+
+		argSegment.SetOffset(mySegment->GetPosition() - 7);
+
+		/* Compile list with arguments */
+		this->_Push(&argSegment);
+		this->_Run(n->argList);
+		this->_Pop();
+
+		/* Read result */
 		this->_Read(n, var0, var0);
+
+		/* Check result for boolean type */
 		if (!var0->GetClass()->IsBooleanLike()) {
 			goto _BooleanError;
 		}
+
+		/* Load result from stack if needed */
+		if (!var0->wasInStack) {
+			this->OnLoad(var0);
+		}
+
+		blockSegment = n->var->GetSegment();
+
+		/* Compile construction's block */
+		this->_Push(blockSegment);
+		this->_Run(n->blockList);
+		this->_Pop();
+
+		/* Move arguments segment to parent's */
+		mySegment->Merge(&argSegment);
+
+		/* Set jump before compiled block */
+		this->GetByteCode()->New(JNZ)->Write(mySegment->GetPosition() +
+			blockSegment->GetSize() - 2 + 5);
+
+		/* Move block segment to parent's */
+		mySegment->Merge(blockSegment);
+
+		/* Set jump after compiled block for jump */
+		this->GetByteCode()->New(JUMP)->Write(argSegment.GetOffset());
+
+		/* For debug */
+		this->GetByteCode()->New(NOOP);
+
 		break;
 	case kScriptLexDo:
 		break;
@@ -641,7 +700,7 @@ Void VirtualCompiler::_Invoke(NodePtr n) {
 		}
 
 		this->OnInvoke(methodVar->GetMethod());
-		this->variableStack.Push(methodVar->GetMethod()->returnVar);
+		this->variableStack.Return(methodVar->GetMethod()->returnVar);
 	}
 }
 
@@ -688,10 +747,6 @@ Void VirtualCompiler::_Return(NodePtr n) {
 		this->_Read(n, returnVar, returnVar);
 	}
 
-	if (returnVar) {
-		//this->variableStack.Push(returnVar);
-	}
-
 	returnType = methodVar->GetReturnType();
 	methodVar->returnVar = returnVar;
 
@@ -708,8 +763,10 @@ Void VirtualCompiler::_Finish(NodePtr n) {
 
 		this->variableStack.Pop();
 
+#if 0 /* Yes, its an error, but not now */
 		PostSyntaxError(this->variableStack.Back()->GetNode()->lex->line, "Unexcepted token in expression (%s)",
 			this->variableStack.Back()->GetNode()->lex->line);
+#endif
 	}
 
 	this->variableStack.Clear();

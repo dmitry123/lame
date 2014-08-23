@@ -24,14 +24,10 @@ static Void _InitializeAssembler() {
 
 	_SetAsm(NOOP, "noop", 0);
 	_SetAsm(RCONST0, "rconst0", 0);
-	_SetAsm(RCONSTF, "rconstf", 0);
-	_SetAsm(ICONSTM, "iconstm", 0);
 	_SetAsm(ICONST0, "iconst0", 0);
 	_SetAsm(ICONST1, "iconst1", 0);
-	_SetAsm(ICONSTF, "iconstf", 0);
 	_SetAsm(LCONST0, "lconst0", 0);
 	_SetAsm(LCONST1, "lconst1", 0);
-	_SetAsm(LCONSTF, "lconstf", 0);
 	_SetAsm(FCONST0, "fconst0", 0);
 	_SetAsm(FCONST1, "fconst1", 0);
 	_SetAsm(DCONST0, "dconst0", 0);
@@ -141,6 +137,7 @@ static Void _InitializeAssembler() {
 	_SetAsm(JNE, "jne", 1);
 	_SetAsm(JB, "jb", 1);
 	_SetAsm(JNB, "jnb", 1);
+	_SetAsm(JNBE, "jnbe", 1);
 	_SetAsm(JAE, "jae", 1);
 	_SetAsm(JNAE, "jnae", 1);
 	_SetAsm(JA, "ja", 1);

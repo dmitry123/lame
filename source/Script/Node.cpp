@@ -202,16 +202,19 @@ Void Node::ShuntingYard(Void) {
 	if (this->blockList.size() > 0) {
 		_Order(&this->blockList);
 	}
+
 	if (this->argList.size() > 0) {
 		_Order(&this->argList);
 	}
 }
 
 Void Node::Extend(NodePtr node) {
+
 	if (this->extendNode) {
 		delete this->extendNode;
-		this->extendNode = NULL;
+		//this->extendNode = NULL;
 	}
+
 	this->extendNode = new Node(*node);
 }
 
@@ -220,18 +223,22 @@ Void Node::Implement(NodePtr node) {
 }
 
 Void Node::Template(NodePtr node) {
+
 	if (this->templateNode) {
 		delete this->templateNode;
-		this->templateNode = NULL;
+		//this->templateNode = NULL;
 	}
+
 	this->templateNode = new Node(*node);
 }
 
 Void Node::Type(NodePtr node) {
+
 	if (this->typeNode) {
 		delete this->typeNode;
-		this->typeNode = NULL;
+		//this->typeNode = NULL;
 	}
+
 	this->typeNode = new Node(*node);
 }
 
@@ -254,6 +261,9 @@ Node::Node(const Node& node) :
 		this->Implement(n);
 	}
 
+	this->blockList = node.blockList;
+	this->argList = node.argList;
+	this->elseList = node.elseList;
 	this->flags = node.flags;
 }
 
@@ -265,10 +275,10 @@ Node::Node() :
 	id(kScriptNodeDefault)
 {
 	this->flags = 0;
-	this->var = 0;
-	this->typeNode = 0;
-	this->templateNode = 0;
-	this->extendNode = 0;
+	this->var = NULL;
+	this->typeNode = NULL;
+	this->templateNode = NULL;
+	this->extendNode = NULL;
 }
 
 LAME_END2

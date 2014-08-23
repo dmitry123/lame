@@ -5,7 +5,7 @@ LAME_BEGIN2(Script)
 static Uint32 ZeroByte32 = 0;
 
 Segment::Segment(StringC name) :
-	name(name), data(NULL), isCode(FALSE)
+	name(name), data(NULL)
 {
 	this->Clear();
 }
@@ -40,7 +40,7 @@ Void Segment::Write(VoidP block, Uint32 size) {
 	this->size += size;
 }
 
-Uint32P Segment::Write(VariablePtr var) {
+Void Segment::Write(VariablePtr var) {
 
 	Uint8P copyBuffer = 0;
 	Uint32 bufferSize = 0;
@@ -77,8 +77,6 @@ Uint32P Segment::Write(VariablePtr var) {
 	else {
 		this->size += bufferSize;
 	}
-
-	return &this->history.back().offset;
 }
 
 Void Segment::Trace(Bool asFlat) {
@@ -192,8 +190,6 @@ Void Segment::Allocate(Uint32 size) {
 	}
 
 	this->size = 0;
-	this->offset = 0;
-
 	this->data = ZeroMemory(new Uint8[size], size);
 }
 

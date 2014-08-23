@@ -29,7 +29,8 @@ SegmentPtr SegmentBuilder::BuildDataSegment(Void) {
 	this->dataSegment->Allocate();
 
 	_ForEachScopeObject([](SegmentPtr segment, VariablePtr object) {
-		object->SetAddress(*segment->Write(object));
+		segment->Write(object);
+		object->SetAddress(segment->GetSize());
 		object->SetSize(segment->GetLastSize());
 	}, this->dataSegment, NULL);
 
@@ -47,7 +48,6 @@ SegmentPtr SegmentBuilder::BuildCodeSegment(Void) {
 	this->codeSegment
 		= new Segment("code");
 
-	this->codeSegment->isCode = TRUE;
 	this->codeSegment->Allocate();
 
 	_ForEachScopeVariable([](SegmentPtr segment, ObjectPtr object) {
@@ -73,7 +73,8 @@ SegmentPtr SegmentBuilder::BuildTextSegment(Void) {
 	this->textSegment->Allocate();
 
 	_ForEachScopeTemp([](SegmentPtr segment, VariablePtr object) {
-		object->SetAddress(*segment->Write(object));
+		segment->Write(object);
+		object->SetAddress(segment->GetSize());
 		object->SetSize(segment->GetLastSize());
 	}, this->textSegment, NULL);
 

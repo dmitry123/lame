@@ -6,6 +6,7 @@
 LAME_BEGIN2(Compiler)
 
 class LAME_API CodeTranslator : public VirtualCompiler {
+	typedef VariablePtr VariablePtr;
 public:
 	Void Run(NodeBuilderPtr nodeBuilder, ScopePtr rootScope, SegmentPtr codeSegment) {
 		this->VirtualCompiler::Run(nodeBuilder, rootScope, codeSegment);
