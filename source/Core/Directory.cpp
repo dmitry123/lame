@@ -446,11 +446,11 @@ List <Buffer> Directory::GetDirectories(StringC path, Bool withDepth) {
 List <Buffer> Directory::GetFiles(StringC path, Bool withDepth, StringC extension) {
     
     if (withDepth) {
-        return __GetContentAtPath(path, LAME_NULL,
+		return __GetContentAtPath(path, extension,
             Directory::kFiles |
             Directory::kDeep);
     } else {
-        return __GetContentAtPath(path, LAME_NULL,
+		return __GetContentAtPath(path, extension,
             Directory::kFiles);
     }
 }

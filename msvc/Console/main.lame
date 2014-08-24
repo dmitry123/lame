@@ -1,12 +1,18 @@
-int value = 100 + 20 + 3;
+// int value = 100 + 20 + 3;
 
-if (value >= 100) {
-	value -= 100;
+if (true) {
+	if (true) {
+		if (false) {
+			int r = 1;
+		} else {
+			int r = 0;
+		}
+	} else {
+		int r = 0;
+	}
+} else {
+	int r = 0;
 }
-
-// while (100 + 20 + 3 >= 123) {
-// 	int r = -1.0;
-// }
 
 // while (100 > 5) {
 // 	100 + 20 + 3;

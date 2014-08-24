@@ -9,7 +9,7 @@ class LAME_API LexNode {
 public:
 	const Buffer word;
 	const Uint32 line;
-	const LexPtrC lex;
+	      LexPtr lex;
 public:
 	LexNode(BufferRefC word, Uint32 line, LexPtrC lex) :
 		word(word),
@@ -18,6 +18,10 @@ public:
 	{
 		this->priority = lex ? lex->priority : 0;
 		this->args = lex ? lex->args : 0;
+	}
+public:
+	Void ChangeLex(LexPtrC lex) {
+		this->lex = lex;
 	}
 public:
 	Uint32 priority;

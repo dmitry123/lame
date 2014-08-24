@@ -90,8 +90,10 @@ Void SegmentBuilder::_ForEachScopeObject(ForEachScopeObject callback, SegmentPtr
 	}
 
 	for (ObjectPtr i : scope->GetVariableSet()) {
-		if (i->CheckType(Class::Type::Variable)) {
-			if (!i->CheckModificator(Class::Modificator::Constant)) {
+		if (i->CheckType(Object::Type::Variable)) {
+			if (!i->CheckModificator(Object::Modificator::Constant) &&
+				!i->CheckModificator(Object::Modificator::Internal)
+			) {
 				callback(segment, i->GetVariable());
 			}
 		}

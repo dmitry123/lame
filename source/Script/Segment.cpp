@@ -5,7 +5,7 @@ LAME_BEGIN2(Script)
 static Uint32 ZeroByte32 = 0;
 
 Segment::Segment(StringC name) :
-	name(name), data(NULL)
+	name(name), data(NULL), offset(0)
 {
 	this->Clear();
 }
@@ -249,6 +249,17 @@ Void Segment::Merge(SegmentPtr segment) {
 	}
 
 	segment->Clear();
+}
+
+ObjectPtr Segment::Fetch(Uint32 address) {
+
+	for (History& h : this->history) {
+		if (h.offset == address) {
+			return h.object;
+		}
+	}
+
+	return NULL;
 }
 
 LAME_END2

@@ -132,6 +132,7 @@ Void VirtualCompiler::_Cast(VariablePtr var, ObjectPtr type) {
 		if (right->IsIntegerLike()) {
 			goto _CastError;
 		}
+		goto _CastError;
 	}
 	else if (left->IsIntegerLike()) {
 		if (right->IsIntegerLike() && right->GetPriority() > left->GetPriority()) {
@@ -140,6 +141,7 @@ Void VirtualCompiler::_Cast(VariablePtr var, ObjectPtr type) {
 		if (right->IsFloatLike() && right->GetPriority() > left->GetPriority()) {
 			goto _CastOk;
 		}
+		goto _CastError;
 	}
 
 	goto _CastError;
@@ -148,7 +150,7 @@ Void VirtualCompiler::_Cast(VariablePtr var, ObjectPtr type) {
 _CastError:
 
 	if (var->CheckModificator(Object::Modificator::Constant)) {
-		if (right->GetPriority() <= left->GetPriority()) {
+		if (right->GetPriority() > left->GetPriority()) {
 			goto _CastOk;
 		}
 	}
@@ -168,7 +170,7 @@ Void VirtualCompiler::_StrongCast(VariablePtr var, ClassPtr type) {
 
 	if ((left->IsIntegerLike() || left->IsFloatLike()) &&
 		(right->IsIntegerLike() || right->IsFloatLike())
-		) {
+	) {
 		goto _CastOk;
 	}
 	else {
@@ -249,6 +251,8 @@ Void VirtualCompiler::Run(NodeBuilderPtr nodeBuilder, ScopePtr rootScope, Segmen
 	}
 
 	this->_Run(this->nodeBuilder->GetRootNode()->blockList);
+
+	this->GetByteCode()->New(NOOP);
 }
 
 Void VirtualCompiler::_ForEachClass(ScopePtr rootScope) {
@@ -377,6 +381,7 @@ Void VirtualCompiler::_Unary(NodePtr n) {
 				n->var->GetName().data());
 		}
 		this->_StrongCast(leftVar, n->var->GetClass());
+		this->variableStack.Return(VariablePtr(n->var->GetClass()));
 	}
 	else {
 		this->OnUnary(leftVar);
@@ -489,27 +494,26 @@ Void VirtualCompiler::_Condition(NodePtr n) {
 	VariablePtr var0;
 
 	SegmentPtr blockSegment = NULL;
-	SegmentPtr mySegment = NULL;
+	SegmentPtr currentSegment = NULL;
 	Segment    argSegment;
 
+	/* Check segment stack as empty */
 	if (this->segmentStack.empty()) {
 		goto _SegmentError;
 	}
 
-	mySegment = this->segmentStack.top();
+	/* Get current segment */
+	currentSegment = this->segmentStack.top();
 
 	switch (n->lex->lex->id) {
 	case kScriptLexIf:
 
 		/* Set segment's offset */
-		argSegment.SetOffset(mySegment->GetPosition() - 7);
+		argSegment.SetOffset(currentSegment->GetPosition());
 
-		/* Compile list with arguments */
+		/* Push segment and compile list with arguments */
 		this->_Push(&argSegment);
 		this->_Run(n->argList);
-		this->_Pop();
-
-		/* Read result */
 		this->_Read(n, var0, var0);
 
 		/* Check result for boolean type */
@@ -522,7 +526,13 @@ Void VirtualCompiler::_Condition(NodePtr n) {
 			this->OnLoad(var0);
 		}
 
+		/* Pop if's segment */
+		this->_Pop();
+
+		/* Fetch block segment */
 		blockSegment = n->var->GetSegment();
+		blockSegment->SetOffset(
+			currentSegment->GetPosition());
 
 		/* Compile construction's block */
 		this->_Push(blockSegment);
@@ -530,29 +540,57 @@ Void VirtualCompiler::_Condition(NodePtr n) {
 		this->_Pop();
 
 		/* Move arguments segment to parent's */
-		mySegment->Merge(&argSegment);
+		currentSegment->Merge(&argSegment);
 
 		/* Set jump before compiled block */
-		this->GetByteCode()->New(JNZ)->Write(mySegment->GetSize() +
-			mySegment->GetOffset() + blockSegment->GetSize() - 2);
+		this->GetByteCode()->New(JZ)->Write(currentSegment->GetPosition() +
+			blockSegment->GetSize() + (n->elseNode ? 10 : 5) + 1);
 
 		/* Move block segment to parent's */
-		mySegment->Merge(blockSegment);
-
-		/* For debug */
-		this->GetByteCode()->New(NOOP);
+		currentSegment->Merge(blockSegment);
 
 		break;
 	case kScriptLexElse:
+
+		/* Set segment's offset */
+		argSegment.SetOffset(currentSegment->GetPosition());
+
+		/* Fetch block segment and set it's offset */
+		blockSegment = n->var->GetSegment();
+
+		/* Compile construction's block */
+		this->_Push(blockSegment);
+		this->_Run(n->blockList);
+		this->_Pop();
+
+		/* Set block segment offset as compiled block size */
+		blockSegment->SetOffset(currentSegment->GetPosition() + 5);
+		blockSegment->Clear();
+
+		/* Recompile construction's block */
+		this->_Push(blockSegment);
+		this->_Run(n->blockList);
+		this->_Pop();
+
+		/* Move arguments segment to parent's */
+		currentSegment->Merge(&argSegment);
+
+		/* Set jump before compiled block */
+		this->GetByteCode()->New(JUMP)->Write(currentSegment->GetPosition() +
+			blockSegment->GetSize() + 5 + 1);
+
+		/* Move block segment to parent's */
+		currentSegment->Merge(blockSegment);
+
 		break;
 	case kScriptLexWhile:
 
-		/*	Set segment's offset, where 7 is 
-			segment's offset (5 + 2). Digit two is
-			magic (its really magic) and 5 is size
-			of jump instruction. */
+		if (n->hasDo) {
+			break;
+		}
 
-		argSegment.SetOffset(mySegment->GetPosition() - 7);
+		/*	Set segment's offset */
+		argSegment.SetOffset(currentSegment->GetPosition());
 
 		/* Compile list with arguments */
 		this->_Push(&argSegment);
@@ -572,7 +610,10 @@ Void VirtualCompiler::_Condition(NodePtr n) {
 			this->OnLoad(var0);
 		}
 
+		/* Fetch block segment and set it's offset */
 		blockSegment = n->var->GetSegment();
+		blockSegment->SetOffset(
+			currentSegment->GetPosition());
 
 		/* Compile construction's block */
 		this->_Push(blockSegment);
@@ -580,23 +621,60 @@ Void VirtualCompiler::_Condition(NodePtr n) {
 		this->_Pop();
 
 		/* Move arguments segment to parent's */
-		mySegment->Merge(&argSegment);
+		currentSegment->Merge(&argSegment);
 
 		/* Set jump before compiled block */
-		this->GetByteCode()->New(JNZ)->Write(mySegment->GetPosition() +
-			blockSegment->GetSize() - 2 + 5);
+		this->GetByteCode()->New(JZ)->Write(currentSegment->GetPosition() +
+			blockSegment->GetSize() + 10 + 1);
 
 		/* Move block segment to parent's */
-		mySegment->Merge(blockSegment);
+		currentSegment->Merge(blockSegment);
 
 		/* Set jump after compiled block for jump */
-		this->GetByteCode()->New(JUMP)->Write(argSegment.GetOffset());
-
-		/* For debug */
-		this->GetByteCode()->New(NOOP);
+		this->GetByteCode()->New(JUMP)->Write(
+			argSegment.GetOffset() + 1);
 
 		break;
 	case kScriptLexDo:
+
+		/*	Set segment's offset */
+		argSegment.SetOffset(currentSegment->GetPosition());
+
+		/* Fetch block segment */
+		blockSegment = n->var->GetSegment();
+		blockSegment->SetOffset(
+			currentSegment->GetPosition());
+
+		/* Compile construction's block */
+		this->_Push(blockSegment);
+		this->_Run(n->blockList);
+		this->_Pop();
+
+		/* Compile list with arguments */
+		this->_Push(&argSegment);
+		this->_Run(n->argList);
+		this->_Pop();
+
+		/* Move arguments segment to parent's */
+		currentSegment->Merge(blockSegment);
+		currentSegment->Merge(&argSegment);
+
+		/* Read result */
+		this->_Read(n, var0, var0);
+
+		/* Check result for boolean type */
+		if (!var0->GetClass()->IsBooleanLike()) {
+			goto _BooleanError;
+		}
+
+		/* Load result from stack if needed */
+		if (!var0->wasInStack) {
+			this->OnLoad(var0);
+		}
+
+		/* Set jump before compiled block */
+		this->GetByteCode()->New(JNZ)->Write(argSegment.GetOffset() + 1);
+
 		break;
 	case kScriptLexFor:
 		break;
@@ -613,7 +691,8 @@ Void VirtualCompiler::_Condition(NodePtr n) {
 	goto _SkipErrors;
 
 _BooleanError:
-	PostSyntaxError(n->lex->line, "Construction (%s) requires boolean argument", n->word.data());
+	PostSyntaxError(n->lex->line, "Construction (%s) requires boolean argument, not (%s)", n->word.data(),
+		var0->GetClass()->GetName().data());
 
 _SegmentError:
 	PostSyntaxError(n->lex->line, "Segments mismatched at (%s)", n->word.data());
@@ -787,6 +866,10 @@ Void VirtualCompiler::_Push(SegmentPtr segment) {
 
 	if (this->segmentList.empty()) {
 		this->segmentOffset = segment->GetOffset();
+	}
+
+	if (!segment->GetOffset()) {
+		segment->SetOffset(this->byteCode->GetPosition());
 	}
 
 	this->segmentList.push_back(segment);

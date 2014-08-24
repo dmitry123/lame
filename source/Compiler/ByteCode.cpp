@@ -1,4 +1,5 @@
 #include "ByteCode.h"
+#include "SegmentBuilder.h"
 
 LAME_BEGIN2(Compiler)
 
@@ -61,25 +62,47 @@ ByteCodePtr ByteCode::Flush(Void) {
 	return this;
 }
 
-Void ByteCode::Trace(SegmentPtr segment) {
+Void ByteCode::Trace(SegmentBuilderPtr segmentBuilder) {
 
-	for (Uint32 i = 0; i < segment->GetSize();) {
+	SegmentPtr codeSegment = segmentBuilder->GetCodeSegment();
+	SegmentPtr dataSegment = segmentBuilder->GetDataSegment();
+	SegmentPtr textSegment = segmentBuilder->GetTextSegment();
 
-		AsmInfoPtr asmInfo = Assembler::GetAsmInfo(*segment->GetBlockAt(i++));
+	ObjectPtr object = NULL;
+	Uint32 address = 0;
+	Uint64 scopeHash;
+
+	for (Uint32 i = 0; i < codeSegment->GetSize();) {
+
+		AsmInfoPtr asmInfo = Assembler::GetAsmInfo(*codeSegment->GetBlockAt(i++));
 		Uint32 argCount = asmInfo->arguments;
 
 		if (strlen(asmInfo->name) <= 2) {
-			printf("0x%.4x : %s\t\t\t", i + segment->GetOffset(), asmInfo->name);
+			printf("0x%.4x : %s\t\t\t", i + codeSegment->GetOffset(), asmInfo->name);
 		}
 		else if (strlen(asmInfo->name) >= 7) {
-			printf("0x%.4x : %s\t", i + segment->GetOffset(), asmInfo->name);
+			printf("0x%.4x : %s\t", i + codeSegment->GetOffset(), asmInfo->name);
 		}
 		else {
-			printf("0x%.4x : %s\t\t", i + segment->GetOffset(), asmInfo->name);
+			printf("0x%.4x : %s\t\t", i + codeSegment->GetOffset(), asmInfo->name);
 		}
 
 		while (argCount--) {
-			printf("0x%.4x ", *Uint32P(segment->GetBlockAt(i)) + 8); i += 4;
+
+			address = *Uint32P(codeSegment->GetBlockAt(i));
+
+			printf("0x%.4x ", address);
+
+			if ((object = dataSegment->Fetch(address)) ||
+				(object = textSegment->Fetch(address))
+			) {
+				scopeHash = object->GetPath().GetHash64();
+
+				printf("// %.8x%.8x : %s", Uint32(scopeHash >> 32), Uint32(scopeHash),
+					object->GetName().data());
+			}
+
+			i += 4;
 		}
 
 		printf("\n");

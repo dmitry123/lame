@@ -176,6 +176,8 @@ Node::Node(Buffer word, NodeID id, LexNodePtr lex, NodePtr parent, NodePtr prev)
 	this->templateNode = 0;
 	this->extendNode = 0;
 	this->methodHash = 0;
+	this->elseNode = 0;
+	this->hasDo = 0;
 }
 
 Node::~Node() {
@@ -279,6 +281,7 @@ Node::Node() :
 	this->typeNode = NULL;
 	this->templateNode = NULL;
 	this->extendNode = NULL;
+	this->hasDo = FALSE;
 }
 
 LAME_END2

@@ -58,6 +58,8 @@ public:
 	Deque<NodePtr> blockList;
 	Deque<NodePtr> elseList;
 	Uint32 methodHash;
+	NodePtr elseNode;
+	Bool hasDo;
 public:
 	Node(Buffer word, NodeID id, LexNodePtr lex, NodePtr parent, NodePtr prev);
 	~Node();

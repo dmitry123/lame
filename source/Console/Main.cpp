@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
 		printf("\n");
 
 		/* Trace opcode */
-		ByteCode::Trace(segmentBuilder->GetCodeSegment());
+		ByteCode::Trace(segmentBuilder);
 	}
 	catch (SyntaxException& e) {
 		puts("\n+---------------------------+");
@@ -121,6 +121,8 @@ int main(int argc, char** argv) {
 	puts("");
 #  endif
 #endif
+
+	delete segmentBuilder;
 
 	return 0;
 }

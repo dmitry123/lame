@@ -181,11 +181,6 @@ Void ScopeBuilder::Build(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
     
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachNodeTrace, this), kScriptNodeUnknown);
     this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachNodeFlush, this), kScriptNodeUnknown);
-
-	if (lastVar && lastVar->GetNode() && lastVar->GetNode()->lex->lex->id == kScriptLexDo) {
-		PostSyntaxError(lastVar->GetNode()->lex->line, "Do must have While block (%s)",
-			lastVar->GetNode()->word.data());
-	}
 }
 
 Void ScopeBuilder::_ForEachNodeTrace(NodePtr n) {
@@ -657,10 +652,20 @@ Void ScopeBuilder::_ForEachConstruction(NodePtr n) {
 
 	if (!n->var) {
 
+		Bool hasSameScope = !lastVar || !lastVar->GetNode() ? FALSE :
+			lastVar->GetNode()->parent == n->parent;
+
+		if (!hasSameScope) {
+			goto _SkipErrorCheck;
+		}
+
 		if (n->lex->lex->id == kScriptLexElse) {
-			if (!lastVar->GetNode() || lastVar->GetNode()->lex->lex->id != kScriptLexIf) {
+			if (!lastVar->GetNode() || lastVar->GetNode()->lex->lex->id != kScriptLexIf &&
+				lastVar->GetNode()->lex->lex->id != kScriptLexElse
+			) {
 				PostSyntaxError(n->lex->line, "Else must have If block (%s)", lastVar->GetName().data());
 			}
+			lastVar->GetNode()->elseNode = n;
 		}
 
 		if (n->lex->lex->id == kScriptLexFinally ||
@@ -681,7 +686,13 @@ Void ScopeBuilder::_ForEachConstruction(NodePtr n) {
 			if (n->lex->lex->id != kScriptLexWhile) {
 				PostSyntaxError(n->lex->line, "Do must have While block (%s)", n->word.data());
 			}
+			lastVar->GetNode()->elseNode = n;
+			lastVar->GetNode()->argList = n->argList;
+			n->argList.clear();
+			n->hasDo = TRUE;
 		}
+
+	_SkipErrorCheck:
 
 		if (!n->parent->var) {
 			PostSyntaxError(n->lex->line, "Language construction in illegal place (%s)", n->parent->word.data());
@@ -752,6 +763,10 @@ Void ScopeBuilder::_ForEachNode(NodePtr node, ScopePtr scope, ForEachNode callba
 		if (node->var) {
 			this->_Pop();
 		}
+	}
+
+	if (lastVar && lastVar->GetNode() && lastVar->GetNode()->lex->lex->id == kScriptLexDo && lastVar->GetNode()->parent == node) {
+		PostSyntaxError(lastVar->GetNode()->lex->line, "Do must have While block (%s)", lastVar->GetNode()->word.data());
 	}
 }
 

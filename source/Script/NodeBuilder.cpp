@@ -523,20 +523,6 @@ NodeBuilder::Iterator NodeBuilder::_BuildCondition(NodePtr& parent, Iterator i) 
 	_AllowModificators(parent, 0);
 	this->modificators_ = 0;
 
-	/*	Yep, we can avoid braces in our construction,
-		for example, 'while(true);' - not allowed
-		construction for Java, cuz we must catch and
-		interruption there, btw we have to implement it. */
-
-	if ((*i)->lex->id != kScriptLexBraceL && (
-		parent->lex->lex->id == kScriptLexElse ||
-		parent->lex->lex->id == kScriptLexDo ||
-		parent->lex->lex->id == kScriptLexTry ||
-		parent->lex->lex->id == kScriptLexFinally)
-	) {
-		goto __AvoidBraces;
-	}
-
 	/*	Some language construction has flag, which means that it can
 		exists without parentheses, likes try, else, finally.
 		We check it, cuz shunting yard alghoritm will simple
@@ -549,8 +535,27 @@ NodeBuilder::Iterator NodeBuilder::_BuildCondition(NodePtr& parent, Iterator i) 
 
 	if (!(parent->lex->lex->flags & kScriptLexFlagWoParentheses)) {
 		if ((*i)->lex->id != kScriptLexParenthesisL) {
-			PostSyntaxError((*(i - 1))->line, "Left parenthesis has been lost", 1);
+			PostSyntaxError((*(i - 1))->line, "Left parenthesis has been lost in (%s)", parent->word.data());
 		}
+	}
+	else {
+		if ((*i)->lex->id != kScriptLexBraceL) {
+			PostSyntaxError((*(i - 1))->line, "Construction (%s) require left brace after keyword", parent->word.data());
+		}
+	}
+
+	/*	Yep, we can avoid paretheses in our construction,
+		for example, 'while(true);' - not allowed
+		construction for Java, cuz we must catch and
+		interruption there, btw we have to implement it. */
+
+	if ((*i)->lex->id != kScriptLexBraceL && (
+		parent->lex->lex->id == kScriptLexElse ||
+		parent->lex->lex->id == kScriptLexDo ||
+		parent->lex->lex->id == kScriptLexTry ||
+		parent->lex->lex->id == kScriptLexFinally)
+	) {
+		goto __AvoidParentheses;
 	}
 
 	while (LAME_TRUE) {
@@ -611,7 +616,7 @@ NodeBuilder::Iterator NodeBuilder::_BuildCondition(NodePtr& parent, Iterator i) 
 					break;
 				}
 				else if ((*(i + 1))->lex->id != kScriptLexBraceL) {
-				__AvoidBraces:
+				__AvoidParentheses:
 					this->_Push(&parent->blockList);
 					isSingleExpression = LAME_TRUE;
 					if ((*i)->lex->id != kScriptLexParenthesisR) {
@@ -654,6 +659,7 @@ NodeBuilder::Iterator NodeBuilder::_BuildCondition(NodePtr& parent, Iterator i) 
 				++totalExpCount;
 				expressionLength = 0;
 			}
+		_SingleExpression:
 			if (!isSingleExpression) {
 				goto __SaveNode;
 			}
@@ -674,6 +680,14 @@ NodeBuilder::Iterator NodeBuilder::_BuildCondition(NodePtr& parent, Iterator i) 
 			++expressionLength;
 			modificators = 0;
 			i = this->_Build(this->nodeQueue_->back(), i);
+			if (isSingleExpression && this->nodeQueue_->back()->id != kScriptNodeDefault) {
+				if (i + 1 != this->parser_->GetLexList().end() && (*(i + 1))->lex->IsLanguage()) {
+					// ignore
+				}
+				else {
+					goto _SingleExpression;
+				}
+			}
 			if (this->nodeQueue_->back()->id == kScriptNodeVariable) {
 				__Dec(i);
 			}
@@ -1100,7 +1114,7 @@ NodeBuilder::Iterator NodeBuilder::_Build(NodePtr& node, Iterator i) {
 
 	/*	Fix for cast */
 
-	if ((*i)->lex->IsUnknown() && this->_IsCast(i + 1)) {
+	if (this->_IsCast(i + 1) && (*i)->lex->IsUnknown()) {
 		__Inc(i);
 		i = this->parser_->GetLexList().erase(i);
         LexNodePtr castLex = new LexNode((*i)->word, (*i)->line, Lex::Find(kScriptLexCast));

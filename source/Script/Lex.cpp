@@ -135,7 +135,7 @@ Map<LexID, Lex> Lex::lexMap = {
 				kScriptLexFlagCondition | kScriptLexFlagLanguage }
 		},
 		{ kScriptLexDo,
-			{ "do", P(0, 1), kScriptLexDo, 0,
+			{ "do", P(0, 1), kScriptLexDo, 1,
 				kScriptLexFlagCondition | kScriptLexFlagLanguage | kScriptLexFlagWoParentheses }
 		},
 		{ kScriptLexFor,

@@ -29,37 +29,37 @@ Void _CompileBool(ByteCodePtr bc, Script::VariablePtr left, LexID lexID) {
 	if (left->GetClass()->IsInt()) {
 		bc->New(ICMP);
 		bc->New(command)
-			->Write(bc->GetPosition() + 11);
+			->Write(bc->GetPosition() + 12);
 		bc->New(ICONST1);
 		bc->New(JUMP)
-			->Write(bc->GetPosition() + 6);
+			->Write(bc->GetPosition() + 7);
 		bc->New(ICONST0);
 	}
 	else if (left->GetClass()->IsLong()) {
 		bc->New(LCMP);
 		bc->New(command)
-			->Write(bc->GetPosition() + 11);
+			->Write(bc->GetPosition() + 12);
 		bc->New(LCONST1);
 		bc->New(JUMP)
-			->Write(bc->GetPosition() + 6);
+			->Write(bc->GetPosition() + 7);
 		bc->New(LCONST0);
 	}
 	else if (left->GetClass()->IsFloat()) {
 		bc->New(FCMP);
 		bc->New(command)
-			->Write(bc->GetPosition() + 11);
+			->Write(bc->GetPosition() + 12);
 		bc->New(FCONST1);
 		bc->New(JUMP)
-			->Write(bc->GetPosition() + 6);
+			->Write(bc->GetPosition() + 7);
 		bc->New(FCONST0);
 	}
 	else if (left->GetClass()->IsDouble()) {
 		bc->New(DCMP);
 		bc->New(command)
-			->Write(bc->GetPosition() + 11);
+			->Write(bc->GetPosition() + 12);
 		bc->New(DCONST1);
 		bc->New(JUMP)
-			->Write(bc->GetPosition() + 6);
+			->Write(bc->GetPosition() + 7);
 		bc->New(DCONST0);
 	}
 }
@@ -188,7 +188,7 @@ Void CodeTranslator::OnTernary(NodePtr node, Bool state) {
 Void CodeTranslator::OnCast(VariablePtr source, ClassPtr type) {
 
 	if (source->GetClass()->IsInt()) {
-		if (!type->IsIntegerLike() && !type->IsLong()) {
+		if (!type->IsIntegerLike() || type->IsLong()) {
 			BCPNEW(type, NOOP, NOOP, ITL, ITD, ITF);
 		}
 	}

@@ -30,6 +30,7 @@ public:
 	Uint8P GetBlockAt(Uint32 offset);
 	Void Clear(Void);
 	Void Merge(SegmentPtr segment);
+	ObjectPtr Fetch(Uint32 address);
 public:
 	inline Void SetOffset(Uint32 offset) {
 		this->offset = offset;

@@ -1,9 +1,10 @@
 #include "Main.h"
 
 #if defined(LAME_WINDOWS)
-#define SOURCE_LINK "d:/code/C++/Projects/lame/source/"
+#  define SOURCE_LINK "d:/code/C++/Projects/lame/source/"
+#  define SOLUTION_LINK "d:/code/C++/Projects/lame/"
 #else
-#define SOURCE_LINK "/Storage/code/C++/Projects/lame/source/"
+#  define SOURCE_LINK "/Storage/code/C++/Projects/lame/source/"
 #endif
 
 #define CORE_LINK SOURCE_LINK     "Core"
