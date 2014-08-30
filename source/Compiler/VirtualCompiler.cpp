@@ -51,7 +51,13 @@ Void VirtualCompiler::_Run(NodeListRef nodeList, Bool makeBackup) {
 			}
 			else if (n->lex->lex->IsUnknown() || n->lex->lex->IsConst()) {
 			_SaveNode:
-				this->variableStack.Push(VariablePtr(n->var));
+				if (!n->var) {
+					this->variableStack.GetNameList().push_back(n->word);
+					this->variableStack.GetVarList().push_back(NULL);
+				}
+				else {
+					this->variableStack.Push(VariablePtr(n->var));
+				}
 			}
 			else if (n->lex->lex->IsMath() || n->lex->lex->IsBool()) {
 				if (n->lex->args == 1) {
@@ -430,8 +436,6 @@ Void VirtualCompiler::_New(NodePtr n) {
 	if ((n->flags & kScriptFlagInvocation) != 0) {
 		this->GetByteCode()->New(RNEW)
 			->Write(leftVar->Scope::Size());
-		this->GetByteCode()->New(RDUP);
-		this->GetByteCode()->New(RDUP);
 		this->OnInvoke(leftVar->Find("<init>")->GetMethod());
 		this->_Invoke(n->typeNode);
 	}
@@ -464,15 +468,29 @@ Void VirtualCompiler::_Selection(NodePtr n) {
 	fieldObject = leftVar->GetClass()->Find(fieldName, FALSE);
 
 	if (!fieldObject) {
-		PostSyntaxError(n->lex->line, "Undeclared object's field (%s.%s)", leftVar->GetClass()->GetName().data(), fieldName.data());
+		PostSyntaxError(n->lex->line, "Undeclared object's field (%s.%s)",
+			leftVar->GetClass()->GetName().data(), fieldName.data());
 	}
+
 	rightVar = fieldObject->GetVariable();
 
-	this->OnLoad(rightVar);
+	if (fieldObject->CheckModificator(Object::Modificator::Private) ||
+		fieldObject->CheckModificator(Object::Modificator::Protected)
+	) {
+		PostSyntaxError(n->lex->line, "Unable to get private/protected field (%s.%s)",
+			leftVar->GetClass()->GetName().data(), fieldName.data());
+	}
+
+	if (!leftVar->wasInStack) {
+
+		this->OnLoad(leftVar);
+
+		if (!rightVar->wasInStack) {
+			this->OnLoad(rightVar);
+		}
+	}
 
 	this->variableStack.Return(rightVar);
-	//	varStack.push_back(rightVar);
-	//	nameStack.push_back(fieldName);
 }
 
 Void VirtualCompiler::_Condition(NodePtr n) {
@@ -810,8 +828,10 @@ Void VirtualCompiler::_Invoke(NodePtr n) {
 		Uint32 distance = 0;
 
 		if (!methodVar) {
+
 			Set<ObjectPtr> methodSet = n->var->CheckType(Object::Type::Class) ?
 				n->var->GetMethodSet() : n->var->GetParent()->GetMethodSet();
+
 			for (ObjectPtr m : methodSet) {
 				if (n->word == m->GetName() && n->lex->args == m->GetMethod()->GetAttributeHash().size()) {
 					for (Uint32 i = 0; i < n->lex->args; i++) {
@@ -826,8 +846,22 @@ Void VirtualCompiler::_Invoke(NodePtr n) {
 				}
 			}
 
+			Set<ObjectPtr> constructorSet;
+
+			for (ObjectPtr m : methodSet) {
+				if (m->GetName() == m->GetOwner()->GetName()) {
+					constructorSet.insert(m);
+				}
+			}
+
 			if (this->currentNode->lex->lex->id == kScriptLexNew && !formattedParameters.length()) {
-				return;
+				if (constructorSet.empty()) {
+					return;
+				}
+			}
+
+			if (formattedParameters.empty()) {
+				formattedParameters = "void";
 			}
 
 			if (methodList.empty()) {
@@ -920,6 +954,8 @@ Void VirtualCompiler::_Finish(NodePtr n) {
 
 Void VirtualCompiler::_CompileMethods(SegmentPtr segment) {
 
+	ObjectPtr thisVar = NULL;
+
 	for (ObjectPtr i : this->methodList) {
 
 		Uint32 address = segment->GetSize();
@@ -943,8 +979,10 @@ Void VirtualCompiler::_CompileMethods(SegmentPtr segment) {
 		}
 
 		if (!i->CheckModificator(Object::Modificator::Static)) {
-			ObjectPtr thisVar = i->Find("this");
-			if (thisVar) {
+			if (i->GetName() == "<init>" || i->GetName() == i->GetOwner()->GetName()) {
+				this->GetByteCode()->New(RDUP);
+			}
+			if ((thisVar = i->Find("this"))) {
 				this->OnStore(thisVar->GetVariable());
 			}
 		}

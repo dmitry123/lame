@@ -1,14 +1,11 @@
-
-
-
-
 class A {
-	public A(int a, int b, int c) {
-		value = a + b + c;
+
+	public A() {
 	}
+
 	private long value = 0;
 }
 
 void main() {
-	A r3 = new A(100, 20, 3);
+	A a = new A();
 }

@@ -17,7 +17,7 @@ public:
         return this->varList.back();
     }
     inline Uint32 Size() {
-        return Uint32(this->varList.size());
+        return Uint32(this->nameList.size());
     }
 public:
     inline Vector<VariablePtr>& GetVarList() {
