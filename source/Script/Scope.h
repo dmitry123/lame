@@ -33,9 +33,10 @@ public:
     inline Void SetOnScopeUpdate(OnScopeUpdate callback) { this->callback_ = callback; }
     inline OnScopeUpdate GetOnScopeUpdate() { return this->callback_; }
 public:
-	inline HashMap& GetHashMap() { return this->hashMap_; }
-	inline ScopePtr GetParent() { return this->parentScope_; }
-	inline BufferRefC GetName() { return this->scopeName_; }
+	inline HashMap&   GetHashMap() { return this->hashMap_;     }
+	inline ScopePtr   GetParent()  { return this->parentScope_; }
+	inline BufferRefC GetName()    { return this->scopeName_;   }
+	inline ScopePtr   GetOwner()   { return this->ownerScope_;  }
 public:
 	inline Set<ObjectPtr>& GetPublicSet() { return this->publicSet_; }
 	inline Set<ObjectPtr>& GetStaticSet() { return this->staticSet_; }
@@ -47,7 +48,8 @@ public:
 	Scope(BufferRefC name, ScopePtr parent);
 	~Scope();
 public:
-	static ScopePtr CreateRootScope(Void);
+	static ScopePtr CreateRootScope(
+		Buffer name = "", Bool asClass = FALSE);
 public:
 	static ClassPtr classChar;
 	static ClassPtr classByte;
@@ -76,6 +78,7 @@ private:
 	Set<ObjectPtr> conditionSet_;
 	Buffer scopeName_;
     OnScopeUpdate callback_;
+	ScopePtr ownerScope_;
 };
 
 LAME_END2

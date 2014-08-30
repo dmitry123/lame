@@ -1,23 +1,14 @@
-// int value = 100 + 20 + 3;
 
-if (true) {
-	if (true) {
-		if (false) {
-			int r = 1;
-		} else {
-			int r = 0;
-		}
-	} else {
-		int r = 0;
+
+
+
+class A {
+	public A(int a, int b, int c) {
+		value = a + b + c;
 	}
-} else {
-	int r = 0;
+	private long value = 0;
 }
 
-// while (100 > 5) {
-// 	100 + 20 + 3;
-// }
-
-// do {
-// 	100 + 20 + 3;
-// } while (true);
+void main() {
+	A r3 = new A(100, 20, 3);
+}

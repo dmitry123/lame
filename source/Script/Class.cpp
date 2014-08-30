@@ -77,7 +77,14 @@ Class::HashType Class::Hash(Void) {
 }
 
 Uint32 Class::Size(Void) {
-	return this->size;
+
+	if (this->CheckModificator(Modificator::Primitive)) {
+		return this->sizeOf;
+	}
+
+	return this->sizeOf;
+
+	//return this->Scope::Size();
 }
 
 ClassPtr Class::GetClass(Void) {
@@ -89,7 +96,7 @@ Void Class::New(ObjectPtr object) {
 	// check object for variable, cuz we can
 	// store class's objects only in variables
 	if (!object->CheckType(Type::Variable)) {
-		throw ScriptException("Unable to apply operator new for non-variable object");
+		PostSyntaxError(this->GetNode()->lex->line, "Unable to apply operator new for non-variable object");
 	}
 
 	// get object's variable, its true (checking upper)
@@ -130,7 +137,7 @@ Void Class::Extend(ObjectPtr object) {
 	}
 
 	if (this->extendClass != NULL) {
-		throw ScriptException("Class has already been extended");
+		PostSyntaxError(this->GetNode()->lex->line, "Class has already been extended (%s)", object->GetName().data());
 	}
 
 	this->extendClass = object;
@@ -155,11 +162,13 @@ Void Class::Implement(ObjectPtr object) {
 	if (this->GetType() == Object::Type::Interface) {
 
 		if (this->implementClass.count(object)) {
-			throw InterfaceException("Interface has already implement that interface");
+			PostSyntaxError(this->GetNode()->lex->line, "Interface has already implement that interface (%s)",
+				object->GetName().data());
 		}
         
 		if (!object->CheckType(Type::Interface)) {
-			throw InterfaceException("Unable to implement non-interface object");
+			PostSyntaxError(this->GetNode()->lex->line, "Unable to implement non-interface object (%s)",
+				object->GetName().data());
 		}
 
 		this->implementClass.insert(object);
@@ -167,11 +176,13 @@ Void Class::Implement(ObjectPtr object) {
 	else {
 
 		if (this->implementClass.count(object)) {
-			throw ScriptException("Class has already been implemented with that class");
+			PostSyntaxError(this->GetNode()->lex->line, "Class has already been implemented with that class (%s)",
+				object->GetName().data());
 		}
 
 		if (!object || !object->CheckType(Type::Interface)) {
-			throw ScriptException("Class can only implement interfaces");
+			PostSyntaxError(this->GetNode()->lex->line, "Class can only implement interfaces (%s)",
+				object->GetName().data());
 		}
 
 		this->implementClass.insert(object);
@@ -186,6 +197,7 @@ Void Class::CheckInheritance(Void) {
 		for (auto i : object->GetMethodSet()) {
             
 			MethodPtr m = i->GetMethod();
+			MethodPtr m2 = NULL;
             
 			// if method has root node then
 			// throw an error, cuz interface's
@@ -206,14 +218,16 @@ Void Class::CheckInheritance(Void) {
                         i->GetMethod()->GetInvokeHash()
                     ) {
                         if (j->GetMethod()->GetRootNode()) {
-                            isFound = TRUE; break;
+							m2 = j->GetMethod(); isFound = TRUE; break;
                         }
                     }
                 }
             }
             
-            if (!isFound) {
-                PostSyntaxError(this->GetNode()->lex->line, "Class (%s) must implement interface method (%s)", this->GetName().data(), m->GetName().data());
+            if (!isFound || m->GetReturnType() != m2->GetReturnType()) {
+				PostSyntaxError(this->GetNode()->lex->line, "Class (%s) must implement interface method \"%s %s(%s)\"",
+					this->GetName().data(), i->GetMethod()->GetReturnType()->GetName().data(), m->GetName().data(),
+					m->GetFormattedArguments().data());
             }
 		}
         
@@ -274,17 +288,22 @@ Void Class::CheckInheritance(Void) {
 
 Class::Class(BufferRefC name, ScopePtr parent, Type type, Uint32 size) : Object(name, parent, type),
 	extendClass(0),
-	priority(0),
-	size(size)
+	priority(0)
 {
+	this->sizeOf = size;
+
+	if (!this->sizeOf) {
+		this->sizeOf = SizeOf;
+	}
+
     this->SetOnScopeUpdate([] (ScopePtr scope, ObjectPtr object) {
-        
         ClassPtr self = ClassPtr(scope);
         
         if (self->CheckType(Object::Type::Interface)) {
             if (object->CheckType(Object::Type::Method) && object->GetMethod()->GetRootNode()) {
                 PostSyntaxError(object->GetMethod()->GetRootNode()->lex->line,
-                    "Interface can't implement methods (%s)", object->GetName().data());
+                    "Interface can't implement methods %s(%s)", object->GetName().data(),
+					object->GetMethod()->GetFormattedArguments().data());
             }
         }
         else {
@@ -293,7 +312,8 @@ Class::Class(BufferRefC name, ScopePtr parent, Type type, Uint32 size) : Object(
                         object->GetMethod()->GetRootNode()
                 ) {
                     PostSyntaxError(object->GetMethod()->GetRootNode()->lex->line,
-                        "Abstract class can't implement abstract methods (%s)", object->GetName().data());
+                        "Abstract class can't implement abstract methods %s(%s)", object->GetName().data(),
+						object->GetMethod()->GetFormattedArguments().data());
                 }
             }
         }

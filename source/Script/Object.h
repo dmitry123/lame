@@ -13,34 +13,35 @@ class LAME_API Object :
 	friend class Segment;
 public: /* Flags & States */
 	enum class Modificator : Uint32 {
-		Unknown    = 0x000000,
-		Public     = 0x000001,
-		Private    = 0x000002,
-		Protected  = 0x000004,
-		Static     = 0x000008,
-		Final      = 0x000010,
-		Native     = 0x000020,
-		Primitive  = 0x000040,
-		Abstract   = 0x000080,
-		Register   = 0x000100,
-		Internal   = 0x000200,
-		Constant   = 0x000400,
-		Override   = 0x000800,
-		Deprecated = 0x001000,
-		Array      = 0x002000,
-        Float      = 0x004000,
-        Integer    = 0x008000,
-        Boolean    = 0x010000,
-        String     = 0x020000,
-        Object2    = 0x040000,
-		Enum       = 0x080000
+		Unknown      = 0x00000000,
+		Public       = 0x00000001,
+		Private      = 0x00000002,
+		Protected    = 0x00000004,
+		Static       = 0x00000008,
+		Final        = 0x00000010,
+		Native       = 0x00000020,
+		Primitive    = 0x00000040,
+		Abstract     = 0x00000080,
+		Register     = 0x00000100,
+		Internal     = 0x00000200,
+		Constant     = 0x00000400,
+		Override     = 0x00000800,
+		Deprecated   = 0x00001000,
+		Array        = 0x00002000,
+        Float        = 0x00004000,
+        Integer      = 0x00008000,
+        Boolean      = 0x00010000,
+        String       = 0x00020000,
+        Object2      = 0x00040000,
+		Enum         = 0x00080000,
+		Synchronized = 0x00100000,
 	};
 	enum class Type : Uint32 {
-		Unknown    = 0x000000,
-		Class      = 0x000001,
-		Variable   = 0x000002,
-		Method     = 0x000003,
-		Interface  = 0x000004
+		Unknown      = 0x00000000,
+		Class        = 0x00000001,
+		Variable     = 0x00000002,
+		Method       = 0x00000003,
+		Interface    = 0x00000004
 	};
 private: /* Constant Variables */
 	const Buffer name;
@@ -75,6 +76,8 @@ public:
 	inline Void SetAddress(Uint32 address)     { this->address_  = address;  }
 	inline Void SetSegment(SegmentPtr segment) { this->segment_  = segment;  }
 	inline Void SetSize(Uint32 size)           { this->size_     = size;     }
+	inline Void SetFieldID(Uint32 id)          { this->fieldId_  = id;       }
+	inline Void SetThis(ObjectPtr self)        { this->this_     = self;     }
 public: /* Getters */
 	Buffer GetModificatorString(Void);
 	Uint64 GetHash64(Void);
@@ -114,6 +117,8 @@ public: /* Inline Getters */
 	inline BufferRefC GetPath()       const { return this->path;      }
 	inline NodePtr    GetNode()             { return this->node_;     }
 	inline Uint32     GetPosition()   const { return this->position_; }
+	inline Uint32     GetFieldID()    const { return this->fieldId_;  }
+	inline ObjectPtr  GetThis()       const { return this->this_;     }
 private: /* Private Variables */
 	Uint32     modificators_;
 	SegmentPtr segment_;
@@ -122,6 +127,8 @@ private: /* Private Variables */
 	ClassPtr   template_;
 	NodePtr    node_;
 	Uint32     position_;
+	Uint32     fieldId_;
+	ObjectPtr  this_;
 public:
 	Bool wasInStack;
 public:

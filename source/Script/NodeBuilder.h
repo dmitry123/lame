@@ -3,6 +3,7 @@
 
 #include "FileParser.h"
 #include "Node.h"
+#include "SyntaxBuilder.h"
 
 LAME_BEGIN2(Script)
 
@@ -23,6 +24,7 @@ typedef enum {
 } LexSequenceID;
 
 class LAME_API NodeBuilder {
+	friend class SyntaxBuilder;
 public:
 	Void Build(FileParserPtr p);
 public:
@@ -40,7 +42,6 @@ private:
 	Iterator _BuildArray(NodePtr& parent, Iterator i);
 	Iterator _BuildArgumentList(NodePtr& parent, Iterator i);
 	Iterator _BuildTemplate(NodePtr& parent, Iterator i);
-	Iterator _BuildCatch(NodePtr& parent, Iterator i);
 	Iterator _BuildNew(NodePtr& parent, Iterator i);
 	Iterator _BuildEnum(NodePtr& parent, Iterator i);
 	Iterator _BuildTernary(NodePtr& parent, Iterator i);
@@ -56,7 +57,8 @@ private:
 	Bool _CheckLex(Iterator i, Vector<LexID> lexList);
 	Void _DeclareSequence(LexSequenceID id, Vector<LexID> lexList);
 	Bool _CheckSequence(Iterator i, LexSequenceID id);
-	Void _ApplySemicolon(Void);
+	Void _ApplySemicolon(Deque<NodePtr>* list = NULL);
+	NodePtr _Append(Iterator& i);
 private:
 	inline Bool _IsDefault(Iterator i)   { return this->_CheckSequence(i, kScriptLexSequenceDefault);   }
 	inline Bool _IsArray(Iterator i)     { return this->_CheckSequence(i, kScriptLexSequenceArray);     }
@@ -71,6 +73,7 @@ private:
 	inline Bool _IsEnum(Iterator i)      { return this->_CheckSequence(i, kScriptLexSequenceEnum);      }
 	inline Bool _IsTernary(Iterator i)   { return this->_CheckSequence(i, kScriptLexSequenceTernary);   }
 private:
+	SyntaxBuilder syntaxBuilder_;
 	Vector<NodePtr> nodeList_;
 	NodePtr parentNode_;
 	NodePtr prevNode_;

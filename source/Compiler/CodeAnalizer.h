@@ -7,7 +7,7 @@ LAME_BEGIN2(Compiler)
 
 class LAME_API CodeAnalizer : private VirtualCompiler {
 public:
-	Void Run(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
+	Void Run(SyntaxBuilderPtr nodeBuilder, ScopePtr rootScope) {
 		this->VirtualCompiler::Run(nodeBuilder, rootScope, NULL);
     }
 private:

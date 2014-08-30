@@ -15,7 +15,7 @@ classType(classType)
 
 	if (classType->IsFloat() ||
 		classType->IsDouble()
-		) {
+	) {
 		this->varType = Var::Float;
 		this->SetModificator(Modificator::Float);
 	}
@@ -69,7 +69,7 @@ VariablePtr Variable::SetFloat(ScriptNativeFloat f) {
 	return this;
 }
 
-VariablePtr Variable::SetObject(ClassPtr c) {
+VariablePtr Variable::SetObject(ObjectPtr c) {
 
 	if (this->objectValue) {
 		delete this->objectValue;
@@ -236,25 +236,23 @@ Variable::HashType Variable::Hash(Void) {
 
 Uint32 Variable::Size(Void) {
 
-	if (this->varType == Var::Integer) {
-		return sizeof(ScriptNativeInt);
-	}
-	else if (this->varType == Var::Float) {
-		return sizeof(ScriptNativeFloat);
-	}
-	else {
-		return Object::SizeOf;
-	}
+	//if (this->varType == Var::Integer) {
+	//	return sizeof(ScriptNativeInt);
+	//}
+	//else if (this->varType == Var::Float) {
+	//	return sizeof(ScriptNativeFloat);
+	//}
+	//else {
+	//	return Object::SizeOf;
+	//}
+
+	return this->classType->Size();
 }
 
 ClassPtr Variable::GetClass() {
 
 	if (this->CheckType(Type::Class)) {
 		return ClassPtr(this);
-	}
-
-	if (this->objectValue) {
-		return this->objectValue;
 	}
 
 	return this->classType;

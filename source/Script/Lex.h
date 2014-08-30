@@ -45,6 +45,8 @@ typedef enum {
 	kScriptLexTry,
 	kScriptLexCatch,
 	kScriptLexFinally,
+	kScriptLexThrow,
+	kScriptLexThrows,
 	/* Binary Operators */
 	kScriptLexMul,
 	kScriptLexDiv,
@@ -104,6 +106,7 @@ typedef enum {
 	kScriptLexAbstract,
 	kScriptLexOverride,
 	kScriptLexDecprecated,
+	kScriptLexSynchronized,
 	/* Count Of Lexes */
 	kScriptLexAmount
 } LexID;
@@ -132,7 +135,9 @@ typedef enum {
 	/* Language Construction Has't Parentheses */
 	kScriptLexFlagWoParentheses = 0x0200,
     /* Logic Mac Operators */
-    kScriptLexFlagLogic = 0x0400
+    kScriptLexFlagLogic = 0x0400,
+	/* Allowed or expressions's element */
+	kScriptLexFlagExpression = 0x0800
 } LexFlagID;
 
 class LAME_API Lex {
@@ -173,6 +178,9 @@ public:
     inline Bool IsLogic() const {
 		return (this->flags & kScriptLexFlagLogic) != 0;
     }
+	inline Bool IsExpression() const {
+		return (this->flags & kScriptLexFlagExpression) != 0;
+	}
 public:
 	inline Bool IsClass() const {
 		return this->id == kScriptLexClass;
@@ -184,6 +192,7 @@ public:
 	static LexPtrC Find(LexID id);
 	static LexPtrC Find(BufferRefC word);
 	static Void PrintLine(Uint32 tabOffset = 0);
+	static Vector<LexPtrC> Match(BufferRefC entry);
 private:
 	static Map<LexID, Lex> lexMap;
 };

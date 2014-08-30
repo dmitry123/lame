@@ -52,6 +52,7 @@ static Void _InitializeAssembler() {
 	_SetAsm(POP2, "pop2", 0);
 	_SetAsm(DUP, "dup", 0);
 	_SetAsm(DUP2, "dup2", 0);
+	_SetAsm(RDUP, "rdup", 0);
 	_SetAsm(XCHG, "xchg", 0);
 	_SetAsm(IADD, "iadd", 0);
 	_SetAsm(LADD, "ladd", 0);
@@ -122,6 +123,8 @@ static Void _InitializeAssembler() {
 	_SetAsm(ANEW, "anew", 1);
 	_SetAsm(BIPUSH, "bipush", 1);
 	_SetAsm(LDC, "ldc", 1);
+	_SetAsm(LDC16, "ldc16", 1);
+	_SetAsm(LDC32, "ldc32", 1);
 	_SetAsm(RLOAD, "rload", 1);
 	_SetAsm(ILOAD, "iload", 1);
 	_SetAsm(LLOAD, "lload", 1);
@@ -132,7 +135,7 @@ static Void _InitializeAssembler() {
 	_SetAsm(LSTORE, "lstore", 1);
 	_SetAsm(FSTORE, "fstore", 1);
 	_SetAsm(DSTORE, "dstore", 1);
-	_SetAsm(RSTORE, "tstore", 1);
+	_SetAsm(RSTORE, "rstore", 1);
 	_SetAsm(JE, "je", 1);
 	_SetAsm(JNE, "jne", 1);
 	_SetAsm(JB, "jb", 1);
@@ -156,14 +159,31 @@ static Void _InitializeAssembler() {
 	_SetAsm(JZ, "jz", 1);
 	_SetAsm(JNZ, "jnz", 1);
 	_SetAsm(SIPUSH, "sipush", 1);
-	_SetAsm(IINC, "iinc", 0);
-	_SetAsm(IDEC, "idec", 0);
-	_SetAsm(IINC, "linc", 0);
-	_SetAsm(IDEC, "ldec", 0);
-	_SetAsm(NEW, "new", 1);
+	_SetAsm(IINC, "iinc", 1);
+	_SetAsm(IDEC, "idec", 1);
+	_SetAsm(IINC, "linc", 1);
+	_SetAsm(IDEC, "ldec", 1);
+	_SetAsm(RNEW, "rnew", 1);
 	_SetAsm(ARNEW, "arnew", 1);
 	_SetAsm(INSTANCEOF, "instanceof", 1);
 	_SetAsm(CALL, "call", 1);
+	_SetAsm(IRLOAD, "irload", 1);
+	_SetAsm(LRLOAD, "lrload", 1);
+	_SetAsm(FRLOAD, "frload", 1);
+	_SetAsm(DRLOAD, "drload", 1);
+	_SetAsm(RRLOAD, "rrload", 1);
+	_SetAsm(BRLOAD, "brload", 1);
+	_SetAsm(CRLOAD, "crload", 1);
+	_SetAsm(SRLOAD, "srload", 1);
+	_SetAsm(IRSTORE, "irstore", 1);
+	_SetAsm(LRSTORE, "lrstore", 1);
+	_SetAsm(FRSTORE, "frstore", 1);
+	_SetAsm(DRSTORE, "drstore", 1);
+	_SetAsm(RRSTORE, "rrstore", 1);
+	_SetAsm(BRSTORE, "brstore", 1);
+	_SetAsm(CRSTORE, "crstore", 1);
+	_SetAsm(SRSTORE, "srstore", 1);
+	_SetAsm(CLEAR, "clear", 1);
 }
 
 AsmInfoPtr Assembler::GetAsmInfo(Uint8 command) {

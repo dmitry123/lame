@@ -19,7 +19,7 @@ Method::Method(BufferRefC name, ScopePtr parent, ObjectPtr thisClass, ObjectPtr 
 }
 
 ClassPtr Method::GetClass() {
-	return thisClass->GetVariable()->GetObject();
+	return thisClass->GetVariable()->GetClass();
 }
 
 MethodPtr Method::GetMethod() {
@@ -31,7 +31,13 @@ Bool Method::Equal(ObjectPtrC object) {
 }
 
 ObjectPtr Method::Clone(BufferRefC name, ObjectPtr parent) {
-	return this;
+
+	MethodPtr m = new Method(name, parent, this->thisClass,
+		this->returnClass, this->attributesHash);
+
+	m->Merge(this);
+
+	return m;
 }
 
 Void Method::Trace(Uint32 offset) {

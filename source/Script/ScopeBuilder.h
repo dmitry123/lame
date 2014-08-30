@@ -24,7 +24,7 @@ public:
 	ScopeBuilder();
 	~ScopeBuilder();
 public:
-	Void Build(NodeBuilderPtr nodeBuilder, ScopePtr rootScope);
+	Void Build(NodePtr rootNode, ScopePtr rootScope);
 private:
 	Void _ForEachNodeTrace(NodePtr n);
 	Void _ForEachModificatorSet(NodePtr n);
@@ -43,6 +43,7 @@ private:
 	Void _ForEachConstruction(NodePtr n);
     Void _ForEachCheckInheritance(NodePtr n);
     Void _ForEachNodeFlush(NodePtr n);
+	Void _ForEachClassInit(NodePtr n);
 private:
 	Void _ForEachNode(NodePtr node, ScopePtr scope, ForEachNode callback, NodeID id);
 	Void _Push(ScopePtr scope);

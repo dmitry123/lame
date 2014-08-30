@@ -22,13 +22,11 @@ static Bool _MoveNode(NodePtr node) {
 		whereupon we'll swap our expressions and push in one stack. Final
 		view should be : '1 if'. We've saved count of arguments in node 'new' */
 
-	if (node->id == kScriptNodeCondition || node->id == kScriptNodeFunction ||
-		node->lex->lex->id == kScriptLexCatch
-	) {
+	if (node->id != kScriptNodeVariable && node->lex->lex->id != kScriptLexNew) {
 		goto _Seek;
 	}
 
-	if (node->parent != NULL && (node->parent->blockList.size() > 0 && node->argList.size() > 0)) {
+	if (node->parent != NULL && node->argList.size() > 0) {
 
 		Deque<NodePtr>* nodeStack = NULL;
 
@@ -37,17 +35,19 @@ static Bool _MoveNode(NodePtr node) {
 			node->parent->blockList.begin(),
 			node->parent->blockList.end(), node);
 
-		if (position == node->parent->blockList.end()) {
-			position = std::find(node->parent->argList.begin(), node->parent->argList.end(), node);
-			if (position == node->parent->argList.end()) {
-				PostSyntaxError(node->parent->lex->line, "Node (%s) hasn't been appended to his parent (%s)", node->word.data(), node->parent->word.data());
-			}
-			else {
-				nodeStack = &node->parent->argList;
-			}
-		}
-		else {
-			nodeStack = &node->parent->blockList;
+#define __If(_list) \
+	if (!nodeStack && (position = std::find(_list.begin(), _list.end(), node)) != _list.end()) {\
+		nodeStack = &_list; \
+	}
+
+		__If(node->parent->forInfo.beginList);
+		__If(node->parent->forInfo.conditionList);
+		__If(node->parent->forInfo.nextList);
+		__If(node->parent->blockList);
+		__If(node->parent->argList);
+
+		if (!nodeStack) {
+			PostSyntaxError(node->parent->lex->line, "Node (%s) hasn't been appended to his parent (%s)", node->word.data(), node->parent->word.data());
 		}
 
 		/*	Push argument list in parent's block stack */
@@ -80,6 +80,24 @@ _Again:
 			goto _Again;
 		}
 	}
+_Again1:
+	for (NodePtr n : node->forInfo.beginList) {
+		if (_MoveNode(n)) {
+			goto _Again1;
+		}
+	}
+_Again2:
+	for (NodePtr n : node->forInfo.conditionList) {
+		if (_MoveNode(n)) {
+			goto _Again2;
+		}
+	}
+_Again3:
+	for (NodePtr n : node->forInfo.nextList) {
+		if (_MoveNode(n)) {
+			goto _Again3;
+		}
+	}
 
 	return result;
 }
@@ -93,9 +111,7 @@ ScopeBuilder::~ScopeBuilder() {
 	delete this->rootConstruction;
 }
 
-Void ScopeBuilder::Build(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
-
-	NodePtr rootNode = nodeBuilder->GetRootNode();
+Void ScopeBuilder::Build(NodePtr rootNode, ScopePtr rootScope) {
 
 	/*	Move all consutions's nodes from blocks
 		to parent's block */
@@ -130,6 +146,7 @@ Void ScopeBuilder::Build(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
 			2. Apply inheritance for interfaces */
 
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassInherit, this), kScriptNodeClass);
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassInherit, this), kScriptNodeAnonymous);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachInterfaceInherit, this), kScriptNodeInterface);
 
 	/*	Constant declare. That block allocate memory
@@ -163,7 +180,10 @@ Void ScopeBuilder::Build(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
     this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachCheckInheritance, this), kScriptNodeInterface);
     this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachCheckInheritance, this), kScriptNodeClass);
     this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachCheckInheritance, this), kScriptNodeAnonymous);
-    
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassInit, this), kScriptNodeClass);
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassInit, this), kScriptNodeAnonymous);
+
+#if 0
 	/*	Now we can move all other nodes which was in language constructions. That
 		mean that we've allocated memory for there variables in there scopes
 		after what move it's variables in parent scope to avoid variable redeclaration
@@ -173,13 +193,13 @@ Void ScopeBuilder::Build(NodeBuilderPtr nodeBuilder, ScopePtr rootScope) {
 		view : 'i 0 = ... for' and we won't have any conflicts with other language
 		constructions. */
 
-#if 0
 	_MoveNode(rootNode, TRUE);
-#endif
 
 	/*	Node trace (only for debugging) */
-    
+
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachNodeTrace, this), kScriptNodeUnknown);
+#endif
+
     this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachNodeFlush, this), kScriptNodeUnknown);
 }
 
@@ -227,9 +247,17 @@ Void ScopeBuilder::_ForEachModificatorSet(NodePtr n) {
 		if ((n->flags & kScriptFlagNative) != 0) {
 			n->var->SetModificator(Class::Modificator::Native);
 		}
+		if ((n->flags & kScriptFlagNative) != 0) {
+			n->var->SetModificator(Class::Modificator::Native);
+		}
 		if ((n->flags & kScriptFlagAbstract) != 0) {
 			n->var->SetModificator(Class::Modificator::Abstract);
-            ObjectPtr(n->var->GetParent())->SetModificator(Class::Modificator::Abstract);
+			if (ObjectPtr(n->var->GetParent())->CheckType(Object::Type::Class)) {
+				ObjectPtr(n->var->GetParent())->SetModificator(Class::Modificator::Abstract);
+			}
+		}
+		if ((n->flags & kScriptFlagSynchronized) != 0) {
+			n->var->SetModificator(Class::Modificator::Synchronized);
 		}
 	}
 }
@@ -290,13 +318,6 @@ Void ScopeBuilder::_ForEachClassDeclare(NodePtr n) {
 		PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->typeNode->word.data());
 	}
 
-	if (n->id == kScriptNodeAnonymous) {
-		if (!(classExtend = this->scope->Find(n->word))) {
-			PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->word.data());
-		}
-		classVar->Extend(classExtend);
-	}
-
 	if (n->typeNode->templateNode) {
 		ClassPtr classT = n->var->Scope::Add(this->scope->classObject->Clone(
 			n->typeNode->templateNode->word, n->var))->SetModificator(Object::Modificator::Private)->GetClass();
@@ -347,6 +368,11 @@ Void ScopeBuilder::_ForEachClassVariableDeclare(NodePtr n) {
 		n->var->SetModificator(Object::Modificator::Final);
 	}
 
+	if (ObjectPtr(this->scope)->CheckType(Object::Type::Class)) {
+		n->var->SetFieldID(this->scope->Size() - n->var->Size());
+		n->var->SetThis(ObjectPtr(this->scope));
+	}
+
 	if (n->typeNode && n->typeNode->templateNode) {
 		if (!typeClass->GetTemplate()) {
 			PostSyntaxError(n->lex->line, "Class (%s) non-template", typeClass->GetName().data());
@@ -378,9 +404,16 @@ Void ScopeBuilder::_ForEachClassInherit(NodePtr n) {
 
 	ObjectPtr typeClass;
 
-	if (n->extendNode) {
-		if (!(typeClass = scope->Find(n->extendNode->word))) {
-			PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->extendNode->word.data());
+	//if (n->id == kScriptNodeAnonymous) {
+	//	if (!(classExtend = this->scope->Find(n->word))) {
+	//		PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->word.data());
+	//	}
+	//	classVar->Extend(classExtend);
+	//}
+
+	if (n->classInfo.extendNode) {
+		if (!(typeClass = scope->Find(n->classInfo.extendNode->word))) {
+			PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->classInfo.extendNode->word.data());
 		}
 		n->var->GetClass()->Extend(typeClass->GetClass());
 	}
@@ -388,7 +421,7 @@ Void ScopeBuilder::_ForEachClassInherit(NodePtr n) {
 		n->var->GetClass()->Extend(scope->classObject);
 	}
 
-	for (NodePtr n2 : n->implementNode) {
+	for (NodePtr n2 : n->classInfo.implementNode) {
 		if (!(typeClass = scope->Find(n2->word))) {
 			PostSyntaxError(n->lex->line, "Undeclared interface (%s)", n2->word.data());
 		}
@@ -412,11 +445,11 @@ Void ScopeBuilder::_ForEachInterfaceInherit(NodePtr n) {
 
 	ObjectPtr typeClass;
 
-	if (n->extendNode) {
-		PostSyntaxError(n->lex->line, "Interfaces can't extend classes (%s)", n->extendNode->word.data());
+	if (n->classInfo.extendNode) {
+		PostSyntaxError(n->lex->line, "Interfaces can't extend classes (%s)", n->classInfo.extendNode->word.data());
 	}
 
-	for (NodePtr n2 : n->implementNode) {
+	for (NodePtr n2 : n->classInfo.implementNode) {
 		if (!(typeClass = n->var->Find(n2->word))) {
 			PostSyntaxError(n->lex->line, "Undeclared interface (%s)", n2->word.data());
 		}
@@ -534,11 +567,18 @@ Void ScopeBuilder::_ForEachMethodDeclare(NodePtr n) {
 		methodAttributes.push_back(argType->GetClass());
 	}
 
-	methodObject = scope->Add(new Method(n->word, scope, ObjectPtr(scope), returnType, methodAttributes));
+	MethodPtr method = new Method(n->word, scope, ObjectPtr(scope), returnType, methodAttributes);
 
-	if (!methodObject) {
-		PostSyntaxError(n->lex->line, "Method redeclaration (%s.%s)",
-			scope->GetName().data(), n->word.data());
+	if (!ObjectPtr(this->scope)->CheckType(Object::Type::Class) &&
+		!ObjectPtr(this->scope)->CheckType(Object::Type::Interface)
+	) {
+		PostSyntaxError(n->lex->line, "Unable to declare method in non-class scope %s/%s(%s)",
+			this->scope->GetName().data(), n->word.data(), method->GetFormattedArguments().data());
+	}
+
+	if (!(methodObject = scope->Add(method))) {
+		PostSyntaxError(n->lex->line, "Method redeclaration %s.%s(%s)",
+			scope->GetName().data(), n->word.data(), method->GetFormattedArguments().data());
 	}
 
 	if (methodObject->GetName() == this->scope->GetName() && !returnType->IsVoid()) {
@@ -551,7 +591,7 @@ Void ScopeBuilder::_ForEachMethodDeclare(NodePtr n) {
     }
 
 	n->var = methodObject;
-	n->methodHash = methodObject->GetMethod()->GetInvokeHash();
+	n->methodInfo.invokeHash = methodObject->GetMethod()->GetInvokeHash();
 	n->var->SetNode(n);
 }
 
@@ -689,11 +729,10 @@ Void ScopeBuilder::_ForEachConstruction(NodePtr n) {
 			lastVar->GetNode()->elseNode = n;
 			lastVar->GetNode()->argList = n->argList;
 			n->argList.clear();
-			n->hasDo = TRUE;
+			n->flags |= kScriptFlagWhileHasDo;
 		}
 
 	_SkipErrorCheck:
-
 		if (!n->parent->var) {
 			PostSyntaxError(n->lex->line, "Language construction in illegal place (%s)", n->parent->word.data());
 		}
@@ -727,18 +766,40 @@ Void ScopeBuilder::_ForEachNodeFlush(NodePtr n) {
     }
 }
 
+Void ScopeBuilder::_ForEachClassInit(NodePtr n) {
+
+	ObjectPtr classVar = n->var;
+
+	MethodPtr initMethod = classVar->Add(new Method("<init>", classVar,
+		classVar, Scope::classVoid))->GetMethod();
+
+	initMethod->SetRootNode(n);
+
+	initMethod->Scope::Add(new Variable("this", initMethod, ClassPtr(this->scope)));
+
+	if (ClassPtr(classVar)->GetExtend()) {
+		initMethod->Scope::Add(new Variable("super", initMethod,
+			ClassPtr(classVar)->GetExtend()->GetClass()));
+	}
+}
+
 Void ScopeBuilder::_ForEachNode(NodePtr node, ScopePtr scope, ForEachNode callback, NodeID id) {
 
 	if (id == kScriptNodeUnknown || (id != kScriptNodeUnknown && node->id == id)) {
 		callback(node);
 	}
-    
+	if (node->typeNode) {
+		if (id == kScriptNodeUnknown || (id != kScriptNodeUnknown && node->typeNode->id == id)) {
+			callback(node->typeNode);
+		}
+	}
+
 	if (node->id == kScriptNodeClass ||
 		node->id == kScriptNodeInterface ||
 		node->id == kScriptNodeFunction ||
 		node->id == kScriptNodeCondition ||
 		node->id == kScriptNodeAnonymous
-	)  {
+	) {
 		if (node->var) {
 			this->_Push(node->var);
 		}
@@ -753,13 +814,22 @@ Void ScopeBuilder::_ForEachNode(NodePtr node, ScopePtr scope, ForEachNode callba
 	for (NodePtr n : node->elseList) {
 		_ForEachNode(n, scope, callback, id);
 	}
+	for (NodePtr n : node->forInfo.beginList) {
+		_ForEachNode(n, scope, callback, id);
+	}
+	for (NodePtr n : node->forInfo.conditionList) {
+		_ForEachNode(n, scope, callback, id);
+	}
+	for (NodePtr n : node->forInfo.nextList) {
+		_ForEachNode(n, scope, callback, id);
+	}
 
 	if (node->id == kScriptNodeClass ||
 		node->id == kScriptNodeInterface ||
 		node->id == kScriptNodeFunction ||
 		node->id == kScriptNodeCondition ||
 		node->id == kScriptNodeAnonymous
-	)  {
+	) {
 		if (node->var) {
 			this->_Pop();
 		}

@@ -11,41 +11,17 @@ class LAME_API Segment {
 	friend class SegmentLinker;
 	friend class SegmentBuilder;
 public:
-	inline Segment() : Segment("")
-	{
-	}
-	inline Segment(Buffer name) :
+	inline Segment(Buffer name = "") :
 		Segment(name.data())
 	{
 	}
-public:
-	Segment(StringC name);
-	~Segment(Void);
-public:
-	Void Write(VoidP block, Uint32 size);
-	Void Write(VariablePtr var);
-	Void Trace(Bool asFlat = FALSE);
-	Void Allocate(Uint32 size = 0);
-	Void Flush(Void);
-	Uint8P GetBlockAt(Uint32 offset);
-	Void Clear(Void);
-	Void Merge(SegmentPtr segment);
-	ObjectPtr Fetch(Uint32 address);
-public:
-	inline Void SetOffset(Uint32 offset) {
+	inline Segment(Uint32 offset) :
+		Segment(name.data())
+	{
 		this->offset = offset;
 	}
 public:
-	inline Uint32 GetCapacity() const { return this->capacity; }
-	inline Uint32 GetSize()     const { return this->size;     }
-	inline Uint32 GetOffset()   const { return this->offset;   }
-	inline Uint32 GetLastSize() const { return this->lastSize; }
-public:
-	inline Uint32 GetPosition() const {
-		return this->GetSize() + this->GetOffset();
-	}
-private:
-	struct History {
+	typedef struct History {
 	public:
 		Buffer name;
 		Uint32 offset;
@@ -63,7 +39,38 @@ private:
 		}
 	public:
 		ObjectPtr object;
-	};
+	} *HistoryPtr;
+public:
+	inline List<History>& GetHistory() {
+		return this->history;
+	}
+public:
+	Segment(StringC name);
+	~Segment(Void);
+public:
+	Void Write(VoidP block, Uint32 size);
+	Void Write(VariablePtr var);
+	Void Trace(Bool asFlat = FALSE);
+	Void Allocate(Uint32 size = 0);
+	Void Flush(Void);
+	Uint8P GetBlockAt(Uint32 offset);
+	Void Clear(Void);
+	Void Merge(SegmentPtr segment);
+	ObjectPtr Fetch(Uint32 address);
+	HistoryPtr FetchHistory(Uint32 address);
+public:
+	inline Void SetOffset(Uint32 offset) {
+		this->offset = offset;
+	}
+public:
+	inline Uint32 GetCapacity() const { return this->capacity; }
+	inline Uint32 GetSize()     const { return this->size;     }
+	inline Uint32 GetOffset()   const { return this->offset;   }
+	inline Uint32 GetLastSize() const { return this->lastSize; }
+public:
+	inline Uint32 GetPosition() const {
+		return this->GetSize() + this->GetOffset();
+	}
 private:
 	Buffer name;
 	Uint32 size;

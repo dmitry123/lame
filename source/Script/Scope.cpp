@@ -20,6 +20,12 @@ ObjectPtr Scope::Add(ObjectPtr object) {
 		PostSyntaxError(0, "Reserved name (%s)", object->GetName().data());
 	}
 
+#if 0
+	if (this->Find(object->GetName())) {
+		return LAME_NULL;
+	}
+#endif
+
 	if ((i = this->hashMap_.find(hash)) != this->hashMap_.end() && object->GetName().length() > 0) {
 		return LAME_NULL;
 	}
@@ -31,6 +37,7 @@ ObjectPtr Scope::Add(ObjectPtr object) {
 		->Observe(this);
 
 	this->Update(object);
+	object->ownerScope_ = this;
 
 	return object;
 }
@@ -47,7 +54,7 @@ Void Scope::Remove(ObjectPtr object) {
 	}
 
 	object->GetObservable()
-        ->RemoveObserver(this);
+		->RemoveObserver(this);
 
 	if (this->publicSet_.count(object)) {
 		this->publicSet_.erase(object);
@@ -84,10 +91,10 @@ ObjectPtr Scope::Find(Hash hash, Bool withDepth) {
 		if ((i = scope->hashMap_.find(hash)) != scope->hashMap_.end()) {
 			return i->second;
 		}
-        
-        if (!withDepth) {
-            break;
-        }
+
+		if (!withDepth) {
+			break;
+		}
 
 		scope = scope->parentScope_;
 	}
@@ -108,10 +115,10 @@ ObjectPtr Scope::Find(BufferRefC name, Bool withDepth) {
 			return i->second;
 		}
 
-        if (!withDepth) {
-            break;
-        }
-        
+		if (!withDepth) {
+			break;
+		}
+
 		scope = scope->parentScope_;
 	}
 
@@ -211,7 +218,9 @@ Uint32 Scope::Size(Void) {
 			continue;
 		}
 
-		size += i.second->Size();
+		if (i.second->CheckType(Object::Type::Variable)) {
+			size += i.second->Size();
+		}
 	}
 
 	return size;
@@ -308,9 +317,9 @@ Void Scope::Flush(Void) {
 
 	for (auto i : this->hashMap_) {
 		this->Update(i.second);
-        if (this->callback_) {
-            this->callback_(this, i.second);
-        }
+		if (this->callback_) {
+			this->callback_(this, i.second);
+		}
 	}
 }
 
@@ -319,20 +328,26 @@ Scope::Scope(BufferRefC name, ScopePtr parent) {
 	this->scopeName_ = name;
 	this->parentScope_ = parent;
 	this->isOwner_ = TRUE;
-    this->callback_ = NULL;
+	this->callback_ = NULL;
 }
 
 Scope::~Scope() {
 	this->Clear();
 }
 
-ScopePtr Scope::CreateRootScope(Void) {
+ScopePtr Scope::CreateRootScope(Buffer name, Bool asClass) {
 
-	Script::ClassPtr rootScope = new Script::Class("Root", NULL, 0);
-    
-    if (classChar != NULL) {
+	ObjectPtr rootScope = NULL;
+
+	if (asClass) {
+		rootScope = new Script::Class(name, NULL, 0);
+	} else {
+		rootScope = new Script::Method(name, NULL, NULL, NULL);
+	}
+
+	if (classChar != NULL) {
 		goto _ReturnScope;
-    }
+	}
 
 	classChar = rootScope->Scope::Add(new Script::Class("char", rootScope, 2))->GetClass();
 	classByte = rootScope->Scope::Add(new Script::Class("byte", rootScope, 1))->GetClass();
@@ -348,58 +363,58 @@ ScopePtr Scope::CreateRootScope(Void) {
 	classClass = rootScope->Scope::Add(new Script::Class("Class", rootScope))->GetClass();
 	classUnknown = rootScope->Scope::Add(new Script::Class("?", rootScope))->GetClass();
 	classArray = rootScope->Scope::Add(new Script::Class("Array", rootScope))->GetClass();
-    
+
 	classChar
 		->SetModificator(Script::Object::Modificator::Primitive)
 		->SetModificator(Script::Object::Modificator::Internal)
-        ->SetModificator(Script::Object::Modificator::Integer);
+		->SetModificator(Script::Object::Modificator::Integer);
 	classByte
 		->SetModificator(Script::Object::Modificator::Primitive)
 		->SetModificator(Script::Object::Modificator::Internal)
-        ->SetModificator(Script::Object::Modificator::Integer);
+		->SetModificator(Script::Object::Modificator::Integer);
 	classBoolean
 		->SetModificator(Script::Object::Modificator::Primitive)
 		->SetModificator(Script::Object::Modificator::Internal)
-        ->SetModificator(Script::Object::Modificator::Boolean);
+		->SetModificator(Script::Object::Modificator::Boolean);
 	classShort
 		->SetModificator(Script::Object::Modificator::Primitive)
 		->SetModificator(Script::Object::Modificator::Internal)
-        ->SetModificator(Script::Object::Modificator::Integer);
+		->SetModificator(Script::Object::Modificator::Integer);
 	classInt
 		->SetModificator(Script::Object::Modificator::Primitive)
 		->SetModificator(Script::Object::Modificator::Internal)
-        ->SetModificator(Script::Object::Modificator::Integer);
+		->SetModificator(Script::Object::Modificator::Integer);
 	classLong
 		->SetModificator(Script::Object::Modificator::Primitive)
 		->SetModificator(Script::Object::Modificator::Internal)
-        ->SetModificator(Script::Object::Modificator::Integer);
+		->SetModificator(Script::Object::Modificator::Integer);
 	classFloat
 		->SetModificator(Script::Object::Modificator::Primitive)
 		->SetModificator(Script::Object::Modificator::Internal)
-        ->SetModificator(Script::Object::Modificator::Float);
+		->SetModificator(Script::Object::Modificator::Float);
 	classDouble
 		->SetModificator(Script::Object::Modificator::Primitive)
 		->SetModificator(Script::Object::Modificator::Internal)
-        ->SetModificator(Script::Object::Modificator::Float);
+		->SetModificator(Script::Object::Modificator::Float);
 	classVoid
 		->SetModificator(Script::Object::Modificator::Primitive)
 		->SetModificator(Script::Object::Modificator::Internal);
 
 	classString
-        ->SetModificator(Script::Object::Modificator::Internal)
+		->SetModificator(Script::Object::Modificator::Internal)
 		->SetModificator(Script::Object::Modificator::Object2)
-        ->SetModificator(Script::Object::Modificator::String);
+		->SetModificator(Script::Object::Modificator::String);
 	classObject
-        ->SetModificator(Script::Object::Modificator::Internal)
+		->SetModificator(Script::Object::Modificator::Internal)
 		->SetModificator(Script::Object::Modificator::Object2);
 	classClass
-        ->SetModificator(Script::Object::Modificator::Internal)
+		->SetModificator(Script::Object::Modificator::Internal)
 		->SetModificator(Script::Object::Modificator::Object2);
 	classUnknown
-        ->SetModificator(Script::Object::Modificator::Internal)
+		->SetModificator(Script::Object::Modificator::Internal)
 		->SetModificator(Script::Object::Modificator::Object2);
 	classArray
-        ->SetModificator(Script::Object::Modificator::Internal)
+		->SetModificator(Script::Object::Modificator::Internal)
 		->SetModificator(Script::Object::Modificator::Object2);
 
 	//classObject->Scope::Add(new Method("toString", classObject, classObject, classString))
@@ -426,6 +441,24 @@ ScopePtr Scope::CreateRootScope(Void) {
 	classArray->SetPriority(7);
 
 _ReturnScope:
+
+	if (!rootScope->Scope::Amount()) {
+
+		rootScope->Add(classChar);
+		rootScope->Add(classByte);
+		rootScope->Add(classBoolean);
+		rootScope->Add(classShort);
+		rootScope->Add(classInt);
+		rootScope->Add(classLong);
+		rootScope->Add(classFloat);
+		rootScope->Add(classDouble);
+		rootScope->Add(classVoid);
+		rootScope->Add(classString);
+		rootScope->Add(classObject);
+		rootScope->Add(classClass);
+		rootScope->Add(classUnknown);
+		rootScope->Add(classArray);
+	}
 
 	rootScope->Add(new Variable("true", rootScope, classBoolean))
 		->GetVariable()->SetBoolean(TRUE)->SetModificator(Object::Modificator::Internal);

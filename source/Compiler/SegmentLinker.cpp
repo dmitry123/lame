@@ -123,7 +123,7 @@ Void SegmentLinker::Save(StringC fileName) {
 	}
 
 	for (SegmentPtr s : this->segmentList) {
-		file.Write(s->data, s->capacity);
+		file.Write(s->data, s->size);
 	}
 
 	file.Close();

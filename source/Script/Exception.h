@@ -36,7 +36,11 @@ typedef ScriptException MethodException;
 typedef ScriptException InterfaceException;
 
 #define PostSyntaxError(_line, _message, ...) \
-	throw SyntaxException(_line, _message, __VA_ARGS__)
+	do { \
+		SyntaxException e(_line, ""); \
+		sprintf(e.GetErrorBuffer(), _message, __VA_ARGS__); \
+		throw e; \
+	} while (0);
 
 #define PostSyntaxWarning(_line, _message, ...) \
 	static Bool __warningExceptionLock = 0; \

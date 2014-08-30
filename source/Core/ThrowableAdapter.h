@@ -5,26 +5,23 @@
 
 LAME_BEGIN2(Core)
 
-class ThrowableAdapter : public Throwable {
+class LAME_API ThrowableAdapter : public Throwable {
 public:
 	inline Void Debug(PrintStreamPtr printer) override {
-		printer->Print(this->errorBuffer);
+		printer->Print(this->GetErrorBuffer());
 	}
 	inline StringC What() override {
-		return &errorBuffer[0];
+		return this->GetErrorBuffer();
 	}
 	inline Void Throw() override {
 		throw (*this);
 	}
 public:
 	inline Void SetErrorBuffer(StringC message) {
-		memcpy(this->errorBuffer, message, strlen(message));
+		memcpy(this->GetErrorBuffer(), message, strlen(message));
 	}
-	inline String GetErrorBuffer() {
-		return this->errorBuffer;
-	}
-private:
-	ErrorBuffer errorBuffer;
+public:
+	String GetErrorBuffer(Void);
 };
 
 LAME_END2

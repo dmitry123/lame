@@ -7,19 +7,18 @@ LAME_BEGIN2(Script)
 
 class LAME_API SegmentBuilder {
 public:
-	SegmentBuilder(ScopePtr rootScope) :
+	SegmentBuilder() :
 		dataSegment(0),
 		codeSegment(0),
 		textSegment(0)
 	{
-		this->rootScope = rootScope;
 	}
 public:
 	~SegmentBuilder();
 public:
-	SegmentPtr BuildDataSegment(Void);
-	SegmentPtr BuildCodeSegment(Void);
-	SegmentPtr BuildTextSegment(Void);
+	SegmentPtr BuildDataSegment(ScopePtr rootScope);
+	SegmentPtr BuildCodeSegment(ScopePtr rootScope);
+	SegmentPtr BuildTextSegment(ScopePtr rootScope);
 private:
 	typedef Void (*ForEachScopeObject)(
 		SegmentPtr segment, VariablePtr object);
@@ -43,8 +42,6 @@ private:
 	SegmentPtr dataSegment;
 	SegmentPtr codeSegment;
 	SegmentPtr textSegment;
-private:
-	ScopePtr rootScope;
 };
 
 LAME_END2

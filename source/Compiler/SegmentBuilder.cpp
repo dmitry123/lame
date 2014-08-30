@@ -17,7 +17,7 @@ SegmentBuilder::~SegmentBuilder() {
 	}
 }
 
-SegmentPtr SegmentBuilder::BuildDataSegment(Void) {
+SegmentPtr SegmentBuilder::BuildDataSegment(ScopePtr rootScope) {
 
 	if (this->dataSegment) {
 		delete this->dataSegment;
@@ -29,17 +29,24 @@ SegmentPtr SegmentBuilder::BuildDataSegment(Void) {
 	this->dataSegment->Allocate();
 
 	_ForEachScopeObject([](SegmentPtr segment, VariablePtr object) {
-		segment->Write(object);
-		object->SetAddress(segment->GetSize());
-		object->SetSize(segment->GetLastSize());
-	}, this->dataSegment, NULL);
+		if (object->GetName() == "super") {
+			object->SetAddress(object->GetParent()->Find("this", FALSE)->GetAddress());
+		}
+		else {
+			segment->Write(object);
+			object->SetAddress(segment->GetSize());
+			object->SetSize(segment->GetLastSize());
+		}
+	}, this->dataSegment, rootScope);
+
+	memset(this->dataSegment->data, -1, this->dataSegment->size);
 
 	this->dataSegment->Flush();
 
 	return this->dataSegment;
 }
 
-SegmentPtr SegmentBuilder::BuildCodeSegment(Void) {
+SegmentPtr SegmentBuilder::BuildCodeSegment(ScopePtr rootScope) {
 
 	if (this->codeSegment) {
 		delete this->codeSegment;
@@ -54,14 +61,14 @@ SegmentPtr SegmentBuilder::BuildCodeSegment(Void) {
 		if (!object->GetSegment() && !object->CheckType(Object::Type::Variable)) {
 			object->SetSegment(new Segment(object->GetName()));
 		}
-	}, this->codeSegment, NULL);
+	}, this->codeSegment, rootScope);
 
 	this->codeSegment->Flush();
 
 	return this->codeSegment;
 }
 
-SegmentPtr SegmentBuilder::BuildTextSegment(Void) {
+SegmentPtr SegmentBuilder::BuildTextSegment(ScopePtr rootScope) {
 
 	if (this->textSegment) {
 		delete this->textSegment;
@@ -76,7 +83,7 @@ SegmentPtr SegmentBuilder::BuildTextSegment(Void) {
 		segment->Write(object);
 		object->SetAddress(segment->GetSize());
 		object->SetSize(segment->GetLastSize());
-	}, this->textSegment, NULL);
+	}, this->textSegment, rootScope);
 
 	this->textSegment->Flush();
 
@@ -85,8 +92,10 @@ SegmentPtr SegmentBuilder::BuildTextSegment(Void) {
 
 Void SegmentBuilder::_ForEachScopeObject(ForEachScopeObject callback, SegmentPtr segment, ScopePtr scope) {
 
+	static ScopePtr rootScope = scope;
+
 	if (!scope) {
-		scope = this->rootScope;
+		scope = rootScope;
 	}
 
 	for (ObjectPtr i : scope->GetVariableSet()) {
@@ -116,8 +125,10 @@ Void SegmentBuilder::_ForEachScopeObject(ForEachScopeObject callback, SegmentPtr
 
 Void SegmentBuilder::_ForEachScopeTemp(ForEachScopeObject callback, SegmentPtr segment, ScopePtr scope) {
 
+	static ScopePtr rootScope = scope;
+
 	if (!scope) {
-		scope = this->rootScope;
+		scope = rootScope;
 	}
 
 	for (ObjectPtr i : scope->GetVariableSet()) {
@@ -137,8 +148,10 @@ Void SegmentBuilder::_ForEachScopeTemp(ForEachScopeObject callback, SegmentPtr s
 
 Void SegmentBuilder::_ForEachScopeVariable(ForEachScopeMethod callback, SegmentPtr segment, ScopePtr scope) {
 
+	static ScopePtr rootScope = scope;
+
 	if (!scope) {
-		scope = this->rootScope;
+		scope = rootScope;
 	}
 
 	callback(segment, ObjectPtr(scope));

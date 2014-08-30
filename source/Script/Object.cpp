@@ -40,9 +40,10 @@ Object::Object(BufferRefC name, ScopePtr parent, Type type) :
 	this->segment_ = NULL;
 	this->template_ = NULL;
 	this->node_ = NULL;
+	this->this_ = NULL;
 
 	this->modificators_ = 0;
-	this->address_ = 0;
+	this->address_ = -1;
 	this->size_ = 0;
 	this->wasInStack = 0;
 	this->position_ = 0;
@@ -89,6 +90,9 @@ Buffer Object::GetModificatorString(Void) {
 	}
 	if (this->CheckModificator(Modificator::Abstract)) {
 		result.append("abstract ");
+	}
+	if (this->CheckModificator(Modificator::Synchronized)) {
+		result.append("synchronized ");
 	}
 
 	return result;

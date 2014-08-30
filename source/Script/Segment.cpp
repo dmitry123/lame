@@ -2,7 +2,8 @@
 
 LAME_BEGIN2(Script)
 
-static Uint32 ZeroByte32 = 0;
+static Uint32 ZeroByte32 = -1;
+static Uint64 ZeroByte64 = -1;
 
 Segment::Segment(StringC name) :
 	name(name), data(NULL), offset(0)
@@ -63,6 +64,9 @@ Void Segment::Write(VariablePtr var) {
 		else {
 			copyBuffer = Uint8P(&var->v.floatValue);
 		}
+	}
+	else if (var->GetVarType() == Variable::Var::Object) {
+		copyBuffer = Uint8P(&ZeroByte64);
 	}
 
 	if (var->GetVarType() == Variable::Var::String && !var->GetNode()) {
@@ -163,7 +167,7 @@ Void Segment::Trace(Bool asFlat) {
 				if (i && !(i % 16)) {
 					printf("\n|        |          |        | ");
 				}
-				printf("%.2X ", Uint8P(this->data + h.offset)[i]);
+				printf("%.2X ", Uint8P(this->data + h.offset - this->offset)[i]);
 			}
 
 			if (h.size > 16 || &h == &this->history.back()) {
@@ -190,7 +194,7 @@ Void Segment::Allocate(Uint32 size) {
 	}
 
 	this->size = 0;
-	this->data = ZeroMemory(new Uint8[size], size);
+	this->data = Uint8P(malloc(size));
 }
 
 Void Segment::Flush(Void) {
@@ -256,6 +260,17 @@ ObjectPtr Segment::Fetch(Uint32 address) {
 	for (History& h : this->history) {
 		if (h.offset == address) {
 			return h.object;
+		}
+	}
+
+	return NULL;
+}
+
+Segment::HistoryPtr Segment::FetchHistory(Uint32 address) {
+
+	for (History& h : this->history) {
+		if (h.offset == address) {
+			return &h;
 		}
 	}
 

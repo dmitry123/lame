@@ -2,10 +2,13 @@
 
 LAME_BEGIN2(Compiler)
 
-using namespace Core;
-using namespace Script;
+Void VirtualCompiler::_Run(NodeListRef nodeList, Bool makeBackup) {
 
-Void VirtualCompiler::_Run(NodeListRef nodeList) {
+	VariableStack stackBackup;
+
+	if (makeBackup) {
+		stackBackup = this->variableStack;
+	}
 
 	for (NodePtr n : nodeList) {
 
@@ -72,12 +75,20 @@ Void VirtualCompiler::_Run(NodeListRef nodeList) {
 			throw SyntaxException(n->lex->line, e.GetErrorBuffer());
 		}
 	}
+
+	if (this->variableStack.Size()) {
+		this->lastResult = this->variableStack.Back();
+	}
+
+	if (makeBackup) {
+		this->variableStack = stackBackup;
+	}
 }
 
 Void VirtualCompiler::_Read(NodePtr n, VariablePtr& left, VariablePtr& right) {
 
 	if (this->variableStack.Size() < n->lex->args || !n->lex->args) {
-		PostSyntaxError(n->lex->line, "Invalid operator parameters, \"%s\" requires %d arguments", n->word.data(), n->lex->args);
+		PostSyntaxError(n->lex->line, "Operator \"%s\" requires %d arguments", n->word.data(), n->lex->args);
 	}
 
 	if (n->lex->args > 1) {
@@ -190,20 +201,22 @@ _CastOk:
 	this->GetStack()->Push(VariablePtr(type));
 }
 
-Void VirtualCompiler::Run(NodeBuilderPtr nodeBuilder, ScopePtr rootScope, SegmentPtr codeSegment) {
+Void VirtualCompiler::Run(SyntaxBuilderPtr nodeBuilder, ScopePtr rootScope, SegmentPtr codeSegment) {
 
 	this->nodeBuilder = nodeBuilder;
 	this->rootScope = rootScope;
 
-	this->_ForEachClass(this->rootScope);
-	this->_ForEachMethod(this->rootScope);
-
 	if (!ObjectPtr(rootScope)->GetSegment()) {
-		throw ScriptException("Root scope must have segment, run scope builder");
+		throw ScriptException("Root scope must have segment, run scope builder first");
 	}
 
 	this->byteCode = new ByteCode(codeSegment);
 	this->_Push(codeSegment);
+
+	this->_ForEachClass(this->rootScope);
+	this->_ForEachMethod(this->rootScope);
+
+	this->lastResult = NULL;
 
 	Sint64 previousEnumValue = -1;
 
@@ -214,41 +227,16 @@ Void VirtualCompiler::Run(NodeBuilderPtr nodeBuilder, ScopePtr rootScope, Segmen
 			}
 		}
 		else {
-			if (i->GetNode()->id != kScriptNodeCondition) {
-				this->_Run(i->GetNode()->blockList);
-			}
+			//if (i->GetNode()->id != kScriptNodeCondition) {
+				//this->_Run(i->GetNode()->blockList);
+			//}
 		}
 	}
 
-	for (ObjectPtr i : this->methodList) {
-
-		i->SetPosition(ObjectPtr(rootScope)->GetSegment()->GetSize());
-
-		this->_Print(" // %s%s (%s)\n", i->GetPath().data(), i->GetName().data(),
-			i->GetMethod()->GetFormattedArguments().data());
-
-		NodePtr n = i->GetMethod()->GetRootNode();
-
-		for (NodePtr n2 : n->argList) {
-			if (!n2->var->CheckType(Object::Type::Variable)) {
-				PostSyntaxError(n->lex->line, "Argument must be variable (%s)", n2->var->GetName().data());
-			}
-			this->OnStore(n2->var->GetVariable());
-		}
-
-		this->_Run(i->GetMethod()->GetRootNode()->blockList);
-
-		if (i->GetMethod()->GetReturnType()->IsVoid()) {
-			this->OnReturn(NULL);
-		}
-
-		if (!i->GetMethod()->GetReturnType()->IsVoid()) {
-			if (!i->GetMethod()->returnVar) {
-				PostSyntaxError(n->lex->line, "Non-void method (%s) must return (%s)", i->GetName().data(),
-					i->GetMethod()->GetReturnType()->GetName().data());
-			}
-		}
-	}
+	Segment temporaryMethodSegment;
+	temporaryMethodSegment.SetOffset(codeSegment->GetPosition());
+	this->_CompileMethods(&temporaryMethodSegment);
+	this->_CompileMethods(codeSegment);
 
 	this->_Run(this->nodeBuilder->GetRootNode()->blockList);
 
@@ -291,8 +279,10 @@ Void VirtualCompiler::_Binary(NodePtr n) {
 
 	this->_Read(n, leftVar, rightVar);
 
-	//this->_Print(" // - %s %s %s\n", leftVar->GetName().data(),
-	//	n->word.data(), rightVar->GetName().data());
+	if (n->lex->lex->IsLeft() && leftVar->CheckModificator(Object::Modificator::Constant)) {
+		PostSyntaxError(n->lex->line, "Unable to apply (%s) to constant variable (%s)",
+			n->word.data(), leftVar->GetName().data());
+	}
 
 	if (n->lex->lex->IsRight()) {
 
@@ -318,8 +308,6 @@ Void VirtualCompiler::_Binary(NodePtr n) {
 				this->_Cast(rightVar, sourceVar->GetClass());
 			}
 		}
-
-		//sourceVar->wasInStack = TRUE;
 	}
 	else {
 		sourceVar = leftVar;
@@ -333,6 +321,7 @@ Void VirtualCompiler::_Binary(NodePtr n) {
 		}
 
 		rightVar->wasInStack = FALSE;
+		sourceVar->wasInStack = FALSE;
 	}
 
 	if (n->lex->lex->IsLogic()) {
@@ -358,7 +347,12 @@ Void VirtualCompiler::_Binary(NodePtr n) {
 		this->variableStack.Return(VariablePtr(Scope::classBoolean));
 	}
 	else {
-		this->variableStack.Return(sourceVar);
+		if (n->lex->lex->IsLeft()) {
+			this->variableStack.Push(sourceVar);
+		}
+		else {
+			this->variableStack.Return(sourceVar);
+		}
 	}
 }
 
@@ -368,14 +362,15 @@ Void VirtualCompiler::_Unary(NodePtr n) {
 
 	this->_Read(n, leftVar, leftVar);
 
-	//this->_Print(" // - %s%s\n", n->word.data(),
-	//	leftVar->GetName().data());
-
-	if (!leftVar->wasInStack) {
-		this->OnLoad(leftVar);
+	if (n->lex->lex->IsLeft() && leftVar->CheckModificator(Object::Modificator::Constant)) {
+		PostSyntaxError(n->lex->line, "Unable to apply (%s) to constant variable (%s)",
+			n->word.data(), leftVar->GetName().data());
 	}
 
 	if (n->lex->lex->id == kScriptLexCast) {
+		if (!leftVar->wasInStack) {
+			this->OnLoad(leftVar);
+		}
 		if (!n->var->CheckType(Object::Type::Class)) {
 			PostSyntaxError(n->lex->line, "Unable to apply strong cast to non-class object (%s)",
 				n->var->GetName().data());
@@ -384,8 +379,24 @@ Void VirtualCompiler::_Unary(NodePtr n) {
 		this->variableStack.Return(VariablePtr(n->var->GetClass()));
 	}
 	else {
-		this->OnUnary(leftVar);
-		this->variableStack.Return(leftVar);
+		if (n->lex->lex->id == kScriptLexIncrement ||
+			n->lex->lex->id == kScriptLexDecrement ||
+			n->lex->lex->id == kScriptLexPrefixIncrement ||
+			n->lex->lex->id == kScriptLexPrefixDecrement
+		) {
+			this->OnUnary(leftVar);
+			this->variableStack.Push(leftVar);
+		}
+		else {
+			if (!leftVar->wasInStack) {
+				this->OnLoad(leftVar);
+			}
+			this->OnUnary(leftVar);
+			this->variableStack.Return(leftVar);
+			if (n->lex->lex->IsLeft()) {
+				this->OnStore(leftVar);
+			}
+		}
 	}
 }
 
@@ -412,46 +423,21 @@ Void VirtualCompiler::_Ternary(NodePtr n) {
 
 Void VirtualCompiler::_New(NodePtr n) {
 
-	VariablePtr leftVar;
+	VariablePtr leftVar = VariablePtr(n->typeNode->var);
 	VariablePtr rightVar;
 
-	this->_Read(n, leftVar, leftVar);
-
-	if (leftVar->CheckModificator(Object::Modificator::Primitive)) {
-		this->_Read(n, rightVar, rightVar);
-		if (!rightVar->CheckType(Object::Type::Variable)) {
-			PostSyntaxError(n->lex->line, "Array parameter must be variable (%s)", rightVar->GetName().data());
-		}
-		if (rightVar->GetVarType() != Variable::Var::Integer) {
-			PostSyntaxError(n->lex->line, "Array parameter must be integer value (%s)", rightVar->GetName().data());
-		}
-		// new
+	/* Constructor invocation */
+	if ((n->flags & kScriptFlagInvocation) != 0) {
+		this->GetByteCode()->New(RNEW)
+			->Write(leftVar->Scope::Size());
+		this->GetByteCode()->New(RDUP);
+		this->GetByteCode()->New(RDUP);
+		this->OnInvoke(leftVar->Find("<init>")->GetMethod());
+		this->_Invoke(n->typeNode);
 	}
+	/* Array allocation */
 	else {
-		if (leftVar->CheckModificator(Object::Modificator::Primitive)) {
-			PostSyntaxError(n->lex->line, "Unable to apply 'new' for primitive type (%s)", leftVar->GetName().data());
-		}
-		// new
-		ObjectPtr classVar = leftVar->Find(leftVar->Hash());
-		ObjectPtr constructorVar = leftVar->Find(leftVar->GetName());
-		// push
-		if (classVar->GetNode()) {
-			for (NodePtr n2 : classVar->GetNode()->blockList) {
-				this->_Run(n2->blockList);
-			}
-		}
-		if (constructorVar && FALSE) {
-			if (constructorVar->GetMethod()->GetRootNode()) {
-				this->_Run(constructorVar->GetMethod()->GetRootNode()->blockList);
-			}
-			else if (constructorVar->GetMethod()->GetNativeMethod()) {
-				constructorVar->GetMethod()->GetNativeMethod()(constructorVar->GetMethod());
-			}
-			else {
-				PostSyntaxError(n->lex->line, "Non-implemented class constructor (%s)", constructorVar->GetName().data());
-			}
-		}
-		// pop
+		__asm int 3
 	}
 
 	this->variableStack.Return(leftVar);
@@ -475,14 +461,14 @@ Void VirtualCompiler::_Selection(NodePtr n) {
 		PostSyntaxError(n->lex->line, "You can access to object's fields only (%s)", fieldName.data());
 	}
 
-	fieldObject = leftVar->GetClass()->Find(fieldName);
+	fieldObject = leftVar->GetClass()->Find(fieldName, FALSE);
 
 	if (!fieldObject) {
 		PostSyntaxError(n->lex->line, "Undeclared object's field (%s.%s)", leftVar->GetClass()->GetName().data(), fieldName.data());
 	}
 	rightVar = fieldObject->GetVariable();
 
-	// selection
+	this->OnLoad(rightVar);
 
 	this->variableStack.Return(rightVar);
 	//	varStack.push_back(rightVar);
@@ -496,6 +482,9 @@ Void VirtualCompiler::_Condition(NodePtr n) {
 	SegmentPtr blockSegment = NULL;
 	SegmentPtr currentSegment = NULL;
 	Segment    argSegment;
+	Segment    nextSegment;
+
+	Deque<NodePtr>::iterator i;
 
 	/* Check segment stack as empty */
 	if (this->segmentStack.empty()) {
@@ -513,8 +502,12 @@ Void VirtualCompiler::_Condition(NodePtr n) {
 
 		/* Push segment and compile list with arguments */
 		this->_Push(&argSegment);
-		this->_Run(n->argList);
-		this->_Read(n, var0, var0);
+		this->_Run(n->argList, TRUE);
+
+		if (!this->lastResult) {
+			PostSyntaxError(n->lex->line, "Lost expression's result", 0)
+		}
+		var0 = this->lastResult;
 
 		/* Check result for boolean type */
 		if (!var0->GetClass()->IsBooleanLike()) {
@@ -536,7 +529,7 @@ Void VirtualCompiler::_Condition(NodePtr n) {
 
 		/* Compile construction's block */
 		this->_Push(blockSegment);
-		this->_Run(n->blockList);
+		this->_Run(n->blockList, TRUE);
 		this->_Pop();
 
 		/* Move arguments segment to parent's */
@@ -544,7 +537,7 @@ Void VirtualCompiler::_Condition(NodePtr n) {
 
 		/* Set jump before compiled block */
 		this->GetByteCode()->New(JZ)->Write(currentSegment->GetPosition() +
-			blockSegment->GetSize() + (n->elseNode ? 10 : 5) + 1);
+			blockSegment->GetSize() + (n->elseNode ? 10 : 5));
 
 		/* Move block segment to parent's */
 		currentSegment->Merge(blockSegment);
@@ -560,7 +553,7 @@ Void VirtualCompiler::_Condition(NodePtr n) {
 
 		/* Compile construction's block */
 		this->_Push(blockSegment);
-		this->_Run(n->blockList);
+		this->_Run(n->blockList, TRUE);
 		this->_Pop();
 
 		/* Set block segment offset as compiled block size */
@@ -569,7 +562,7 @@ Void VirtualCompiler::_Condition(NodePtr n) {
 
 		/* Recompile construction's block */
 		this->_Push(blockSegment);
-		this->_Run(n->blockList);
+		this->_Run(n->blockList, TRUE);
 		this->_Pop();
 
 		/* Move arguments segment to parent's */
@@ -577,7 +570,7 @@ Void VirtualCompiler::_Condition(NodePtr n) {
 
 		/* Set jump before compiled block */
 		this->GetByteCode()->New(JUMP)->Write(currentSegment->GetPosition() +
-			blockSegment->GetSize() + 5 + 1);
+			blockSegment->GetSize() + 5);
 
 		/* Move block segment to parent's */
 		currentSegment->Merge(blockSegment);
@@ -585,7 +578,7 @@ Void VirtualCompiler::_Condition(NodePtr n) {
 		break;
 	case kScriptLexWhile:
 
-		if (n->hasDo) {
+		if ((n->flags & kScriptFlagWhileHasDo) != 0) {
 			break;
 		}
 
@@ -594,11 +587,14 @@ Void VirtualCompiler::_Condition(NodePtr n) {
 
 		/* Compile list with arguments */
 		this->_Push(&argSegment);
-		this->_Run(n->argList);
+		this->_Run(n->argList, TRUE);
 		this->_Pop();
 
 		/* Read result */
-		this->_Read(n, var0, var0);
+		if (!this->lastResult) {
+			PostSyntaxError(n->lex->line, "Lost expression's result", 0)
+		}
+		var0 = this->lastResult;
 
 		/* Check result for boolean type */
 		if (!var0->GetClass()->IsBooleanLike()) {
@@ -617,7 +613,7 @@ Void VirtualCompiler::_Condition(NodePtr n) {
 
 		/* Compile construction's block */
 		this->_Push(blockSegment);
-		this->_Run(n->blockList);
+		this->_Run(n->blockList, TRUE);
 		this->_Pop();
 
 		/* Move arguments segment to parent's */
@@ -625,14 +621,14 @@ Void VirtualCompiler::_Condition(NodePtr n) {
 
 		/* Set jump before compiled block */
 		this->GetByteCode()->New(JZ)->Write(currentSegment->GetPosition() +
-			blockSegment->GetSize() + 10 + 1);
+			blockSegment->GetSize() + 10);
 
 		/* Move block segment to parent's */
 		currentSegment->Merge(blockSegment);
 
 		/* Set jump after compiled block for jump */
 		this->GetByteCode()->New(JUMP)->Write(
-			argSegment.GetOffset() + 1);
+			argSegment.GetOffset());
 
 		break;
 	case kScriptLexDo:
@@ -647,12 +643,12 @@ Void VirtualCompiler::_Condition(NodePtr n) {
 
 		/* Compile construction's block */
 		this->_Push(blockSegment);
-		this->_Run(n->blockList);
+		this->_Run(n->blockList, TRUE);
 		this->_Pop();
 
 		/* Compile list with arguments */
 		this->_Push(&argSegment);
-		this->_Run(n->argList);
+		this->_Run(n->argList, TRUE);
 		this->_Pop();
 
 		/* Move arguments segment to parent's */
@@ -660,7 +656,10 @@ Void VirtualCompiler::_Condition(NodePtr n) {
 		currentSegment->Merge(&argSegment);
 
 		/* Read result */
-		this->_Read(n, var0, var0);
+		if (!this->lastResult) {
+			PostSyntaxError(n->lex->line, "Lost expression's result", 0)
+		}
+		var0 = this->lastResult;
 
 		/* Check result for boolean type */
 		if (!var0->GetClass()->IsBooleanLike()) {
@@ -673,10 +672,73 @@ Void VirtualCompiler::_Condition(NodePtr n) {
 		}
 
 		/* Set jump before compiled block */
-		this->GetByteCode()->New(JNZ)->Write(argSegment.GetOffset() + 1);
+		this->GetByteCode()->New(JNZ)->Write(argSegment.GetOffset());
 
 		break;
 	case kScriptLexFor:
+
+		/* Compile for's entry in current segment (doesn't metter) */
+		this->_Run(n->forInfo.beginList, TRUE);
+
+		/* Set segment's offset */
+		argSegment.SetOffset(currentSegment->GetPosition());
+
+		/* Compile condition block in temporary segment */
+		this->_Push(&argSegment);
+		this->_Run(n->forInfo.conditionList, TRUE);
+		this->_Pop();
+
+		/* Read result */
+		if (!this->lastResult) {
+			PostSyntaxError(n->lex->line, "Lost expression's result", 0)
+		}
+		var0 = this->lastResult;
+
+		/* Check result for boolean type */
+		if (!var0->GetClass()->IsBooleanLike()) {
+			goto _BooleanError;
+		}
+
+		/* Load result from stack if needed */
+		if (!var0->wasInStack) {
+			this->OnLoad(var0);
+		}
+
+		/* Fetch block segment and set it's offset */
+		blockSegment = n->var->GetSegment();
+
+		/* Set segment's offset */
+		blockSegment->SetOffset(currentSegment->GetPosition());
+
+		/* Compile construction's block */
+		this->_Push(blockSegment);
+		this->_Run(n->blockList, TRUE);
+		this->_Pop();
+
+		/* Move arguments and block segments to parent's */
+		currentSegment->Merge(&argSegment);
+
+		/* Set segment's offset */
+		nextSegment.SetOffset(currentSegment->GetPosition());
+
+		/* Compile next block */
+		this->_Push(&nextSegment);
+		this->_Run(n->forInfo.nextList, TRUE);
+		this->_Pop();
+
+		/* Set jump before compiled block */
+		this->GetByteCode()->New(JZ)->Write(nextSegment.GetPosition() +
+			blockSegment->GetSize() + 10);
+
+		/* Move block segments to parent's */
+		currentSegment->Merge(blockSegment);
+
+		/* Move next segment to parent's */
+		currentSegment->Merge(&nextSegment);
+
+		/* Jump to begin */
+		this->GetByteCode()->New(JUMP)->Write(argSegment.GetOffset());
+
 		break;
 	case kScriptLexTry:
 		break;
@@ -718,7 +780,6 @@ Void VirtualCompiler::_Invoke(NodePtr n) {
 		this->variableStack.Push(leftVar->GetVariable());
 	}
 	else {
-
 		for (Uint32 i = 0; i < n->lex->args; i++) {
 
 			VariablePtr var = *(this->variableStack.GetVarList().end() - i - 1);
@@ -731,14 +792,8 @@ Void VirtualCompiler::_Invoke(NodePtr n) {
 			}
 		}
 
-		this->_Print(" // - %s(%s)\n", n->word.data(), formattedParameters.data());
-
-		for (Uint32 i = 0; i < n->lex->args; i++) {
-			this->OnLoad(this->variableStack.Pop());
-		}
-
 		invokeHash = Method::ComputeInvokeHash(objectList);
-		methodHash = n->var->GetNode()->methodHash;
+		methodHash = n->var->GetNode()->methodInfo.invokeHash;
 		methodVar = n->var->Find(Uint64(n->var->GetHash32()) << 32 | invokeHash);
 
 		struct OrderedMethod {
@@ -755,18 +810,24 @@ Void VirtualCompiler::_Invoke(NodePtr n) {
 		Uint32 distance = 0;
 
 		if (!methodVar) {
-			for (ObjectPtr m : n->var->GetParent()->GetMethodSet()) {
+			Set<ObjectPtr> methodSet = n->var->CheckType(Object::Type::Class) ?
+				n->var->GetMethodSet() : n->var->GetParent()->GetMethodSet();
+			for (ObjectPtr m : methodSet) {
 				if (n->word == m->GetName() && n->lex->args == m->GetMethod()->GetAttributeHash().size()) {
 					for (Uint32 i = 0; i < n->lex->args; i++) {
 						if (objectList[i]->GetPriority() > m->GetMethod()->GetAttributeHash()[i]->GetPriority()) {
-							goto _WrongMethod;
+							goto _WrongMethod1;
 						}
 						distance += std::labs(objectList[i]->GetPriority() - m->GetMethod()->GetAttributeHash()[i]->GetPriority());
 					}
 					methodList.push_back({ m->GetMethod(), distance });
-				_WrongMethod:
+				_WrongMethod1:
 					distance = 0;
 				}
+			}
+
+			if (this->currentNode->lex->lex->id == kScriptLexNew && !formattedParameters.length()) {
+				return;
 			}
 
 			if (methodList.empty()) {
@@ -778,8 +839,15 @@ Void VirtualCompiler::_Invoke(NodePtr n) {
 			methodVar = methodList.begin()->method;
 		}
 
+		for (Uint32 i = 0; i < n->lex->args; i++) {
+			this->OnLoad(this->variableStack.Pop());
+		}
+
 		this->OnInvoke(methodVar->GetMethod());
-		this->variableStack.Return(methodVar->GetMethod()->returnVar);
+
+		if (methodVar->GetMethod()->returnVar) {
+			this->variableStack.Return(methodVar->GetMethod()->returnVar);
+		}
 	}
 }
 
@@ -829,9 +897,8 @@ Void VirtualCompiler::_Return(NodePtr n) {
 	returnType = methodVar->GetReturnType();
 	methodVar->returnVar = returnVar;
 
-	OnCast(methodVar->returnVar, methodVar->GetReturnType());
-
 	if (returnVar) {
+		OnCast(methodVar->returnVar, methodVar->GetReturnType());
 		this->OnReturn(methodVar->GetReturnType());
 	}
 }
@@ -842,13 +909,71 @@ Void VirtualCompiler::_Finish(NodePtr n) {
 
 		this->variableStack.Pop();
 
-#if 0 /* Yes, its an error, but not now */
-		PostSyntaxError(this->variableStack.Back()->GetNode()->lex->line, "Unexcepted token in expression (%s)",
-			this->variableStack.Back()->GetNode()->lex->line);
+#if 1 /* Yes, its an error, but not now */
+		PostSyntaxError(this->currentNode->lex->line, "Unexcepted token in expression (%s)",
+			this->variableStack.Back()->GetName().data());
 #endif
 	}
 
 	this->variableStack.Clear();
+}
+
+Void VirtualCompiler::_CompileMethods(SegmentPtr segment) {
+
+	for (ObjectPtr i : this->methodList) {
+
+		Uint32 address = segment->GetSize();
+		NodePtr n = i->GetMethod()->GetRootNode();
+
+		this->currentMethod = i;
+
+		i->SetPosition(segment->GetPosition());
+
+		if (i->CheckModificator(Object::Modificator::Synchronized)) {
+			this->GetByteCode()->New(Asm::SYNCE);
+		}
+
+		this->_Push(segment);
+
+		for (NodePtr n2 : n->argList) {
+			if (!n2->var->CheckType(Object::Type::Variable)) {
+				PostSyntaxError(n->lex->line, "Argument must be variable (%s)", n2->var->GetName().data());
+			}
+			this->OnStore(n2->var->GetVariable());
+		}
+
+		if (!i->CheckModificator(Object::Modificator::Static)) {
+			ObjectPtr thisVar = i->Find("this");
+			if (thisVar) {
+				this->OnStore(thisVar->GetVariable());
+			}
+		}
+
+		this->_Run(i->GetMethod()->GetRootNode()->blockList);
+
+		if (i->CheckModificator(Object::Modificator::Synchronized)) {
+			this->GetByteCode()->New(Asm::SYNCQ);
+		}
+
+		Segment::HistoryPtr history = NULL;
+
+		if ((history = this->GetByteCode()->GetSegment()->FetchHistory(address))) {
+			history->object = i;
+		}
+
+		if (i->GetMethod()->GetReturnType()->IsVoid()) {
+			this->OnReturn(NULL);
+		}
+
+		if (!i->GetMethod()->GetReturnType()->IsVoid()) {
+			if (!i->GetMethod()->returnVar) {
+				PostSyntaxError(n->lex->line, "Non-void method %s(%s) must return (%s)", i->GetName().data(),
+					i->GetMethod()->GetFormattedArguments().data(), i->GetMethod()->GetReturnType()->GetName().data());
+			}
+		}
+
+		this->_Pop();
+	}
 }
 
 Void VirtualCompiler::_Push(SegmentPtr segment) {

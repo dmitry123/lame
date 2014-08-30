@@ -56,9 +56,6 @@ public:
 				) {
 					this->HandleRightParenthesis(node);
 				}
-				else if (node->lex->lex->id == kScriptLexComma) {
-					continue;
-				}
 				else {
 				_HandleOperator:
 					this->HandleOperator(node);
@@ -170,33 +167,13 @@ Node::Node(Buffer word, NodeID id, LexNodePtr lex, NodePtr parent, NodePtr prev)
 	parent(parent),
 	previous(prev)
 {
+	this->elseNode = NULL;
+	this->methodInfo.invokeHash = 0;
+	this->classInfo.extendNode = NULL;
+	this->templateNode = NULL;
+	this->typeNode = NULL;
+	this->var = NULL;
 	this->flags = 0;
-	this->var = 0;
-	this->typeNode = 0;
-	this->templateNode = 0;
-	this->extendNode = 0;
-	this->methodHash = 0;
-	this->elseNode = 0;
-	this->hasDo = 0;
-}
-
-Node::~Node() {
-
-	if (this->typeNode) {
-		delete this->typeNode;
-	}
-	
-	if (this->templateNode) {
-		delete this->templateNode;
-	}
-	
-	if (this->extendNode) {
-		delete this->extendNode;
-	}
-
-	for (NodePtr n : this->implementNode) {
-		delete n;
-	}
 }
 
 Void Node::ShuntingYard(Void) {
@@ -204,84 +181,37 @@ Void Node::ShuntingYard(Void) {
 	if (this->blockList.size() > 0) {
 		_Order(&this->blockList);
 	}
-
 	if (this->argList.size() > 0) {
 		_Order(&this->argList);
+	}
+	if (this->elseList.size() > 0) {
+		_Order(&this->argList);
+	}
+	if (this->forInfo.beginList.size() > 0) {
+		_Order(&this->forInfo.beginList);
+	}
+	if (this->forInfo.conditionList.size() > 0) {
+		_Order(&this->forInfo.conditionList);
+	}
+	if (this->forInfo.nextList.size() > 0) {
+		_Order(&this->forInfo.nextList);
 	}
 }
 
 Void Node::Extend(NodePtr node) {
-
-	if (this->extendNode) {
-		delete this->extendNode;
-		//this->extendNode = NULL;
-	}
-
-	this->extendNode = new Node(*node);
+	this->classInfo.extendNode = node;
 }
 
 Void Node::Implement(NodePtr node) {
-	this->implementNode.push_back(new Node(*node));
+	this->classInfo.implementNode.push_back(node);
 }
 
 Void Node::Template(NodePtr node) {
-
-	if (this->templateNode) {
-		delete this->templateNode;
-		//this->templateNode = NULL;
-	}
-
-	this->templateNode = new Node(*node);
+	this->templateNode = node;
 }
 
 Void Node::Type(NodePtr node) {
-
-	if (this->typeNode) {
-		delete this->typeNode;
-		//this->typeNode = NULL;
-	}
-
-	this->typeNode = new Node(*node);
-}
-
-Node::Node(const Node& node) :
-	Node(node.word, node.id, node.lex, node.parent, node.previous)
-{
-	if (node.extendNode) {
-		this->Extend(node.extendNode);
-	}
-
-	if (node.templateNode) {
-		this->Template(node.templateNode);
-	}
-
-	if (node.typeNode) {
-		this->Type(node.typeNode);
-	}
-
-	for (NodePtr n : node.implementNode) {
-		this->Implement(n);
-	}
-
-	this->blockList = node.blockList;
-	this->argList = node.argList;
-	this->elseList = node.elseList;
-	this->flags = node.flags;
-}
-
-Node::Node() :
-	word(""),
-	parent(NULL),
-	previous(NULL),
-	lex(NULL),
-	id(kScriptNodeDefault)
-{
-	this->flags = 0;
-	this->var = NULL;
-	this->typeNode = NULL;
-	this->templateNode = NULL;
-	this->extendNode = NULL;
-	this->hasDo = FALSE;
+	this->typeNode = node;
 }
 
 LAME_END2

@@ -26,7 +26,7 @@ public:
 public:
 	VariablePtr SetInteger(ScriptNativeInt i);
 	VariablePtr SetFloat(ScriptNativeFloat f);
-	VariablePtr SetObject(ClassPtr c);
+	VariablePtr SetObject(ObjectPtr c);
 	VariablePtr SetString(ScriptNativeString s);
     VariablePtr SetBoolean(ScriptNativeBool b);
 public:
@@ -42,7 +42,7 @@ public:
 	ClassPtr GetClass() final override;
 	VariablePtr GetVariable() override;
 public:
-	inline ClassPtr GetObject() { return this->objectValue; }
+	inline ObjectPtr GetObject() { return this->objectValue; }
 	inline Var GetVarType() { return this->varType; }
 public:
 	inline Void SetClass(ClassPtr classType) {
@@ -54,7 +54,7 @@ public:
 		ScriptNativeFloat floatValue;
 	} v;
 public:
-	ClassPtr objectValue;
+	ObjectPtr objectValue;
 	ScriptNativeString stringValue;
 private:
 	Var varType;

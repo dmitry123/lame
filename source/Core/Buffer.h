@@ -10,18 +10,20 @@ LAME_BEGIN2(Core)
 
 class Buffer : public std::string {
 public:
+	typedef std::string string;
+public:
 	Buffer() {
 	}
 	~Buffer() {
 	}
 public:
-	Buffer(const char* string) : std::string(string) {}
-	Buffer(char* string) : std::string(string) {}
-	Buffer(const char  symbol) : std::string(&symbol, 1) {}
-	Buffer(const std::string& string) : std::string(string) {}
-	Buffer(const char* string, Uint32 length) : std::string(string, length) {}
-	Buffer(char* string, Uint32 length) : std::string(string, length) {}
-	Buffer(const std::string& string, Uint32 length) : std::string(string, length) {}
+	Buffer(const char* string) : string(string) {}
+	Buffer(char* string) : string(string) {}
+	Buffer(const char  symbol) : string(&symbol, 1) {}
+	Buffer(const string& string) : string(string) {}
+	Buffer(const char* string, Uint32 length) : string(string, length) {}
+	Buffer(char* string, Uint32 length) : string(string, length) {}
+	Buffer(const string& string, Uint32 length) : string(string, length) {}
 public:
 	Void LAME_API Format(StringC format, ...);
 	List <Buffer> LAME_API Split(Sint8 symbol) const;

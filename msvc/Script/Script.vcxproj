@@ -217,6 +217,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\Script\Class.cpp" />
+    <ClCompile Include="..\..\source\Script\SequenceMatcher.cpp" />
+    <ClCompile Include="..\..\source\Script\SyntaxBuilder.cpp" />
     <ClCompile Include="..\..\source\Script\Interface.cpp" />
     <ClCompile Include="..\..\source\Script\Method.cpp" />
     <ClCompile Include="..\..\source\Script\NodeBuilder.cpp" />
@@ -236,6 +238,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\Script\Class.h" />
+    <ClInclude Include="..\..\source\Script\SequenceMatcher.h" />
+    <ClInclude Include="..\..\source\Script\SyntaxBuilder.h" />
     <ClInclude Include="..\..\source\Script\Interface.h" />
     <ClInclude Include="..\..\source\Script\Method.h" />
     <ClInclude Include="..\..\source\Script\NodeBuilder.h" />

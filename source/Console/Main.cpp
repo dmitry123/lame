@@ -6,6 +6,32 @@ using namespace Lame::ResourceManager;
 using namespace Lame::Script;
 using namespace Lame;
 
+#include <iostream>
+
+void tprintf(const char* format) {
+	std::cout << format;
+}
+
+template<typename T, typename... Targs>
+void tprintf(const char* format, T value, Targs... Fargs) {
+	while (*format) {
+		if (*format == '/' && *(format + 1) == '@') {
+			std::cout << '@';
+			format += 2;
+		}
+		if (*format == '@') {
+			std::cout << value;
+			tprintf(format + 1, Fargs...);
+			return;
+		}
+		std::cout << *format++;
+	}
+}
+
+template <class ...Args> Uint32 getArgCount(Args... a) {
+	return sizeof...a;
+}
+
 int main(int argc, char** argv) {
 
 #ifdef LAME_VLD
@@ -18,69 +44,63 @@ int main(int argc, char** argv) {
 	fileName = argc > 1 ?
 		argv[1] : "main.lame";
 
-	NodeBuilder nodeBuilder;
+	SyntaxBuilder syntaxBuilder;
 	FileParser fileParser;
 	ScopeBuilder scopeBuilder;
 	ScopePtr rootScope;
 	SegmentLinker segmentLinker;
-	SegmentBuilderPtr segmentBuilder;
+	SegmentBuilder segmentBuilder;
 	CodeTranslator codeTranslator;
 	CodeAnalizer codeAnalizer;
+	NodePtr rootNode;
 
 	try {
 		/* Launch timer */
 		time = Time::GetTime();
 
-		/* Initialize root scope and segment builder */
-		rootScope = Scope::CreateRootScope();
-		segmentBuilder = new SegmentBuilder(rootScope);
-
-		/* Load and parser file */
+		/* Load, parse file and build syntax tree */
 		fileParser.Load(fileName);
+		syntaxBuilder.Build(&fileParser);
 
-		/* Build node and scope trees */
-		nodeBuilder.Build(&fileParser);
-		scopeBuilder.Build(&nodeBuilder, rootScope);
+		/* Initialize root scope and fetch root node */
+		rootScope = Scope::CreateRootScope("Main", TRUE);
+		rootNode = syntaxBuilder.GetRootNode();
 
-		/* Run code analizer */
-		//codeAnalizer.Analize(&nodeBuilder, rootScope);
-
-		puts("");
-		for (Uint32 i = 0; i < 79; i++) {
-			printf("-");
-		}
-		puts("\n");
+		/* Build scope trees */
+		scopeBuilder.Build(rootNode, rootScope);
 
 		/* Build segments */
-		segmentBuilder->BuildTextSegment();
-		segmentBuilder->BuildDataSegment();
-		segmentBuilder->BuildCodeSegment();
+		segmentBuilder.BuildTextSegment(rootScope);
+		segmentBuilder.BuildDataSegment(rootScope);
+		segmentBuilder.BuildCodeSegment(rootScope);
 
 		/* Link data and text segments */
-		segmentLinker.Add(segmentBuilder->GetTextSegment());
-		segmentLinker.Add(segmentBuilder->GetDataSegment());
+		segmentLinker.Add(segmentBuilder.GetTextSegment());
+		segmentLinker.Add(segmentBuilder.GetDataSegment());
 
 		/* Move code segment to nessesary position */
-		segmentBuilder->GetCodeSegment()->SetOffset(
+		segmentBuilder.GetCodeSegment()->SetOffset(
 			segmentLinker.GetPosition());
 
-		/* Run translator and compile code */
-		codeTranslator.Run(&nodeBuilder, rootScope,
-			segmentBuilder->GetCodeSegment());
+		/* Compile code */
+		codeTranslator.Run(&syntaxBuilder, rootScope,
+			segmentBuilder.GetCodeSegment());
 
 		/* Link code segment */
-		segmentLinker.Add(segmentBuilder->GetCodeSegment());
+		segmentLinker.Add(segmentBuilder.GetCodeSegment());
 
 		/* Trace segments */
-		segmentBuilder->GetTextSegment()->Trace();
+		segmentBuilder.GetTextSegment()->Trace(FALSE);
 		printf("\n");
-		segmentBuilder->GetDataSegment()->Trace();
+		segmentBuilder.GetDataSegment()->Trace(FALSE);
 		printf("\n");
-		segmentBuilder->GetCodeSegment()->Trace(TRUE);
+		segmentBuilder.GetCodeSegment()->Trace(TRUE);
 		printf("\n");
 
+		segmentLinker.Save("main.lc");
+
 		/* Trace opcode */
-		ByteCode::Trace(segmentBuilder);
+		ByteCode::Trace(&segmentBuilder);
 	}
 	catch (SyntaxException& e) {
 		puts("\n+---------------------------+");
@@ -121,8 +141,6 @@ int main(int argc, char** argv) {
 	puts("");
 #  endif
 #endif
-
-	delete segmentBuilder;
 
 	return 0;
 }

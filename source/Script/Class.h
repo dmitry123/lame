@@ -40,7 +40,7 @@ private:
 	ObjectPtr extendClass;
 	Set<ObjectPtr> implementClass;
 	Uint32 priority;
-	Uint32 size;
+	Uint32 sizeOf;
 };
 
 LAME_END2

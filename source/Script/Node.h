@@ -21,7 +21,10 @@ typedef enum {
 	kScriptFlagOverride = 0x0800,
 	kScriptFlagDeprecated = 0x1000,
 	kScriptFlagForEach = 0x2000,
-	kScriptFlagEnum = 0x4000
+	kScriptFlagEnum = 0x4000,
+	kScriptFlagWhileHasDo = 0x8000,
+	kScriptFlagInvocation = 0x10000,
+	kScriptFlagSynchronized= 0x20000
 } FlagID;
 
 typedef enum {
@@ -50,28 +53,37 @@ public:
 public:
 	NodePtr typeNode;
 	NodePtr templateNode;
-	NodePtr extendNode;
-	Vector<NodePtr> implementNode;
+	//NodePtr extendNode;
+	//Vector<NodePtr> implementNode;
 	ObjectPtr var;
 	Uint32 flags;
 	Deque<NodePtr> argList;
 	Deque<NodePtr> blockList;
 	Deque<NodePtr> elseList;
-	Uint32 methodHash;
 	NodePtr elseNode;
-	Bool hasDo;
+	//Bool hasDo;
+public:
+	struct {
+		NodePtr extendNode;
+		Vector<NodePtr> implementNode;
+	} classInfo;
+	struct {
+		Deque<NodePtr> beginList;
+		Deque<NodePtr> conditionList;
+		Deque<NodePtr> nextList;
+	} forInfo;
+	struct {
+		Deque<NodePtr> throwsList;
+		Uint32 invokeHash;
+	} methodInfo;
 public:
 	Node(Buffer word, NodeID id, LexNodePtr lex, NodePtr parent, NodePtr prev);
-	~Node();
 public:
 	Void ShuntingYard(Void);
 	Void Extend(NodePtr node);
 	Void Implement(NodePtr node);
 	Void Template(NodePtr node);
 	Void Type(NodePtr node);
-private:
-	Node(const Node& node);
-	Node();
 };
 
 LAME_END2
