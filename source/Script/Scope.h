@@ -2,6 +2,7 @@
 #define __LAME_SCRIPT__SCOPE__
 
 #include "Define.h"
+#include "Node.h"
 
 LAME_BEGIN2(Script)
 
@@ -16,8 +17,8 @@ public:
 public:
 	ObjectPtr Add(ObjectPtr object);
 	Void Remove(ObjectPtr var);
-	ObjectPtr Find(Hash hash, Bool withDepth = TRUE);
-	ObjectPtr Find(BufferRefC name, Bool withDepth = TRUE);
+	ObjectPtr Find(Hash hash, Bool withDepth = TRUE, Uint32 objectType = FALSE);
+	ObjectPtr Find(BufferRefC name, Bool withDepth = TRUE, Uint32 objectType = FALSE);
 	Void Merge(ScopePtrC scope);
 	Void Clone(ScopePtrC scope);
 	Void Move(ScopePtrC scope);

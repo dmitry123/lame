@@ -477,8 +477,10 @@ Void VirtualCompiler::_Selection(NodePtr n) {
 	if (fieldObject->CheckModificator(Object::Modificator::Private) ||
 		fieldObject->CheckModificator(Object::Modificator::Protected)
 	) {
-		PostSyntaxError(n->lex->line, "Unable to get private/protected field (%s.%s)",
-			leftVar->GetClass()->GetName().data(), fieldName.data());
+		if (!leftVar->GetOwner()->Find(rightVar->Hash())) {
+			PostSyntaxError(n->lex->line, "Unable to get private/protected field (%s.%s)",
+				leftVar->GetClass()->GetName().data(), fieldName.data());
+		}
 	}
 
 	if (!leftVar->wasInStack) {
@@ -489,6 +491,8 @@ Void VirtualCompiler::_Selection(NodePtr n) {
 			this->OnLoad(rightVar);
 		}
 	}
+
+	rightVar->SetThis(leftVar);
 
 	this->variableStack.Return(rightVar);
 }
@@ -868,7 +872,9 @@ Void VirtualCompiler::_Invoke(NodePtr n) {
 				PostSyntaxError(n->lex->line, "Undeclared method %s(%s)", n->word.data(), formattedParameters.data());
 			}
 
-			std::sort(methodList.begin(), methodList.end());
+			if (methodList.size() > 1) {
+				std::sort(methodList.begin(), methodList.end());
+			}
 
 			methodVar = methodList.begin()->method;
 		}

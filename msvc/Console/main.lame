@@ -1,11 +1,13 @@
 class A {
-
-	public A() {
-	}
-
-	private long value = 0;
+	int a = 100;
+	int b = 20;
+	int c = 3;
+	int r = 0;
 }
 
 void main() {
-	A a = new A();
+
+	A z = new A();
+
+	z.r = z.a + z.b + z.c;
 }

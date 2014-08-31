@@ -201,6 +201,24 @@ Void ScopeBuilder::Build(NodePtr rootNode, ScopePtr rootScope) {
 #endif
 
     this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachNodeFlush, this), kScriptNodeUnknown);
+
+	for (ObjectPtr c : rootScope->GetClassSet()) {
+
+		if (c->CheckModificator(Object::Modificator::Primitive)) {
+			continue;
+		}
+
+		if (c->Find("<init>", FALSE)) {
+			continue;
+		}
+
+		MethodPtr initMethod = c->Add(new Method("<init>", c,
+			c, Scope::classVoid))->GetMethod();
+
+		initMethod->SetNativeMethod([] (MethodPtr m) {
+			/* Ignore */
+		});
+	}
 }
 
 Void ScopeBuilder::_ForEachNodeTrace(NodePtr n) {
@@ -627,18 +645,24 @@ Void ScopeBuilder::_ForEachVariableDeclare(NodePtr n) {
 		}
 
 		if (!n->typeNode) {
-			if (!(typeClass = scope->Find(n->word))) {
+			if (!(typeClass = scope->Find(n->word, TRUE, Uint32(Object::Type::Class)))) {
 				PostSyntaxError(n->lex->line, "Undeclared variable (%s)", n->word.data());
 			}
 			n->var = typeClass;
 			typeClass = typeClass->GetClass();
 		}
 		else {
-			typeClass = scope->Find(n->typeNode->word);
+			typeClass = scope->Find(n->typeNode->word, TRUE, Uint32(Object::Type::Class));
 		}
 
 		if (!typeClass) {
-			PostSyntaxError(n->lex->line, "Undeclared type (%s)", n->typeNode->word.data());
+			PostSyntaxError(n->lex->line, "Undeclared type (%s)",
+				n->typeNode->word.data());
+		}
+
+		if (!typeClass->CheckType(Object::Type::Class)) {
+			PostSyntaxError(n->lex->line, "Variable's type must be class or primitive type (%s)",
+				typeClass->GetName().data());
 		}
 
 		if ((n->flags & kScriptFlagArray) != 0) {
@@ -833,10 +857,6 @@ Void ScopeBuilder::_ForEachNode(NodePtr node, ScopePtr scope, ForEachNode callba
 		if (node->var) {
 			this->_Pop();
 		}
-	}
-
-	if (lastVar && lastVar->GetNode() && lastVar->GetNode()->lex->lex->id == kScriptLexDo && lastVar->GetNode()->parent == node) {
-		PostSyntaxError(lastVar->GetNode()->lex->line, "Do must have While block (%s)", lastVar->GetNode()->word.data());
 	}
 }
 

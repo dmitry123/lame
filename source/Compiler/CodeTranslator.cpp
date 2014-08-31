@@ -300,12 +300,11 @@ Void CodeTranslator::OnStore(VariablePtr var) {
 	ObjectPtr thisVar = NULL;
 
 	if (var->GetThis()) {
-		if ((thisVar = this->GetCurrentMethod()->Find("this", FALSE))) {
+		if (!(thisVar = this->GetCurrentMethod()->Find("this", FALSE))) {
+			thisVar = var->GetThis();
+		}
+		if (thisVar) {
 			this->OnLoad(VariablePtr(thisVar));
-#if 0
-			PostSyntaxError(this->currentNode->lex->line, "Lost 'this' variable in parent scope (%s)",
-				var->GetName().data());
-#endif
 		}
 		BCPNEW(var, RRSTORE, IRSTORE, LRSTORE, DRSTORE, FRSTORE)
 			->Write(var->GetFieldID());

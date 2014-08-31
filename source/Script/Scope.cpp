@@ -5,7 +5,6 @@
 #include "Class.h"
 #include "Method.h"
 #include "Variable.h"
-#include "Node.h"
 
 #include <utility>
 
@@ -79,7 +78,7 @@ Void Scope::Remove(ObjectPtr object) {
 	this->stringMap_.erase(j);
 }
 
-ObjectPtr Scope::Find(Hash hash, Bool withDepth) {
+ObjectPtr Scope::Find(Hash hash, Bool withDepth, Uint32 objectType) {
 
 	HashMap::iterator i;
 	ScopePtr scope;
@@ -89,7 +88,9 @@ ObjectPtr Scope::Find(Hash hash, Bool withDepth) {
 	while (scope) {
 
 		if ((i = scope->hashMap_.find(hash)) != scope->hashMap_.end()) {
-			return i->second;
+			if (!objectType || i->second->CheckType((Object::Type)objectType)) {
+				return i->second;
+			}
 		}
 
 		if (!withDepth) {
@@ -102,7 +103,7 @@ ObjectPtr Scope::Find(Hash hash, Bool withDepth) {
 	return NULL;
 }
 
-ObjectPtr Scope::Find(BufferRefC name, Bool withDepth) {
+ObjectPtr Scope::Find(BufferRefC name, Bool withDepth, Uint32 objectType) {
 
 	StringMap::iterator i;
 	ScopePtr scope;
@@ -112,7 +113,9 @@ ObjectPtr Scope::Find(BufferRefC name, Bool withDepth) {
 	while (scope) {
 
 		if ((i = scope->stringMap_.find(name)) != scope->stringMap_.end()) {
-			return i->second;
+			if (!objectType || i->second->CheckType((Object::Type)objectType)) {
+				return i->second;
+			}
 		}
 
 		if (!withDepth) {

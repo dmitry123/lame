@@ -19,7 +19,7 @@ Method::Method(BufferRefC name, ScopePtr parent, ObjectPtr thisClass, ObjectPtr 
 }
 
 ClassPtr Method::GetClass() {
-	return thisClass->GetVariable()->GetClass();
+	return thisClass->GetClass();
 }
 
 MethodPtr Method::GetMethod() {
