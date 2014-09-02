@@ -20,6 +20,8 @@ Void _CompileBool(ByteCodePtr bc, Script::VariablePtr left, LexID lexID) {
 		case kScriptLexBellowEqual: command = JNBE; break;
 		case kScriptLexEqual:       command = JNE;  break;
 		case kScriptLexNotEqual:    command = JE;   break;
+    default:
+        break;
 	}
 
 	if (command == NOOP) {
@@ -134,6 +136,8 @@ Void CodeTranslator::OnBinary(VariablePtr left, VariablePtr right) {
 		}
 		bc->New(IOR);
 		break;
+    default:
+        break;
 	}
 }
 
@@ -226,7 +230,8 @@ Void CodeTranslator::OnCast(VariablePtr source, ClassPtr type) {
 Void CodeTranslator::OnLoad(VariablePtr var) {
 
 	ByteCodePtr bc = this->GetByteCode();
-
+    ObjectPtr thisVar = NULL;
+    
 	if (!var->GetThis()) {
 
 		if (var->GetName() == "true") {
@@ -290,6 +295,12 @@ Void CodeTranslator::OnLoad(VariablePtr var) {
 		}
 	}
 	else {
+		if (!(thisVar = this->GetCurrentMethod()->Find("this", FALSE))) {
+			thisVar = var->GetThis();
+		}
+		if (thisVar) {
+			this->OnLoad(VariablePtr(thisVar));
+		}
 		BCPNEW(var, RRLOAD, IRLOAD, LRLOAD, DRLOAD, FRLOAD)
 			->Write(var->GetFieldID());
 	}

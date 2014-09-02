@@ -3,7 +3,7 @@
 
 #include "Define.h"
 
-LAME_BEGIN2(Script)
+LAME_BEGIN2(Compiler)
 
 class LAME_API SegmentLinker {
 public:

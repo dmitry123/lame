@@ -24,7 +24,7 @@ classType(classType)
 		classType->IsChar() ||
 		classType->IsShort() ||
 		classType->IsLong()
-		) {
+	) {
 		this->varType = Var::Integer;
 		this->SetModificator(Modificator::Integer);
 	}

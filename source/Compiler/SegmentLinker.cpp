@@ -1,6 +1,6 @@
 #include "SegmentLinker.h"
 
-LAME_BEGIN2(Script)
+LAME_BEGIN2(Compiler)
 
 SegmentLinker::SegmentLinker() {
 	this->position = 0;
@@ -33,7 +33,7 @@ Bool SegmentLinker::Add(SegmentPtr segment) {
 	}
 
 	segment->SetOffset(this->position);
-	this->position += segment->capacity;
+	this->position += segment->GetCapacity();
 
 	return TRUE;
 }
@@ -78,7 +78,8 @@ Void SegmentLinker::Load(StringC fileName) {
 
 		Uint32 filePosition = file.GetPosition();
 		file.SetPosition(segment.position);
-		file.Read(segmentObject->data, segmentObject->capacity);
+		file.Read(segmentObject->GetBlockAt(0),
+                  segmentObject->GetCapacity());
 		file.SetPosition(filePosition);
 
 		this->segmentList.push_back(segmentObject);
@@ -103,27 +104,27 @@ Void SegmentLinker::Save(StringC fileName) {
 	file.Write(&header, sizeof(HeaderInfo));
 
 	for (SegmentPtr s : this->segmentList) {
-		positionOffset += s->name.length() + 1;
+		positionOffset += s->GetName().length() + 1;
 	}
 
 	for (SegmentPtr s : this->segmentList) {
 
-		Uint32 nameLength = Uint32(s->name.length()) + 1;
+		Uint32 nameLength = Uint32(s->GetName().length()) + 1;
 
 		SegmentInfo segment = {
 			positionOffset,
-			s->capacity,
+			s->GetCapacity(),
 			nameLength
 		};
 
 		file.Write(&segment, sizeof(SegmentInfo));
-		file.Write(VoidP(s->name.data()), nameLength);
+		file.Write(VoidP(s->GetName().data()), nameLength);
 
-		positionOffset += s->capacity;
+		positionOffset += s->GetCapacity();
 	}
 
 	for (SegmentPtr s : this->segmentList) {
-		file.Write(s->data, s->size);
+		file.Write(s->GetBlockAt(0), s->GetSize());
 	}
 
 	file.Close();

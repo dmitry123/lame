@@ -137,6 +137,36 @@ Void VirtualCompiler::_Print(StringC message, ...) {
 	va_end(vaList);
 }
 
+static Bool _CheckObjectCast(ClassPtr left, ClassPtr right) {
+
+	if (left == right || left->GetExtend()->GetClass() == right) {
+		return TRUE;
+	}
+
+	for (ObjectPtr i : left->GetImplements()) {
+		if (i->GetClass() == right) {
+			return TRUE;
+		}
+	}
+
+	ObjectPtr c = left->GetExtend()->GetClass()->GetExtend();
+
+	while (c) {
+		if (_CheckObjectCast(c->GetClass(), right)) {
+			return TRUE;
+		}
+		c = c->GetClass()->GetExtend();
+	}
+
+	for (ObjectPtr c : left->GetImplements()) {
+		if (_CheckObjectCast(c->GetClass(), right)) {
+			return TRUE;
+		}
+	}
+
+	return FALSE;
+}
+
 Void VirtualCompiler::_Cast(VariablePtr var, ObjectPtr type) {
 
 	ClassPtr left = var->GetClass();
@@ -159,6 +189,11 @@ Void VirtualCompiler::_Cast(VariablePtr var, ObjectPtr type) {
 			goto _CastOk;
 		}
 		goto _CastError;
+	}
+	else if (left->IsObject()) {
+		if (_CheckObjectCast(left, right)) {
+			goto _CastOk;
+		}
 	}
 
 	goto _CastError;
@@ -241,6 +276,7 @@ Void VirtualCompiler::Run(SyntaxBuilderPtr nodeBuilder, ScopePtr rootScope, Segm
 
 	Segment temporaryMethodSegment;
 	temporaryMethodSegment.SetOffset(codeSegment->GetPosition());
+
 	this->_CompileMethods(&temporaryMethodSegment);
 	this->_CompileMethods(codeSegment);
 
@@ -430,18 +466,28 @@ Void VirtualCompiler::_Ternary(NodePtr n) {
 Void VirtualCompiler::_New(NodePtr n) {
 
 	VariablePtr leftVar = VariablePtr(n->typeNode->var);
-	VariablePtr rightVar;
 
 	/* Constructor invocation */
 	if ((n->flags & kScriptFlagInvocation) != 0) {
+
 		this->GetByteCode()->New(RNEW)
 			->Write(leftVar->Scope::Size());
-		this->OnInvoke(leftVar->Find("<init>")->GetMethod());
+
+		ClassPtr initClass = leftVar->GetClass();
+		ObjectPtr initMethod = NULL;
+
+		while (initClass != initClass->classObject) {
+			if ((initMethod = initClass->Find("<init>", FALSE))) {
+				this->OnInvoke(initMethod->GetMethod());
+			}
+			initClass = ClassPtr(initClass->GetExtend());
+		}
+
 		this->_Invoke(n->typeNode);
 	}
 	/* Array allocation */
 	else {
-		__asm int 3
+        __asm int 3
 	}
 
 	this->variableStack.Return(leftVar);
@@ -842,7 +888,7 @@ Void VirtualCompiler::_Invoke(NodePtr n) {
 						if (objectList[i]->GetPriority() > m->GetMethod()->GetAttributeHash()[i]->GetPriority()) {
 							goto _WrongMethod1;
 						}
-						distance += std::labs(objectList[i]->GetPriority() - m->GetMethod()->GetAttributeHash()[i]->GetPriority());
+						distance += labs(objectList[i]->GetPriority() - m->GetMethod()->GetAttributeHash()[i]->GetPriority());
 					}
 					methodList.push_back({ m->GetMethod(), distance });
 				_WrongMethod1:
@@ -945,15 +991,14 @@ Void VirtualCompiler::_Return(NodePtr n) {
 
 Void VirtualCompiler::_Finish(NodePtr n) {
 
-	if (this->variableStack.Size() > 1) {
-
-		this->variableStack.Pop();
-
 #if 1 /* Yes, its an error, but not now */
-		PostSyntaxError(this->currentNode->lex->line, "Unexcepted token in expression (%s)",
-			this->variableStack.Back()->GetName().data());
+    for (VariablePtr v : this->variableStack.GetVarList()) {
+        if (v && v->GetNode() && v->GetNode()->id == kScriptNodeDefault) {
+            PostSyntaxError(this->currentNode->lex->line, "Unexcepted token in expression (%s)",
+                this->variableStack.Back()->GetName().data());
+        }
+    }
 #endif
-	}
 
 	this->variableStack.Clear();
 }
@@ -988,7 +1033,7 @@ Void VirtualCompiler::_CompileMethods(SegmentPtr segment) {
 			if (i->GetName() == "<init>" || i->GetName() == i->GetOwner()->GetName()) {
 				this->GetByteCode()->New(RDUP);
 			}
-			if ((thisVar = i->Find("this"))) {
+			if ((thisVar = i->Find("this", FALSE, Uint32(Object::Type::Variable)))) {
 				this->OnStore(thisVar->GetVariable());
 			}
 		}

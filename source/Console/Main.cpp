@@ -29,11 +29,11 @@ void tprintf(const char* format, T value, Targs... Fargs) {
 }
 
 template <class ...Args> Uint32 getArgCount(Args... a) {
-	return sizeof...a;
+	return sizeof...(a);
 }
 
 int main(int argc, char** argv) {
-
+    
 #ifdef LAME_VLD
 	puts("");
 #endif
@@ -44,15 +44,15 @@ int main(int argc, char** argv) {
 	fileName = argc > 1 ?
 		argv[1] : "main.lame";
 
-	SyntaxBuilder syntaxBuilder;
-	FileParser fileParser;
-	ScopeBuilder scopeBuilder;
-	ScopePtr rootScope;
-	SegmentLinker segmentLinker;
-	SegmentBuilder segmentBuilder;
-	CodeTranslator codeTranslator;
-	CodeAnalizer codeAnalizer;
-	NodePtr rootNode;
+    SyntaxBuilder syntaxBuilder;
+    FileParser fileParser;
+    ScopeBuilder scopeBuilder;
+    ScopePtr rootScope;
+    SegmentLinker segmentLinker;
+    SegmentBuilder segmentBuilder;
+    CodeTranslator codeTranslator;
+    CodeAnalizer codeAnalizer;
+    NodePtr rootNode;
 
 	try {
 		/* Launch timer */
@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
 		segmentBuilder.GetCodeSegment()->Trace(TRUE);
 		printf("\n");
 
-		segmentLinker.Save("main.lc");
+		rootScope->Trace(0);
 
 		/* Trace opcode */
 		ByteCode::Trace(&segmentBuilder);

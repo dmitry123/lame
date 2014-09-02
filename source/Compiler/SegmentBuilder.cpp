@@ -1,6 +1,6 @@
 #include "SegmentBuilder.h"
 
-LAME_BEGIN2(Script)
+LAME_BEGIN2(Compiler)
 
 SegmentBuilder::~SegmentBuilder() {
 
@@ -39,7 +39,8 @@ SegmentPtr SegmentBuilder::BuildDataSegment(ScopePtr rootScope) {
 		}
 	}, this->dataSegment, rootScope);
 
-	memset(this->dataSegment->data, -1, this->dataSegment->size);
+	memset(this->dataSegment->GetBlockAt(0), -1,
+           this->dataSegment->GetSize());
 
 	this->dataSegment->Flush();
 

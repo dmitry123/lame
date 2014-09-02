@@ -15,6 +15,11 @@ typedef Exception WaitManagerException;
 typedef Exception FileException;
 typedef Exception DirectoryException;
 
+#define LAME_ASSERT(_condition) \
+    if (!(_condition)) { \
+        throw Exception(#_condition); \
+    }
+
 LAME_END2
 
 #endif // ~__LAME_CORE_EXCEPTION__

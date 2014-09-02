@@ -43,10 +43,12 @@ typedef ScriptException InterfaceException;
 	} while (0);
 
 #define PostSyntaxWarning(_line, _message, ...) \
+    do { \
 	static Bool __warningExceptionLock = 0; \
 	if (!__warningExceptionLock) { \
 		SyntaxException(1, _line, _message, __VA_ARGS__).Debug(); \
-	} __warningExceptionLock = 1;
+	} __warningExceptionLock = 1; \
+    } while (0);
 
 LAME_END2
 

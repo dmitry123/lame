@@ -192,7 +192,7 @@ public:
 	static LexPtrC Find(LexID id);
 	static LexPtrC Find(BufferRefC word);
 	static Void PrintLine(Uint32 tabOffset = 0);
-	static Vector<LexPtrC> Match(BufferRefC entry);
+	static List<LexPtr> Match(BufferRefC entry);
 private:
 	static Map<LexID, Lex> lexMap;
 };

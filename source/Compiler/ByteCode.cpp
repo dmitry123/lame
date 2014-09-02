@@ -128,12 +128,11 @@ Void ByteCode::Trace(SegmentBuilderPtr segmentBuilder) {
 				scopeHash = object->GetPath().GetHash64();
 
 				if (object->CheckType(Object::Type::Method)) {
-					printf("   // %.8x%.8x : %s %s%s(%s)", Uint32(scopeHash >> 32), Uint32(scopeHash), object->GetMethod()->GetReturnType()->GetName().data(),
+					printf("   // %s %s%s(%s)", object->GetMethod()->GetReturnType()->GetName().data(),
 						object->GetPath().data(), object->GetName().data(), object->GetMethod()->GetFormattedArguments().data());
 				}
 				else {
-					printf("   // %.8x%.8x : %s", Uint32(scopeHash >> 32), Uint32(scopeHash),
-						object->GetName().data());
+					printf("   // %s", object->GetName().data());
 				}
 			}
 

@@ -35,19 +35,19 @@ Map<LexID, Lex> Lex::lexMap = {
 		/* Brackets */
 
 		{ kScriptLexBracketL,
-			{ "[", P(2, 1), kScriptLexBracketL, 0,
+			{ "[", P(2, 0), kScriptLexBracketL, 0,
 				kScriptLexFlagRight | kScriptLexFlagExpression }
 		},
 		{ kScriptLexBracketR,
-			{ "]", P(2, 1), kScriptLexBracketR, 0,
+			{ "]", P(2, 0), kScriptLexBracketR, 0,
 				kScriptLexFlagRight | kScriptLexFlagExpression }
 		},
 		{ kScriptLexParenthesisL,
-			{ "(", P(2, 1), kScriptLexParenthesisL, 0,
+			{ "(", P(2, 0), kScriptLexParenthesisL, 0,
 				kScriptLexFlagRight | kScriptLexFlagExpression }
 		},
 		{ kScriptLexParenthesisR,
-			{ ")", P(2, 1), kScriptLexParenthesisR, 0,
+			{ ")", P(2, 0), kScriptLexParenthesisR, 0,
 				kScriptLexFlagRight | kScriptLexFlagExpression }
 		},
 
@@ -423,13 +423,13 @@ LexPtrC Lex::Find(BufferRefC word) {
 	return NULL;
 }
 
-Vector<LexPtrC> Lex::Match(BufferRefC entry) {
+List<LexPtr> Lex::Match(BufferRefC entry) {
 
-	Vector<LexPtrC> result;
+	List<LexPtr> result;
 
 	for (auto& i : lexMap) {
 		if (strstr(entry.data(), i.second.word.data()) == entry.data()) {
-			result.push_back(&i.second);
+            result.push_back(&i.second);
 		}
 	}
 

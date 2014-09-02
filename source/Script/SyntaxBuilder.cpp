@@ -73,7 +73,10 @@ Void SyntaxBuilder::Build(FileParserPtr fileParser) {
 	/*	Creating root node, which will be the entry point
 		of our script code. */
 
-	this->rootNode = this->_Create(this->_End() - 1, kScriptNodeEntry);
+    /* Stupid clang can't take reference to temporary variable */
+    auto __it = this->_End() - 1;
+    
+    this->rootNode = this->_Create(__it, kScriptNodeEntry);
 	this->parentNode = this->rootNode;
 
 	/*	Find first object in parser's list with lexes and
@@ -433,7 +436,6 @@ SyntaxBuilder::Iterator SyntaxBuilder::Variable(NodePtr& node, Iterator i) {
 		'int value = 100;' or 'class A { public int value = 100; }' */
 
 	NodePtr typeNode = 0;
-	NodePtr prevNode = 0;
 	NodePtr varNode = 0;
 
 	__Inc(i);
@@ -653,6 +655,13 @@ SyntaxBuilder::Iterator SyntaxBuilder::Class(NodePtr& node, Iterator i) {
 		__Inc(i);
 	}
 
+	if (this->_IsTemplate(i)) {
+		__Inc(i);
+		node->typeNode->templateNode = this->_Create(i);
+		__Inc(i);
+		__Inc(i);
+	}
+
 	if ((*i)->lex->id == kScriptLexExtends) {
 		__Inc(i);
 		while ((*i)->lex->id != kScriptLexBraceL && (*i)->lex->id != kScriptLexImplements) {
@@ -711,11 +720,21 @@ SyntaxBuilder::Iterator SyntaxBuilder::Class(NodePtr& node, Iterator i) {
 		}
 		else {
 			if ((*i)->word == node->typeNode->word) {
-				i = this->fileParser->GetLexList().insert(i,
-					new LexNode("void", (*i)->line, Lex::Find(kScriptLexDefault)));
+				__Inc(i);
+				if ((*i)->lex->id == kScriptLexParenthesisL) {
+					__Dec(i);
+					i = this->fileParser->GetLexList().insert(i,
+						new LexNode("void", (*i)->line, Lex::Find(kScriptLexDefault)));
+					__Inc(i);
+				}
+				__Dec(i);
 			}
 			field = this->_Append(i);
-			if (field->id != kScriptNodeVariable && field->id != kScriptNodeFunction) {
+			if (field->id != kScriptNodeVariable &&
+				field->id != kScriptNodeFunction &&
+				field->id != kScriptNodeClass &&
+				field->id != kScriptNodeInterface
+			) {
 				PostSyntaxError((*i)->line, "Illegal token in class (%s)", field->word.data());
 			}
 			if (modificatorCount > 1) {
@@ -845,8 +864,11 @@ SyntaxBuilder::Iterator SyntaxBuilder::Arguments(NodePtr& node, Iterator i) {
 }
 
 SyntaxBuilder::Iterator SyntaxBuilder::Template(NodePtr& node, Iterator i) {
-
-	node->templateNode = this->_Create(i + 2, kScriptNodeDefault);
+    
+    /* Stupid clang can't take reference from non-temporary variable */
+    auto __it = i + 2;
+    
+    node->templateNode = this->_Create(__it, kScriptNodeDefault);
 
 	i = this->fileParser->GetLexList().erase(i + 1);
 	i = this->fileParser->GetLexList().erase(i);
@@ -1089,18 +1111,6 @@ NodePtr SyntaxBuilder::_Append(Iterator& i) {
 	//	}
 	//}
 
-	/*	Fix for cast */
-
-	if (this->_IsCast(i + 1) && (*i)->lex->IsUnknown()) {
-		__Inc(i);
-		i = this->_List().erase(i);
-		LexNodePtr castLex = new LexNode((*i)->word, (*i)->line, Lex::Find(kScriptLexCast));
-		i = this->_List().erase(i);
-		i = this->_List().erase(i);
-		i = this->_List().insert(i, castLex);
-		__Dec(i);
-	}
-
 	if (node->lex->lex->id == kScriptLexClass ||
 		node->lex->lex->id == kScriptLexInterface
 	) {
@@ -1116,6 +1126,8 @@ NodePtr SyntaxBuilder::_Append(Iterator& i) {
 			case kScriptLexTry:     i = this->Try(node, i);     break;
 			case kScriptLexCatch:   i = this->Catch(node, i);   break;
 			case kScriptLexFinally: i = this->Finally(node, i); break;
+        default:
+            break;
 		}
 	}
 
@@ -1154,6 +1166,18 @@ NodePtr SyntaxBuilder::_Append(Iterator& i) {
 		}
 
 		i = this->Arguments(node, i);
+	}
+
+	/*	Fix for cast */
+
+	if (this->_IsCast(i + 1) && (*(i + 2))->lex->IsUnknown()) {
+		__Inc(i);
+		i = this->_List().erase(i);
+		(*i)->ChangeLex(Lex::Find(kScriptLexCast));
+		(*i)->args = (*i)->lex->args;
+		i = this->_List().erase(i + 1);
+		__Dec(i);
+		__Dec(i);
 	}
 
 	if (i == this->fileParser->GetLexList().end()) {

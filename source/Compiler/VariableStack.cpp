@@ -19,7 +19,9 @@ VariablePtr VariableStack::Pop(Void) {
 	this->varList.pop_back();
 	this->nameList.pop_back();
 
-	var->wasInStack = FALSE;
+	if (var) {
+		var->wasInStack = FALSE;
+	}
 
 	return var;
 }
@@ -36,13 +38,18 @@ Void VariableStack::Return(VariablePtr var) {
 
 	this->varHistory.push_back(var);
 	this->Push(var);
-	var->wasInStack = TRUE;
+
+	if (var) {
+		var->wasInStack = TRUE;
+	}
 }
 
 Void VariableStack::Release(Void) {
 
 	for (VariablePtr var : this->varHistory) {
-		var->wasInStack = FALSE;
+		if (var) {
+			var->wasInStack = FALSE;
+		}
 	}
 	this->varHistory.clear();
 }

@@ -514,6 +514,8 @@ NodeBuilder::Iterator NodeBuilder::_BuildCondition(NodePtr& parent, Iterator i) 
 		case kScriptLexTry:     i = this->syntaxBuilder_.Try(parent, i);     break;
 		case kScriptLexCatch:   i = this->syntaxBuilder_.Catch(parent, i);   break;
 		case kScriptLexFinally: i = this->syntaxBuilder_.Finally(parent, i); break;
+    default:
+        break;
 	}
 
 	__Inc(i);

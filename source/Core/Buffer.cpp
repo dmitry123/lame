@@ -550,11 +550,11 @@ Uint64 Buffer::GetHash64(Void) const {
 }
 
 Uint32 Buffer::GetHash32(StringC string) {
-	return MurmurHash2A(string, strlen(string), 0x7b1010);
+	return MurmurHash2A(string, (Uint32)strlen(string), 0x7b1010);
 }
 
 Uint64 Buffer::GetHash64(StringC string) {
-	return MurmurHash64A(string, strlen(string), 0x7b1010);
+	return MurmurHash64A(string, (Uint32)strlen(string), 0x7b1010);
 }
 
 LAME_END2

@@ -131,6 +131,7 @@ Void ScopeBuilder::Build(NodePtr rootNode, ScopePtr rootScope) {
 			2. Apply class/interface modificators
 			3. Declaring class/interface methods and variables */
 
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachConstruction, this), kScriptNodeCondition);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassPrototype, this), kScriptNodeClass);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachModificatorSet, this), kScriptNodeClass);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassPrototype, this), kScriptNodeAnonymous);
@@ -167,7 +168,6 @@ Void ScopeBuilder::Build(NodePtr rootNode, ScopePtr rootScope) {
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachMethodDeclare, this), kScriptNodeFunction);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachModificatorSet, this), kScriptNodeFunction);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachMethodRegister, this), kScriptNodeFunction);
-	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachConstruction, this), kScriptNodeCondition);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachVariableDeclare, this), kScriptNodeUnknown);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachModificatorSet, this), kScriptNodeVariable);
 
@@ -182,24 +182,6 @@ Void ScopeBuilder::Build(NodePtr rootNode, ScopePtr rootScope) {
     this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachCheckInheritance, this), kScriptNodeAnonymous);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassInit, this), kScriptNodeClass);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassInit, this), kScriptNodeAnonymous);
-
-#if 0
-	/*	Now we can move all other nodes which was in language constructions. That
-		mean that we've allocated memory for there variables in there scopes
-		after what move it's variables in parent scope to avoid variable redeclaration
-		and now we can use next construction :
-		'for (int i = 0; ...)' { ... }' and 'i' variable
-		will be allocated into 'for' scope and ordered expression will have next
-		view : 'i 0 = ... for' and we won't have any conflicts with other language
-		constructions. */
-
-	_MoveNode(rootNode, TRUE);
-
-	/*	Node trace (only for debugging) */
-
-	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachNodeTrace, this), kScriptNodeUnknown);
-#endif
-
     this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachNodeFlush, this), kScriptNodeUnknown);
 
 	for (ObjectPtr c : rootScope->GetClassSet()) {
@@ -219,6 +201,10 @@ Void ScopeBuilder::Build(NodePtr rootNode, ScopePtr rootScope) {
 			/* Ignore */
 		});
 	}
+    
+#if 0 /* Node trace (only for debugging) */
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachNodeTrace, this), kScriptNodeUnknown);
+#endif
 }
 
 Void ScopeBuilder::_ForEachNodeTrace(NodePtr n) {
@@ -337,9 +323,13 @@ Void ScopeBuilder::_ForEachClassDeclare(NodePtr n) {
 	}
 
 	if (n->typeNode->templateNode) {
-		ClassPtr classT = n->var->Scope::Add(this->scope->classObject->Clone(
-			n->typeNode->templateNode->word, n->var))->SetModificator(Object::Modificator::Private)->GetClass();
-		n->var->SetTemplate(classT);
+		ObjectPtr classT = n->var->Scope::Add(this->scope->classObject->Clone(
+			n->typeNode->templateNode->word, n->var));
+		if (!classT) {
+			PostSyntaxError(n->lex->line, "Class redeclaration (%s)", n->typeNode->templateNode->word.data());
+		}
+		n->var->SetModificator(Object::Modificator::Private)
+			->SetTemplate(classT->GetClass());
 	}
 }
 
@@ -805,6 +795,34 @@ Void ScopeBuilder::_ForEachClassInit(NodePtr n) {
 		initMethod->Scope::Add(new Variable("super", initMethod,
 			ClassPtr(classVar)->GetExtend()->GetClass()));
 	}
+
+	Set<ObjectPtr> constructorSet;
+
+	for (ObjectPtr m : classVar->GetMethodSet()) {
+		if (m->GetName() == m->GetOwner()->GetName()) {
+			constructorSet.insert(m);
+		}
+	}
+
+	for (ObjectPtr m : constructorSet) {
+		classVar->Add(new Method("this", classVar, classVar, Scope::classVoid, m->GetMethod()->GetAttributeHash()))
+			->GetMethod()->SetRootNode(m->GetMethod()->GetRootNode());
+	}
+
+	constructorSet.clear();
+
+	for (ObjectPtr m : classVar->GetClass()->GetExtend()->GetMethodSet()) {
+		if (m->GetName() == m->GetOwner()->GetName()) {
+			constructorSet.insert(m);
+		}
+	}
+
+	for (ObjectPtr m : constructorSet) {
+		classVar->Add(new Method("super", classVar, classVar, Scope::classVoid, m->GetMethod()->GetAttributeHash()))
+			->GetMethod()->SetRootNode(m->GetMethod()->GetRootNode());
+	}
+
+	constructorSet.clear();
 }
 
 Void ScopeBuilder::_ForEachNode(NodePtr node, ScopePtr scope, ForEachNode callback, NodeID id) {

@@ -8,8 +8,6 @@
 LAME_BEGIN2(Script)
 
 class LAME_API Segment {
-	friend class SegmentLinker;
-	friend class SegmentBuilder;
 public:
 	inline Segment(Buffer name = "") :
 		Segment(name.data())
@@ -67,10 +65,13 @@ public:
 	inline Uint32 GetSize()     const { return this->size;     }
 	inline Uint32 GetOffset()   const { return this->offset;   }
 	inline Uint32 GetLastSize() const { return this->lastSize; }
+    inline Buffer GetName()           { return this->name;     }
 public:
 	inline Uint32 GetPosition() const {
 		return this->GetSize() + this->GetOffset();
 	}
+public:
+	List<History> history;
 private:
 	Buffer name;
 	Uint32 size;
@@ -78,8 +79,6 @@ private:
 	Uint8P data;
 	Uint32 capacity;
 	Uint32 lastSize;
-private:
-	List<History> history;
 };
 
 LAME_END2

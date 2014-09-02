@@ -1,3 +1,10 @@
+#include <string>
+#include <utility>
+
+using std::swap;
+
+#include <algorithm>
+
 #include "FileParser.h"
 #include "Exception.h"
 #include "Internal.h"
@@ -33,12 +40,12 @@ static LexPtrC _ParseLex(StringC* wordPtr, Buffer* name, Uint32 line, Bool isCom
 			if (lexWord.length() == 2 && lexWord[0] == '\\') {
 				Sint8 symbol = 0;
 				switch (lexWord[1]) {
-				case 'n': symbol = '\n'; break;
-				case 'r': symbol = '\r'; break;
-				case 't': symbol = '\t'; break;
-				case 'v': symbol = '\v'; break;
-				case 'b': symbol = '\b'; break;
-				case 'a': symbol = '\a'; break;
+                    case 'n': symbol = '\n'; break;
+                    case 'r': symbol = '\r'; break;
+                    case 't': symbol = '\t'; break;
+                    case 'v': symbol = '\v'; break;
+                    case 'b': symbol = '\b'; break;
+                    case 'a': symbol = '\a'; break;
 				}
 				lexWord.resize(1);
 				lexWord[0] = symbol;
@@ -84,12 +91,12 @@ static LexPtrC _ParseLex(StringC* wordPtr, Buffer* name, Uint32 line, Bool isCom
 		isWord = IsLetter(*word);
 
 		auto l = Lex::Match(word);
+        
+        l.sort([](LexPtrC left, LexPtrC right) {
+            return left->word.length() < right->word.length();
+        });
 
-		std::sort(l.begin(), l.end(), [](LexPtrC left, LexPtrC right) {
-			return left->word.length() < right->word.length();
-		});
-
-		if (!l.empty()) {
+		if (!l.empty() && !(IsLetter(*(word + l.back()->word.length() + 1)))) {
 			word += l.back()->word.length();
 		}
 		else {
@@ -168,7 +175,7 @@ Void FileParser::Parse(StringC script) {
 			*(script) == '\t' ||
 			*(script) == '\r' ||
 			*(script) == '\n'
-			) {
+        ) {
 			if (*script == '\0') {
 				goto __ExitLoop;
 			}
@@ -178,15 +185,15 @@ Void FileParser::Parse(StringC script) {
 			script++;
 		}
 
-		LexNodePtr node = new LexNode(lexWord, line, _ParseLex(&script, &lexWord, line, isCommentLock));
+		LexNodePtr node = new LexNode(lexWord, line,
+            _ParseLex(&script, &lexWord, line, isCommentLock));
 
 		if (!node->lex) {
-			delete node;
-			continue;
+			delete node; break;
 		}
 
 		Uint32 extraWordLines = 0;
-
+        
 		for (auto i = lexWord.begin(); i != lexWord.end(); i++) {
 			if (strchr(writeSpaces, *i)) {
 				if (*i == '\n') {

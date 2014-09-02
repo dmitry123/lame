@@ -1,13 +1,28 @@
-class A {
-	int a = 100;
-	int b = 20;
-	int c = 3;
-	int r = 0;
+class List<T> {
+
+	private Node firstNode;
+	private Node lastNode;
+
+	private class Node {
+		T    value;
+		Node next;
+		Node prev;
+	}
 }
 
-void main() {
+class State {
 
-	A z = new A();
+	public String getName() { return name; }
+	public void setName(String n) { name = n; }
 
-	z.r = z.a + z.b + z.c;
+	public int getID() { return id; }
+	public void setID(int i) { id = i; }
+
+	private String name;
+	private int id;
+}
+
+class Machine {
+	public Machine() {
+	}
 }

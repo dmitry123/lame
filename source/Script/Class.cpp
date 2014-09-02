@@ -96,7 +96,7 @@ Void Class::New(ObjectPtr object) {
 	// check object for variable, cuz we can
 	// store class's objects only in variables
 	if (!object->CheckType(Type::Variable)) {
-		PostSyntaxError(this->GetNode()->lex->line, "Unable to apply operator new for non-variable object");
+		PostSyntaxError(this->GetNode()->lex->line, "Unable to apply operator new for non-variable object", 0);
 	}
 
 	// get object's variable, its true (checking upper)
