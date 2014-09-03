@@ -43,7 +43,7 @@ public:
 	VariablePtr GetVariable() override;
 public:
 	inline ObjectPtr GetObject() { return this->objectValue; }
-	inline Var GetVarType() { return this->varType; }
+	inline Var& GetVarType() { return this->varType; }
 public:
 	inline Void SetClass(ClassPtr classType) {
 		this->classType = classType;

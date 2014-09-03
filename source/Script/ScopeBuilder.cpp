@@ -285,6 +285,10 @@ Void ScopeBuilder::_ForEachNodeFind(NodePtr n) {
 
 Void ScopeBuilder::_ForEachClassPrototype(NodePtr n) {
 
+	if (!n->typeNode) {
+		return;
+	}
+
 	if (n->id == kScriptNodeAnonymous) {
 		do {
 			n->var = this->scope->Add(new Class("", this->scope));
@@ -321,6 +325,10 @@ Void ScopeBuilder::_ForEachClassDeclare(NodePtr n) {
 
 	ClassPtr classVar;
 	ObjectPtr classExtend;
+
+	if (!n->typeNode) {
+		return;
+	}
 
 	if (!n->var) {
 		n->var = this->scope->Find(n->typeNode->word);
@@ -851,7 +859,7 @@ Void ScopeBuilder::_ForEachNode(NodePtr node, ScopePtr scope, ForEachNode callba
 		callback(node);
 	}
 	if (node->typeNode) {
-		if (id == kScriptNodeUnknown || (id != kScriptNodeUnknown && node->typeNode->id == id)) {
+		if ((id == kScriptNodeUnknown || node->id == kScriptNodeAnonymous) && node->id != kScriptNodeVariable) {
 			callback(node->typeNode);
 		}
 	}

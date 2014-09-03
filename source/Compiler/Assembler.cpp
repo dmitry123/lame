@@ -105,6 +105,10 @@ static Void _InitializeAssembler() {
 	_SetAsm(ITB, "itb", 0);
 	_SetAsm(ITC, "itc", 0);
 	_SetAsm(ITS, "its", 0);
+	_SetAsm(BCLD, "bcld", 1);
+	_SetAsm(SCLD, "scld", 1);
+	_SetAsm(ICLD, "icld", 1);
+	_SetAsm(LCLD, "lcld", 1);
 	_SetAsm(ICMP, "icmp", 0);
 	_SetAsm(LCMP, "lcmp", 0);
 	_SetAsm(FCMP, "fcmp", 0);

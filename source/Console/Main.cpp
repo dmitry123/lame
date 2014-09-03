@@ -97,8 +97,6 @@ int main(int argc, char** argv) {
 		segmentBuilder.GetCodeSegment()->Trace(TRUE);
 		printf("\n");
 
-		segmentLinker.Save("main.lc");
-
 		/* Trace opcode */
 		ByteCode::Trace(&segmentBuilder);
 	}

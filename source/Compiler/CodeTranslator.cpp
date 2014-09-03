@@ -320,6 +320,10 @@ Void CodeTranslator::OnStore(VariablePtr var) {
 		BCPNEW(var, RRSTORE, IRSTORE, LRSTORE, DRSTORE, FRSTORE)
 			->Write(var->GetFieldID());
 	}
+	else if (var->GetVarType() == Variable::Var::Array) {
+		BCPNEW(var, RASTORE, IASTORE, LASTORE, DASTORE, FASTORE)
+			->Write(var->GetAddress());
+	}
 	else {
 		BCPNEW(var, RSTORE, ISTORE, LSTORE, DSTORE, FSTORE)
 			->Write(var->GetAddress());

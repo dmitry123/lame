@@ -781,8 +781,11 @@ SyntaxBuilder::Iterator SyntaxBuilder::New(NodePtr& node, Iterator i) {
 		i = this->Template(classNode, i - 1) + 1;
 	}
 	classNode->typeNode = classNode;
-	if ((*i)->lex->id != kScriptLexParenthesisL && (*i)->lex->id != kScriptLexBracketL) {
-		PostSyntaxError((*i)->line, "Lost left parenthesis in constructor invoke (%s)", (*i)->word.data());
+	if ((*i)->lex->id != kScriptLexParenthesisL && 
+		(*i)->lex->id != kScriptLexBracketL &&
+		(*i)->lex->id != kScriptLexArray
+	) {
+		PostSyntaxError((*i)->line, "Lost left parenthesis or left bracket (%s)", (*i)->word.data());
 	}
 	if ((*i)->lex->id == kScriptLexParenthesisL) {
 		node->flags |= kScriptFlagInvocation;
@@ -801,15 +804,46 @@ SyntaxBuilder::Iterator SyntaxBuilder::New(NodePtr& node, Iterator i) {
 		classNode->classInfo.extendNode = classNode;
 		i = this->Class(classNode, i);
 	}
+	else if ((*i)->lex->id == kScriptLexArray) {
+		node->lex->args = 0;
+		node->typeNode->lex->args = 0;
+		__Inc(i);
+		if ((*i)->lex->id != kScriptLexBraceL) {
+			PostSyntaxError((*i)->line, "Excepted array initializer before (%s)", (*i)->word.data());
+		}
+		__Inc(i);
+		while ((*i)->lex->id != kScriptLexBraceR) {
+			NodePtr n = this->_Append(i);
+			if (n->id != kScriptNodeDefault) {
+				PostSyntaxError((*i)->line, "Array initializer must be expression (%s)", n->word.data());
+			}
+			if (!this->_WasItBrace(n)) {
+				__Inc(i);
+			}
+			node->blockList.push_back(n);
+		}
+	}
+	else if ((*i)->lex->id == kScriptLexBracketL) {
+		__Inc(i);
+		while ((*i)->lex->id != kScriptLexBracketR) {
+			NodePtr n = this->_Append(i);
+			if ((*i)->lex->id != kScriptLexBracketR || n->id == kScriptNodeAlloc) {
+				__Inc(i);
+			}
+			node->argList.push_back(n);
+		}
+	}
 	else {
 		classNode->id = kScriptNodeDefault;
 		this->parentNode = this->parentNode->parent;
 	}
 
-	__Inc(i);
+	if ((*i)->lex->id != kScriptLexSemicolon) {
+		__Inc(i);
+	}
 
 	if ((*i)->lex->id != kScriptLexSemicolon) {
-		PostSyntaxError((*i)->line, "Lost semicolon", 0);
+		PostSyntaxError((*i)->line, "Lost semicolon before (%s)", (*i)->word.data());
 	}
 
 	return i;
@@ -871,7 +905,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::Arguments(NodePtr& node, Iterator i) {
 
 SyntaxBuilder::Iterator SyntaxBuilder::Template(NodePtr& node, Iterator i) {
     
-    /* Stupid clang can't take reference from non-temporary variable */
+    /* Stupid clang can't take reference to non-temporary variable */
     auto __it = i + 2;
     
     node->templateNode = this->_Create(__it, kScriptNodeDefault);
@@ -1082,7 +1116,7 @@ NodePtr SyntaxBuilder::_Append(Iterator& i) {
 
 	NodePtr node = this->_Create(i);
 
-	if (this->_IsArray(i + 1)) {
+	if (this->_IsArray(i)) {
 		i = this->Array(node, i);
 	}
 	else if (this->_IsNew(i)) {

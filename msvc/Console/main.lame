@@ -1,4 +1,6 @@
-// class State {
+int[] array = new int[] { 100, 20, 3 };
+
+ // class State {
 
 // 	public String getName() { return name; }
 // 	public void setName(String n) { name = n; }
@@ -10,23 +12,23 @@
 // 	private int id;
 // }
 
-class A {
+// class A {
 
-	public A(int a) {
-		this(a, 0);
-	}
+// 	public A(int a) {
+// 		this(a, 0);
+// 	}
 
-	public A(int a, int b) {
-		this(a, b, 0);
-	}
+// 	public A(int a, int b) {
+// 		this(a, b, 0);
+// 	}
 
-	public A(int a, int b, int c) {
-		this.a = a;
-		this.b = b;
-		this.c = c;
-	}
+// 	public A(int a, int b, int c) {
+// 		this.a = a;
+// 		this.b = b;
+// 		this.c = c;
+// 	}
 
-	int a;
-	int b;
-	int c;
-}
+// 	int a;
+// 	int b;
+// 	int c;
+// }

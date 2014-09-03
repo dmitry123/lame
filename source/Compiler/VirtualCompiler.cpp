@@ -487,7 +487,48 @@ Void VirtualCompiler::_New(NodePtr n) {
 	}
 	/* Array allocation */
 	else {
-        __asm int 3
+
+		Uint32 offsetLength = 0;
+
+		if (n->typeNode->lex->args > 1) {
+			PostSyntaxError(n->lex->line, "Array allocation can't have more then 1 argument (%s)",
+				n->lex->args);
+		}
+
+		if (leftVar->GetClass()->CheckModificator(Object::Modificator::Primitive)) {
+			offsetLength = leftVar->GetClass()->Size();
+		}
+		else {
+			offsetLength = leftVar->Scope::Size();
+		}
+
+		Vector<VariablePtr> initList;
+
+		for (NodePtr n2 : n->blockList) {
+			if (n2->lex->lex->id != kScriptLexComma) {
+				initList.push_back(VariablePtr(n2->var));
+			}
+		}
+
+		if (n->typeNode->lex->args > 0) {
+
+			this->_Read(n, leftVar, leftVar);
+			this->OnLoad(leftVar);
+		}
+		else {
+			this->GetByteCode()->New(ICLD)
+				->Write(initList.size());
+
+			for (VariablePtr v : initList) {
+				this->OnLoad(leftVar);
+				this->OnStore(v);
+			}
+		}
+
+		this->GetByteCode()->New(ANEW)
+			->Write(offsetLength);
+
+		leftVar->GetVarType() = Variable::Var::Array;
 	}
 
 	this->variableStack.Return(leftVar);
