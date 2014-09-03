@@ -36,6 +36,8 @@ ObjectPtr Method::Clone(BufferRefC name, ObjectPtr parent) {
 		this->returnClass, this->attributesHash);
 
 	m->Merge(this);
+	m->SetRootNode(this->GetRootNode());
+	m->SetNode(this->GetNode());
 
 	return m;
 }
@@ -99,6 +101,10 @@ Buffer Method::GetFormattedArguments(Void) {
 		if (i != this->attributesHash.size() - 1) {
 			result.append(", ");
 		}
+	}
+
+	if (result.empty()) {
+		result = "void";
 	}
 
 	return result;

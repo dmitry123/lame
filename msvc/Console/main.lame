@@ -1,28 +1,32 @@
-class List<T> {
+// class State {
 
-	private Node firstNode;
-	private Node lastNode;
+// 	public String getName() { return name; }
+// 	public void setName(String n) { name = n; }
 
-	private class Node {
-		T    value;
-		Node next;
-		Node prev;
+// 	public int getID() { return id; }
+// 	public void setID(int i) { id = i; }
+
+// 	private String name;
+// 	private int id;
+// }
+
+class A {
+
+	public A(int a) {
+		this(a, 0);
 	}
-}
 
-class State {
-
-	public String getName() { return name; }
-	public void setName(String n) { name = n; }
-
-	public int getID() { return id; }
-	public void setID(int i) { id = i; }
-
-	private String name;
-	private int id;
-}
-
-class Machine {
-	public Machine() {
+	public A(int a, int b) {
+		this(a, b, 0);
 	}
+
+	public A(int a, int b, int c) {
+		this.a = a;
+		this.b = b;
+		this.c = c;
+	}
+
+	int a;
+	int b;
+	int c;
 }

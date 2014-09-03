@@ -806,6 +806,12 @@ SyntaxBuilder::Iterator SyntaxBuilder::New(NodePtr& node, Iterator i) {
 		this->parentNode = this->parentNode->parent;
 	}
 
+	__Inc(i);
+
+	if ((*i)->lex->id != kScriptLexSemicolon) {
+		PostSyntaxError((*i)->line, "Lost semicolon", 0);
+	}
+
 	return i;
 }
 

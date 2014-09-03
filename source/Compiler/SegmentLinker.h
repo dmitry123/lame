@@ -16,7 +16,7 @@ public:
 	Void Save(StringC fileName);
 public:
 	typedef struct {
-		Uint64 singature;
+		Sint8 singature[10];
 		Uint32 segmentCount;
 	} HeaderInfo;
 public:
@@ -37,7 +37,7 @@ private:
 	Vector<SegmentPtr> segmentList;
 	Bool isLoaded;
 private:
-	static StringC signature;
+	static const StringC signature;
 };
 
 LAME_END2

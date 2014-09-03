@@ -39,7 +39,7 @@ SegmentPtr SegmentBuilder::BuildDataSegment(ScopePtr rootScope) {
 		}
 	}, this->dataSegment, rootScope);
 
-	memset(this->dataSegment->GetBlockAt(0), -1,
+	memset(this->dataSegment->GetBlockAt(0), 0,
            this->dataSegment->GetSize());
 
 	this->dataSegment->Flush();

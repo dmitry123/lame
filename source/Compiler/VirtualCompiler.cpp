@@ -839,101 +839,166 @@ Void VirtualCompiler::_Invoke(NodePtr n) {
 	Vector<ClassPtr> objectList;
 	Uint32 invokeHash;
 	Buffer formattedParameters;
+	ObjectPtr scope;
+	Buffer methodName;
 
-	if (n->var->CheckModificator(Object::Modificator::Primitive)) {
-		this->_Read(n, leftVar, leftVar);
-		if (!leftVar->CheckType(Object::Type::Variable)) {
-			PostSyntaxError(n->lex->line, "Array parameter must be variable (%s)", leftVar->GetName().data());
+	/*	Looks like construction invoke, but via
+		class name */
+	if (n->word == n->parent->word) {
+		PostSyntaxError(n->lex->line, "Use 'this' or 'super' method to invoke class constructor", 0);
+	}
+	
+	/* Check for lost parameters */
+	if (this->variableStack.Size() < n->lex->args) {
+		PostSyntaxError(n->lex->line, "Lost %d parameters to invoke method (%s)",
+			n->lex->args, n->word.data());
+	}
+
+	/*	We have to get all variables from stack
+		and save it in another list to build
+		invocation hash number to find nessesary
+		method fast and generate parameters */
+
+	for (Uint32 i = 0; i < n->lex->args; i++) {
+
+		VariablePtr var = *(this->variableStack.GetVarList().end() - i - 1);
+
+		objectList.push_back(var->GetClass());
+		formattedParameters.append(var->GetClass()->GetName());
+
+		if (i != n->lex->args - 1) {
+			formattedParameters.append(", ");
 		}
-		this->variableStack.Push(leftVar->GetVariable());
+	}
+
+	/*	Compute invoke hash for current
+		parameters */
+
+	invokeHash = Method::ComputeInvokeHash(objectList);
+
+	/*	Try to get current scope as method, but
+		just in case, we can find it in parent
+		nodes */
+
+	if (!(scope = this->GetCurrentMethod())) {
+		
+		NodePtr n2 = n;
+
+		while (n2 && !n2->var) {
+			n2 = n2->parent;
+		}
+
+		scope = n2->var;
+	}
+
+	/*	But if we have 'this' or 'super' names then
+		we're going to invoke constructor, so we
+		have to save parent's name */
+
+	if (n->word == "this") {
+		methodName = scope->GetName();
+	}
+	else if (n->word == "super") {
+		methodName = scope->GetClass()->GetExtend()->GetName();
 	}
 	else {
-		for (Uint32 i = 0; i < n->lex->args; i++) {
+		methodName = n->word;
+	}
 
-			VariablePtr var = *(this->variableStack.GetVarList().end() - i - 1);
+	/*	If we found metohd's variable, then we 
+		can save it in node's variable */
 
-			objectList.push_back(var->GetClass());
-			formattedParameters.append(var->GetClass()->GetName());
+	if ((methodVar = scope->Find(Uint64(methodName.GetHash32()) << 32 | invokeHash)) && !n->var) {
+		n->var = methodVar;
+	}
 
-			if (i != n->lex->args - 1) {
-				formattedParameters.append(", ");
-			}
+	struct OrderedMethod {
+	public:
+		MethodPtr method;
+		Uint32 distance;
+	public:
+		inline bool operator < (const OrderedMethod& om) const {
+			return this->distance < om.distance;
 		}
+	};
 
-		invokeHash = Method::ComputeInvokeHash(objectList);
-		methodHash = n->var->GetNode()->methodInfo.invokeHash;
-		methodVar = n->var->Find(Uint64(n->var->GetHash32()) << 32 | invokeHash);
+	/*	But, if we can't find out method
+		fast (it means, that sended parameters
+		will be the same, like in method without
+		weak cast, like foo(100, 20, 3) can apply
+		fast invoke fot foo(byte, byte, byte) method),
+		else we have to find method with the same name
+		but with another parameters types which can be
+		casted to sended arguments */
 
-		struct OrderedMethod {
-		public:
-			MethodPtr method;
-			Uint32 distance;
-		public:
-			inline bool operator < (const OrderedMethod& om) const {
-				return this->distance < om.distance;
-			}
-		};
+	if (!methodVar) {
 
 		Vector<OrderedMethod> methodList;
 		Uint32 distance = 0;
 
-		if (!methodVar) {
+		Set<ObjectPtr> methodSet = scope->CheckType(Object::Type::Class) ?
+			scope->GetMethodSet() : scope->GetParent()->GetMethodSet();
 
-			Set<ObjectPtr> methodSet = n->var->CheckType(Object::Type::Class) ?
-				n->var->GetMethodSet() : n->var->GetParent()->GetMethodSet();
-
-			for (ObjectPtr m : methodSet) {
-				if (n->word == m->GetName() && n->lex->args == m->GetMethod()->GetAttributeHash().size()) {
-					for (Uint32 i = 0; i < n->lex->args; i++) {
-						if (objectList[i]->GetPriority() > m->GetMethod()->GetAttributeHash()[i]->GetPriority()) {
-							goto _WrongMethod1;
-						}
-						distance += labs(objectList[i]->GetPriority() - m->GetMethod()->GetAttributeHash()[i]->GetPriority());
+		for (ObjectPtr m : methodSet) {
+			if (methodName == m->GetName() && n->lex->args == m->GetMethod()->GetAttributeHash().size()) {
+				for (Uint32 i = 0; i < n->lex->args; i++) {
+					if (objectList[i]->GetPriority() > m->GetMethod()->GetAttributeHash()[i]->GetPriority()) {
+						goto _WrongMethod1;
 					}
-					methodList.push_back({ m->GetMethod(), distance });
-				_WrongMethod1:
-					distance = 0;
+					distance += labs(objectList[i]->GetPriority() - m->GetMethod()->GetAttributeHash()[i]->GetPriority());
 				}
+				methodList.push_back({ m->GetMethod(), distance });
+			_WrongMethod1:
+				distance = 0;
 			}
-
-			Set<ObjectPtr> constructorSet;
-
-			for (ObjectPtr m : methodSet) {
-				if (m->GetName() == m->GetOwner()->GetName()) {
-					constructorSet.insert(m);
-				}
-			}
-
-			if (this->currentNode->lex->lex->id == kScriptLexNew && !formattedParameters.length()) {
-				if (constructorSet.empty()) {
-					return;
-				}
-			}
-
-			if (formattedParameters.empty()) {
-				formattedParameters = "void";
-			}
-
-			if (methodList.empty()) {
-				PostSyntaxError(n->lex->line, "Undeclared method %s(%s)", n->word.data(), formattedParameters.data());
-			}
-
-			if (methodList.size() > 1) {
-				std::sort(methodList.begin(), methodList.end());
-			}
-
-			methodVar = methodList.begin()->method;
 		}
 
-		for (Uint32 i = 0; i < n->lex->args; i++) {
-			this->OnLoad(this->variableStack.Pop());
+		/*	Build set with all class
+			constructors */
+
+		Set<ObjectPtr> constructorSet;
+
+		for (ObjectPtr m : methodSet) {
+			if (m->GetName() == methodName) {
+				constructorSet.insert(m);
+			}
 		}
 
-		this->OnInvoke(methodVar->GetMethod());
-
-		if (methodVar->GetMethod()->returnVar) {
-			this->variableStack.Return(methodVar->GetMethod()->returnVar);
+		if (this->currentNode->lex->lex->id == kScriptLexNew && !formattedParameters.length()) {
+			if (constructorSet.empty()) {
+				return;
+			}
 		}
+
+		if (formattedParameters.empty()) {
+			formattedParameters = "void";
+		}
+
+		if (methodList.empty()) {
+			PostSyntaxError(n->lex->line, "Undeclared method %s(%s)", methodName.data(), formattedParameters.data());
+		}
+
+		/*	Order founded method and get first
+			method with highest precedence */
+
+		if (methodList.size() > 1) {
+			std::sort(methodList.begin(), methodList.end());
+		}
+
+		methodVar = methodList.begin()->method;
+	}
+
+	/*	Load all method's local variables, then
+		apply call instruction and return something */
+
+	for (Uint32 i = 0; i < n->lex->args; i++) {
+		this->OnLoad(this->variableStack.Pop());
+	}
+
+	this->OnInvoke(methodVar->GetMethod());
+
+	if (methodVar->GetMethod()->returnVar) {
+		this->variableStack.Return(methodVar->GetMethod()->returnVar);
 	}
 }
 

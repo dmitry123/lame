@@ -22,7 +22,11 @@ static Bool _MoveNode(NodePtr node) {
 		whereupon we'll swap our expressions and push in one stack. Final
 		view should be : '1 if'. We've saved count of arguments in node 'new' */
 
-	if (node->id != kScriptNodeVariable && node->lex->lex->id != kScriptLexNew) {
+	if (node->id != kScriptNodeVariable &&
+		node->id != kScriptNodeInvoke &&
+		node->id != kScriptNodeAlloc &&
+		node->lex->lex->id != kScriptLexNew
+	) {
 		goto _Seek;
 	}
 
@@ -270,7 +274,11 @@ Void ScopeBuilder::_ForEachNodeFind(NodePtr n) {
 
 	if (n->id != kScriptNodeClass && n->id != kScriptNodeInterface) {
 		if (!n->var) {
-			n->var = this->scope->Find(n->word);
+			if (n->id != kScriptNodeInvoke &&
+				n->id != kScriptNodeAlloc
+			) {
+				n->var = this->scope->Find(n->word);
+			}
 		}
 	}
 }
@@ -278,7 +286,9 @@ Void ScopeBuilder::_ForEachNodeFind(NodePtr n) {
 Void ScopeBuilder::_ForEachClassPrototype(NodePtr n) {
 
 	if (n->id == kScriptNodeAnonymous) {
-		n->var = this->scope->Add(new Class("", this->scope));
+		do {
+			n->var = this->scope->Add(new Class("", this->scope));
+		} while (!n->var);
 	}
 	else {
 		n->var = this->scope->Add(new Class(n->typeNode->word, this->scope));
@@ -577,11 +587,18 @@ Void ScopeBuilder::_ForEachMethodDeclare(NodePtr n) {
 
 	MethodPtr method = new Method(n->word, scope, ObjectPtr(scope), returnType, methodAttributes);
 
+	if (ObjectPtr(scope)->CheckModificator(Object::Modificator::Construction)) {
+		goto _DeclareError;
+	}
+
 	if (!ObjectPtr(this->scope)->CheckType(Object::Type::Class) &&
 		!ObjectPtr(this->scope)->CheckType(Object::Type::Interface)
 	) {
+	_DeclareError:
+		Buffer argf = method->GetFormattedArguments();
+		delete method;
 		PostSyntaxError(n->lex->line, "Unable to declare method in non-class scope %s/%s(%s)",
-			this->scope->GetName().data(), n->word.data(), method->GetFormattedArguments().data());
+			this->scope->GetName().data(), n->word.data(), argf.data());
 	}
 
 	if (!(methodObject = scope->Add(method))) {
@@ -752,7 +769,8 @@ Void ScopeBuilder::_ForEachConstruction(NodePtr n) {
 		}
 
 		do {
-			n->var = n->parent->var->Add(new Class("", this->scope));
+			n->var = n->parent->var->Add(new Class("", scope))
+				->SetModificator(Object::Modificator::Construction);
 		} while (!n->var);
 
 		n->var->SetNode(n);
@@ -796,6 +814,7 @@ Void ScopeBuilder::_ForEachClassInit(NodePtr n) {
 			ClassPtr(classVar)->GetExtend()->GetClass()));
 	}
 
+#if 0 /* Found better solution */
 	Set<ObjectPtr> constructorSet;
 
 	for (ObjectPtr m : classVar->GetMethodSet()) {
@@ -823,6 +842,7 @@ Void ScopeBuilder::_ForEachClassInit(NodePtr n) {
 	}
 
 	constructorSet.clear();
+#endif
 }
 
 Void ScopeBuilder::_ForEachNode(NodePtr node, ScopePtr scope, ForEachNode callback, NodeID id) {
