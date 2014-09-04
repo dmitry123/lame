@@ -11,22 +11,66 @@ CodeBuilder::~CodeBuilder() {
 
 Void CodeBuilder::Run(SyntaxBuilderPtr nodeBuilder, ScopePtr rootScope, SegmentPtr codeSegment) {
 
+	NodePtr rootNode = nodeBuilder->GetRootNode();
+
+	this->currentMethod = NULL;
 	this->currentCode = NULL;
 	this->lastResult = NULL;
-	this->currentMethod = NULL;
 	this->rememberedInvoke = NULL;
+	this->currentNode = NULL;
 
 	this->_ForEachClass(rootScope);
 	this->_ForEachMethod(rootScope);
 
-	for (ObjectPtr m : this->methodList) {
-		this->currentMethod = m;
-		if (m->GetMethod()->GetRootNode()) {
-			this->_Run(m->GetMethod()->GetRootNode()->blockList);
+	rootNode->var = rootScope->Add(new Method("<main>",
+		rootScope, ObjectPtr(rootScope), rootScope->classVoid));
+
+	rootNode->var->GetMethod()->SetRootNode(rootNode);
+	rootNode->var->SetNode(rootNode);
+
+	this->methodList.push_back(rootNode->var);
+
+	for (ObjectPtr i : this->methodList) {
+
+		NodePtr n = i->GetMethod()->GetRootNode();
+
+		this->codeMethodList.push_back(
+			CodeMethod(i->GetMethod()));
+
+		this->currentNode = n;
+		this->currentMethod = &this->codeMethodList.back();
+
+		for (NodePtr n2 : n->argList) {
+			if (!n2->var->CheckType(Object::Type::Variable)) {
+				PostSyntaxError(n->lex->line, "Argument must be variable (%s)", n2->var->GetName().data());
+			}
+			this->_Save(Code::Store, n2->var);
+		}
+
+		ObjectPtr thisVar = NULL;
+
+		if (!i->CheckModificator(Object::Modificator::Static)) {
+			if (i->GetName() == "<init>" || i->GetName() == i->GetOwner()->GetName()) {
+				this->_Save(Code::Clone);
+			}
+			if ((thisVar = i->Find("this", FALSE, Uint32(Object::Type::Variable)))) {
+				this->_Save(Code::Store, thisVar);
+			}
+		}
+
+		this->_Run(i->GetMethod()->GetRootNode()->blockList);
+
+		if (i->GetMethod()->GetReturnType()->IsVoid()) {
+			this->_Save(Code::Return);
+		}
+
+		if (!i->GetMethod()->GetReturnType()->IsVoid()) {
+			if (!i->GetMethod()->returnVar) {
+				PostSyntaxError(n->lex->line, "Non-void method %s(%s) must return (%s)", i->GetName().data(),
+					i->GetMethod()->GetFormattedArguments().data(), i->GetMethod()->GetReturnType()->GetName().data());
+			}
 		}
 	}
-
-	this->_Run(nodeBuilder->GetRootNode()->blockList);
 }
 
 Void CodeBuilder::_Run(NodeListRef nodeList, Bool makeBackup) {
@@ -38,6 +82,13 @@ Void CodeBuilder::_Run(NodeListRef nodeList, Bool makeBackup) {
 	}
 
 	for (NodePtr n : nodeList) {
+
+		if (n->id == kScriptNodeClass ||
+			n->id == kScriptNodeInterface ||
+			n->id == kScriptNodeFunction
+		) {
+			continue;
+		}
 
 		this->currentNode = n;
 
@@ -53,13 +104,6 @@ Void CodeBuilder::_Run(NodeListRef nodeList, Bool makeBackup) {
 		}
 
 		try {
-			if (n->id == kScriptNodeClass ||
-				n->id == kScriptNodeInterface ||
-				n->id == kScriptNodeFunction
-			) {
-				continue;
-			}
-
 			if (n->lex->lex->id == kScriptLexReturn) {
 				this->_Return(n);
 			}
@@ -82,12 +126,11 @@ Void CodeBuilder::_Run(NodeListRef nodeList, Bool makeBackup) {
 				this->_Selection(n);
 			}
 			else if (n->id == kScriptNodeAlloc) {
-				if (!n->var) {
-					PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->word.data());
-				}
-				this->_Invoke(n);
 				if (n->parent->id != kScriptNodeClass) {
-					goto _SaveNode;
+					this->_Array(n);
+				}
+				else {
+					this->_Invoke(n);
 				}
 			}
 			else if (n->lex->lex->IsUnknown() || n->lex->lex->IsConst()) {
@@ -110,11 +153,8 @@ Void CodeBuilder::_Run(NodeListRef nodeList, Bool makeBackup) {
 				else if (n->lex->args == 2) {
 					this->_Binary(n);
 				}
-				else if (n->lex->args == 3 && n->lex->lex->id == kScriptLexTernary) {
+				else if (n->lex->args == 3) {
 					this->_Ternary(n);
-				}
-				else {
-					this->_Invoke(n);
 				}
 			}
 		}
@@ -138,7 +178,8 @@ Void CodeBuilder::_Run(NodeListRef nodeList, Bool makeBackup) {
 Void CodeBuilder::_Read(NodePtr n, VariablePtr& left, VariablePtr& right) {
 
 	if (this->variableStack.Size() < n->lex->args || !n->lex->args) {
-		PostSyntaxError(n->lex->line, "Operator \"%s\" requires %d arguments", n->word.data(), n->lex->args);
+		PostSyntaxError(n->lex->line, "Operator \"%s\" requires %d arguments",
+			n->word.data(), n->lex->args);
 	}
 
 	if (n->lex->args > 1) {
@@ -533,6 +574,7 @@ Void CodeBuilder::_Ternary(NodePtr n) {
 Void CodeBuilder::_New(NodePtr n) {
 
 	VariablePtr leftVar = VariablePtr(n->typeNode->var);
+	VariablePtr resultVar = leftVar;
 
 	/* Constructor invocation */
 	if ((n->flags & kScriptFlagInvocation) != 0) {
@@ -554,16 +596,58 @@ Void CodeBuilder::_New(NodePtr n) {
 	/* Array allocation */
 	else {
 
+		Uint32 offsetLength = 0;
+
 		if (n->typeNode->lex->args > 1) {
 			PostSyntaxError(n->lex->line, "Array allocation can't have more then 1 argument (%s)",
 				n->lex->args);
 		}
 
-		this->_Save(Code::New, leftVar);
-		leftVar->GetVarType() = Variable::Var::Array;
+		if (leftVar->GetClass()->CheckModificator(Object::Modificator::Primitive)) {
+			offsetLength = leftVar->GetClass()->Size();
+		}
+		else {
+			offsetLength = leftVar->Scope::Size();
+		}
+
+		Vector<VariablePtr> initList;
+
+		for (NodePtr n2 : n->blockList) {
+			if (n2->lex->lex->id != kScriptLexComma) {
+				initList.push_back(VariablePtr(n2->var));
+			}
+		}
+
+		if (n->typeNode->lex->args > 0) {
+
+			this->_Read(n, leftVar, leftVar);
+
+			this->_Save(Code::New)
+				->SetOffset(offsetLength);
+		}
+		else {
+			Uint32 offset = 0;
+
+			this->_Save(Code::Load)
+				->SetOffset(initList.size());
+
+			this->_Save(Code::New)
+				->SetOffset(offsetLength);
+
+			for (VariablePtr v : initList) {
+
+				this->_Save(Code::Clone);
+				this->_Save(Code::Store, v);
+
+				v->SetAddress(offset);
+				offset += offsetLength;
+			}
+		}
+
+		resultVar->GetVarType() = Variable::Var::Array;
 	}
 
-	this->variableStack.Return(leftVar);
+	this->variableStack.Return(resultVar);
 }
 
 Void CodeBuilder::_Selection(NodePtr n) {
@@ -801,7 +885,7 @@ Void CodeBuilder::_Invoke(NodePtr n) {
 	just in case, we can find it in parent
 	nodes */
 
-	if (!(scope = this->currentMethod)) {
+	if (!(scope = this->currentMethod->GetMethod())) {
 
 		NodePtr n2 = n;
 
@@ -988,9 +1072,33 @@ Void CodeBuilder::_Finish(NodePtr n) {
 	this->variableStack.Clear();
 }
 
+Void CodeBuilder::_Array(NodePtr n) {
+
+	VariablePtr leftVar;
+
+	if (!n->var->CheckType(Object::Type::Variable) || n->var->GetVariable()->GetVarType() != Variable::Var::Array) {
+		PostSyntaxError(n->lex->line, "You can assume indexing only to arrays (%s)",
+			n->word.data());
+	}
+
+	n->lex->args = 1;
+
+	this->_Read(n, leftVar, leftVar);
+
+	if (!leftVar->GetClass()->IsIntegerLike()) {
+		PostSyntaxError(n->lex->line, "Array index must be integer value, found (%s)",
+			leftVar->GetClass()->GetName().data());
+	}
+
+	this->_Save(Code::Load, n->var);
+
+	this->variableStack.Push(
+		VariablePtr(n->var->GetClass()));
+}
+
 CodeNodePtr CodeBuilder::_Save(Code code, ObjectPtr left, ObjectPtr right) {
 
-	Vector<CodeNodePtr>* codeList = &this->codeList;
+	Vector<CodeNodePtr>* codeList = &this->currentMethod->GetList();
 
 	if (this->currentCode) {
 		codeList = &this->currentCode->GetList();
@@ -999,6 +1107,7 @@ CodeNodePtr CodeBuilder::_Save(Code code, ObjectPtr left, ObjectPtr right) {
 	CodeNodePtr nodeCode = new CodeNode(
 		code, this->currentNode, left, right);
 
+	this->codeList.push_back(nodeCode);
 	codeList->push_back(nodeCode);
 
 	return nodeCode;

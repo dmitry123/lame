@@ -73,6 +73,10 @@ Buffer CodeNode::GetCodeName(Code code) {
 		return "load";
 	case Code::Skip:
 		return "skip";
+	case Code::Store:
+		return "store";
+	case Code::Clone:
+		return "clone";
 	}
 
 	return "noop";

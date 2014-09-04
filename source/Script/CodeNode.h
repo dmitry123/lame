@@ -42,11 +42,12 @@ public:
 		Invoke,
 		Load,
 		Store,
-		Skip
+		Skip,
+		Clone
 	};
 public:
 	CodeNode(Code code, NodePtr node, ObjectPtr left, ObjectPtr right) :
-		code(code), node(node), left(left), right(right), line(node->lex->line)
+		code(code), node(node), left(left), right(right), line(node->lex->line), offset(-1)
 	{
 	}
 public:
@@ -55,12 +56,16 @@ public:
 	inline Buffer GetName() {
 		return this->GetCodeName(this->code);
 	}
+	inline Void SetOffset(Uint32 offset) {
+		this->offset = offset;
+	}
 public:
-	inline Code      GetCode()  { return this->code;     }
-	inline ObjectPtr GetLeft()  { return this->left;     }
-	inline ObjectPtr GetRight() { return this->right;    }
-	inline NodePtr   GetNode()  { return this->node;     }
-	inline Uint32    GetLine()  { return this->line;     }
+	inline Code      GetCode()   { return this->code;     }
+	inline ObjectPtr GetLeft()   { return this->left;     }
+	inline ObjectPtr GetRight()  { return this->right;    }
+	inline NodePtr   GetNode()   { return this->node;     }
+	inline Uint32    GetLine()   { return this->line;     }
+	inline Uint32    GetOffset() { return this->offset;   }
 public:
 	inline Vector<CodeNodePtr>& GetList() {
 		return this->codeList;
@@ -72,6 +77,29 @@ private:
 	const NodePtr   node;
 	const Uint32    line;
 private:
+	Vector<CodeNodePtr> codeList;
+	Uint32 offset;
+};
+
+class LAME_API CodeMethod {
+public:
+	CodeMethod(MethodPtr method) :
+		method(method)
+	{
+	}
+public:
+	inline MethodPtr GetMethod() {
+		return this->method;
+	}
+	inline Vector<CodeNodePtr>& GetList() {
+		return this->codeList;
+	}
+public:
+	inline Void Insert(CodeNodePtr codeNode) {
+		this->codeList.push_back(codeNode);
+	}
+private:
+	MethodPtr method;
 	Vector<CodeNodePtr> codeList;
 };
 

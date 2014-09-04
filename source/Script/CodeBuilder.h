@@ -27,15 +27,9 @@ public:
 		ScopePtr         rootScope,
 		SegmentPtr       codeSegment);
 public:
-	inline Vector<CodeNodePtr>& GetCodeList() {
-		return this->codeList;
-	}
-	inline Vector<ObjectPtr>& GetClassList() {
-		return this->classList;
-	}
-	inline Vector<ObjectPtr>& GetMethodList() {
-		return this->methodList;
-	}
+	inline Vector<CodeNodePtr>& GetCodeList()   { return this->codeList;       }
+	inline List<CodeMethod>&    GetMethodList() { return this->codeMethodList; }
+	inline Vector<ObjectPtr>&   GetClassList()  { return this->classList;      }
 private:
 	Void _Read(NodePtr node, VariablePtr& left, VariablePtr& right);
 	Void _Run(NodeListRef nodeList, Bool makeBackup = FALSE);
@@ -54,6 +48,7 @@ private:
 	Void _Invoke(NodePtr n);
 	Void _Return(NodePtr n);
 	Void _Finish(NodePtr n);
+	Void _Array(NodePtr n);
 private:
 	CodeNodePtr _Save(Code code,
 		ObjectPtr left  = NULL,
@@ -64,7 +59,6 @@ private:
 private:
 	Vector<ObjectPtr> classList;
 	Vector<ObjectPtr> methodList;
-	ObjectPtr currentMethod;
 	StackVar variableStack;
 	NodePtr currentNode;
 	VariablePtr lastResult;
@@ -72,6 +66,8 @@ private:
 	CodeNodePtr currentCode;
 	NodePtr rememberedInvoke;
 	Stack<CodeNodePtr> codeStack;
+	List<CodeMethod> codeMethodList;
+	CodeMethodPtr currentMethod;
 };
 
 LAME_END2

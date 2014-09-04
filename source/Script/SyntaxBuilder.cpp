@@ -784,7 +784,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::New(NodePtr& node, Iterator i) {
 	__Inc(i);
 
 	/*	Create class node */
-	classNode = this->_Create(i, kScriptNodeAnonymous);
+	classNode = this->_Create(i, kScriptNodeDefault);
 	node->typeNode = classNode;
 	__Inc(i);
 	if (this->sequenceMatcher.Match(kScriptLexSequenceTemplate, i, this->_End())) {
@@ -813,6 +813,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::New(NodePtr& node, Iterator i) {
 	if ((*i)->lex->id == kScriptLexBraceL) {
 		classNode->classInfo.extendNode = classNode;
 		i = this->Class(classNode, i);
+		classNode->id = kScriptNodeAnonymous;
 	}
 	else if ((*i)->lex->id == kScriptLexArray) {
 		node->lex->args = 0;

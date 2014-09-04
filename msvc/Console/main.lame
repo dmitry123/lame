@@ -1,22 +1,28 @@
-// int[] array = new int[] { 100, 20, 3 };
+
+
+
+
+
+
+
+int[] array = new int[] { 100, 20, 3 };
+
 // int[] array = new int[100];
 
-class A {
-	int foo(int a, int b, int c) {
-		return a + b + c;
-	}
-}
+array[0] = 100;
+array[2] = 20;
+array[3] = 3;
 
-A z = new A();
+// A z = new A();
 
-int r1 = z.foo(100, 20, 3);
-int r2 = z.foo(100, 20, 3);
+// int r1 = z.foo(100, 20, 3);
+// int r2 = z.foo(100, 20, 3);
 
-if (r1 == r2 && 199 > 200) {
-	int r = 0;
-} else {
-	int d = 1;
-}
+// if (r1 == r2 && 199 > 200) {
+// 	int r = 0;
+// } else {
+// 	int d = 1;
+// }
 
 // class State {
 

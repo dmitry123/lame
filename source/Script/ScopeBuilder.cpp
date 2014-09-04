@@ -279,12 +279,8 @@ Void ScopeBuilder::_ForEachModificatorSet(NodePtr n) {
 Void ScopeBuilder::_ForEachNodeFind(NodePtr n) {
 
 	if (n->id != kScriptNodeClass && n->id != kScriptNodeInterface) {
-		if (!n->var) {
-			if (n->id != kScriptNodeInvoke &&
-				n->id != kScriptNodeAlloc
-			) {
-				n->var = this->scope->Find(n->word);
-			}
+		if (n->lex->lex->IsUnknown() && !n->var && !(n->var = this->scope->Find(n->word))) {
+			PostSyntaxError(n->lex->line, "Undeclared variable (%s)", n->word.data());
 		}
 	}
 }
@@ -643,6 +639,7 @@ Void ScopeBuilder::_ForEachMethodDeclare(NodePtr n) {
     }
 
 	n->methodInfo.invokeHash = methodObject->GetMethod()->GetInvokeHash();
+	n->var = methodObject;
 }
 
 Void ScopeBuilder::_ForEachMethodRegister(NodePtr n) {
@@ -658,12 +655,16 @@ Void ScopeBuilder::_ForEachMethodRegister(NodePtr n) {
         n->parent->id == kScriptNodeAnonymous
 	) {
 		if (!methodObject->CheckModificator(Object::Modificator::Static)) {
+
 			methodObject->Scope::Add(new Variable("this", methodObject, ClassPtr(this->scope)));
+
 			if (ClassPtr(this->scope)->GetExtend()) {
 				methodObject->Scope::Add(new Variable("super", methodObject, ClassPtr(this->scope)->GetExtend()->GetClass()));
 			}
 		}
 	}
+
+	n->var = NULL;
 }
 
 Void ScopeBuilder::_ForEachVariableDeclare(NodePtr n) {
