@@ -27,9 +27,10 @@ typedef class LowLevelStack *LowLevelStackPtr, *const LowLevelStackPtrC;
 typedef class Register *RegisterPtr, *const RegisterPtrPtrC;
 typedef class ByteCode *ByteCodePtr, *const ByteCodePrinterPtrC;
 typedef class VirtualCompiler *VirtualAnalizerPtr, *const VirtualAnalizerPtrC;
-typedef class VariableStack *VariableStackPtr, *const VariableStackPtrC;
 typedef class SegmentBuilder *SegmentBuilderPtr, *const SegmentBuilderPtrC;
 typedef class SegmentLinker *SegmentLinkerPtr, *const SegmentLinkerPtrC;
+typedef class AbstractTranslator *AbstractTranslatorPtr, *const AbstractTranslatorPtrC;
+typedef class TranslateEngine *TranslateEnginePtr, *const TranslateEnginePtrC;
 
 LAME_END2
 

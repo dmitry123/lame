@@ -464,6 +464,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::Variable(NodePtr& node, Iterator i) {
 		_AllowModificators(node, kScriptFlagFinal);
 	}
 
+#if 0
 	/*	Yep, if our parent is class then before building
 		variable's arguments we must save it's node in parent's
 		list with blocks. Why? Because our expresssion has next
@@ -471,10 +472,9 @@ SyntaxBuilder::Iterator SyntaxBuilder::Variable(NodePtr& node, Iterator i) {
 		lost variable's node and we have back it to our expression. */
 
 	if (node->parent->id == kScriptNodeClass) {
-#if 0
 		node->blockList.push_back(this->_Create(node->lex, parent->id));
-#endif
 	}
+#endif
 
 	if (node->lex == *i) {
 		__Inc(i);
@@ -592,7 +592,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::Method(NodePtr& node, Iterator i) {
 		if ((*i)->lex->id == kScriptLexReturn) {
 			__Inc(i);
 			__Dec(i);
-			if (!(*(i + 1))->lex->IsUnknown()) {
+			if ((*(i + 1))->lex->id == kScriptLexSemicolon) {
 				(*i)->args = 0;
 			}
 		}
@@ -666,9 +666,19 @@ SyntaxBuilder::Iterator SyntaxBuilder::Class(NodePtr& node, Iterator i) {
 		__Inc(i);
 		while ((*i)->lex->id != kScriptLexBraceL && (*i)->lex->id != kScriptLexImplements) {
 			if (node->classInfo.extendNode) {
-				PostSyntaxError((*i)->line, "Class can extend only one class (%s)", (*i)->word.data());
+				if ((*i)->lex->id != kScriptLexDirected) {
+					PostSyntaxError((*i)->line, "Unexcepted token in expression (%s)", (*i)->word.data());
+				}
+				NodePtr nextNode = node->classInfo.extendNode;
+				while (nextNode->next) {
+					nextNode = nextNode->next;
+				}
+				__Inc(i);
+				nextNode->next = this->_Create(i);
 			}
-			node->classInfo.extendNode = this->_Create(i);
+			else {
+				node->classInfo.extendNode = this->_Create(i);
+			}
 			__Inc(i);
 		}
 		if (!node->classInfo.extendNode) {

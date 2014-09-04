@@ -50,7 +50,9 @@ Void Class::Trace(Uint32 offset) {
 	}
 
 	if (this->extendClass) {
-		printf("extends %s ", this->extendClass->GetName().data());
+		printf("extends %s%s ",
+			this->extendClass->GetPath().data(),
+			this->extendClass->GetName().data());
 	}
 
 	if (this->implementClass.size() > 0) {
@@ -297,11 +299,19 @@ Class::Class(BufferRefC name, ScopePtr parent, Type type, Uint32 size) : Object(
 	}
 
     this->SetOnScopeUpdate([] (ScopePtr scope, ObjectPtr object) {
+
         ClassPtr self = ClassPtr(scope);
+
+		if (object->CheckType(Object::Type::Method)) {
+			if (!object->CheckModificator(Object::Modificator::Native) && object->GetNode() && !(object->GetNode()->flags & kScriptFlagImplemented)) {
+				PostSyntaxError(object->GetNode()->lex->line, "Only native methods don't have to be implemented %s(%s)",
+					object->GetName().data(), object->GetMethod()->GetFormattedArguments().data());
+			}
+		}
         
         if (self->CheckType(Object::Type::Interface)) {
             if (object->CheckType(Object::Type::Method) && object->GetMethod()->GetRootNode()) {
-                PostSyntaxError(object->GetMethod()->GetRootNode()->lex->line,
+                PostSyntaxError(object->GetNode()->lex->line,
                     "Interface can't implement methods %s(%s)", object->GetName().data(),
 					object->GetMethod()->GetFormattedArguments().data());
             }

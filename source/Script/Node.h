@@ -53,15 +53,13 @@ public:
 public:
 	NodePtr typeNode;
 	NodePtr templateNode;
-	//NodePtr extendNode;
-	//Vector<NodePtr> implementNode;
 	ObjectPtr var;
 	Uint32 flags;
 	Deque<NodePtr> argList;
 	Deque<NodePtr> blockList;
 	Deque<NodePtr> elseList;
 	NodePtr elseNode;
-	//Bool hasDo;
+	NodePtr next;
 public:
 	struct {
 		NodePtr extendNode;

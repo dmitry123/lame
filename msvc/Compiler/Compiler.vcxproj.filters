@@ -9,9 +9,6 @@
     <ClCompile Include="..\..\source\Compiler\Assembler.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\Compiler\CodeAnalizer.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\Compiler\CodeTranslator.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -19,18 +16,6 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\Compiler\Define.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\Compiler\Internal.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\Compiler\LowLevelStack.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\Compiler\Register.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\Compiler\VariableStack.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\Compiler\VirtualCompiler.cpp">
@@ -45,12 +30,18 @@
     <ClCompile Include="..\..\source\Compiler\SegmentLinker.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\Compiler\AbstractTranslator.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Compiler\TranslateEngine.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Compiler\SegmentContainer.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\Compiler\Assembler.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Compiler\CodeAnalizer.h">
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Compiler\CodeTranslator.h">
@@ -60,18 +51,6 @@
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Compiler\Define.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Compiler\Internal.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Compiler\LowLevelStack.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Compiler\Register.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Compiler\VariableStack.h">
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Compiler\VirtualCompiler.h">
@@ -84,6 +63,15 @@
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Compiler\SegmentLinker.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Compiler\AbstractTranslator.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Compiler\TranslateEngine.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Compiler\SegmentContainer.h">
       <Filter>source</Filter>
     </ClInclude>
   </ItemGroup>

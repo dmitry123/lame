@@ -10,7 +10,6 @@ class LAME_API Throwable {
 public:
 	virtual Void Debug(PrintStreamPtr printer) = 0;
 	virtual StringC What() = 0;
-	virtual Void Throw() = 0;
 protected:
 
 };

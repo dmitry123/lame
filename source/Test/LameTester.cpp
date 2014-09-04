@@ -7,7 +7,6 @@ ScopePtr LameTester::Test(StringC fileName) {
 	try {
 		fileParser.Load(fileName);
 		nodeBuilder.Build(&fileParser);
-		lowLevelStack = new LowLevelStack(rootScope);
 		scopeBuilder.Build(nodeBuilder.GetRootNode(), rootScope);
 	}
 	catch (SyntaxException& e) {

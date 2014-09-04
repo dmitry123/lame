@@ -6,32 +6,6 @@ using namespace Lame::ResourceManager;
 using namespace Lame::Script;
 using namespace Lame;
 
-#include <iostream>
-
-void tprintf(const char* format) {
-	std::cout << format;
-}
-
-template<typename T, typename... Targs>
-void tprintf(const char* format, T value, Targs... Fargs) {
-	while (*format) {
-		if (*format == '/' && *(format + 1) == '@') {
-			std::cout << '@';
-			format += 2;
-		}
-		if (*format == '@') {
-			std::cout << value;
-			tprintf(format + 1, Fargs...);
-			return;
-		}
-		std::cout << *format++;
-	}
-}
-
-template <class ...Args> Uint32 getArgCount(Args... a) {
-	return sizeof...(a);
-}
-
 int main(int argc, char** argv) {
     
 #ifdef LAME_VLD
@@ -51,8 +25,8 @@ int main(int argc, char** argv) {
     SegmentLinker segmentLinker;
     SegmentBuilder segmentBuilder;
     CodeTranslator codeTranslator;
-    CodeAnalizer codeAnalizer;
     NodePtr rootNode;
+	CodeBuilder codeBuilder;
 
 	try {
 		/* Launch timer */
@@ -62,12 +36,37 @@ int main(int argc, char** argv) {
 		fileParser.Load(fileName);
 		syntaxBuilder.Build(&fileParser);
 
-		/* Initialize root scope and fetch root node */
-		rootScope = Scope::CreateRootScope("Main", TRUE);
+		/* Initialize root scope */
+		rootScope = Scope::CreateRootScope(
+			/* Root class name */
+			"Main",
+			/* Shall root be a class */
+			FALSE);
+
+		/* Get syntax's root node */
 		rootNode = syntaxBuilder.GetRootNode();
 
 		/* Build scope trees */
 		scopeBuilder.Build(rootNode, rootScope);
+
+		/* Check code for syntax errors */
+		codeBuilder.Run(&syntaxBuilder, rootScope,
+			segmentBuilder.GetCodeSegment());
+
+		for (CodeNodePtr n : codeBuilder.GetCodeList()) {
+			printf("%4d : (%6s) : ", n->GetLine(), n->GetName().data());
+			if (n->GetLeft() && n->GetRight()) {
+				printf("%s, %s", n->GetLeft()->GetName().data(), n->GetRight()->GetName().data());
+			}
+			else if (n->GetLeft()) {
+				printf("%s", n->GetLeft()->GetName().data());
+			}
+			printf("\n");
+		}
+
+#if 0
+		/* Trace root scope */
+		rootScope->Trace(0);
 
 		/* Build segments */
 		segmentBuilder.BuildTextSegment(rootScope);
@@ -99,6 +98,7 @@ int main(int argc, char** argv) {
 
 		/* Trace opcode */
 		ByteCode::Trace(&segmentBuilder);
+#endif
 	}
 	catch (SyntaxException& e) {
 		puts("\n+---------------------------+");

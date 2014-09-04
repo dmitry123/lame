@@ -57,6 +57,9 @@
 #  error "Unsupported compiler!"
 #endif
 
+/* For LLVM */
+#define _HAS_EXCEPTIONS 1
+
 #if defined(LAME_MSVC) && LAME_MSVC < 120
 #  error "Lame Script requires MSVC12 compiler with C++0x support!"
 #endif

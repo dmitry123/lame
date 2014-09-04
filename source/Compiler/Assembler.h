@@ -90,10 +90,7 @@ enum Asm {
 	ITB,
 	ITC,
 	ITS,
-	BCLD,
-	SCLD,
 	ICLD,
-	LCLD,
 	ICMP,
 	LCMP,
 	FCMP,
@@ -177,9 +174,8 @@ enum Asm {
 
 typedef struct {
 	StringC name;
-	Uint8 command;
-	VoidP callback;
-	Uint8 arguments;
+	Uint8   cmd;
+	Uint8   args;
 } AsmInfo, *AsmInfoPtr;
 
 class LAME_API Assembler {

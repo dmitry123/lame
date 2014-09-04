@@ -10,6 +10,8 @@
 #  include <unistd.h>
 #endif
 
+#include <string>
+
 typedef time_t TIMET, *TIMETP;
 typedef struct tm TM, *TMP;
 

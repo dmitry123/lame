@@ -12,6 +12,10 @@ public:
 	typedef Void(*ThreadProc)(VoidP);
 	typedef Uint64 Handle;
 public:
+	inline Thread() {
+		// default
+	}
+public:
 	~Thread();
 public:
 	Void Create(ThreadProc callback, VoidP parameter);

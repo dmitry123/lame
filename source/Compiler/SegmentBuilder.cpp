@@ -110,9 +110,7 @@ Void SegmentBuilder::_ForEachScopeObject(ForEachScopeObject callback, SegmentPtr
 	}
 
 	for (ObjectPtr i : scope->GetClassSet()) {
-		for (ObjectPtr j : i->GetMethodSet()) {
-			this->_ForEachScopeObject(callback, segment, j);
-		}
+		this->_ForEachScopeObject(callback, segment, i);
 	}
 
 	for (ObjectPtr i : scope->GetMethodSet()) {

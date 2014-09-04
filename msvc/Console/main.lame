@@ -1,15 +1,33 @@
-int[] array = new int[] { 100, 20, 3 };
+// int[] array = new int[] { 100, 20, 3 };
+// int[] array = new int[100];
 
- // class State {
+class A {
+	int foo(int a, int b, int c) {
+		return a + b + c;
+	}
+}
+
+A z = new A();
+
+int r1 = z.foo(100, 20, 3);
+int r2 = z.foo(100, 20, 3);
+
+if (r1 == r2 && 199 > 200) {
+	int r = 0;
+} else {
+	int d = 1;
+}
+
+// class State {
 
 // 	public String getName() { return name; }
 // 	public void setName(String n) { name = n; }
 
-// 	public int getID() { return id; }
+// 	public float getID() { return id; }
 // 	public void setID(int i) { id = i; }
 
 // 	private String name;
-// 	private int id;
+// 	private float id;
 // }
 
 // class A {

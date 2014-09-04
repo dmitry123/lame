@@ -294,7 +294,7 @@ Buffer Scope::Path(Void) {
 
 	ScopePtr root = this;
 	Buffer resultPath;
-	Stack<ScopePtr> scopeStack;
+	Core::Stack<ScopePtr> scopeStack;
 
 	while (root && root->parentScope_) {
 		scopeStack.push(root);
@@ -343,7 +343,7 @@ ScopePtr Scope::CreateRootScope(Buffer name, Bool asClass) {
 	ObjectPtr rootScope = NULL;
 
 	if (asClass) {
-		rootScope = new Script::Class(name, NULL, 0);
+		rootScope = new Script::Class(name, NULL);
 	} else {
 		rootScope = new Script::Method(name, NULL, NULL, NULL);
 	}
@@ -352,20 +352,19 @@ ScopePtr Scope::CreateRootScope(Buffer name, Bool asClass) {
 		goto _ReturnScope;
 	}
 
-	classChar = rootScope->Scope::Add(new Script::Class("char", rootScope, 2))->GetClass();
-	classByte = rootScope->Scope::Add(new Script::Class("byte", rootScope, 1))->GetClass();
+	classChar    = rootScope->Scope::Add(new Script::Class("char",    rootScope, 2))->GetClass();
+	classByte    = rootScope->Scope::Add(new Script::Class("byte",    rootScope, 1))->GetClass();
 	classBoolean = rootScope->Scope::Add(new Script::Class("boolean", rootScope, 1))->GetClass();
-	classShort = rootScope->Scope::Add(new Script::Class("short", rootScope, 2))->GetClass();
-	classInt = rootScope->Scope::Add(new Script::Class("int", rootScope, 4))->GetClass();
-	classLong = rootScope->Scope::Add(new Script::Class("long", rootScope, 8))->GetClass();
-	classFloat = rootScope->Scope::Add(new Script::Class("float", rootScope, 4))->GetClass();
-	classDouble = rootScope->Scope::Add(new Script::Class("double", rootScope, 8))->GetClass();
-	classVoid = rootScope->Scope::Add(new Script::Class("void", rootScope, 0))->GetClass();
-	classString = rootScope->Scope::Add(new Script::Class("String", rootScope))->GetClass();
-	classObject = rootScope->Scope::Add(new Script::Class("Object", rootScope))->GetClass();
-	classClass = rootScope->Scope::Add(new Script::Class("Class", rootScope))->GetClass();
-	classUnknown = rootScope->Scope::Add(new Script::Class("?", rootScope))->GetClass();
-	classArray = rootScope->Scope::Add(new Script::Class("Array", rootScope))->GetClass();
+	classShort   = rootScope->Scope::Add(new Script::Class("short",   rootScope, 2))->GetClass();
+	classInt     = rootScope->Scope::Add(new Script::Class("int",     rootScope, 4))->GetClass();
+	classLong    = rootScope->Scope::Add(new Script::Class("long",    rootScope, 8))->GetClass();
+	classFloat   = rootScope->Scope::Add(new Script::Class("float",   rootScope, 4))->GetClass();
+	classDouble  = rootScope->Scope::Add(new Script::Class("double",  rootScope, 8))->GetClass();
+	classVoid    = rootScope->Scope::Add(new Script::Class("void",    rootScope, 0))->GetClass();
+	classString  = rootScope->Scope::Add(new Script::Class("String",  rootScope))->GetClass();
+	classObject  = rootScope->Scope::Add(new Script::Class("Object",  rootScope))->GetClass();
+	classClass   = rootScope->Scope::Add(new Script::Class("Class",   rootScope))->GetClass();
+	classUnknown = rootScope->Scope::Add(new Script::Class("?",       rootScope))->GetClass();
 
 	classChar
 		->SetModificator(Script::Object::Modificator::Primitive)
@@ -416,17 +415,6 @@ ScopePtr Scope::CreateRootScope(Buffer name, Bool asClass) {
 	classUnknown
 		->SetModificator(Script::Object::Modificator::Internal)
 		->SetModificator(Script::Object::Modificator::Object2);
-	classArray
-		->SetModificator(Script::Object::Modificator::Internal)
-		->SetModificator(Script::Object::Modificator::Object2);
-
-	//classObject->Scope::Add(new Method("toString", classObject, classObject, classString))
-	//	->GetMethod()->SetNativeMethod([](Script::MethodPtr method) { /* Nothing */ });
-
-	classArray->Scope::Add(new Variable("length", classArray, classInt))
-		->SetModificator(Object::Modificator::Public);
-	classArray->Scope::Add(new Variable("array", classArray, classInt))
-		->SetModificator(Object::Modificator::Private);
 
 	classChar->SetPriority(0);
 	classByte->SetPriority(0);
@@ -441,27 +429,23 @@ ScopePtr Scope::CreateRootScope(Buffer name, Bool asClass) {
 	classObject->SetPriority(7);
 	classClass->SetPriority(7);
 	classUnknown->SetPriority(7);
-	classArray->SetPriority(7);
 
+	goto _SkipPrimitive;
 _ReturnScope:
-
-	if (!rootScope->Scope::Amount()) {
-
-		rootScope->Add(classChar);
-		rootScope->Add(classByte);
-		rootScope->Add(classBoolean);
-		rootScope->Add(classShort);
-		rootScope->Add(classInt);
-		rootScope->Add(classLong);
-		rootScope->Add(classFloat);
-		rootScope->Add(classDouble);
-		rootScope->Add(classVoid);
-		rootScope->Add(classString);
-		rootScope->Add(classObject);
-		rootScope->Add(classClass);
-		rootScope->Add(classUnknown);
-		rootScope->Add(classArray);
-	}
+	rootScope->Add(classChar);
+	rootScope->Add(classByte);
+	rootScope->Add(classBoolean);
+	rootScope->Add(classShort);
+	rootScope->Add(classInt);
+	rootScope->Add(classLong);
+	rootScope->Add(classFloat);
+	rootScope->Add(classDouble);
+	rootScope->Add(classVoid);
+	rootScope->Add(classString);
+	rootScope->Add(classObject);
+	rootScope->Add(classClass);
+	rootScope->Add(classUnknown);
+_SkipPrimitive:
 
 	rootScope->Add(new Variable("true", rootScope, classBoolean))
 		->GetVariable()->SetBoolean(TRUE)->SetModificator(Object::Modificator::Internal);
@@ -472,7 +456,7 @@ _ReturnScope:
 	rootScope->Add(new Variable("null", rootScope, classObject))
 		->GetVariable()->SetObject(NULL)->SetModificator(Object::Modificator::Internal);
 
-	return ScopePtr(rootScope);
+	return rootScope;
 }
 
 Script::ClassPtr Scope::classChar = NULL;
@@ -488,6 +472,5 @@ Script::ClassPtr Scope::classString = NULL;
 Script::ClassPtr Scope::classObject = NULL;
 Script::ClassPtr Scope::classClass = NULL;
 Script::ClassPtr Scope::classUnknown = NULL;
-Script::ClassPtr Scope::classArray = NULL;
 
 LAME_END2

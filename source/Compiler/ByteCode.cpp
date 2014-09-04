@@ -16,9 +16,9 @@ ByteCodePtr ByteCode::New(Asm command) {
 	asmInfo = assembler.GetAsmInfo(
 		command);
 
-	this->segment->Write(&asmInfo->command, 1);
+	this->segment->Write(&asmInfo->cmd, 1);
 
-	if (asmInfo->arguments == this->infoList.size()) {
+	if (asmInfo->args == this->infoList.size()) {
 		this->Flush();
 	}
 
@@ -29,7 +29,7 @@ ByteCodePtr ByteCode::Write(Uint32 address) {
 
 	this->infoList.push_back(address);
 
-	if (asmInfo->arguments == this->infoList.size()) {
+	if (asmInfo->args == this->infoList.size()) {
 		this->Flush();
 	}
 
@@ -40,7 +40,7 @@ ByteCodePtr ByteCode::Flush(Void) {
 
 	Uint32 address = 0;
 
-	if (asmInfo->arguments != infoList.size()) {
+	if (asmInfo->args != infoList.size()) {
         return this;
 	}
 
@@ -48,7 +48,7 @@ ByteCodePtr ByteCode::Flush(Void) {
 		address = infoList[0];
 	}
 
-	for (Sint32 i = 0; i < asmInfo->arguments; i++) {
+	for (Sint32 i = 0; i < asmInfo->args; i++) {
 		this->segment->Write(&infoList[i], 4);
 	}
 
@@ -70,7 +70,7 @@ Void ByteCode::Trace(SegmentBuilderPtr segmentBuilder) {
 	for (Uint32 i = 0; i < codeSegment->GetSize();) {
 
 		AsmInfoPtr asmInfo = Assembler::GetAsmInfo(*codeSegment->GetBlockAt(i));
-		Uint32 argCount = asmInfo->arguments;
+		Uint32 argCount = asmInfo->args;
 		Uint32 address = i + codeSegment->GetOffset();
 
 		if ((object = codeSegment->Fetch(address)) && object->CheckType(Object::Type::Method)) {
@@ -96,23 +96,40 @@ Void ByteCode::Trace(SegmentBuilderPtr segmentBuilder) {
 
 			printf("0x%.4x ", address);
 
-			if (asmInfo->command == IRLOAD ||
-				asmInfo->command == LRLOAD ||
-				asmInfo->command == FRLOAD ||
-				asmInfo->command == DRLOAD ||
-				asmInfo->command == RRLOAD ||
-				asmInfo->command == BRLOAD ||
-				asmInfo->command == CRLOAD ||
-				asmInfo->command == SRLOAD ||
-				asmInfo->command == IRSTORE ||
-				asmInfo->command == LRSTORE ||
-				asmInfo->command == FRSTORE ||
-				asmInfo->command == DRSTORE ||
-				asmInfo->command == RRSTORE ||
-				asmInfo->command == BRSTORE ||
-				asmInfo->command == CRSTORE ||
-				asmInfo->command == SRSTORE ||
-				asmInfo->command == CLEAR
+			if (asmInfo->cmd == IRLOAD ||
+				asmInfo->cmd == LRLOAD ||
+				asmInfo->cmd == FRLOAD ||
+				asmInfo->cmd == DRLOAD ||
+				asmInfo->cmd == RRLOAD ||
+				asmInfo->cmd == BRLOAD ||
+				asmInfo->cmd == CRLOAD ||
+				asmInfo->cmd == SRLOAD ||
+				asmInfo->cmd == IRSTORE ||
+				asmInfo->cmd == LRSTORE ||
+				asmInfo->cmd == FRSTORE ||
+				asmInfo->cmd == DRSTORE ||
+				asmInfo->cmd == RRSTORE ||
+				asmInfo->cmd == BRSTORE ||
+				asmInfo->cmd == CRSTORE ||
+				asmInfo->cmd == SRSTORE ||
+				asmInfo->cmd == IALOAD ||
+				asmInfo->cmd == LALOAD ||
+				asmInfo->cmd == FALOAD ||
+				asmInfo->cmd == DALOAD ||
+				asmInfo->cmd == RALOAD ||
+				asmInfo->cmd == BALOAD ||
+				asmInfo->cmd == CALOAD ||
+				asmInfo->cmd == SALOAD ||
+				asmInfo->cmd == IASTORE ||
+				asmInfo->cmd == LASTORE ||
+				asmInfo->cmd == FASTORE ||
+				asmInfo->cmd == DASTORE ||
+				asmInfo->cmd == RASTORE ||
+				asmInfo->cmd == BASTORE ||
+				asmInfo->cmd == CASTORE ||
+				asmInfo->cmd == SASTORE ||
+				asmInfo->cmd == CLEAR ||
+				asmInfo->cmd == ICLD
 			) {
 				goto _Skip;
 			}
@@ -121,7 +138,7 @@ Void ByteCode::Trace(SegmentBuilderPtr segmentBuilder) {
 				(object = textSegment->Fetch(address)) ||
 				(object = codeSegment->Fetch(address))
 			) {
-				if (asmInfo->command == RNEW) {
+				if (asmInfo->cmd == RNEW) {
 					goto _Skip;
 				}
 

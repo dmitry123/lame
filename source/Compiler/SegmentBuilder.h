@@ -8,9 +8,9 @@ LAME_BEGIN2(Compiler)
 class LAME_API SegmentBuilder {
 public:
 	SegmentBuilder() :
-		dataSegment(0),
-		codeSegment(0),
-		textSegment(0)
+		dataSegment(NULL),
+		codeSegment(NULL),
+		textSegment(NULL)
 	{
 	}
 public:

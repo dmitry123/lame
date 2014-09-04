@@ -13,9 +13,9 @@ static AsmInfo asmArray[0xff];
 
 static Void _SetAsm(Uint8 command, StringC name, Uint8 arguments) {
 
-	asmArray[command].command = command;
+	asmArray[command].cmd = command;
 	asmArray[command].name = name;
-	asmArray[command].arguments = arguments;
+	asmArray[command].args = arguments;
 }
 
 static Void _InitializeAssembler() {
@@ -32,22 +32,22 @@ static Void _InitializeAssembler() {
 	_SetAsm(FCONST1, "fconst1", 0);
 	_SetAsm(DCONST0, "dconst0", 0);
 	_SetAsm(DCONST1, "dconst1", 0);
-	_SetAsm(IALOAD, "iaload", 0);
-	_SetAsm(LALOAD, "laload", 0);
-	_SetAsm(FALOAD, "faload", 0);
-	_SetAsm(DALOAD, "daload", 0);
-	_SetAsm(RALOAD, "raload", 0);
-	_SetAsm(BALOAD, "baload", 0);
-	_SetAsm(CALOAD, "caload", 0);
-	_SetAsm(SALOAD, "saload", 0);
-	_SetAsm(IASTORE, "iastore", 0);
-	_SetAsm(LASTORE, "lastore", 0);
-	_SetAsm(FASTORE, "fastore", 0);
-	_SetAsm(DASTORE, "dastore", 0);
-	_SetAsm(RASTORE, "rastore", 0);
-	_SetAsm(BASTORE, "bastore", 0);
-	_SetAsm(CASTORE, "castore", 0);
-	_SetAsm(SASTORE, "sastore", 0);
+	_SetAsm(IALOAD, "iaload", 1);
+	_SetAsm(LALOAD, "laload", 1);
+	_SetAsm(FALOAD, "faload", 1);
+	_SetAsm(DALOAD, "daload", 1);
+	_SetAsm(RALOAD, "raload", 1);
+	_SetAsm(BALOAD, "baload", 1);
+	_SetAsm(CALOAD, "caload", 1);
+	_SetAsm(SALOAD, "saload", 1);
+	_SetAsm(IASTORE, "iastore", 1);
+	_SetAsm(LASTORE, "lastore", 1);
+	_SetAsm(FASTORE, "fastore", 1);
+	_SetAsm(DASTORE, "dastore", 1);
+	_SetAsm(RASTORE, "rastore", 1);
+	_SetAsm(BASTORE, "bastore", 1);
+	_SetAsm(CASTORE, "castore", 1);
+	_SetAsm(SASTORE, "sastore", 1);
 	_SetAsm(POP, "pop", 0);
 	_SetAsm(POP2, "pop2", 0);
 	_SetAsm(DUP, "dup", 0);
@@ -105,10 +105,7 @@ static Void _InitializeAssembler() {
 	_SetAsm(ITB, "itb", 0);
 	_SetAsm(ITC, "itc", 0);
 	_SetAsm(ITS, "its", 0);
-	_SetAsm(BCLD, "bcld", 1);
-	_SetAsm(SCLD, "scld", 1);
 	_SetAsm(ICLD, "icld", 1);
-	_SetAsm(LCLD, "lcld", 1);
 	_SetAsm(ICMP, "icmp", 0);
 	_SetAsm(LCMP, "lcmp", 0);
 	_SetAsm(FCMP, "fcmp", 0);

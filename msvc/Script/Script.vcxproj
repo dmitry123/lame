@@ -217,7 +217,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\Script\Class.cpp" />
+    <ClCompile Include="..\..\source\Script\CodeBuilder.cpp" />
+    <ClCompile Include="..\..\source\Script\CodeNode.cpp" />
     <ClCompile Include="..\..\source\Script\SequenceMatcher.cpp" />
+    <ClCompile Include="..\..\source\Script\StackVar.cpp" />
     <ClCompile Include="..\..\source\Script\SyntaxBuilder.cpp" />
     <ClCompile Include="..\..\source\Script\Interface.cpp" />
     <ClCompile Include="..\..\source\Script\Method.cpp" />
@@ -238,7 +241,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\Script\Class.h" />
+    <ClInclude Include="..\..\source\Script\CodeBuilder.h" />
+    <ClInclude Include="..\..\source\Script\CodeNode.h" />
     <ClInclude Include="..\..\source\Script\SequenceMatcher.h" />
+    <ClInclude Include="..\..\source\Script\StackVar.h" />
     <ClInclude Include="..\..\source\Script\SyntaxBuilder.h" />
     <ClInclude Include="..\..\source\Script\Interface.h" />
     <ClInclude Include="..\..\source\Script\Method.h" />

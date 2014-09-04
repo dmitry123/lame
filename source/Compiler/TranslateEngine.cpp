@@ -1,4 +1,4 @@
-#include "Register.h"
+#include "TranslateEngine.h"
 
 LAME_BEGIN2(Compiler)
 

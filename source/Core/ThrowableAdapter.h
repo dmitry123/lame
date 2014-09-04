@@ -13,9 +13,6 @@ public:
 	inline StringC What() override {
 		return this->GetErrorBuffer();
 	}
-	inline Void Throw() override {
-		throw (*this);
-	}
 public:
 	inline Void SetErrorBuffer(StringC message) {
 		memcpy(this->GetErrorBuffer(), message, strlen(message));

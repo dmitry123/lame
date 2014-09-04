@@ -10,7 +10,7 @@
 
 LAME_BEGIN2(Script)
 
-static Bool _MoveNode(NodePtr node) {
+static Bool _MoveNode(NodePtr node, Bool strict = FALSE) {
 
 	Bool result = FALSE;
 
@@ -23,11 +23,12 @@ static Bool _MoveNode(NodePtr node) {
 		view should be : '1 if'. We've saved count of arguments in node 'new' */
 
 	if (node->id != kScriptNodeVariable &&
-		node->id != kScriptNodeInvoke &&
 		node->id != kScriptNodeAlloc &&
 		node->lex->lex->id != kScriptLexNew
 	) {
-		goto _Seek;
+		if (!strict) {
+			goto _Seek;
+		}
 	}
 
 	if (node->parent != NULL && node->argList.size() > 0) {
@@ -42,7 +43,7 @@ static Bool _MoveNode(NodePtr node) {
 #define __If(_list) \
 	if (!nodeStack && (position = std::find(_list.begin(), _list.end(), node)) != _list.end()) {\
 		nodeStack = &_list; \
-	}
+		}
 
 		__If(node->parent->forInfo.beginList);
 		__If(node->parent->forInfo.conditionList);
@@ -77,11 +78,10 @@ _Seek:
 			}
 		}
 	}
-
-_Again:
+_Again0:
 	for (NodePtr n : node->blockList) {
 		if (_MoveNode(n)) {
-			goto _Again;
+			goto _Again0;
 		}
 	}
 _Again1:
@@ -100,6 +100,12 @@ _Again3:
 	for (NodePtr n : node->forInfo.nextList) {
 		if (_MoveNode(n)) {
 			goto _Again3;
+		}
+	}
+_Again4:
+	if (node->lex->lex->id == kScriptLexNew && node->typeNode) {
+		if (_MoveNode(node->typeNode, TRUE)) {
+			goto _Again4;
 		}
 	}
 
@@ -324,7 +330,6 @@ Void ScopeBuilder::_ForEachInterfacePrototype(NodePtr n) {
 Void ScopeBuilder::_ForEachClassDeclare(NodePtr n) {
 
 	ClassPtr classVar;
-	ObjectPtr classExtend;
 
 	if (!n->typeNode) {
 		return;
@@ -428,27 +433,41 @@ Void ScopeBuilder::_ForEachInterfaceDeclare(NodePtr n) {
 
 Void ScopeBuilder::_ForEachClassInherit(NodePtr n) {
 
-	ObjectPtr typeClass;
+	ObjectPtr typeClass = NULL;
+	NodePtr extendNode = NULL;
+	ObjectPtr extendClass = NULL;
 
-	//if (n->id == kScriptNodeAnonymous) {
-	//	if (!(classExtend = this->scope->Find(n->word))) {
-	//		PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->word.data());
-	//	}
-	//	classVar->Extend(classExtend);
-	//}
-
-	if (n->classInfo.extendNode) {
-		if (!(typeClass = scope->Find(n->classInfo.extendNode->word))) {
-			PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->classInfo.extendNode->word.data());
+#if 0
+	if (n->id == kScriptNodeAnonymous) {
+		if (!(classExtend = this->scope->Find(n->word))) {
+			PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->word.data());
 		}
-		n->var->GetClass()->Extend(typeClass->GetClass());
+		classVar->Extend(classExtend);
 	}
-	else {
-		n->var->GetClass()->Extend(scope->classObject);
+#endif
+
+	if (!(extendNode = n->classInfo.extendNode)) {
+		extendClass = scope->classObject;
 	}
+
+	while (extendNode) {
+		if (!extendClass) {
+			if (!(extendClass = scope->Find(extendNode->word, TRUE, Uint32(Object::Type::Class)))) {
+				PostSyntaxError(n->lex->line, "Undeclared class (%s)", extendNode->word.data());
+			}
+		}
+		else {
+			if (!(extendClass = extendClass->Find(extendNode->word, FALSE, Uint32(Object::Type::Class)))) {
+				PostSyntaxError(n->lex->line, "Undeclared class (%s)", extendNode->word.data());
+			}
+		}
+		extendNode = extendNode->next;
+	}
+
+	n->var->GetClass()->Extend(extendClass);
 
 	for (NodePtr n2 : n->classInfo.implementNode) {
-		if (!(typeClass = scope->Find(n2->word))) {
+		if (!(typeClass = scope->Find(n2->word, Uint32(Object::Type::Class)))) {
 			PostSyntaxError(n->lex->line, "Undeclared interface (%s)", n2->word.data());
 		}
 		n->var->GetClass()->Implement(typeClass);
@@ -595,6 +614,8 @@ Void ScopeBuilder::_ForEachMethodDeclare(NodePtr n) {
 
 	MethodPtr method = new Method(n->word, scope, ObjectPtr(scope), returnType, methodAttributes);
 
+	method->SetNode(n);
+
 	if (ObjectPtr(scope)->CheckModificator(Object::Modificator::Construction)) {
 		goto _DeclareError;
 	}
@@ -603,10 +624,8 @@ Void ScopeBuilder::_ForEachMethodDeclare(NodePtr n) {
 		!ObjectPtr(this->scope)->CheckType(Object::Type::Interface)
 	) {
 	_DeclareError:
-		Buffer argf = method->GetFormattedArguments();
-		delete method;
 		PostSyntaxError(n->lex->line, "Unable to declare method in non-class scope %s/%s(%s)",
-			this->scope->GetName().data(), n->word.data(), argf.data());
+			this->scope->GetName().data(), n->word.data(), method->GetFormattedArguments());
 	}
 
 	if (!(methodObject = scope->Add(method))) {
@@ -623,9 +642,7 @@ Void ScopeBuilder::_ForEachMethodDeclare(NodePtr n) {
         methodObject->GetMethod()->SetRootNode(n);
     }
 
-	n->var = methodObject;
 	n->methodInfo.invokeHash = methodObject->GetMethod()->GetInvokeHash();
-	n->var->SetNode(n);
 }
 
 Void ScopeBuilder::_ForEachMethodRegister(NodePtr n) {
@@ -680,10 +697,10 @@ Void ScopeBuilder::_ForEachVariableDeclare(NodePtr n) {
 				typeClass->GetName().data());
 		}
 
-		if ((n->flags & kScriptFlagArray) != 0) {
+		if (n->typeNode && (n->typeNode->flags & kScriptFlagArray) != 0) {
             n->var = scope->Add(new Variable(n->word, scope, typeClass->GetClass(), TRUE));
 		}
-		else if (!n->var) {
+		else {
 			n->var = scope->Add(new Variable(n->word, scope, typeClass->GetClass()));
 		}
 
@@ -815,7 +832,7 @@ Void ScopeBuilder::_ForEachClassInit(NodePtr n) {
 
 	initMethod->SetRootNode(n);
 
-	initMethod->Scope::Add(new Variable("this", initMethod, ClassPtr(this->scope)));
+	initMethod->Scope::Add(new Variable("this", initMethod, ClassPtr(classVar)));
 
 	if (ClassPtr(classVar)->GetExtend()) {
 		initMethod->Scope::Add(new Variable("super", initMethod,

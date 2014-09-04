@@ -21,6 +21,7 @@ protected: /* Strict Virtual Methods */
     virtual Void OnStore(VariablePtr var) = 0;
 	virtual Void OnCast(VariablePtr source, ClassPtr type) = 0;
 	virtual Void OnInvoke(MethodPtr method) = 0;
+	virtual Void OnDup(ObjectPtr var) = 0;
 protected:
 	Void _Read(NodePtr node, VariablePtr& left, VariablePtr& right);
 	Void _Run(NodeListRef nodeList, Bool makeBackup = FALSE);
@@ -29,12 +30,12 @@ protected:
 	Void _Cast(VariablePtr var, ObjectPtr type);
 public:
 	inline NodePtr GetNode() { return this->currentNode; }
-	inline ScopePtr GetRoot() { return this->rootScope; }
-	inline VariableStackPtr GetStack() { return &this->variableStack; }
-	inline ByteCodePtr GetByteCode() { return this->byteCode; }
 	inline ObjectPtr GetCurrentMethod() { return this->currentMethod; }
+	inline ScopePtr GetRoot() { return this->rootScope; }
+	inline StackVarPtr GetStack() { return &this->variableStack; }
+	inline ByteCodePtr GetByteCode() { return this->byteCode; }
 protected:
-    VariableStack variableStack;
+    StackVar variableStack;
 	SyntaxBuilderPtr nodeBuilder;
 	Uint32 methodHash;
 	ScopePtr rootScope;
@@ -79,7 +80,7 @@ private:
     Vector<ObjectPtr> classList;
 	Vector<ObjectPtr> methodList;
 	Vector<Uint32> addressStack;
-	Stack<SegmentPtr> segmentStack;
+	Core::Stack<SegmentPtr> segmentStack;
 	Vector<SegmentPtr> segmentList;
 	Uint32 segmentOffset;
 	ObjectPtr currentMethod;

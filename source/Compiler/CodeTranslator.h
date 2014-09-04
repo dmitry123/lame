@@ -9,7 +9,7 @@ class LAME_API CodeTranslator : public VirtualCompiler {
 	typedef Script::VariablePtr VariablePtr;
 public:
 	Void Run(SyntaxBuilderPtr nodeBuilder, ScopePtr rootScope, SegmentPtr codeSegment) {
-		this->VirtualCompiler::Run(nodeBuilder, rootScope, codeSegment);
+		//this->VirtualCompiler::Run(nodeBuilder, rootScope, codeSegment);
     }
 private:
     Void OnBinary(VariablePtr left, VariablePtr right) override;
@@ -20,6 +20,7 @@ private:
     Void OnStore(VariablePtr var) override;
 	Void OnCast(VariablePtr source, ClassPtr type) override;
 	Void OnInvoke(MethodPtr method) override;
+	Void OnDup(ObjectPtr var) override;
 };
 
 LAME_END2

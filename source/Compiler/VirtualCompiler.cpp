@@ -4,91 +4,6 @@ LAME_BEGIN2(Compiler)
 
 Void VirtualCompiler::_Run(NodeListRef nodeList, Bool makeBackup) {
 
-	VariableStack stackBackup;
-
-	if (makeBackup) {
-		stackBackup = this->variableStack;
-	}
-
-	for (NodePtr n : nodeList) {
-
-		this->currentNode = n;
-
-		try {
-			if (n->id == kScriptNodeClass ||
-				n->id == kScriptNodeInterface ||
-				n->id == kScriptNodeFunction
-			) {
-				continue;
-			}
-
-			if (n->lex->lex->id == kScriptLexReturn) {
-				this->_Return(n);
-			}
-			else if (n->id == kScriptNodeCondition) {
-				this->_Condition(n);
-			}
-			else if (n->id == kScriptNodeInvoke) {
-				this->_Invoke(n);
-			}
-			else if (n->lex->lex->id == kScriptLexSemicolon) {
-				this->_Finish(n);
-			}
-			else if (n->lex->lex->id == kScriptLexNew) {
-				this->_New(n);
-			}
-			else if (n->lex->lex->id == kScriptLexDirected) {
-				this->_Selection(n);
-			}
-			else if (n->id == kScriptNodeAlloc) {
-				if (!n->var) {
-					PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->word.data());
-				}
-				this->_Invoke(n);
-				if (n->parent->id != kScriptNodeClass) {
-					goto _SaveNode;
-				}
-			}
-			else if (n->lex->lex->IsUnknown() || n->lex->lex->IsConst()) {
-			_SaveNode:
-				if (!n->var) {
-					this->variableStack.GetNameList().push_back(n->word);
-					this->variableStack.GetVarList().push_back(NULL);
-				}
-				else {
-					this->variableStack.Push(VariablePtr(n->var));
-				}
-			}
-			else if (n->lex->lex->IsMath() || n->lex->lex->IsBool()) {
-				if (n->lex->args == 1) {
-					this->_Unary(n);
-				}
-				else if (n->lex->args == 2) {
-					this->_Binary(n);
-				}
-				else if (n->lex->args == 3 && n->lex->lex->id == kScriptLexTernary) {
-					this->_Ternary(n);
-				}
-				else {
-					this->_Invoke(n);
-				}
-			}
-		}
-		catch (SyntaxException& e) {
-			throw SyntaxException(e.Line(), e.GetErrorBuffer());
-		}
-		catch (ScriptException& e) {
-			throw SyntaxException(n->lex->line, e.GetErrorBuffer());
-		}
-	}
-
-	if (this->variableStack.Size()) {
-		this->lastResult = this->variableStack.Back();
-	}
-
-	if (makeBackup) {
-		this->variableStack = stackBackup;
-	}
 }
 
 Void VirtualCompiler::_Read(NodePtr n, VariablePtr& left, VariablePtr& right) {
@@ -97,29 +12,11 @@ Void VirtualCompiler::_Read(NodePtr n, VariablePtr& left, VariablePtr& right) {
 		PostSyntaxError(n->lex->line, "Operator \"%s\" requires %d arguments", n->word.data(), n->lex->args);
 	}
 
-	if (n->lex->args > 1) {
 
-		right = this->variableStack.Back();
-		this->variableStack.GetVarList().pop_back();
-
-		if (n->lex->lex->id != kScriptLexDirected) {
-			if (!right) {
-				PostSyntaxError(n->lex->line, "Undeclared variable (%s)", this->variableStack.GetNameList().data());
-			}
-			this->variableStack.GetNameList().pop_back();
-		}
-	}
 
 	left = this->variableStack.Back();
 	this->variableStack.GetVarList().pop_back();
 
-	if (!left) {
-		PostSyntaxError(n->lex->line, "Undeclared variable (%s)", this->variableStack.GetNameList().data());
-	}
-
-	if (n->lex->lex->id != kScriptLexDirected) {
-		this->variableStack.GetNameList().pop_back();
-	}
 }
 
 Void VirtualCompiler::_Write(VariablePtr var) {
@@ -268,9 +165,9 @@ Void VirtualCompiler::Run(SyntaxBuilderPtr nodeBuilder, ScopePtr rootScope, Segm
 			}
 		}
 		else {
-			//if (i->GetNode()->id != kScriptNodeCondition) {
-				//this->_Run(i->GetNode()->blockList);
-			//}
+			if (i->GetNode()->id != kScriptNodeCondition) {
+				this->_Run(i->GetNode()->blockList);
+			}
 		}
 	}
 
@@ -514,19 +411,26 @@ Void VirtualCompiler::_New(NodePtr n) {
 
 			this->_Read(n, leftVar, leftVar);
 			this->OnLoad(leftVar);
+			this->GetByteCode()->New(ANEW)
+				->Write(offsetLength);
 		}
 		else {
+			Uint32 offset = 0;
+
 			this->GetByteCode()->New(ICLD)
 				->Write(initList.size());
 
+			this->GetByteCode()->New(ANEW)
+				->Write(offsetLength);
+
 			for (VariablePtr v : initList) {
-				this->OnLoad(leftVar);
+				this->GetByteCode()->New(RDUP);
+				v->SetAddress(offset);
+				v->GetVarType() = Variable::Var::Array;
 				this->OnStore(v);
+				offset += offsetLength;
 			}
 		}
-
-		this->GetByteCode()->New(ANEW)
-			->Write(offsetLength);
 
 		leftVar->GetVarType() = Variable::Var::Array;
 	}
@@ -543,10 +447,6 @@ Void VirtualCompiler::_Selection(NodePtr n) {
 
 	this->_Read(n, leftVar, rightVar);
 
-	fieldName = this->variableStack.GetNameList().back();
-
-	this->variableStack.GetNameList().pop_back();
-	this->variableStack.GetNameList().pop_back();
 
 	if (leftVar->GetVarType() != Variable::Var::Object) {
 		PostSyntaxError(n->lex->line, "You can access to object's fields only (%s)", fieldName.data());
@@ -874,9 +774,7 @@ _SkipErrors:
 
 Void VirtualCompiler::_Invoke(NodePtr n) {
 
-	VariablePtr leftVar;
 	ObjectPtr methodVar;
-	Uint32 methodHash;
 	Vector<ClassPtr> objectList;
 	Uint32 invokeHash;
 	Buffer formattedParameters;

@@ -7,7 +7,7 @@
 LAME_BEGIN2(Script)
 
 Variable::Variable(BufferRefC name, ScopePtr parent, ClassPtr classType, Bool isArray) : Object(name, parent, Type::Variable),
-classType(classType)
+	classType(classType)
 {
 	this->wasInStack = FALSE;
 	this->objectValue = NULL;

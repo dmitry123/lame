@@ -7,6 +7,10 @@ LAME_BEGIN2(Core)
 
 class LAME_API Time {
 public:
+	Time() {
+		// default
+	}
+public:
 	Void ConvertToString(String buffer);
 	Uint64 ConvertToMilliseconds(Void);
 public:

@@ -346,4 +346,8 @@ Void CodeTranslator::OnInvoke(MethodPtr method) {
 		->Write(method->GetPosition());
 }
 
+Void CodeTranslator::OnDup(ObjectPtr var) {
+	BCPNEW(var, RDUP, DUP, DUP2, DUP2, DUP);
+}
+
 LAME_END2

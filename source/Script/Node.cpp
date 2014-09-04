@@ -7,7 +7,7 @@ LAME_BEGIN2(Script)
 
 class ShuntingYard {
 public:
-	Stack<NodePtr>* Convert(Deque<NodePtr>* list) {
+	Core::Stack<NodePtr>* Convert(Deque<NodePtr>* list) {
 
 		NodePtr top = NULL;
         
@@ -131,14 +131,14 @@ private:
 		return this->GetPrecedence(this->opStack.top());
 	}
 private:
-	Stack<NodePtr> resultStack;
-	Stack<NodePtr> opStack;
+	Core::Stack<NodePtr> resultStack;
+	Core::Stack<NodePtr> opStack;
     Sint32 operandsLeft;
 };
 
 Void _Order(Deque<NodePtr>* list) {
 
-	Stack<NodePtr>* result;
+	Core::Stack<NodePtr>* result;
 	ShuntingYard shuntingYard;
     
 	result = shuntingYard.Convert(list);
@@ -174,6 +174,7 @@ Node::Node(Buffer word, NodeID id, LexNodePtr lex, NodePtr parent, NodePtr prev)
 	this->typeNode = NULL;
 	this->var = NULL;
 	this->flags = 0;
+	this->next = NULL;
 }
 
 Void Node::ShuntingYard(Void) {

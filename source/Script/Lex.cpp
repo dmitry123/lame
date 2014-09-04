@@ -193,6 +193,10 @@ Map<LexID, Lex> Lex::lexMap = {
 			{ ">>", P(7, 1), kScriptLexBitShiftR, 2,
 				kScriptLexFlagRight | kScriptLexFlagMath | kScriptLexFlagLogic | kScriptLexFlagExpression }
 		},
+		{ kScriptLexBitShiftU,
+			{ ">>>", P(7, 1), kScriptLexBitShiftU, 2,
+				kScriptLexFlagRight | kScriptLexFlagMath | kScriptLexFlagLogic | kScriptLexFlagExpression }
+		},
 		{ kScriptLexBitAnd,
 			{ "&", P(10, 1), kScriptLexBitAnd, 2,
 				kScriptLexFlagRight | kScriptLexFlagMath | kScriptLexFlagLogic | kScriptLexFlagExpression }
@@ -235,6 +239,10 @@ Map<LexID, Lex> Lex::lexMap = {
 		},
 		{ kScriptLexBitShiftSetR,
 			{ ">>=", P(16, 1), kScriptLexBitShiftSetR, 2,
+				kScriptLexFlagLeft | kScriptLexFlagMath | kScriptLexFlagLogic | kScriptLexFlagExpression }
+		},
+		{ kScriptLexBitShiftSetU,
+			{ ">>>=", P(16, 1), kScriptLexBitShiftSetU, 2,
 				kScriptLexFlagLeft | kScriptLexFlagMath | kScriptLexFlagLogic | kScriptLexFlagExpression }
 		},
 		{ kScriptLexBitAndSet,
@@ -282,7 +290,7 @@ Map<LexID, Lex> Lex::lexMap = {
 				kScriptLexFlagRight | kScriptLexFlagBool | kScriptLexFlagExpression }
 		},
 		{ kScriptLexTernary,
-			{ "?", P(15, 1), kScriptLexTernary, 3,
+			{ "?", P(15, 1), kScriptLexTernary, 1,
 				kScriptLexFlagDefault | kScriptLexFlagMath | kScriptLexFlagExpression }
 		},
 

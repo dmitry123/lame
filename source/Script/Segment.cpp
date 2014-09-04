@@ -68,6 +68,11 @@ Void Segment::Write(VariablePtr var) {
 	else if (var->GetVarType() == Variable::Var::Object) {
 		copyBuffer = Uint8P(&ZeroByte64);
 	}
+	else if (var->GetVarType() == Variable::Var::Array) {
+		copyBuffer = Uint8P(&ZeroByte64);
+		bufferSize = 8;
+	}
+
 
 	if (var->GetVarType() == Variable::Var::String && !var->GetNode()) {
 		bufferSize = Uint32(var->stringValue.length()) + 1;
