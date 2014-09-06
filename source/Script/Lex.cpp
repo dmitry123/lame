@@ -75,12 +75,12 @@ Map<LexID, Lex> Lex::lexMap = {
 
 		/* Unary Operators */
 
-		{ kScriptLexIncrement,
-			{ "++", P(2, 1), kScriptLexIncrement, 1,
+		{ kScriptLexPostfixIncrement,
+			{ "++", P(2, 1), kScriptLexPostfixIncrement, 1,
 				kScriptLexFlagLeft | kScriptLexFlagMath | kScriptLexFlagExpression }
 		},
-		{ kScriptLexDecrement,
-			{ "--", P(2, 1), kScriptLexDecrement, 1,
+		{ kScriptLexPostfixDecrement,
+			{ "--", P(2, 1), kScriptLexPostfixDecrement, 1,
 				kScriptLexFlagLeft | kScriptLexFlagMath | kScriptLexFlagExpression }
 		},
 		{ kScriptLexPrefixIncrement,

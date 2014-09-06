@@ -318,8 +318,8 @@ Void VirtualCompiler::_Unary(NodePtr n) {
 		this->variableStack.Return(VariablePtr(n->var->GetClass()));
 	}
 	else {
-		if (n->lex->lex->id == kScriptLexIncrement ||
-			n->lex->lex->id == kScriptLexDecrement ||
+		if (n->lex->lex->id == kScriptLexPostfixIncrement ||
+			n->lex->lex->id == kScriptLexPostfixDecrement ||
 			n->lex->lex->id == kScriptLexPrefixIncrement ||
 			n->lex->lex->id == kScriptLexPrefixDecrement
 		) {

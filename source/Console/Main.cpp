@@ -15,6 +15,9 @@ int main(int argc, char** argv) {
 	StringC fileName;
 	Clock time;
 
+	int a = 0;
+	int c = a++ + a++ + a++;
+
 	fileName = argc > 1 ?
 		argv[1] : "main.lame";
 
@@ -53,12 +56,10 @@ int main(int argc, char** argv) {
 		codeBuilder.Run(&syntaxBuilder, rootScope,
 			segmentBuilder.GetCodeSegment());
 
-		puts("");
+		/* Trace root scope */
+		//rootScope->Trace(0);
 
 #if 0
-		/* Trace root scope */
-		rootScope->Trace(0);
-
 		/* Build segments */
 		segmentBuilder.BuildTextSegment(rootScope);
 		segmentBuilder.BuildDataSegment(rootScope);

@@ -534,8 +534,8 @@ Void CodeBuilder::_Unary(NodePtr n) {
 		this->variableStack.Return(VariablePtr(n->var->GetClass()));
 	}
 	else {
-		if (n->lex->lex->id == kScriptLexIncrement ||
-			n->lex->lex->id == kScriptLexDecrement ||
+		if (n->lex->lex->id == kScriptLexPostfixIncrement ||
+			n->lex->lex->id == kScriptLexPostfixDecrement ||
 			n->lex->lex->id == kScriptLexPrefixIncrement ||
 			n->lex->lex->id == kScriptLexPrefixDecrement
 		) {
@@ -562,11 +562,11 @@ Void CodeBuilder::_Unary(NodePtr n) {
 
 #if 0
 	switch (n->lex->lex->id) {
-	case kScriptLexIncrement:
+	case kScriptLexPostfixIncrement:
 	case kScriptLexPrefixIncrement:
 		this->_Save(Code::Increment, leftVar);
 		break;
-	case kScriptLexDecrement:
+	case kScriptLexPostfixDecrement:
 	case kScriptLexPrefixDecrement:
 		this->_Save(Code::Decrement, leftVar);
 		break;
@@ -1123,7 +1123,7 @@ Void CodeBuilder::_Array(NodePtr n) {
 	VariablePtr leftVar;
 
 	if (!n->var->CheckType(Object::Type::Variable) || n->var->GetVariable()->GetVarType() != Variable::Var::Array) {
-		PostSyntaxError(n->lex->line, "You can assume indexing only to arrays (%s)",
+		PostSyntaxError(n->lex->line, "You can't assume indexing only to arrays (%s)",
 			n->word.data());
 	}
 

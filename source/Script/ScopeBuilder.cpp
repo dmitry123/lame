@@ -185,7 +185,6 @@ Void ScopeBuilder::Build(NodePtr rootNode, ScopePtr rootScope) {
 			2. Apply class/interface modificators
 			3. Declaring class/interface methods and variables */
 
-	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachConstruction, this), kScriptNodeCondition);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassPrototype, this), kScriptNodeClass);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassPrototype, this), kScriptNodeAnonymous);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachInterfacePrototype, this), kScriptNodeInterface);
@@ -222,13 +221,14 @@ Void ScopeBuilder::Build(NodePtr rootNode, ScopePtr rootScope) {
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachMethodDeclare, this), kScriptNodeFunction);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachModificatorSet, this), kScriptNodeFunction);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachMethodRegister, this), kScriptNodeFunction);
-	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachVariableDeclare, this), kScriptNodeUnknown);
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachVariableDeclare, this), kScriptNodeVariable);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachModificatorSet, this), kScriptNodeVariable);
 
 	/*	Check for empty nodes */
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachNodeFind, this), kScriptNodeUnknown);
 
 	/*  Check every class/interface inheritance lexes */
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachConstruction, this), kScriptNodeCondition);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachCheckInheritance, this), kScriptNodeInterface);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachCheckInheritance, this), kScriptNodeClass);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachCheckInheritance, this), kScriptNodeAnonymous);
@@ -255,6 +255,7 @@ Void ScopeBuilder::Build(NodePtr rootNode, ScopePtr rootScope) {
 		initMethod->SetNativeMethod([] (MethodPtr m) {
 			/* Ignore */
 		});
+		initMethod->SetModificator(Object::Modificator::Internal);
 	}
     
 #if 0 /* Node trace (only for debugging) */
@@ -452,7 +453,7 @@ Void ScopeBuilder::_ForEachClassVariableDeclare(NodePtr n) {
 		PostSyntaxError(n->lex->line, "Undeclared type (%s)", n->typeNode->word.data());
 	}
 
-	if ((n->flags & kScriptFlagArray) != 0) {
+	if ((n->typeNode->flags & kScriptFlagArray) != 0) {
         n->var = scope->Add(new Variable(n->word, scope, typeClass->GetClass(), TRUE));
 	}
 	else if (!n->var) {
@@ -659,6 +660,7 @@ Void ScopeBuilder::_ForEachMethodDeclare(NodePtr n) {
 	ObjectPtr returnType;
 	ObjectPtr methodObject;
 	Vector<ClassPtr> methodAttributes;
+	ObjectPtr varObject;
 
 	returnType = _FindClass(scope, n->typeNode);
 
@@ -679,7 +681,21 @@ Void ScopeBuilder::_ForEachMethodDeclare(NodePtr n) {
 
 	MethodPtr method = new Method(n->word, scope, ObjectPtr(scope), returnType, methodAttributes);
 
+	if ((n->flags & kScriptFlagImplemented)) {
+		method->SetModificator(Object::Modificator::Implemented);
+	}
+
 	method->SetNode(n);
+
+	for (NodePtr n2 : n->argList) {
+		if (!(varObject = method->Add(new Variable(n2->word, method, _FindClass(scope, n2->typeNode)->GetClass())))) {
+			PostSyntaxError(n2->lex->line, "Variable redeclaration (%s)", n2->word.data());
+		}
+		varObject->SetNode(n2);
+		n2->var = varObject;
+	}
+
+	n->var = method;
 
 	if (ObjectPtr(scope)->CheckModificator(Object::Modificator::Construction)) {
 		goto _DeclareError;
@@ -732,87 +748,63 @@ Void ScopeBuilder::_ForEachMethodRegister(NodePtr n) {
 			}
 		}
 	}
-
-	n->var = NULL;
 }
 
 Void ScopeBuilder::_ForEachVariableDeclare(NodePtr n) {
 
 	ObjectPtr typeClass;
 
-	if (n->id == kScriptNodeVariable) {
-
-		if (n->parent && n->parent->id == kScriptNodeClass) {
-			return;
-		}
-
-		if (!n->typeNode) {
-			if (!(typeClass = _FindClass(scope, n->typeNode))) {
-				PostSyntaxError(n->lex->line, "Undeclared variable (%s)", n->word.data());
-			}
-			n->var = typeClass;
-			typeClass = typeClass->GetClass();
-		}
-		else {
-			typeClass = _FindClass(scope, n->typeNode);
-		}
-
-		if (!typeClass) {
-			PostSyntaxError(n->lex->line, "Undeclared type (%s)",
-				n->typeNode->word.data());
-		}
-
-		if (!typeClass->CheckType(Object::Type::Class) && !typeClass->CheckType(Object::Type::Interface)) {
-			PostSyntaxError(n->lex->line, "Variable's type must be class or primitive type (%s)",
-				typeClass->GetName().data());
-		}
-
-		if (n->typeNode && (n->typeNode->flags & kScriptFlagArray) != 0) {
-            n->var = scope->Add(new Variable(n->word, scope, typeClass->GetClass(), TRUE));
-		}
-		else {
-			n->var = scope->Add(new Variable(n->word, scope, typeClass->GetClass()));
-		}
-
-		if (!n->var) {
-			PostSyntaxError(n->lex->line, "Variable redeclaration (%s)", n->word.data());
-		}
-
-		if (n->typeNode && n->typeNode->templateNode) {
-			if (!typeClass->GetTemplate()) {
-				PostSyntaxError(n->lex->line, "Class (%s) non-template", typeClass->GetName().data());
-			}
-			ObjectPtr classT = n->var->Find(n->typeNode->templateNode->word);
-			if (!classT) {
-				PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->typeNode->templateNode->word.data());
-			}
-			if (classT->CheckModificator(Class::Modificator::Primitive)) {
-				PostSyntaxError(n->lex->line, "Template class mustn't be primitive type (%s)", n->templateNode->word.data());
-			}
-			ClassPtr classT2 = classT->GetClass();
-			n->var->Scope::Add(classT->Clone(
-				typeClass->GetTemplate()->GetName(), n->var));
-			n->var->SetTemplate(classT2);
-		}
+	if (n->parent && (n->parent->id == kScriptNodeClass || n->parent->id == kScriptNodeFunction)) {
+		return;
 	}
-	else if (n->id == kScriptNodeDefault) {
-		if (!n->var && n->lex->lex->id == kScriptLexDefault) {
-			n->var = _FindClass(scope, n);
-			if (!n->var) {
-#if 0 /* Invalid code block */
-				auto i = std::find(n->parent->blockList.begin(), n->parent->blockList.end(), n);
-				if (i != n->parent->blockList.end()) {
-					if (n->parent->blockList.end() - i < 2 || (*(i + 1))->lex->lex->id != kScriptLexDirected) {
-						goto _UndeclaredVariable;
-					}
-				}
-				else {
-				_UndeclaredVariable:
-					PostSyntaxError(n->lex->line, "Undeclared variable (%s)", n->word.data());
-				}
-#endif
-			}
+
+	if (!n->typeNode) {
+		if (!(typeClass = _FindClass(scope, n->typeNode))) {
+			PostSyntaxError(n->lex->line, "Undeclared variable (%s)", n->word.data());
 		}
+		n->var = typeClass;
+		typeClass = typeClass->GetClass();
+	}
+	else {
+		typeClass = _FindClass(scope, n->typeNode);
+	}
+
+	if (!typeClass) {
+		PostSyntaxError(n->lex->line, "Undeclared type (%s)",
+			n->typeNode->word.data());
+	}
+
+	if (!typeClass->CheckType(Object::Type::Class) && !typeClass->CheckType(Object::Type::Interface)) {
+		PostSyntaxError(n->lex->line, "Variable's type must be class or primitive type (%s)",
+			typeClass->GetName().data());
+	}
+
+	if (n->typeNode && (n->typeNode->flags & kScriptFlagArray) != 0) {
+        n->var = scope->Add(new Variable(n->word, scope, typeClass->GetClass(), TRUE));
+	}
+	else {
+		n->var = scope->Add(new Variable(n->word, scope, typeClass->GetClass()));
+	}
+
+	if (!n->var) {
+		PostSyntaxError(n->lex->line, "Variable redeclaration (%s)", n->word.data());
+	}
+
+	if (n->typeNode && n->typeNode->templateNode) {
+		if (!typeClass->GetTemplate()) {
+			PostSyntaxError(n->lex->line, "Class (%s) non-template", typeClass->GetName().data());
+		}
+		ObjectPtr classT = n->var->Find(n->typeNode->templateNode->word);
+		if (!classT) {
+			PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->typeNode->templateNode->word.data());
+		}
+		if (classT->CheckModificator(Class::Modificator::Primitive)) {
+			PostSyntaxError(n->lex->line, "Template class mustn't be primitive type (%s)", n->templateNode->word.data());
+		}
+		ClassPtr classT2 = classT->GetClass();
+		n->var->Scope::Add(classT->Clone(
+			typeClass->GetTemplate()->GetName(), n->var));
+		n->var->SetTemplate(classT2);
 	}
 }
 
@@ -865,10 +857,8 @@ Void ScopeBuilder::_ForEachConstruction(NodePtr n) {
 			PostSyntaxError(n->lex->line, "Language construction in illegal place (%s)", n->parent->word.data());
 		}
 
-		do {
-			n->var = n->parent->var->Add(new Class("", scope))
-				->SetModificator(Object::Modificator::Construction);
-		} while (!n->var);
+		n->var = n->parent->var->Add(new Class("", scope))
+			->SetModificator(Object::Modificator::Construction);
 
 		n->var->SetNode(n);
 		n->parent->var->GetConditionSet().insert(n->var);
@@ -912,6 +902,9 @@ Void ScopeBuilder::_ForEachNodeFlush(NodePtr n) {
 
 		n->var->path = n->var->GetParent()->Path();
     }
+	else {
+		n->var = scope->Find(n->word);
+	}
 }
 
 Void ScopeBuilder::_ForEachClassInit(NodePtr n) {
@@ -921,6 +914,7 @@ Void ScopeBuilder::_ForEachClassInit(NodePtr n) {
 	MethodPtr initMethod = classVar->Add(new Method("<init>", classVar,
 		classVar, Scope::classVoid))->GetMethod();
 
+	initMethod->SetModificator(Object::Modificator::Internal);
 	initMethod->SetRootNode(n);
 
 	initMethod->Scope::Add(new Variable("this", initMethod, ClassPtr(classVar)));
@@ -982,26 +976,6 @@ Void ScopeBuilder::_ForEachNode(NodePtr node, ScopePtr scope, ForEachNode callba
 	) {
 		if (node->var) {
 			this->_Push(node->var);
-		}
-		else {
-#if 0
-			switch (node->id) {
-			case kScriptNodeClass:
-				this->_ForEachClassPrototype(node);
-				break;
-			case kScriptNodeInterface:
-				this->_ForEachInterfacePrototype(node);
-				break;
-			case kScriptNodeCondition:
-				this->_ForEachConstruction(node);
-				break;
-			case kScriptNodeAnonymous:
-				this->_ForEachClassPrototype(node);
-				break;
-			case kScriptNodeFunction:
-				this->_ForEachMethodDeclare(node);
-			}
-#endif
 		}
 	}
 

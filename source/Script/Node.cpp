@@ -91,6 +91,14 @@ private:
 	inline void HandleOperator(NodePtr node) {
         if (node->lex->lex->args > 0) {
             this->operandsLeft -= node->lex->lex->args;
+			if (this->operandsLeft == -1) {
+				if (node->lex->lex->id == kScriptLexPostfixIncrement) {
+					node->lex->ChangeLex(Lex::Find(kScriptLexPrefixIncrement));
+				}
+				if (node->lex->lex->id == kScriptLexPostfixDecrement) {
+					node->lex->ChangeLex(Lex::Find(kScriptLexPrefixDecrement));
+				}
+			}
             if (this->operandsLeft == -2) {
                 if (
                     node->lex->lex->id == kScriptLexAdd ||

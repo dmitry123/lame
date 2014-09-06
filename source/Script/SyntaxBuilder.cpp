@@ -123,9 +123,6 @@ SyntaxBuilder::Iterator SyntaxBuilder::Parameters(NodePtr& node, Iterator i) {
 			wasLastParenthesis = FALSE;
 			__Inc(i);
 		}
-		if ((*i)->lex->id != kScriptLexParenthesisR && !extraParentheses) {
-			__Inc(i);
-		}
 		emptyParentheses = FALSE;
 	}
 
@@ -395,6 +392,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::Catch(NodePtr& node, Iterator i) {
 				(*i)->word.data());
 		}
 		NodePtr typeNode = this->_Create(i);
+		i = this->Directed(typeNode, i);
 		__Inc(i);
 		NodePtr varNode = this->_Create(i, kScriptNodeVariable);
 		varNode->typeNode = typeNode;
@@ -480,6 +478,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::Variable(NodePtr& node, Iterator i) {
 	varNode->Type(typeNode);
 	node = varNode;
 	node->flags = this->modificatorFlags;
+	i = this->Directed(typeNode, i);
 
 	/*	We can create declare variable with limited modificators
 		if it separates not in class scope (Only final modificator).
@@ -551,6 +550,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::Method(NodePtr& node, Iterator i) {
 	node = functionNode;
 	this->parentNode = node;
 	this->modificatorFlags = 0;
+	i = this->Directed(typeNode, i);
 
 	if (node->lex == *i) {
 		__Inc(i);
@@ -699,9 +699,11 @@ SyntaxBuilder::Iterator SyntaxBuilder::Class(NodePtr& node, Iterator i) {
 				}
 				__Inc(i);
 				nextNode->next = this->_Create(i);
+				i = this->Directed(nextNode->next, i);
 			}
 			else {
 				node->classInfo.extendNode = this->_Create(i);
+				i = this->Directed(node->classInfo.extendNode, i);
 			}
 			__Inc(i);
 		}
@@ -720,6 +722,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::Class(NodePtr& node, Iterator i) {
 			}
 			NodePtr implementNode = this->_Create(i);
 			node->classInfo.implementNode.push_back(implementNode);
+			i = this->Directed(implementNode, i);
 			__Inc(i);
 			while (((*i)->lex->id != kScriptLexComma) && (*i)->lex->id != kScriptLexBraceL) {
 				if ((*i)->lex->id != kScriptLexDirected) {
@@ -731,6 +734,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::Class(NodePtr& node, Iterator i) {
 				}
 				__Inc(i);
 				nextNode->next = this->_Create(i);
+				i = this->Directed(nextNode->next, i);
 				__Inc(i);
 			}
 			if ((*i)->lex->id != kScriptLexBraceL) {
@@ -1191,10 +1195,6 @@ NodePtr SyntaxBuilder::_Append(Iterator& i) {
 
 	NodePtr node = this->_Create(i);
 
-	if ((*i)->lex->id == kScriptLexDefault) {
-		i = this->Directed(node, i);
-	}
-
 	if (this->_IsArray(i)) {
 		i = this->Array(node, i);
 	}
@@ -1216,11 +1216,11 @@ NodePtr SyntaxBuilder::_Append(Iterator& i) {
 
 	/*	Fix for prefix increment/decrement. */
 
-	//if (this->_CheckLex(i + 1, { kScriptLexIncrement }) ||
-	//	this->_CheckLex(i + 1, { kScriptLexDecrement })
+	//if (this->_CheckLex(i + 1, { kScriptLexPostfixIncrement }) ||
+	//	this->_CheckLex(i + 1, { kScriptLexPostfixDecrement })
 	//) {
 	//	if (!(*(i + 2))->lex->IsUnknown()) {
-	//		if ((*(i + 1))->lex->id == kScriptLexIncrement) {
+	//		if ((*(i + 1))->lex->id == kScriptLexPostfixIncrement) {
 	//			this->incStack_.push_back(*(i));
 	//		}
 	//		else {

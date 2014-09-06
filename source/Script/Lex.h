@@ -25,8 +25,8 @@ typedef enum {
 	/* Selection */
 	kScriptLexDirected,
 	/* Unary Operatorss */
-	kScriptLexIncrement,
-	kScriptLexDecrement,
+	kScriptLexPostfixIncrement,
+	kScriptLexPostfixDecrement,
 	kScriptLexPrefixIncrement,
 	kScriptLexPrefixDecrement,
 	kScriptLexInstanceof,

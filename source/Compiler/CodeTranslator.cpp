@@ -144,7 +144,7 @@ Void CodeTranslator::OnBinary(VariablePtr left, VariablePtr right) {
 Void CodeTranslator::OnUnary(VariablePtr left) {
 
 	switch (this->currentNode->lex->lex->id) {
-	case kScriptLexIncrement:
+	case kScriptLexPostfixIncrement:
 	case kScriptLexPrefixIncrement:
 		if (left->GetClass()->IsLong()) {
 			this->GetByteCode()->New(LINC)
@@ -155,7 +155,7 @@ Void CodeTranslator::OnUnary(VariablePtr left) {
 				->Write(left->GetAddress());
 		}
 		break;
-	case kScriptLexDecrement:
+	case kScriptLexPostfixDecrement:
 	case kScriptLexPrefixDecrement:
 		BCPNEW(left, NOOP, IDEC, LDEC, NOOP, NOOP);
 		break;

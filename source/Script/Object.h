@@ -36,7 +36,8 @@ public: /* Flags & States */
         Object2      = 0x00040000,
 		Enum         = 0x00080000,
 		Synchronized = 0x00100000,
-		Construction = 0x00200000
+		Construction = 0x00200000,
+		Implemented  = 0x00400000
 	};
 	enum class Type : Uint32 {
 		Unknown      = 0x00000000,

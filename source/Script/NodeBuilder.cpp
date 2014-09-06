@@ -1059,11 +1059,11 @@ NodeBuilder::Iterator NodeBuilder::_Build(NodePtr& node, Iterator i) {
 
 	/*	Fix for prefix increment/decrement. */
 
-	//if (this->_CheckLex(i + 1, { kScriptLexIncrement }) ||
-	//	this->_CheckLex(i + 1, { kScriptLexDecrement })
+	//if (this->_CheckLex(i + 1, { kScriptLexPostfixIncrement }) ||
+	//	this->_CheckLex(i + 1, { kScriptLexPostfixDecrement })
 	//) {
 	//	if (!(*(i + 2))->lex->IsUnknown()) {
-	//		if ((*(i + 1))->lex->id == kScriptLexIncrement) {
+	//		if ((*(i + 1))->lex->id == kScriptLexPostfixIncrement) {
 	//			this->incStack_.push_back(*(i));
 	//		}
 	//		else {
@@ -1352,8 +1352,8 @@ Bool NodeBuilder::_CheckSequence(Iterator i, LexSequenceID id) {
 
 Void NodeBuilder::_ApplySemicolon(Deque<NodePtr>* list) {
 
-	static LexNode incLex("++", 0, Lex::Find(kScriptLexIncrement));
-	static LexNode decLex("--", 0, Lex::Find(kScriptLexDecrement));
+	static LexNode incLex("++", 0, Lex::Find(kScriptLexPostfixIncrement));
+	static LexNode decLex("--", 0, Lex::Find(kScriptLexPostfixDecrement));
 
 	if (!list) {
 		list = this->nodeQueue_;
