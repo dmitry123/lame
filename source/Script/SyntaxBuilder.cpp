@@ -636,16 +636,12 @@ SyntaxBuilder::Iterator SyntaxBuilder::Class(NodePtr& node, Iterator i) {
 	if (node->id != kScriptNodeAnonymous) {
 		node->typeNode = this->_Create(i, kScriptNodeDefault);
 	}
-	node->flags = this->modificatorFlags;
 
 	/* Allow all modificators for class */
 
+	node->flags = this->modificatorFlags;
 	_AllowModificators(node, -1);
 	this->modificatorFlags = 0;
-
-	if (this->sequenceMatcher.Match(kScriptLexSequenceTemplate, i, this->_End())) {
-		i = this->Template(node->typeNode, i);
-	}
 
 	if (node->id != kScriptNodeAnonymous) {
 		__Inc(i);
@@ -689,15 +685,27 @@ SyntaxBuilder::Iterator SyntaxBuilder::Class(NodePtr& node, Iterator i) {
 	if ((*i)->lex->id == kScriptLexImplements) {
 		__Inc(i);
 		while ((*i)->lex->id != kScriptLexBraceL) {
-			if ((*i)->lex->id != kScriptLexDefault) {
-				PostSyntaxError((*i)->line, "Illegal token after (implements) keyword (%s)", (*i)->word.data());
+			if (!node->classInfo.implementNode.empty()) {
+				if ((*i)->lex->id != kScriptLexDirected) {
+					PostSyntaxError((*i)->line, "Illegal token after (implements) keyword (%s)", (*i)->word.data());
+				}
 			}
-			node->classInfo.implementNode.push_back(this->_Create(i));
+			NodePtr implementNode = this->_Create(i);
+			node->classInfo.implementNode.push_back(implementNode);
 			__Inc(i);
-			if ((*i)->lex->id == kScriptLexComma) {
+			while (((*i)->lex->id != kScriptLexComma) && (*i)->lex->id != kScriptLexBraceL) {
+				if ((*i)->lex->id != kScriptLexDirected) {
+					PostSyntaxError((*i)->line, "Unexcepted token in expression (%s)", (*i)->word.data());
+				}
+				NodePtr nextNode = implementNode;
+				while (nextNode->next) {
+					nextNode = nextNode->next;
+				}
+				__Inc(i);
+				nextNode->next = this->_Create(i);
 				__Inc(i);
 			}
-			else if ((*i)->lex->id != kScriptLexBraceL) {
+			if ((*i)->lex->id != kScriptLexBraceL) {
 				PostSyntaxError((*i)->line, "Illegal token after (implements) keyword (%s)", (*i)->word.data());
 			}
 		}

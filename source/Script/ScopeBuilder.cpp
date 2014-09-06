@@ -283,6 +283,10 @@ Void ScopeBuilder::_ForEachNodeFind(NodePtr n) {
 			PostSyntaxError(n->lex->line, "Undeclared variable (%s)", n->word.data());
 		}
 	}
+
+	if (n->var) {
+		n->var->SetNode(n);
+	}
 }
 
 Void ScopeBuilder::_ForEachClassPrototype(NodePtr n) {
@@ -429,7 +433,6 @@ Void ScopeBuilder::_ForEachInterfaceDeclare(NodePtr n) {
 
 Void ScopeBuilder::_ForEachClassInherit(NodePtr n) {
 
-	ObjectPtr typeClass = NULL;
 	NodePtr extendNode = NULL;
 	ObjectPtr extendClass = NULL;
 
@@ -462,11 +465,33 @@ Void ScopeBuilder::_ForEachClassInherit(NodePtr n) {
 
 	n->var->GetClass()->Extend(extendClass);
 
+	extendClass = NULL;
+	extendNode = NULL;
+
 	for (NodePtr n2 : n->classInfo.implementNode) {
-		if (!(typeClass = scope->Find(n2->word, Uint32(Object::Type::Class)))) {
-			PostSyntaxError(n->lex->line, "Undeclared interface (%s)", n2->word.data());
+
+		extendNode = n2;
+
+		while (extendNode) {
+			if (!extendClass) {
+				if (!(extendClass = scope->Find(extendNode->word, TRUE, Uint32(Object::Type::Class)))) {
+					if (!(extendClass = scope->Find(extendNode->word, TRUE, Uint32(Object::Type::Interface)))) {
+						PostSyntaxError(n->lex->line, "Undeclared interface (%s)", extendNode->word.data());
+					}
+				}
+			}
+			else {
+				ObjectPtr scopeClass = extendClass;
+				if (!(extendClass = scopeClass->Find(extendNode->word, FALSE, Uint32(Object::Type::Class)))) {
+					if (!(extendClass = scopeClass->Find(extendNode->word, FALSE, Uint32(Object::Type::Interface)))) {
+						PostSyntaxError(n->lex->line, "Undeclared interface (%s)", extendNode->word.data());
+					}
+				}
+			}
+			extendNode = extendNode->next;
 		}
-		n->var->GetClass()->Implement(typeClass);
+
+		n->var->GetClass()->Implement(extendClass);
 	}
 
 	n->var->Flush();

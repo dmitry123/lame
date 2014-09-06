@@ -145,6 +145,7 @@ Void CodeBuilder::_Run(NodeListRef nodeList, Bool makeBackup) {
 				if (n->var) {
 					this->_Save(Code::Load, n->var);
 				}
+				this->nodeList.push_back(n);
 			}
 			else if (n->lex->lex->IsMath() || n->lex->lex->IsBool()) {
 				if (n->lex->args == 1) {
@@ -382,6 +383,23 @@ Void CodeBuilder::_Binary(NodePtr n) {
 		sourceVar->wasInStack = FALSE;
 	}
 
+	if (leftVar->CheckModificator(Object::Modificator::Constant) &&
+		rightVar->CheckModificator(Object::Modificator::Constant)
+	) {
+		if (this->GetCalculator()->Compute(n, leftVar, rightVar)) {
+			this->nodeList.pop_back();
+			this->nodeList.pop_back();
+			this->nodeList.push_back(leftVar->GetNode());
+		}
+		else {
+			goto _SaveNode;
+		}
+	}
+	else {
+	_SaveNode:
+		this->nodeList.push_back(n);
+	}
+
 	if (n->lex->lex->IsLogic()) {
 		if (!leftVar->IsIntegerLike()) {
 			PostSyntaxError(this->currentNode->lex->line,
@@ -395,6 +413,7 @@ Void CodeBuilder::_Binary(NodePtr n) {
 		}
 	}
 
+#if 0
 	switch (this->currentNode->lex->lex->id) {
 	case kScriptLexMul:
 	case kScriptLexMulSet:
@@ -470,6 +489,7 @@ Void CodeBuilder::_Binary(NodePtr n) {
 	default:
 		break;
 	}
+#endif
 
 	if (n->lex->lex->IsBool()) {
 		this->variableStack.Return(VariablePtr(Scope::classBoolean));

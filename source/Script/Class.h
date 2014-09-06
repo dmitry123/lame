@@ -22,25 +22,24 @@ public:
 	inline ObjectPtr GetExtend() { return this->extendClass; }
 	inline Set<ObjectPtr>& GetImplements() { return this->implementClass; }
 	inline Uint32 GetPriority() const { return this->priority; }
+	inline Vector<HashType>& GetTypeMap() { return this->typeMap; }
 public:
-	inline Void SetPriority(Uint32 priority) {
-		this->priority = priority;
-	}
-	inline Uint32 GetPriority() {
-		return this->priority;
-	}
+	inline Void SetPriority(Uint32 priority) { this->priority = priority; }
+	inline Uint32 GetPriority() { return this->priority; }
 public:
 	Void Extend(ObjectPtr object);
 	Void Implement(ObjectPtr object);
 	Void New(ObjectPtr object);
     Void CheckInheritance(Void);
 private:
-	Class(BufferRefC name, ScopePtr parent, Type type, Uint32 size = SizeOf);
+	Class(BufferRefC name, ScopePtr parent,
+		Type type, Uint32 size = SizeOf);
 private:
 	ObjectPtr extendClass;
 	Set<ObjectPtr> implementClass;
 	Uint32 priority;
 	Uint32 sizeOf;
+	Vector<HashType> typeMap;
 };
 
 LAME_END2

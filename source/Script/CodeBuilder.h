@@ -11,6 +11,7 @@
 #include "Interface.h"
 #include "Method.h"
 #include "CodeNode.h"
+#include "LittleCalculator.h"
 
 LAME_BEGIN2(Script)
 
@@ -20,6 +21,11 @@ public:
 	typedef Core::Deque<NodePtr> NodeList;
 	typedef Core::Deque<NodePtr>& NodeListRef;
 public:
+	CodeBuilder() :
+		littleCalculator(this)
+	{
+	}
+public:
 	~CodeBuilder();
 public:
 	Void Run(
@@ -27,9 +33,10 @@ public:
 		ScopePtr         rootScope,
 		SegmentPtr       codeSegment);
 public:
-	inline Vector<CodeNodePtr>& GetCodeList()   { return this->codeList;       }
-	inline List<CodeMethod>&    GetMethodList() { return this->codeMethodList; }
-	inline Vector<ObjectPtr>&   GetClassList()  { return this->classList;      }
+	inline Vector<CodeNodePtr>& GetCodeList()   { return this->codeList;          }
+	inline List<CodeMethod>&    GetMethodList() { return this->codeMethodList;    }
+	inline Vector<ObjectPtr>&   GetClassList()  { return this->classList;         }
+	inline LittleCalculatorPtr  GetCalculator() { return &this->littleCalculator; }
 private:
 	Void _Read(NodePtr node, VariablePtr& left, VariablePtr& right);
 	Void _Run(NodeListRef nodeList, Bool makeBackup = FALSE);
@@ -68,6 +75,8 @@ private:
 	Stack<CodeNodePtr> codeStack;
 	List<CodeMethod> codeMethodList;
 	CodeMethodPtr currentMethod;
+	LittleCalculator littleCalculator;
+	Vector<NodePtr> nodeList;
 };
 
 LAME_END2

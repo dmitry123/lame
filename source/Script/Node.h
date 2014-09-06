@@ -45,7 +45,7 @@ typedef enum {
 
 class LAME_API Node {
 public:
-	const Buffer word;
+	      Buffer word;
 	const LexNodePtr lex;
 	      NodeID id;
 	const NodePtr parent;

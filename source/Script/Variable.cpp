@@ -99,18 +99,25 @@ VariablePtr Variable::SetBoolean(ScriptNativeBool b) {
 
 ScriptNativeInt Variable::GetInteger(Void) {
 
+	if (this->varType == Var::Integer) {
+		return this->v.intValue;
+	}
+
 	if (this->varType == Var::Float) {
 		return (ScriptNativeInt) this->v.floatValue;
 	}
 
-	if (this->varType != Var::Float) {
-		PostSyntaxError(this->GetNode()->lex->line, "Invalid type cast from (%s) to Integer", this->GetClass()->GetName().data());
-	}
+	PostSyntaxError(this->GetNode()->lex->line, "Invalid type cast from (%s) to Integer",
+		this->GetClass()->GetName().data());
 
-	return this->v.intValue;
+	return 0;
 }
 
 ScriptNativeFloat Variable::GetFloat(Void) {
+
+	if (this->varType == Var::Float) {
+		return this->v.floatValue;
+	}
 
 	if (this->varType == Var::Integer) {
 		return (ScriptNativeFloat) this->v.intValue;
@@ -126,10 +133,34 @@ ScriptNativeFloat Variable::GetFloat(Void) {
 ScriptNativeBool Variable::GetBoolean(Void) {
 
 	if (this->varType != Var::Boolean) {
-		PostSyntaxError(this->GetNode()->lex->line, "Invalid type cast from (%s) to Boolean", this->GetClass()->GetName().data());
+		PostSyntaxError(this->GetNode()->lex->line, "Invalid type cast from (%s) to Boolean",
+			this->GetClass()->GetName().data());
 	}
 
 	return ScriptNativeBool(this->v.intValue);
+}
+
+ScriptNativeString Variable::GetString(Void) {
+
+	if (this->varType == Var::String) {
+		return this->stringValue;
+	}
+
+	Buffer result;
+
+	result.resize(80);
+
+	switch (this->varType) {
+	case Var::Integer:
+		result.Format("%lld", this->v.intValue);
+	case Var::Float:
+		result.Format("%.4f", this->v.floatValue);
+	default:
+		PostSyntaxError(this->GetNode()->lex->line, "Invalid type cast from (%s) to String",
+			this->GetClass()->GetName().data());
+	}
+
+	return result;
 }
 
 Bool Variable::Equal(ObjectPtrC object) {

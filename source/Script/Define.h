@@ -21,23 +21,25 @@ LAME_BEGIN2(Script)
 
 using namespace Core;
 
+typedef class Class *ClassPtr, *const ClassPtrC;
+typedef class CodeBuilder *CodeBuilderPtr, *const CodeBuilderPtrC;
+typedef class CodeMethod *CodeMethodPtr, *const CodeMethodPtrC;
+typedef class CodeNode *CodeNodePtr, *const CodeNodePtrC;
+typedef class FileParser *FileParserPtr, *const FileParserPtrC;
+typedef class Interface *InterfacePtr, *const InterfacePtrC;
 typedef class Lex *LexPtr, *const LexPtrC;
 typedef class LexNode *LexNodePtr, *const LexNodePtrC;
-typedef class FileParser *FileParserPtr, *const FileParserPtrC;
-typedef class Node *NodePtr, *const NodePtrC;
-typedef class SyntaxBuilder *SyntaxBuilderPtr, *const SyntaxBuilderPtrC;
-typedef class Scope *ScopePtr, *const ScopePtrC;
-typedef class Object *ObjectPtr, *const ObjectPtrC;
-typedef class Class *ClassPtr, *const ClassPtrC;
-typedef class Interface *InterfacePtr, *const InterfacePtrC;
-typedef class Variable *VariablePtr, *const VariablePtrC;
+typedef class LittleCalculator *LittleCalculatorPtr, *const LittleCalculatorPtrC;
 typedef class Method *MethodPtr, *const MethodPtrC;
+typedef class Node *NodePtr, *const NodePtrC;
+typedef class Object *ObjectPtr, *const ObjectPtrC;
+typedef class Scope *ScopePtr, *const ScopePtrC;
 typedef class Scope *ScopePtr, *const ScopePtrC;
 typedef class ScopeBuilder *ScopeBuilderPtr, *const ScopeBuilderPtrC;
 typedef class Segment *SegmentPtr, *const SegmentPtrC;
 typedef class StackVar *StackVarPtr, *const StackVarPtrC;
-typedef class CodeNode *CodeNodePtr, *const CodeNodePtrC;
-typedef class CodeMethod *CodeMethodPtr, *const CodeMethodPtrC;
+typedef class SyntaxBuilder *SyntaxBuilderPtr, *const SyntaxBuilderPtrC;
+typedef class Variable *VariablePtr, *const VariablePtrC;
 
 typedef Buffer ScriptNativeString;
 typedef Sint64 ScriptNativeInt;

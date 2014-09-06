@@ -33,6 +33,7 @@ public:
 	ScriptNativeInt GetInteger(Void);
 	ScriptNativeFloat GetFloat(Void);
     ScriptNativeBool GetBoolean(Void);
+	ScriptNativeString GetString(Void);
 public:
 	Bool Equal(ObjectPtrC object) override;
 	ObjectPtr Clone(BufferRefC name, ObjectPtr parent) override;

@@ -45,7 +45,7 @@ public: /* Flags & States */
 		Interface    = 0x00000004
 	};
 private: /* Constant Variables */
-	const Buffer name;
+	      Buffer name;
 	const Buffer path;
 	const Type   type;
 public:
@@ -109,7 +109,7 @@ public:
 	Bool IsVoid()    const;
 	Bool IsObject()  const;
 public: /* Inline Getters */
-	inline BufferRefC GetName()       const { return this->name;      }
+	inline BufferRef  GetName()             { return this->name;      }
 	inline Type       GetType()       const { return this->type;      }
 	inline SegmentPtr GetSegment()    const { return this->segment_;  }
 	inline Uint32     GetAddress()    const { return this->address_;  }
