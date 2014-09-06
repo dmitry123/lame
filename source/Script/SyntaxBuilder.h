@@ -32,6 +32,7 @@ public:
 public:
 	Void Build(FileParserPtr fileParser);
 public:
+	virtual Iterator Parameters(NodePtr& node, Iterator i);
 	virtual Iterator If(NodePtr& node, Iterator i);
 	virtual Iterator Else(NodePtr& node, Iterator i);
 	virtual Iterator While(NodePtr& node, Iterator i);
@@ -50,6 +51,7 @@ public:
 	virtual Iterator Array(NodePtr& node, Iterator i);
 	virtual Iterator Enum(NodePtr& node, Iterator i);
 	virtual Iterator Ternary(NodePtr& node, Iterator i);
+	virtual Iterator Directed(NodePtr& node, Iterator i);
 public:
 	inline NodePtr GetRootNode() {
 		return this->rootNode;

@@ -71,7 +71,7 @@ typedef enum {
 	kScriptLexBitAndSet,
 	kScriptLexBitXorSet,
 	kScriptLexBitOrSet,
-	kScriptLexBellow,
+	kScriptLexBelow,
 	kScriptLexAbove,
 	kScriptLexBellowEqual,
 	kScriptLexAboveEqual,
@@ -138,7 +138,7 @@ typedef enum {
 	kScriptLexFlagWoParentheses = 0x0200,
     /* Logic Mac Operators */
     kScriptLexFlagLogic = 0x0400,
-	/* Allowed or expressions's element */
+	/* Allowed token in expression */
 	kScriptLexFlagExpression = 0x0800
 } LexFlagID;
 

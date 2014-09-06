@@ -23,7 +23,6 @@ using namespace Core;
 
 typedef class Class *ClassPtr, *const ClassPtrC;
 typedef class CodeBuilder *CodeBuilderPtr, *const CodeBuilderPtrC;
-typedef class CodeMethod *CodeMethodPtr, *const CodeMethodPtrC;
 typedef class CodeNode *CodeNodePtr, *const CodeNodePtrC;
 typedef class FileParser *FileParserPtr, *const FileParserPtrC;
 typedef class Interface *InterfacePtr, *const InterfacePtrC;

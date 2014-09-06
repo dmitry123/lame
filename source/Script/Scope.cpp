@@ -32,8 +32,8 @@ ObjectPtr Scope::Add(ObjectPtr object) {
 	this->hashMap_.insert(std::make_pair(hash, object));
 	this->stringMap_.insert(std::make_pair(object->GetName(), object));
 
-	object->GetObservable()
-		->Observe(this);
+	//object->GetObservable()
+	//	->Observe(this);
 
 	this->Update(object);
 	object->ownerScope_ = this;
@@ -52,8 +52,8 @@ Void Scope::Remove(ObjectPtr object) {
 		return;
 	}
 
-	object->GetObservable()
-		->RemoveObserver(this);
+	//object->GetObservable()
+	//	->RemoveObserver(this);
 
 	if (this->publicSet_.count(object)) {
 		this->publicSet_.erase(object);
@@ -76,6 +76,8 @@ Void Scope::Remove(ObjectPtr object) {
 
 	this->hashMap_.erase(i);
 	this->stringMap_.erase(j);
+
+	delete object;
 }
 
 ObjectPtr Scope::Find(Hash hash, Bool withDepth, Uint32 objectType) {
@@ -147,8 +149,6 @@ Void Scope::Clone(ScopePtrC scope) {
 
 Void Scope::Move(ScopePtrC scope) {
 
-	this->Clear();
-
 	if (this == scope) {
 		return;
 	}
@@ -168,7 +168,12 @@ Void Scope::Move(ScopePtrC scope) {
 		}
 	}
 
-	isOwner_ = FALSE;
+	scope->hashMap_.clear();
+	scope->stringMap_.clear();
+
+	scope->Flush();
+
+	//isOwner_ = FALSE;
 }
 
 Uint32 Scope::Amount(Void) {

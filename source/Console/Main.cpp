@@ -53,31 +53,7 @@ int main(int argc, char** argv) {
 		codeBuilder.Run(&syntaxBuilder, rootScope,
 			segmentBuilder.GetCodeSegment());
 
-		for (CodeMethod& m : codeBuilder.GetMethodList()) {
-
-			MethodPtr m2 = m.GetMethod();
-
-			printf("%s %s %s%s(%s)\n", m2->GetModificatorString().data(), m2->GetReturnType()->GetName().data(),
-				m2->GetPath().data(), m2->GetName().data(), m2->GetFormattedArguments().data());
-
-			for (CodeNodePtr n : m.GetList()) {
-
-				printf("%4d : (%6s) : ", n->GetLine(), n->GetName().data());
-
-				if (n->GetLeft() && n->GetRight()) {
-					printf("%s, %s", n->GetLeft()->GetName().data(), n->GetRight()->GetName().data());
-				}
-				else if (n->GetLeft()) {
-					printf("%s", n->GetLeft()->GetName().data());
-				}
-
-				if (n->GetOffset() != -1) {
-					printf("%d", n->GetOffset());
-				}
-
-				printf("\n");
-			}
-		}
+		puts("");
 
 #if 0
 		/* Trace root scope */

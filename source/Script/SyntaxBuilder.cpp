@@ -22,7 +22,7 @@ SyntaxBuilder::SyntaxBuilder(Void) {
 		kScriptLexDefault, kScriptLexArray
 	});
 	this->sequenceMatcher.Declare(kScriptLexSequenceTemplate, {
-		kScriptLexBellow, kScriptLexDefault, kScriptLexAbove
+		kScriptLexBelow, kScriptLexDefault, kScriptLexAbove
 	});
 	this->sequenceMatcher.Declare(kScriptLexSequenceCast, {
 		kScriptLexParenthesisL, kScriptLexDefault, kScriptLexParenthesisR
@@ -77,7 +77,6 @@ Void SyntaxBuilder::Build(FileParserPtr fileParser) {
     auto __it = this->_End() - 1;
     
     this->rootNode = this->_Create(__it, kScriptNodeEntry);
-	this->parentNode = this->rootNode;
 
 	/*	Find first object in parser's list with lexes and
 		get it's iterator, _BuildEntry function will build
@@ -93,6 +92,46 @@ Void SyntaxBuilder::Build(FileParserPtr fileParser) {
 	this->_Order(this->rootNode);
 }
 
+SyntaxBuilder::Iterator SyntaxBuilder::Parameters(NodePtr& node, Iterator i) {
+
+	Bool emptyParentheses = 0;
+	Uint32 extraParentheses = 0;
+
+	if ((*i)->lex->id != kScriptLexParenthesisL) {
+		return i;
+	}
+
+	__Inc(i);
+
+	this->wasLastParenthesis = TRUE;
+
+	while ((*i)->lex->id != kScriptLexParenthesisR || extraParentheses) {
+		if ((*i)->lex->id == kScriptLexParenthesisL) {
+			++extraParentheses;
+		}
+		else if ((*i)->lex->id == kScriptLexParenthesisR) {
+			if (extraParentheses) {
+				--extraParentheses;
+			}
+			emptyParentheses = TRUE;
+		}
+		i = this->_Append(&node->argList, i);
+		if ((*i)->lex->id != kScriptLexParenthesisR || emptyParentheses) {
+			__Inc(i);
+		}
+		else if (this->wasLastParenthesis) {
+			wasLastParenthesis = FALSE;
+			__Inc(i);
+		}
+		if ((*i)->lex->id != kScriptLexParenthesisR && !extraParentheses) {
+			__Inc(i);
+		}
+		emptyParentheses = FALSE;
+	}
+
+	return i;
+}
+
 SyntaxBuilder::Iterator SyntaxBuilder::If(NodePtr& node, Iterator i) {
 
 	if (node->lex == *i) {
@@ -104,18 +143,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::If(NodePtr& node, Iterator i) {
 			node->word.data());
 	}
 
-	__Inc(i);
-
-	while ((*i)->lex->id != kScriptLexParenthesisR) {
-		if (!(*i)->lex->IsExpression()) {
-			PostSyntaxError((*i)->line, "Illegal token in expression (%s)",
-				(*i)->word.data());
-		}
-		i = this->_Append(&node->argList, i);
-		if ((*i)->lex->id != kScriptLexParenthesisR) {
-			__Inc(i);
-		}
-	}
+	i = this->Parameters(node, i);
 
 	__Inc(i);
 
@@ -794,6 +822,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::New(NodePtr& node, Iterator i) {
 	/*	Create class node */
 	classNode = this->_Create(i, kScriptNodeDefault);
 	node->typeNode = classNode;
+	i = this->Directed(classNode, i);
 	__Inc(i);
 	if (this->sequenceMatcher.Match(kScriptLexSequenceTemplate, i, this->_End())) {
 		i = this->Template(classNode, i - 1) + 1;
@@ -854,7 +883,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::New(NodePtr& node, Iterator i) {
 	}
 	else {
 		classNode->id = kScriptNodeDefault;
-		this->parentNode = this->parentNode->parent;
+		LAME_TODO("this->parentNode = this->parentNode->parent");
 	}
 
 	if ((*i)->lex->id != kScriptLexSemicolon) {
@@ -1033,6 +1062,32 @@ SyntaxBuilder::Iterator SyntaxBuilder::Ternary(NodePtr& node, Iterator i) {
 	return i;
 }
 
+SyntaxBuilder::Iterator SyntaxBuilder::Directed(NodePtr& node, Iterator i) {
+
+	if (node->lex->lex->id != kScriptLexDefault) {
+		return i;
+	}
+	__Inc(i);
+	if ((*i)->lex->id != kScriptLexDirected) {
+		return i - 1;
+	}
+
+	while ((*i)->lex->id != kScriptLexDefault) {
+		__Inc(i);
+		NodePtr nextNode = node;
+		while (nextNode->next) {
+			nextNode = nextNode->next;
+		}
+		nextNode->next = this->_Create(i);
+		__Inc(i);
+		if ((*i)->lex->id != kScriptLexDirected) {
+			break;
+		}
+	}
+
+	return i - 1;
+}
+
 Bool SyntaxBuilder::_ShallAvoidBrace(NodeList& list, Iterator& i) {
 
 	Iterator j = i;
@@ -1090,7 +1145,8 @@ NodePtr SyntaxBuilder::_Create(Iterator& i, NodeID nodeType) {
 		node->id == kScriptNodeClass ||
 		node->id == kScriptNodeAnonymous ||
 		node->id == kScriptNodeInterface ||
-		node->id == kScriptNodeCondition
+		node->id == kScriptNodeCondition ||
+		node->id == kScriptNodeEntry
 	) {
 		this->parentNode = node;
 	}
@@ -1134,6 +1190,10 @@ NodePtr SyntaxBuilder::_Remove(NodePtr node) {
 NodePtr SyntaxBuilder::_Append(Iterator& i) {
 
 	NodePtr node = this->_Create(i);
+
+	if ((*i)->lex->id == kScriptLexDefault) {
+		i = this->Directed(node, i);
+	}
 
 	if (this->_IsArray(i)) {
 		i = this->Array(node, i);

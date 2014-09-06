@@ -48,12 +48,16 @@ private:
 	Void _ForEachNode(NodePtr node, ScopePtr scope, ForEachNode callback, NodeID id);
 	Void _Push(ScopePtr scope);
 	ScopePtr _Pop(Void);
+	Void _BuildClassList(NodePtr node);
+	Buffer _GetNodePath(NodePtr node);
 private:
 	ScopePtr scope;
-	ClassPtr rootConstruction;
 	Vector<ScopePtr> scopeStack;
 	Vector<ClassPtr> lastStack;
 	ClassPtr lastVar;
+	Vector<NodePtr> classList;
+	Uint32 depthLevel;
+	ClassPtr rootConstruction;
 };
 
 LAME_END2

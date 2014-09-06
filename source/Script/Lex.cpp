@@ -257,8 +257,8 @@ Map<LexID, Lex> Lex::lexMap = {
 			{ "|=", P(16, 1), kScriptLexBitOrSet, 2,
 				kScriptLexFlagLeft | kScriptLexFlagMath | kScriptLexFlagLogic | kScriptLexFlagExpression }
 		},
-		{ kScriptLexBellow,
-			{ "<", P(8, 1), kScriptLexBellow, 2,
+		{ kScriptLexBelow,
+			{ "<", P(8, 1), kScriptLexBelow, 2,
 				kScriptLexFlagRight | kScriptLexFlagBool | kScriptLexFlagExpression }
 		},
 		{ kScriptLexAbove,

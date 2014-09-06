@@ -1,5 +1,108 @@
-int value = 100 + 20 + 3;
+class MouseEvent {
 
+	public static final int STATE_DOWN = 0x0000;
+	public static final int STATE_UP   = 0x0001;
+
+	public static final int BUTTON_LEFT   = 0x0000;
+	public static final int BUTTON_RIGHT  = 0x0001;
+	public static final int BUTTON_MIDDLE = 0x0002;
+
+	public int getX() { return this.x; }
+	public void setX(int x) { this.x = x; }
+
+	public int getY() { return this.y; }
+	public void setY(int y) { this.y = y; }
+
+	public int getButton() { return this.button; }
+	public void setButton(int button) { this.button = button; }
+
+	public int getState() { return this.state; }
+	public void setState(int state) { this.state = state; }
+
+	private int x = 0;
+	private int y = 0;
+	private int key = 0;
+	private int button = 0;
+}
+
+// interface MouseActionListener {
+// 	public void onMouseClick(MouseEvent e);
+// 	public void onMouseDown(MouseEvent e);
+// 	public void onMouseUp(MouseEvent e);
+// 	public void onMouseEnter(MouseEvent e);
+// 	public void onMouseLeave(MouseEvent e);
+// }
+
+// class MouseActionAdapter implements MouseActionListener {
+// 	public void onMouseClick(MouseEvent e) {}
+// 	public void onMouseDown(MouseEvent e) {}
+// 	public void onMouseUp(MouseEvent e) {}
+// 	public void onMouseEnter(MouseEvent e) {}
+// 	public void onMouseLeave(MouseEvent e) {}
+// }
+
+// interface MouseMotionListener {
+// 	public void onMouseMove(MouseEvent e);
+// 	public void onMouseDrag(MouseEvent e);
+// }
+
+// class MouseMotionAdapter implements MouseMotionListener {
+// 	public void onMouseMove(MouseEvent e) {}
+// 	public void onMouseDrag(MouseEvent e) {}
+// }
+
+// interface Observer {
+// 	public void update(Observable observable);
+// }
+
+// class Observable {
+
+// 	public void addObserver(Observer observer) {
+// 		if (!this.observers.contains(observer)) {
+// 			this.observers.add(observer);
+// 		}
+// 	}
+
+// 	public void removeObserver(Observer observer) {
+// 		if (this.observers.contains(observer)) {
+// 			this.observers.remove(observer);
+// 		}
+// 	}
+
+// 	private Observer[] observers;
+// }
+
+// class MouseEventContainer {
+
+// 	public void addMouseActionListener(MouseActionListener object) {
+// 		if (!this.actionListenerList.contains(object)) {
+// 			this.actionListenerList.add(object);
+// 		}
+// 	}
+
+// 	public void removeMouseActionListener(MouseActionListener object) {
+// 		if (this.actionListenerList.contains(object)) {
+// 			this.actionListenerList.remove(object);
+// 		}
+// 	}
+
+// 	public void addMouseMotionListener(MouseMotionListener object) {
+// 		if (!this.motionListenerList.contains(object)) {
+// 			this.motionListenerList.add(object);
+// 		}
+// 	}
+
+// 	public void removeMouseMotionListener(MouseMotionListener object) {
+// 		if (this.motionListenerList.contains(object)) {
+// 			this.motionListenerList.remove(object);
+// 		}
+// 	}
+
+// 	private MouseActionListener[] actionListenerList;
+// 	private MouseMotionListener[] motionListenerList;
+// }
+
+// int value = 100 + 20 + 3;
 
 // class A {
 // 	interface I {}
@@ -8,7 +111,6 @@ int value = 100 + 20 + 3;
 // class B implements A.I {}
 
 // int[] array = new int[] { 100, 20, 3 };
-
 // int[] array = new int[100];
 
 // array[0] = 100;

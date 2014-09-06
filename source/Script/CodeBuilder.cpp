@@ -18,6 +18,7 @@ Void CodeBuilder::Run(SyntaxBuilderPtr nodeBuilder, ScopePtr rootScope, SegmentP
 	this->lastResult = NULL;
 	this->rememberedInvoke = NULL;
 	this->currentNode = NULL;
+	this->lastNode = NULL;
 
 	this->_ForEachClass(rootScope);
 	this->_ForEachMethod(rootScope);
@@ -34,34 +35,33 @@ Void CodeBuilder::Run(SyntaxBuilderPtr nodeBuilder, ScopePtr rootScope, SegmentP
 
 		NodePtr n = i->GetMethod()->GetRootNode();
 
-		this->codeMethodList.push_back(
-			CodeMethod(i->GetMethod()));
+		this->codeList.push_back(new CodeNode(i->GetMethod()));
 
 		this->currentNode = n;
-		this->currentMethod = &this->codeMethodList.back();
+		this->currentMethod = this->codeList.back();
 
 		for (NodePtr n2 : n->argList) {
 			if (!n2->var->CheckType(Object::Type::Variable)) {
 				PostSyntaxError(n->lex->line, "Argument must be variable (%s)", n2->var->GetName().data());
 			}
-			this->_Save(Code::Store, n2->var);
+			// store
 		}
 
 		ObjectPtr thisVar = NULL;
 
 		if (!i->CheckModificator(Object::Modificator::Static)) {
 			if (i->GetName() == "<init>" || i->GetName() == i->GetOwner()->GetName()) {
-				this->_Save(Code::Clone);
+				// clone
 			}
 			if ((thisVar = i->Find("this", FALSE, Uint32(Object::Type::Variable)))) {
-				this->_Save(Code::Store, thisVar);
+				// store thisVar
 			}
 		}
 
 		this->_Run(i->GetMethod()->GetRootNode()->blockList);
 
 		if (i->GetMethod()->GetReturnType()->IsVoid()) {
-			this->_Save(Code::Return);
+			// return
 		}
 
 		if (!i->GetMethod()->GetReturnType()->IsVoid()) {
@@ -142,9 +142,6 @@ Void CodeBuilder::_Run(NodeListRef nodeList, Bool makeBackup) {
 				else {
 					this->variableStack.Push(VariablePtr(n->var));
 				}
-				if (n->var) {
-					this->_Save(Code::Load, n->var);
-				}
 				this->nodeList.push_back(n);
 			}
 			else if (n->lex->lex->IsMath() || n->lex->lex->IsBool()) {
@@ -158,6 +155,8 @@ Void CodeBuilder::_Run(NodeListRef nodeList, Bool makeBackup) {
 					this->_Ternary(n);
 				}
 			}
+
+			this->lastNode = n;
 		}
 		catch (SyntaxException& e) {
 			throw SyntaxException(e.Line(), e.GetErrorBuffer());
@@ -174,6 +173,14 @@ Void CodeBuilder::_Run(NodeListRef nodeList, Bool makeBackup) {
 	if (makeBackup) {
 		this->variableStack = stackBackup;
 	}
+
+	nodeList.clear();
+
+	for (NodePtr n : this->nodeList) {
+		nodeList.push_back(n);
+	}
+
+	this->nodeList.clear();
 }
 
 Void CodeBuilder::_Read(NodePtr n, VariablePtr& left, VariablePtr& right) {
@@ -279,7 +286,7 @@ Void CodeBuilder::_Cast(VariablePtr var, ObjectPtr type) {
 
 _CastOk:
 	if (left != right) {
-		this->_Save(Code::Cast, var, type);
+		// cast var -> type
 	}
 }
 
@@ -308,7 +315,7 @@ Void CodeBuilder::_StrongCast(VariablePtr var, ClassPtr type) {
 
 _CastOk:
 	if (left != right) {
-		this->_Save(Code::Cast, var, type);
+		// cast var -> type
 	}
 
 	this->variableStack.Push(VariablePtr(type));
@@ -462,7 +469,7 @@ Void CodeBuilder::_Binary(NodePtr n) {
 	case kScriptLexSet:
 		this->_Save(Code::Assign, leftVar, rightVar);
 		break;
-	case kScriptLexBellow:
+	case kScriptLexBelow:
 		this->_Save(Code::Bellow, leftVar, rightVar);
 		break;
 	case kScriptLexAbove:
@@ -497,7 +504,7 @@ Void CodeBuilder::_Binary(NodePtr n) {
 	else {
 		if (n->lex->lex->IsLeft()) {
 			if (n->lex->lex->id != kScriptLexSet) {
-				this->_Save(Code::Assign, leftVar, rightVar);
+				LAME_TODO("Assign rightVar->leftVar");
 			}
 			this->variableStack.Push(sourceVar);
 		}
@@ -539,6 +546,21 @@ Void CodeBuilder::_Unary(NodePtr n) {
 		}
 	}
 
+	if (leftVar->CheckModificator(Object::Modificator::Constant)) {
+		if (this->GetCalculator()->Compute(n, leftVar)) {
+			this->nodeList.pop_back();
+			this->nodeList.push_back(leftVar->GetNode());
+		}
+		else {
+			goto _SaveNode;
+		}
+	}
+	else {
+	_SaveNode:
+		this->nodeList.push_back(n);
+	}
+
+#if 0
 	switch (n->lex->lex->id) {
 	case kScriptLexIncrement:
 	case kScriptLexPrefixIncrement:
@@ -578,6 +600,7 @@ Void CodeBuilder::_Unary(NodePtr n) {
 	default:
 		break;
 	}
+#endif
 }
 
 Void CodeBuilder::_Ternary(NodePtr n) {
@@ -585,7 +608,8 @@ Void CodeBuilder::_Ternary(NodePtr n) {
 	VariablePtr backVar;
 
 	this->_Read(n, backVar, backVar);
-	this->_Save(Code::If, backVar);
+
+	LAME_TODO("If backVar");
 
 	this->_Run(n->blockList);
 	this->_Run(n->elseList);
@@ -596,17 +620,22 @@ Void CodeBuilder::_New(NodePtr n) {
 	VariablePtr leftVar = VariablePtr(n->typeNode->var);
 	VariablePtr resultVar = leftVar;
 
+	if (!leftVar->CheckType(Object::Type::Class)) {
+		PostSyntaxError(n->lex->line, "Can't allocate memory for virtual object (%s%s)",
+			leftVar->GetPath().data(), leftVar->GetName().data());
+	}
+
 	/* Constructor invocation */
 	if ((n->flags & kScriptFlagInvocation) != 0) {
 
-		this->_Save(Code::New, leftVar);
+		LAME_TODO("New leftVar");
 
 		ClassPtr initClass = leftVar->GetClass();
 		ObjectPtr initMethod = NULL;
 
 		while (initClass != initClass->classObject) {
-			if ((initMethod = initClass->Find("<init>", FALSE))) {
-				this->_Save(Code::Invoke, initMethod);
+			if (initClass && (initMethod = initClass->Find("<init>", FALSE))) {
+				LAME_TODO("Invoke initMethod");
 			}
 			initClass = ClassPtr(initClass->GetExtend());
 		}
@@ -642,22 +671,18 @@ Void CodeBuilder::_New(NodePtr n) {
 
 			this->_Read(n, leftVar, leftVar);
 
-			this->_Save(Code::New)
-				->SetOffset(offsetLength);
+			LAME_TODO("New offsetLength");
 		}
 		else {
 			Uint32 offset = 0;
 
-			this->_Save(Code::Load)
-				->SetOffset(initList.size());
-
-			this->_Save(Code::New)
-				->SetOffset(offsetLength);
+			LAME_TODO("Load initList.size()");
+			LAME_TODO("New offsetLength");
 
 			for (VariablePtr v : initList) {
 
-				this->_Save(Code::Clone);
-				this->_Save(Code::Store, v);
+				LAME_TODO("Clone reference");
+				LAME_TODO("Store v");
 
 				v->SetAddress(offset);
 				offset += offsetLength;
@@ -666,6 +691,8 @@ Void CodeBuilder::_New(NodePtr n) {
 
 		resultVar->GetVarType() = Variable::Var::Array;
 	}
+
+	this->nodeList.push_back(n);
 
 	this->variableStack.Return(resultVar);
 }
@@ -715,7 +742,7 @@ Void CodeBuilder::_Selection(NodePtr n) {
 	fieldObject->SetThis(leftVar);
 
 	if (fieldObject->CheckType(Object::Type::Variable)) {
-		this->_Save(Code::Load, fieldObject);
+		LAME_TODO("Load fieldObject");
 	}
 
 	if (!fieldObject->CheckType(Object::Type::Method)) {
@@ -747,16 +774,13 @@ Void CodeBuilder::_Condition(NodePtr n) {
 			goto _BooleanError;
 		}
 
-		this->_Push(this->_Save(Code::If, var0));
+		LAME_TODO("If var0");
 		this->_Run(n->blockList, TRUE);
-		this->_Pop();
 
 		break;
 	case kScriptLexElse:
 
-		this->_Push(this->_Save(Code::Noop));
 		this->_Run(n->blockList, TRUE);
-		this->_Pop();
 
 		break;
 	case kScriptLexWhile:
@@ -778,7 +802,7 @@ Void CodeBuilder::_Condition(NodePtr n) {
 			goto _BooleanError;
 		}
 
-		this->_Save(Code::If, var0);
+		LAME_TODO("If var0");
 		this->_Run(n->blockList, TRUE);
 
 		break;
@@ -816,16 +840,15 @@ Void CodeBuilder::_Condition(NodePtr n) {
 			goto _BooleanError;
 		}
 
-		this->_Save(Code::If, var0);
+		LAME_TODO("If var0");
 		this->_Run(n->blockList, TRUE);
 		this->_Run(n->forInfo.nextList, TRUE);
 
 		break;
 	case kScriptLexTry:
-		break;
 	case kScriptLexCatch:
-		break;
 	case kScriptLexFinally:
+		this->_Run(n->blockList, TRUE);
 		break;
 	default:
 		break;
@@ -837,7 +860,7 @@ _BooleanError:
 		var0->GetClass()->GetName().data());
 
 _SkipErrors:
-	;
+	this->nodeList.push_back(n);
 }
 
 Void CodeBuilder::_Invoke(NodePtr n) {
@@ -854,8 +877,7 @@ Void CodeBuilder::_Invoke(NodePtr n) {
 	where invocation via selector */
 
 	if (this->currentNode->lex->lex->id != kScriptLexNew &&
-		this->currentNode->lex->lex->id != kScriptLexDirected &&
-		!this->rememberedInvoke
+		this->currentNode->lex->lex->id != kScriptLexDirected && !this->rememberedInvoke
 	) {
 		this->rememberedInvoke = n;
 	}
@@ -893,7 +915,7 @@ Void CodeBuilder::_Invoke(NodePtr n) {
 			formattedParameters.append(", ");
 		}
 
-		this->_Save(Code::Load, var);
+		LAME_TODO("Load var");
 	}
 
 	/*	Compute invoke hash for current
@@ -1015,7 +1037,7 @@ Void CodeBuilder::_Invoke(NodePtr n) {
 		n->var = methodVar;
 	}
 
-	this->_Save(Code::Invoke, methodVar);
+	LAME_TODO("Invoke methodVar");
 
 #if 1 /* Don't sure, cuz it crashes selection */
 
@@ -1053,7 +1075,7 @@ Void CodeBuilder::_Return(NodePtr n) {
 	if (methodVar->GetReturnType()->IsVoid()) {
 		if (n->lex->args) {
 			PostSyntaxError(n->lex->line, "Void method %s(%s) can't return anything",
-				n->parent->word.data(), methodVar->GetFormattedArguments().data());
+				methodVar->GetName().data(), methodVar->GetFormattedArguments().data());
 		}
 	}
 	else {
@@ -1074,11 +1096,15 @@ Void CodeBuilder::_Return(NodePtr n) {
 
 	if (returnVar) {
 		this->_Cast(methodVar->returnVar, methodVar->GetReturnType());
-		this->_Save(Code::Return, methodVar->returnVar);
+		LAME_TODO("Return methodVar->returnVar");
 	}
 }
 
 Void CodeBuilder::_Finish(NodePtr n) {
+
+	if (this->lastNode->lex->lex->IsLeft() && this->variableStack.Size()) {
+		this->variableStack.Pop();
+	}
 
 #if 1 /* Yes, its an error, but not now */
 	for (VariablePtr v : this->variableStack.GetVarList()) {
@@ -1110,27 +1136,10 @@ Void CodeBuilder::_Array(NodePtr n) {
 			leftVar->GetClass()->GetName().data());
 	}
 
-	this->_Save(Code::Load, n->var);
+	LAME_TODO("Load n->var");
 
 	this->variableStack.Push(
 		VariablePtr(n->var->GetClass()));
-}
-
-CodeNodePtr CodeBuilder::_Save(Code code, ObjectPtr left, ObjectPtr right) {
-
-	Vector<CodeNodePtr>* codeList = &this->currentMethod->GetList();
-
-	if (this->currentCode) {
-		codeList = &this->currentCode->GetList();
-	}
-
-	CodeNodePtr nodeCode = new CodeNode(
-		code, this->currentNode, left, right);
-
-	this->codeList.push_back(nodeCode);
-	codeList->push_back(nodeCode);
-
-	return nodeCode;
 }
 
 Void CodeBuilder::_Push(CodeNodePtr codeNode) {

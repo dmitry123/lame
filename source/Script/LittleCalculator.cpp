@@ -54,16 +54,48 @@ Bool LittleCalculator::Compute(NodePtr node, ObjectPtr left, ObjectPtr right) {
 
 Bool LittleCalculator::_Unary(VariablePtr left) {
 
+	Bool isFloat = left->GetClass()->IsFloatLike();
+	Bool isInt = left->GetClass()->IsIntegerLike();
+	Bool isString = left->GetClass()->IsString();
+
 	switch (this->GetNode()->lex->lex->id) {
 	case kScriptLexBitNot:
+		if (isInt) {
+			left->v.intValue = ~left->v.intValue;
+		} else if (isFloat) {
+			return FALSE;
+		} else {
+			return FALSE;
+		}
 		break;
 	case kScriptLexNot:
+		if (isInt) {
+			left->v.intValue = !left->v.intValue;
+		} else if (isFloat) {
+			left->v.floatValue = !left->v.floatValue;
+		} else {
+			return FALSE;
+		}
 		break;
 	case kScriptLexUnaryMinus:
 	case kScriptLexSub:
+		if (isInt) {
+			left->v.intValue = -left->v.intValue;
+		} else if (isFloat) {
+			left->v.floatValue = -left->v.floatValue;
+		} else {
+			return FALSE;
+		}
 		break;
 	case kScriptLexUnaryPlus:
 	case kScriptLexAdd:
+		if (isInt) {
+			left->v.intValue = +left->v.intValue;
+		} else if (isFloat) {
+			left->v.floatValue = +left->v.floatValue;
+		} else {
+			return FALSE;
+		}
 		break;
 	default:
 		return FALSE;
@@ -182,7 +214,7 @@ Bool LittleCalculator::_Binary(VariablePtr left, VariablePtr right) {
 			return FALSE;
 		}
 		break;
-	case kScriptLexBellow:
+	case kScriptLexBelow:
 		if (isFloat) {
 			left->v.intValue = left->v.floatValue < right->GetFloat();
 		} else if (isInt) {

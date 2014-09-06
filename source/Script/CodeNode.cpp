@@ -2,6 +2,14 @@
 
 LAME_BEGIN2(Script)
 
+Void CodeNode::_Defaults() {
+
+	this->line = this->node->lex->line;
+	this->args = this->method->GetAttributeHash().size();
+	this->locals = 0;
+}
+
+#if 0
 Buffer CodeNode::GetCodeName(Code code) {
 
 	switch (code) {
@@ -81,5 +89,6 @@ Buffer CodeNode::GetCodeName(Code code) {
 
 	return "noop";
 }
+#endif
 
 LAME_END2

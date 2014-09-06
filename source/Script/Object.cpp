@@ -33,10 +33,11 @@ static Buffer _GetRandomScopeName() {
 
 Object::Object(BufferRefC name, ScopePtr parent, Type type) :
 		Scope(name.length() ? name : _GetRandomScopeName(), parent),
-	name(this->Scope::GetName()),
-	path(parent->Path()),
 	type(type)
 {
+	this->name = this->Scope::GetName();
+	this->path = parent->Path();
+
 	this->segment_ = NULL;
 	this->template_ = NULL;
 	this->node_ = NULL;
@@ -45,8 +46,9 @@ Object::Object(BufferRefC name, ScopePtr parent, Type type) :
 	this->modificators_ = 0;
 	this->address_ = -1;
 	this->size_ = 0;
-	this->wasInStack = 0;
 	this->position_ = 0;
+
+	this->wasInStack = FALSE;
 }
 
 ObjectPtr Object::SetModificator(Modificator modificator, Bool state) {
@@ -55,7 +57,7 @@ ObjectPtr Object::SetModificator(Modificator modificator, Bool state) {
 		this->modificators_ |=  (Uint32)modificator :
 		this->modificators_ &= ~(Uint32)modificator;
 
-	this->Notify(TRUE);
+	//this->Notify(TRUE);
 
 	return this;
 }

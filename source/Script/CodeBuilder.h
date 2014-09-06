@@ -16,7 +16,6 @@
 LAME_BEGIN2(Script)
 
 class LAME_API CodeBuilder {
-	typedef CodeNode::Code Code;
 public:
 	typedef Core::Deque<NodePtr> NodeList;
 	typedef Core::Deque<NodePtr>& NodeListRef;
@@ -34,7 +33,6 @@ public:
 		SegmentPtr       codeSegment);
 public:
 	inline Vector<CodeNodePtr>& GetCodeList()   { return this->codeList;          }
-	inline List<CodeMethod>&    GetMethodList() { return this->codeMethodList;    }
 	inline Vector<ObjectPtr>&   GetClassList()  { return this->classList;         }
 	inline LittleCalculatorPtr  GetCalculator() { return &this->littleCalculator; }
 private:
@@ -57,10 +55,6 @@ private:
 	Void _Finish(NodePtr n);
 	Void _Array(NodePtr n);
 private:
-	CodeNodePtr _Save(Code code,
-		ObjectPtr left  = NULL,
-		ObjectPtr right = NULL);
-private:
 	Void _Push(CodeNodePtr codeNode);
 	CodeNodePtr _Pop(Void);
 private:
@@ -73,10 +67,10 @@ private:
 	CodeNodePtr currentCode;
 	NodePtr rememberedInvoke;
 	Stack<CodeNodePtr> codeStack;
-	List<CodeMethod> codeMethodList;
-	CodeMethodPtr currentMethod;
+	CodeNodePtr currentMethod;
 	LittleCalculator littleCalculator;
 	Vector<NodePtr> nodeList;
+	NodePtr lastNode;
 };
 
 LAME_END2

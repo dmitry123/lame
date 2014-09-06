@@ -1,12 +1,13 @@
 #ifndef __LAME_SCRIPT__SCOPE__
 #define __LAME_SCRIPT__SCOPE__
 
-#include "Define.h"
 #include "Node.h"
 
 LAME_BEGIN2(Script)
 
-class LAME_API Scope : public Observer <Object> {
+class LAME_API Scope {
+	friend class ScopeBuilder;
+private:
 	typedef Hashable64::HashType Hash;
 public:
 	typedef Map<Hashable64::HashType, ObjectPtr> HashMap;
@@ -26,10 +27,23 @@ public:
 	Void Clear(Void);
 	Void Trace(Uint32 offset);
 	Uint32 Size(Void);
-	Void Update(ObjectPtr object) override;
+	Void Update(ObjectPtr object);
 	ScopePtr Root(Void);
 	Buffer Path(Void);
 	Void Flush(Void);
+public:
+	template <class F> inline Set<ObjectPtr> Filter(F f) {
+
+		Set<ObjectPtr> result;
+
+		for (auto i : this->hashMap_) {
+			if (f(i.second)) {
+				result.insert(i.second);
+			}
+		}
+
+		return result;
+	}
 public:
     inline Void SetOnScopeUpdate(OnScopeUpdate callback) { this->callback_ = callback; }
     inline OnScopeUpdate GetOnScopeUpdate() { return this->callback_; }

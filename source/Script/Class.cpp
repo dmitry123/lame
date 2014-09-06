@@ -302,7 +302,7 @@ Class::Class(BufferRefC name, ScopePtr parent, Type type, Uint32 size) : Object(
 
         ClassPtr self = ClassPtr(scope);
 
-		if (object->CheckType(Object::Type::Method)) {
+		if (object->CheckType(Object::Type::Method) && self->CheckType(Object::Type::Class)) {
 			if (!object->CheckModificator(Object::Modificator::Native) && object->GetNode() && !(object->GetNode()->flags & kScriptFlagImplemented)) {
 				PostSyntaxError(object->GetNode()->lex->line, "Only native methods don't have to be implemented %s(%s)",
 					object->GetName().data(), object->GetMethod()->GetFormattedArguments().data());

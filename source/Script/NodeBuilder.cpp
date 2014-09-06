@@ -364,7 +364,7 @@ NodeBuilder::Iterator NodeBuilder::_BuildClass(NodePtr& parent, Iterator i) {
 
 	if (this->parser_->GetLexList().end() - i > 3 &&
 		(*(i + 0))->lex->id == kScriptLexDefault &&
-		(*(i + 1))->lex->id == kScriptLexBellow &&
+		(*(i + 1))->lex->id == kScriptLexBelow &&
 		(*(i + 2))->lex->id == kScriptLexDefault &&
 		(*(i + 3))->lex->id == kScriptLexAbove
 	) {
@@ -1398,7 +1398,7 @@ NodeBuilder::NodeBuilder() :
 	});
 
 	this->_DeclareSequence(kScriptLexSequenceTemplate, {
-		kScriptLexBellow,
+		kScriptLexBelow,
 		kScriptLexDefault,
 		kScriptLexAbove
 	});

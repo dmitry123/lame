@@ -19,7 +19,6 @@ public:
 	};
 public:
 	ClassPtr classType;
-	ObjectPtr registerType;
 public:
 	Variable(BufferRefC name, ScopePtr parent, ClassPtr classType, Bool isArray = FALSE);
 	~Variable();

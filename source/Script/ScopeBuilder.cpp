@@ -40,16 +40,16 @@ static Bool _MoveNode(NodePtr node, Bool strict = FALSE) {
 			node->parent->blockList.begin(),
 			node->parent->blockList.end(), node);
 
-#define __If(_list) \
+#define _If(_list) \
 	if (!nodeStack && (position = std::find(_list.begin(), _list.end(), node)) != _list.end()) {\
 		nodeStack = &_list; \
-		}
+	}
 
-		__If(node->parent->forInfo.beginList);
-		__If(node->parent->forInfo.conditionList);
-		__If(node->parent->forInfo.nextList);
-		__If(node->parent->blockList);
-		__If(node->parent->argList);
+		_If(node->parent->forInfo.beginList);
+		_If(node->parent->forInfo.conditionList);
+		_If(node->parent->forInfo.nextList);
+		_If(node->parent->blockList);
+		_If(node->parent->argList);
 
 		if (!nodeStack) {
 			PostSyntaxError(node->parent->lex->line, "Node (%s) hasn't been appended to his parent (%s)", node->word.data(), node->parent->word.data());
@@ -112,13 +112,59 @@ _Again4:
 	return result;
 }
 
+static ObjectPtr _FindClass(ScopePtr scope, NodePtr node) {
+
+	ObjectPtr scopeClass = NULL;
+	NodePtr nextNode = NULL;
+	ObjectPtr classType = NULL;
+	Buffer classPath;
+
+	if (!node->next) {
+		return scope->Find(node->word);
+	}
+
+	nextNode = node;
+
+	while (nextNode) {
+		if (!classType) {
+			if (!(classType = scope->Find(nextNode->word, TRUE, Uint32(Object::Type::Class)))) {
+				if (!(classType = scope->Find(nextNode->word, TRUE, Uint32(Object::Type::Interface)))) {
+					goto _Null;
+				}
+			}
+		}
+		else {
+			scopeClass = classType;
+			if (!(classType = scopeClass->Find(nextNode->word, FALSE, Uint32(Object::Type::Class)))) {
+				if (!(classType = scopeClass->Find(nextNode->word, FALSE, Uint32(Object::Type::Interface)))) {
+					goto _Null;
+				}
+			}
+		}
+		classPath += nextNode->word + '/';
+		nextNode = nextNode->next;
+	}
+
+	if (!classPath.empty()) {
+		classPath.pop_back();
+	}
+	
+	node->word = classType->GetName();
+	node->next = NULL;
+	node->var = classType;
+
+	return classType;
+
+_Null:
+	node->word = classPath + nextNode->word;
+	return NULL;
+}
+
 ScopeBuilder::ScopeBuilder() {
-	this->rootConstruction = new Class("$", NULL);
-	this->lastVar = this->rootConstruction;
+	this->lastVar = NULL;
 }
 
 ScopeBuilder::~ScopeBuilder() {
-	delete this->rootConstruction;
 }
 
 Void ScopeBuilder::Build(NodePtr rootNode, ScopePtr rootScope) {
@@ -129,11 +175,9 @@ Void ScopeBuilder::Build(NodePtr rootNode, ScopePtr rootScope) {
 	_MoveNode(rootNode);
 
 	/*	Copy root scope to root node */
-
 	rootNode->var = ObjectPtr(rootScope);
 
 	/*	Save root scope in stack as default */
-
 	this->_Push(rootScope);
 
 	/*	Class/Interface declare can be divided onto several blocks:
@@ -143,14 +187,14 @@ Void ScopeBuilder::Build(NodePtr rootNode, ScopePtr rootScope) {
 
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachConstruction, this), kScriptNodeCondition);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassPrototype, this), kScriptNodeClass);
-	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachModificatorSet, this), kScriptNodeClass);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassPrototype, this), kScriptNodeAnonymous);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachInterfacePrototype, this), kScriptNodeInterface);
-	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachModificatorSet, this), kScriptNodeInterface);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachInterfaceDeclare, this), kScriptNodeInterface);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassDeclare, this), kScriptNodeClass);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassDeclare, this), kScriptNodeAnonymous);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassVariableDeclare, this), kScriptNodeVariable);
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachModificatorSet, this), kScriptNodeClass);
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachModificatorSet, this), kScriptNodeInterface);
 
 	/*	Class/Interface inheritance:
 			1. We have to apply inheritance for classes
@@ -182,20 +226,21 @@ Void ScopeBuilder::Build(NodePtr rootNode, ScopePtr rootScope) {
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachModificatorSet, this), kScriptNodeVariable);
 
 	/*	Check for empty nodes */
-
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachNodeFind, this), kScriptNodeUnknown);
-    
-    /*  Check every class/interface inheritance lexes */
-    
-    this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachCheckInheritance, this), kScriptNodeInterface);
-    this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachCheckInheritance, this), kScriptNodeClass);
-    this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachCheckInheritance, this), kScriptNodeAnonymous);
+
+	/*  Check every class/interface inheritance lexes */
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachCheckInheritance, this), kScriptNodeInterface);
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachCheckInheritance, this), kScriptNodeClass);
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachCheckInheritance, this), kScriptNodeAnonymous);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassInit, this), kScriptNodeClass);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassInit, this), kScriptNodeAnonymous);
-    this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachNodeFlush, this), kScriptNodeUnknown);
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachNodeFlush, this), kScriptNodeUnknown);
 
-	for (ObjectPtr c : rootScope->GetClassSet()) {
+	/* Declare default method <init> in other classes */
 
+	for (ObjectPtr c : rootScope->Filter([](ObjectPtr c) -> Bool { 
+		return c->CheckType(Object::Type::Class);
+	})) {
 		if (c->CheckModificator(Object::Modificator::Primitive)) {
 			continue;
 		}
@@ -278,11 +323,13 @@ Void ScopeBuilder::_ForEachModificatorSet(NodePtr n) {
 
 Void ScopeBuilder::_ForEachNodeFind(NodePtr n) {
 
+#if 0
 	if (n->id != kScriptNodeClass && n->id != kScriptNodeInterface) {
 		if (n->lex->lex->IsUnknown() && !n->var && !(n->var = this->scope->Find(n->word))) {
 			PostSyntaxError(n->lex->line, "Undeclared variable (%s)", n->word.data());
 		}
 	}
+#endif
 
 	if (n->var) {
 		n->var->SetNode(n);
@@ -294,6 +341,8 @@ Void ScopeBuilder::_ForEachClassPrototype(NodePtr n) {
 	if (!n->typeNode) {
 		return;
 	}
+
+	//ObjectPtr temporaryScope = n->var;
 
 	if (n->id == kScriptNodeAnonymous) {
 		do {
@@ -308,6 +357,14 @@ Void ScopeBuilder::_ForEachClassPrototype(NodePtr n) {
 		PostSyntaxError(n->lex->line, "Class redeclaration (%s)", n->typeNode->word.data());
 	}
 
+	//if (temporaryScope) {
+	//	for (auto i : temporaryScope->GetHashMap()) {
+	//		i.second->parentScope_ = n->var;
+	//	}
+	//	n->var->Move(temporaryScope);
+	//	temporaryScope->GetParent()->Remove(temporaryScope);
+	//}
+
 	if ((n->flags & kScriptFlagEnum) != 0) {
 		n->var->SetModificator(Object::Modificator::Enum);
 	}
@@ -317,12 +374,23 @@ Void ScopeBuilder::_ForEachClassPrototype(NodePtr n) {
 
 Void ScopeBuilder::_ForEachInterfacePrototype(NodePtr n) {
 
+	//ObjectPtr temporaryScope = n->var;
+
 	n->var = this->scope->Add(
 		new Interface(n->typeNode->word, this->scope));
 
 	if (!n->var) {
 		PostSyntaxError(n->lex->line, "Interface redeclaration (%s)", n->typeNode->word.data());
 	}
+
+	//if (temporaryScope) {
+	//	for (auto i : temporaryScope->GetHashMap()) {
+	//		i.second->parentScope_ = n->var;
+	//		i.second->path = n->var->Path();
+	//	}
+	//	n->var->Move(temporaryScope);
+	//	temporaryScope->GetParent()->Remove(temporaryScope);
+	//}
 
 	n->var->SetNode(n);
 }
@@ -336,7 +404,7 @@ Void ScopeBuilder::_ForEachClassDeclare(NodePtr n) {
 	}
 
 	if (!n->var) {
-		n->var = this->scope->Find(n->typeNode->word);
+		n->var = _FindClass(scope, n->typeNode);
 	}
 
 	classVar = n->var->GetClass();
@@ -376,7 +444,7 @@ Void ScopeBuilder::_ForEachClassVariableDeclare(NodePtr n) {
 			typeClass = typeClass->GetClass();
 		}
 		else {
-			typeClass = scope->Find(n->typeNode->word);
+			typeClass = _FindClass(scope, n->typeNode);
 		}
 	}
 
@@ -424,10 +492,10 @@ Void ScopeBuilder::_ForEachClassVariableDeclare(NodePtr n) {
 
 Void ScopeBuilder::_ForEachInterfaceDeclare(NodePtr n) {
 
-	n->var = scope->Find(n->typeNode->word);
+	n->var = _FindClass(scope, n->typeNode);
 
 	if (!n->var) {
-		PostSyntaxError(n->lex->line, "Undeclared interface (%s)", n->word.data());
+		PostSyntaxError(n->lex->line, "Undeclared interface (%s)", n->typeNode->word.data());
 	}
 }
 
@@ -438,7 +506,7 @@ Void ScopeBuilder::_ForEachClassInherit(NodePtr n) {
 
 #if 0
 	if (n->id == kScriptNodeAnonymous) {
-		if (!(classExtend = this->scope->Find(n->word))) {
+		if (!(classExtend = _FindClass(scope, n)) {
 			PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->word.data());
 		}
 		classVar->Extend(classExtend);
@@ -448,19 +516,10 @@ Void ScopeBuilder::_ForEachClassInherit(NodePtr n) {
 	if (!(extendNode = n->classInfo.extendNode)) {
 		extendClass = scope->classObject;
 	}
-
-	while (extendNode) {
-		if (!extendClass) {
-			if (!(extendClass = scope->Find(extendNode->word, TRUE, Uint32(Object::Type::Class)))) {
-				PostSyntaxError(n->lex->line, "Undeclared class (%s)", extendNode->word.data());
-			}
+	else {
+		if (!(extendClass = _FindClass(scope, extendNode))) {
+			PostSyntaxError(n->lex->line, "Undeclared class (%s)", extendNode->word.data());
 		}
-		else {
-			if (!(extendClass = extendClass->Find(extendNode->word, FALSE, Uint32(Object::Type::Class)))) {
-				PostSyntaxError(n->lex->line, "Undeclared class (%s)", extendNode->word.data());
-			}
-		}
-		extendNode = extendNode->next;
 	}
 
 	n->var->GetClass()->Extend(extendClass);
@@ -472,23 +531,8 @@ Void ScopeBuilder::_ForEachClassInherit(NodePtr n) {
 
 		extendNode = n2;
 
-		while (extendNode) {
-			if (!extendClass) {
-				if (!(extendClass = scope->Find(extendNode->word, TRUE, Uint32(Object::Type::Class)))) {
-					if (!(extendClass = scope->Find(extendNode->word, TRUE, Uint32(Object::Type::Interface)))) {
-						PostSyntaxError(n->lex->line, "Undeclared interface (%s)", extendNode->word.data());
-					}
-				}
-			}
-			else {
-				ObjectPtr scopeClass = extendClass;
-				if (!(extendClass = scopeClass->Find(extendNode->word, FALSE, Uint32(Object::Type::Class)))) {
-					if (!(extendClass = scopeClass->Find(extendNode->word, FALSE, Uint32(Object::Type::Interface)))) {
-						PostSyntaxError(n->lex->line, "Undeclared interface (%s)", extendNode->word.data());
-					}
-				}
-			}
-			extendNode = extendNode->next;
+		if (!(extendClass = _FindClass(scope, n2))) {
+			PostSyntaxError(n->lex->line, "Undeclared interface (%s)", extendNode->word.data());
 		}
 
 		n->var->GetClass()->Implement(extendClass);
@@ -616,7 +660,7 @@ Void ScopeBuilder::_ForEachMethodDeclare(NodePtr n) {
 	ObjectPtr methodObject;
 	Vector<ClassPtr> methodAttributes;
 
-	returnType = scope->Find(n->typeNode->word);
+	returnType = _FindClass(scope, n->typeNode);
 
 	if (!returnType) {
 		PostSyntaxError(n->typeNode->lex->line, "Undeclared type (%s)", n->typeNode->word.data());
@@ -624,7 +668,7 @@ Void ScopeBuilder::_ForEachMethodDeclare(NodePtr n) {
 
 	for (NodePtr n2 : n->argList) {
 
-		ObjectPtr argType = scope->Find(n2->typeNode->word);
+		ObjectPtr argType = _FindClass(scope, n2->typeNode);
 
 		if (!argType) {
 			PostSyntaxError(n2->typeNode->lex->line, "Undeclared type (%s)", n2->typeNode->word.data());
@@ -703,14 +747,14 @@ Void ScopeBuilder::_ForEachVariableDeclare(NodePtr n) {
 		}
 
 		if (!n->typeNode) {
-			if (!(typeClass = scope->Find(n->word, TRUE, Uint32(Object::Type::Class)))) {
+			if (!(typeClass = _FindClass(scope, n->typeNode))) {
 				PostSyntaxError(n->lex->line, "Undeclared variable (%s)", n->word.data());
 			}
 			n->var = typeClass;
 			typeClass = typeClass->GetClass();
 		}
 		else {
-			typeClass = scope->Find(n->typeNode->word, TRUE, Uint32(Object::Type::Class));
+			typeClass = _FindClass(scope, n->typeNode);
 		}
 
 		if (!typeClass) {
@@ -718,7 +762,7 @@ Void ScopeBuilder::_ForEachVariableDeclare(NodePtr n) {
 				n->typeNode->word.data());
 		}
 
-		if (!typeClass->CheckType(Object::Type::Class)) {
+		if (!typeClass->CheckType(Object::Type::Class) && !typeClass->CheckType(Object::Type::Interface)) {
 			PostSyntaxError(n->lex->line, "Variable's type must be class or primitive type (%s)",
 				typeClass->GetName().data());
 		}
@@ -753,8 +797,9 @@ Void ScopeBuilder::_ForEachVariableDeclare(NodePtr n) {
 	}
 	else if (n->id == kScriptNodeDefault) {
 		if (!n->var && n->lex->lex->id == kScriptLexDefault) {
-			n->var = scope->Find(n->word);
+			n->var = _FindClass(scope, n);
 			if (!n->var) {
+#if 0 /* Invalid code block */
 				auto i = std::find(n->parent->blockList.begin(), n->parent->blockList.end(), n);
 				if (i != n->parent->blockList.end()) {
 					if (n->parent->blockList.end() - i < 2 || (*(i + 1))->lex->lex->id != kScriptLexDirected) {
@@ -765,6 +810,7 @@ Void ScopeBuilder::_ForEachVariableDeclare(NodePtr n) {
 				_UndeclaredVariable:
 					PostSyntaxError(n->lex->line, "Undeclared variable (%s)", n->word.data());
 				}
+#endif
 			}
 		}
 	}
@@ -843,9 +889,28 @@ Void ScopeBuilder::_ForEachCheckInheritance(NodePtr n) {
 }
 
 Void ScopeBuilder::_ForEachNodeFlush(NodePtr n) {
-    
+
     if (n->var) {
+
         n->var->Flush();
+
+		/*	There is a problem with scope's path
+		which has been declared in temporary scope,
+		cuz we can't store all elements in it's scope
+		at nessesary time, cuz we can have
+		constructions likes:
+		
+		interface I { class A {} }
+		class B { interface Z {} }
+
+		Where we can't declare class A before
+		interface I and can't declare interface Z
+		before class B. The easiest solution is
+		to create temporary scope for I or B and
+		after I/B declaration reallocate it's scope
+		and merge with temporary */
+
+		n->var->path = n->var->GetParent()->Path();
     }
 }
 
@@ -902,7 +967,9 @@ Void ScopeBuilder::_ForEachNode(NodePtr node, ScopePtr scope, ForEachNode callba
 		callback(node);
 	}
 	if (node->typeNode) {
-		if ((id == kScriptNodeUnknown || node->id == kScriptNodeAnonymous) && node->id != kScriptNodeVariable) {
+		if ((id == kScriptNodeUnknown || node->typeNode->id == kScriptNodeAnonymous) &&
+			node->id != kScriptNodeVariable && node->id != kScriptNodeClass && node->id != kScriptNodeInterface
+		) {
 			callback(node->typeNode);
 		}
 	}
@@ -915,6 +982,26 @@ Void ScopeBuilder::_ForEachNode(NodePtr node, ScopePtr scope, ForEachNode callba
 	) {
 		if (node->var) {
 			this->_Push(node->var);
+		}
+		else {
+#if 0
+			switch (node->id) {
+			case kScriptNodeClass:
+				this->_ForEachClassPrototype(node);
+				break;
+			case kScriptNodeInterface:
+				this->_ForEachInterfacePrototype(node);
+				break;
+			case kScriptNodeCondition:
+				this->_ForEachConstruction(node);
+				break;
+			case kScriptNodeAnonymous:
+				this->_ForEachClassPrototype(node);
+				break;
+			case kScriptNodeFunction:
+				this->_ForEachMethodDeclare(node);
+			}
+#endif
 		}
 	}
 
@@ -968,6 +1055,50 @@ ScopePtr ScopeBuilder::_Pop(Void) {
 	this->lastStack.pop_back();
 
 	return this->scope;
+}
+
+Void ScopeBuilder::_BuildClassList(NodePtr node) {
+
+	if (node->id == kScriptNodeClass ||
+		node->id == kScriptNodeAnonymous ||
+		node->id == kScriptNodeInterface
+	) {
+		this->classList.push_back(node);
+	}
+
+	for (NodePtr n : node->blockList) {
+		this->_BuildClassList(n);
+	}
+}
+
+Buffer ScopeBuilder::_GetNodePath(NodePtr node) {
+
+	Stack<NodePtr> stack;
+	Buffer path;
+	NodePtr native;
+
+	native = node;
+
+	while (node->parent) {
+		stack.push(node);
+		node = node->parent;
+	}
+
+	while (!stack.empty()) {
+		if (stack.top()->typeNode) {
+			path += stack.top()->typeNode->word;
+		}
+		else {
+			path += stack.top()->word;
+		}
+		stack.pop();
+		if (!stack.empty()) {
+			path += '/';
+		}
+		++native->depth;
+	}
+
+	return path;
 }
 
 LAME_END2

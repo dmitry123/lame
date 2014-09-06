@@ -175,6 +175,7 @@ Node::Node(Buffer word, NodeID id, LexNodePtr lex, NodePtr parent, NodePtr prev)
 	this->var = NULL;
 	this->flags = 0;
 	this->next = NULL;
+	this->depth = 0;
 }
 
 Void Node::ShuntingYard(Void) {

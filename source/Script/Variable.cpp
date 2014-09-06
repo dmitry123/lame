@@ -11,7 +11,6 @@ Variable::Variable(BufferRefC name, ScopePtr parent, ClassPtr classType, Bool is
 {
 	this->wasInStack = FALSE;
 	this->objectValue = NULL;
-	this->registerType = NULL;
 
 	if (classType->IsFloat() ||
 		classType->IsDouble()

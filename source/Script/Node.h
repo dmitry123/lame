@@ -60,6 +60,7 @@ public:
 	Deque<NodePtr> elseList;
 	NodePtr elseNode;
 	NodePtr next;
+	Uint32 depth;
 public:
 	struct {
 		NodePtr extendNode;
@@ -75,7 +76,8 @@ public:
 		Uint32 invokeHash;
 	} methodInfo;
 public:
-	Node(Buffer word, NodeID id, LexNodePtr lex, NodePtr parent, NodePtr prev);
+	Node(Buffer word, NodeID id, LexNodePtr lex,
+		NodePtr parent, NodePtr prev);
 public:
 	Void ShuntingYard(Void);
 	Void Extend(NodePtr node);

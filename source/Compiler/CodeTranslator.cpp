@@ -15,7 +15,7 @@ Void _CompileBool(ByteCodePtr bc, Script::VariablePtr left, LexID lexID) {
 
 	switch (lexID) {
 		case kScriptLexAbove:       command = JNA;  break;
-		case kScriptLexBellow:      command = JNB;  break;
+		case kScriptLexBelow:      command = JNB;  break;
 		case kScriptLexAboveEqual:  command = JNAE; break;
 		case kScriptLexBellowEqual: command = JNBE; break;
 		case kScriptLexEqual:       command = JNE;  break;
@@ -114,7 +114,7 @@ Void CodeTranslator::OnBinary(VariablePtr left, VariablePtr right) {
 	case kScriptLexSet:
 		this->OnStore(left);
 		break;
-	case kScriptLexBellow:
+	case kScriptLexBelow:
 	case kScriptLexAbove:
 	case kScriptLexBellowEqual:
 	case kScriptLexAboveEqual:

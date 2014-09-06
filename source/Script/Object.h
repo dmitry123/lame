@@ -7,10 +7,11 @@ LAME_BEGIN2(Script)
 
 class LAME_API Object :
 	public Hashable64,
-	public Observable<Object>,
+	//public Observable<Object>,
 	public Scope
 {
 	friend class Segment;
+	friend class ScopeBuilder;
 public: /* Flags & States */
 	enum class Modificator : Uint32 {
 		Unknown      = 0x00000000,
@@ -46,7 +47,7 @@ public: /* Flags & States */
 	};
 private: /* Constant Variables */
 	      Buffer name;
-	const Buffer path;
+	      Buffer path;
 	const Type   type;
 public:
 	Object(
