@@ -1,13 +1,14 @@
 #include <string>
 #include <utility>
 
+#ifdef LAME_CLANG
 using std::swap;
+#endif
 
 #include <algorithm>
+#include <fstream>
 
 #include "FileParser.h"
-#include "Exception.h"
-#include "Internal.h"
 
 LAME_BEGIN2(Script)
 
@@ -29,7 +30,7 @@ static LexPtrC _ParseLex(StringC* wordPtr, Buffer* name, Uint32 line, Bool isCom
 		Bool isCharacterLike = (*word == '\'');
 
 		while (*++word != *savedWord) {
-			if (!*word) {
+			if (!*word || *word == '\n' || *word == '\r') {
 				PostSyntaxError(line, "Quote or Apostrophe mismatched", 1);
 			}
 			lexWord.append(1, *word);
@@ -59,7 +60,10 @@ static LexPtrC _ParseLex(StringC* wordPtr, Buffer* name, Uint32 line, Bool isCom
 		goto __Return;
 	}
 
-	if (IsFloatValue(word)) {
+	Bool isDigit = FileParser::IsDigit(*word) ||
+		*word == '.';
+
+	if (FileParser::IsFloatValue(word) && isDigit) {
 
 		lex = Lex::Find(kScriptLexFloat);
 		strtof(word, (String*)&word);
@@ -69,14 +73,14 @@ static LexPtrC _ParseLex(StringC* wordPtr, Buffer* name, Uint32 line, Bool isCom
 		}
 		goto __SaveWord;
 	}
-	else if (IsHexValue(word)) {
+	else if (FileParser::IsHexValue(word) && isDigit) {
 
 		lex = Lex::Find(kScriptLexInt);
 		strtol(word + 2, (String*)&word, 16);
 
 		goto __SaveWord;
 	}
-	else if (IsIntValue(word)) {
+	else if (FileParser::IsIntValue(word) && isDigit) {
 
 		lex = Lex::Find(kScriptLexInt);
 		strtol(word, (String*)&word, 10);
@@ -88,7 +92,7 @@ static LexPtrC _ParseLex(StringC* wordPtr, Buffer* name, Uint32 line, Bool isCom
 		goto __Return;
 	}
 	else {
-		isWord = IsLetter(*word);
+		isWord = FileParser::IsLetter(*word);
 
 		auto l = Lex::Match(word);
         
@@ -96,13 +100,13 @@ static LexPtrC _ParseLex(StringC* wordPtr, Buffer* name, Uint32 line, Bool isCom
             return left->word.length() < right->word.length();
         });
 
-		if (!l.empty() && !(IsLetter(*(word + l.back()->word.length() + 1)))) {
+		if (!l.empty() && !(FileParser::IsLetter(*(word + l.back()->word.length() + 1)))) {
 			word += l.back()->word.length();
 		}
 		else {
 			while (LAME_TRUE) {
 				if (isWord) {
-					if (!IsLetter(*word) && !IsDigit(*word) && !strchr(wordTokens, *word)) {
+					if (!FileParser::IsLetter(*word) && !FileParser::IsDigit(*word) && !strchr(wordTokens, *word)) {
 						break;
 					}
 				}
@@ -129,7 +133,7 @@ static LexPtrC _ParseLex(StringC* wordPtr, Buffer* name, Uint32 line, Bool isCom
 		lex = Lex::Find(lexWord);
 
 		if (!lex) {
-			lex = Lex::Find(kScriptLexDefault);
+			lex = Lex::Find(kScriptLexUnknown);
 		}
 	}
 
@@ -151,14 +155,26 @@ __Return:
 Void FileParser::Load(StringC fileName) {
 
 	File handle;
-	Buffer script;
 
-	handle.Open(fileName, "rt");
-	script.resize(handle.GetSize());
-	handle.Read((String)script.data(), handle.GetSize());
-	handle.Close();
+	std::string line;
+	std::ifstream stream;
 
-	this->Parse(script.data());
+	stream.open(fileName, std::ios::binary);
+
+	if (!stream) {
+		throw Exception("Unable to open file (%s)", fileName);
+	}
+
+	while (std::getline(stream, line)) {
+		for (Sint8 c : line) {
+			if (c != '\r') {
+				this->fileText.push_back(c);
+			}
+		}
+		this->fileText.append("\n");
+	}
+
+	this->Parse(this->fileText.data());
 }
 
 Void FileParser::Parse(StringC script) {
@@ -218,10 +234,10 @@ Void FileParser::Parse(StringC script) {
 
 		if (node->lex->id == kScriptLexLineComment) {
 			++line;
-			if (*(script - 1) == '\n' || *(script - 1) == '\r') {
+			if (*(script - 1) == '\n') {
 				continue;
 			}
-			while (*script && *script != '\n') {
+			while (*script && *script != '\n' && *script != '\r') {
 				++script;
 			}
 			++script;
@@ -238,6 +254,111 @@ Void FileParser::Parse(StringC script) {
 	}
 __ExitLoop:
 	;
+}
+
+Void FileParser::Clear(Void) {
+
+	for (LexNodePtr n : this->lexList) {
+		delete n;
+	}
+}
+
+Bool FileParser::IsDigit(Sint8 symbol) {
+	return symbol >= '0' && symbol <= '9';
+}
+
+Bool FileParser::IsLetter(Sint8 symbol) {
+	return (symbol >= 'a' && symbol <= 'z') || (symbol >= 'A' && symbol <= 'Z') ||
+		strchr(wordTokens, symbol);
+}
+
+Bool FileParser::IsIntValue(StringC string) {
+
+	String result;
+
+	strtoll(string, &result, 10);
+
+	return string != result &&
+		isdigit(*string);
+}
+
+Bool FileParser::IsHexValue(StringC string) {
+
+	String result;
+
+	if (*(string + 0) == '0' && *(string + 1) == 'x') {
+		strtoll(string + 2, &result, 16);
+	}
+	else {
+		return LAME_FALSE;
+	}
+
+	return string + 2 != result;
+}
+
+Bool FileParser::IsStringValue(StringC string) {
+
+	Uint32 length = (Uint32)strlen(string);
+
+	if (length <= 1) {
+		return LAME_FALSE;
+	}
+
+	return
+		(string[0] == '\"' && string[length - 1] == '\"') ||
+		(string[0] == '\'' && string[length - 1] == '\'');
+}
+
+Bool FileParser::IsIntValue(const Core::Buffer& string) {
+	return IsIntValue(string.data());
+}
+
+Bool FileParser::IsFloatValue(StringC string) {
+
+	String finish;
+	StringC pointer;
+
+	strtod(string, &finish);
+
+	if (finish != string) {
+
+		pointer = string;
+
+		while (pointer != finish) {
+			if (*(pointer++) == '.') {
+				return LAME_TRUE;
+			}
+		}
+	}
+
+	return LAME_FALSE;
+}
+
+Bool FileParser::IsFloatValue(const Core::Buffer& string) {
+
+	if (!string.length()) {
+		return LAME_FALSE;
+	}
+	else {
+		return IsFloatValue(string.data());
+	}
+}
+
+ScriptNativeInt FileParser::ParseIntValue(StringC string) {
+
+	if (IsHexValue(string)) {
+		return (ScriptNativeInt)strtoll(string, NULL, 16);
+	}
+
+	return (ScriptNativeInt)strtoll(string, NULL, 10);
+}
+
+ScriptNativeFloat FileParser::ParseFloatValue(StringC string) {
+	return (ScriptNativeFloat)strtod(string, NULL);
+}
+
+ScriptNativeString FileParser::ParseStringValue(StringC string) {
+	return string;
 }
 
 LAME_END2

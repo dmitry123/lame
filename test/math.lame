@@ -63,4 +63,4 @@ double da = 100;
 double db = 50;
 boolean dr = da > db;
 
-float b1 = (float)((100.5 > 5) && (20 > 4.0) || (10.0 > 2.0));
+float b1 = (100.5 > 5) && (20 > 4.0) || (10.0 > 2.0);

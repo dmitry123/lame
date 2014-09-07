@@ -1,5 +1,4 @@
 #include "StackVar.h"
-#include "Exception.h"
 #include "Variable.h"
 
 LAME_BEGIN2(Script)

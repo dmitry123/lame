@@ -1,6 +1,5 @@
 #include "Class.h"
 #include "Lex.h"
-#include "Exception.h"
 #include "Variable.h"
 #include "Method.h"
 #include "Node.h"
@@ -9,7 +8,7 @@
 LAME_BEGIN2(Script)
 
 Class::Class(BufferRefC name, ScopePtr parent, Uint32 size) :
-Class(name, parent, Type::Class, size)
+	Class(name, parent, Type::Class, size)
 {
 }
 

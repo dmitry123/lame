@@ -8,8 +8,8 @@ Map<LexID, Lex> Lex::lexMap = {
 
 		/* Default */
 
-		{ kScriptLexDefault, {
-			"#", P(0, 1), kScriptLexDefault, 0,
+		{ kScriptLexUnknown, {
+			"#", P(0, 1), kScriptLexUnknown, 0,
 				kScriptLexFlagRight | kScriptLexFlagUnknown | kScriptLexFlagExpression }
 		},
 
@@ -162,6 +162,10 @@ Map<LexID, Lex> Lex::lexMap = {
 			{ "throws", P(0, 0), kScriptLexThrows, 0,
 				kScriptLexFlagLanguage| kScriptLexFlagExpression }
 		},
+		{ kScriptLexSwitch,
+			{ "switch", P(0, 0), kScriptLexSwitch, 0,
+				kScriptLexFlagLanguage | kScriptLexFlagCondition }
+		},
 
 		/* Binary Operators */
 
@@ -265,8 +269,8 @@ Map<LexID, Lex> Lex::lexMap = {
 			{ ">", P(8, 1), kScriptLexAbove, 2,
 				kScriptLexFlagRight | kScriptLexFlagBool | kScriptLexFlagExpression }
 		},
-		{ kScriptLexBellowEqual,
-			{ "<=", P(8, 1), kScriptLexBellowEqual, 2,
+		{ kScriptLexBelowEqual,
+			{ "<=", P(8, 1), kScriptLexBelowEqual, 2,
 				kScriptLexFlagRight | kScriptLexFlagBool | kScriptLexFlagExpression }
 		},
 		{ kScriptLexAboveEqual,
@@ -406,12 +410,38 @@ Map<LexID, Lex> Lex::lexMap = {
 		{ kScriptLexSynchronized,
 			{ "synchronized", P(0, 0), kScriptLexSynchronized, 0,
 				kScriptLexFlagLanguage | kScriptLexFlagModificator }
+		},
+		{ kScriptLexDefault,
+			{ "default", P(0, 0), kScriptLexDefault, 0,
+				kScriptLexFlagLanguage }
+		},
+		{ kScriptLexCase,
+			{ "case", P(0, 0), kScriptLexCase, 0,
+				kScriptLexFlagLanguage }
+		},
+		{ kScriptLexPackage,
+			{ "package", P(0, 0), kScriptLexPackage, 0,
+				kScriptLexFlagLanguage }
+		},
+		{ kScriptLexImport,
+			{ "import", P(0, 0), kScriptLexImport, 0,
+				kScriptLexFlagLanguage }
 		}
 };
 
 LexPtrC Lex::Find(LexID id) {
 
 	Map<LexID, Lex>::iterator i;
+
+	static LexPtr unknownLex = NULL;
+
+	if (!unknownLex) {
+		unknownLex = &lexMap.find(kScriptLexUnknown)->second;
+	}
+
+	if (id == kScriptLexUnknown) {
+		return unknownLex;
+	}
 
 	if ((i = lexMap.find(id)) != lexMap.end()) {
 		return &i->second;

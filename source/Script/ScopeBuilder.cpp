@@ -1,10 +1,8 @@
 #include "ScopeBuilder.h"
-#include "Exception.h"
 #include "Variable.h"
 #include "Method.h"
 #include "Interface.h"
 #include "Class.h"
-#include "Internal.h"
 
 #include <float.h>
 
@@ -50,6 +48,12 @@ static Bool _MoveNode(NodePtr node, Bool strict = FALSE) {
 		_If(node->parent->forInfo.nextList);
 		_If(node->parent->blockList);
 		_If(node->parent->argList);
+
+		if (node->parent->lex->lex->id == kScriptLexSwitch) {
+			for (NodePtr n : node->parent->blockList) {
+				_If(n->blockList);
+			}
+		}
 
 		if (!nodeStack) {
 			PostSyntaxError(node->parent->lex->line, "Node (%s) hasn't been appended to his parent (%s)", node->word.data(), node->parent->word.data());
@@ -106,6 +110,15 @@ _Again4:
 	if (node->lex->lex->id == kScriptLexNew && node->typeNode) {
 		if (_MoveNode(node->typeNode, TRUE)) {
 			goto _Again4;
+		}
+	}
+
+	for (NodePtr n : node->switchInfo.caseList) {
+	_Again5:
+		for (NodePtr n2 : n->blockList) {
+			if (_MoveNode(n)) {
+				goto _Again5;
+			}
 		}
 	}
 
@@ -420,7 +433,7 @@ Void ScopeBuilder::_ForEachClassDeclare(NodePtr n) {
 		if (!classT) {
 			PostSyntaxError(n->lex->line, "Class redeclaration (%s)", n->typeNode->templateNode->word.data());
 		}
-		n->var->SetModificator(Object::Modificator::Private)
+		classT->SetModificator(Object::Modificator::Private)
 			->SetTemplate(classT->GetClass());
 	}
 }
@@ -594,7 +607,7 @@ Void ScopeBuilder::_ForEachConstDeclare(NodePtr n) {
 
 	if (n->lex->lex->id == kScriptLexInt) {
 
-		Sint64 intValue = ParseIntValue(n->word.data());
+		Sint64 intValue = FileParser::ParseIntValue(n->word.data());
 		ClassPtr intClass;
 
 		if (intValue >= -0x7f - 1 && intValue <= 0x7f) {
@@ -619,7 +632,7 @@ Void ScopeBuilder::_ForEachConstDeclare(NodePtr n) {
 	}
 	else if (n->lex->lex->id == kScriptLexFloat) {
         
-        Float64 floatValue = ParseFloatValue(n->word.data());
+		Float64 floatValue = FileParser::ParseFloatValue(n->word.data());
         ClassPtr floatClass;
         
 		if (floatValue >= -FLT_MAX && floatValue <= FLT_MAX) {
@@ -640,7 +653,7 @@ Void ScopeBuilder::_ForEachConstDeclare(NodePtr n) {
 		n->var = globalScope->Add(
 			new Variable(n->word, globalScope, globalScope->classString));
 
-		n->var->GetVariable()->SetString(ParseStringValue(n->word.data()))
+		n->var->GetVariable()->SetString(FileParser::ParseStringValue(n->word.data()))
 			->SetModificator(Class::Modificator::Final)
 			->SetModificator(Class::Modificator::Constant);
 	}
@@ -660,7 +673,6 @@ Void ScopeBuilder::_ForEachMethodDeclare(NodePtr n) {
 	ObjectPtr returnType;
 	ObjectPtr methodObject;
 	Vector<ClassPtr> methodAttributes;
-	ObjectPtr varObject;
 
 	returnType = _FindClass(scope, n->typeNode);
 
@@ -686,15 +698,6 @@ Void ScopeBuilder::_ForEachMethodDeclare(NodePtr n) {
 	}
 
 	method->SetNode(n);
-
-	for (NodePtr n2 : n->argList) {
-		if (!(varObject = method->Add(new Variable(n2->word, method, _FindClass(scope, n2->typeNode)->GetClass())))) {
-			PostSyntaxError(n2->lex->line, "Variable redeclaration (%s)", n2->word.data());
-		}
-		varObject->SetNode(n2);
-		n2->var = varObject;
-	}
-
 	n->var = method;
 
 	if (ObjectPtr(scope)->CheckModificator(Object::Modificator::Construction)) {
@@ -754,7 +757,7 @@ Void ScopeBuilder::_ForEachVariableDeclare(NodePtr n) {
 
 	ObjectPtr typeClass;
 
-	if (n->parent && (n->parent->id == kScriptNodeClass || n->parent->id == kScriptNodeFunction)) {
+	if (n->parent && (n->parent->id == kScriptNodeClass)) {
 		return;
 	}
 

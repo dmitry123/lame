@@ -9,7 +9,7 @@ CodeBuilder::~CodeBuilder() {
 	}
 }
 
-Void CodeBuilder::Run(SyntaxBuilderPtr nodeBuilder, ScopePtr rootScope, SegmentPtr codeSegment) {
+Void CodeBuilder::Build(SyntaxBuilderPtr nodeBuilder, ScopePtr rootScope) {
 
 	NodePtr rootNode = nodeBuilder->GetRootNode();
 
@@ -19,6 +19,7 @@ Void CodeBuilder::Run(SyntaxBuilderPtr nodeBuilder, ScopePtr rootScope, SegmentP
 	this->rememberedInvoke = NULL;
 	this->currentNode = NULL;
 	this->lastNode = NULL;
+	this->lastSelection = NULL;
 
 	this->_ForEachClass(rootScope);
 	this->_ForEachMethod(rootScope);
@@ -35,7 +36,8 @@ Void CodeBuilder::Run(SyntaxBuilderPtr nodeBuilder, ScopePtr rootScope, SegmentP
 
 		NodePtr n = i->GetMethod()->GetRootNode();
 
-		this->codeList.push_back(new CodeNode(i->GetMethod()));
+		this->codeList.push_back(
+			new CodeNode(i->GetMethod()));
 
 		this->currentNode = n;
 		this->currentMethod = this->codeList.back();
@@ -138,8 +140,7 @@ Void CodeBuilder::_Run(NodeListRef nodeList, Bool makeBackup) {
 				if (!n->var) {
 					this->variableStack.GetNodeList().push_back(n);
 					this->variableStack.GetVarList().push_back(NULL);
-				}
-				else {
+				} else {
 					this->variableStack.Push(VariablePtr(n->var));
 				}
 				this->nodeList.push_back(n);
@@ -219,6 +220,10 @@ Void CodeBuilder::_Read(NodePtr n, VariablePtr& left, VariablePtr& right) {
 
 static Bool _CheckObjectCast(ClassPtr left, ClassPtr right) {
 
+	if (!left->GetExtend() || !right->GetExtend()) {
+		return FALSE;
+	}
+
 	if (left == right || left->GetExtend()->GetClass() == right) {
 		return TRUE;
 	}
@@ -268,6 +273,9 @@ Void CodeBuilder::_Cast(VariablePtr var, ObjectPtr type) {
 		if (right->IsFloatLike() && right->GetPriority() > left->GetPriority()) {
 			goto _CastOk;
 		}
+	}
+	else if (left->IsBooleanLike()) {
+		/* Uncastable */
 	}
 	else {
 		if (_CheckObjectCast(left, right)) {
@@ -475,7 +483,7 @@ Void CodeBuilder::_Binary(NodePtr n) {
 	case kScriptLexAbove:
 		this->_Save(Code::Above, leftVar, rightVar);
 		break;
-	case kScriptLexBellowEqual:
+	case kScriptLexBelowEqual:
 		this->_Save(Code::BellowEqual, leftVar, rightVar);
 		break;
 	case kScriptLexAboveEqual:
@@ -713,7 +721,9 @@ Void CodeBuilder::_Selection(NodePtr n) {
 	this->variableStack.GetNodeList().pop_back();
 	this->variableStack.GetNodeList().pop_back();
 
-	if (leftVar->GetVarType() != Variable::Var::Object) {
+	if (leftVar->GetVarType() != Variable::Var::Object &&
+		leftVar->GetVarType() != Variable::Var::Array
+	) {
 		PostSyntaxError(n->lex->line, "You can access to object's fields only (%s)", leftVar->GetName().data());
 	}
 
@@ -748,6 +758,8 @@ Void CodeBuilder::_Selection(NodePtr n) {
 	if (!fieldObject->CheckType(Object::Type::Method)) {
 		this->variableStack.Return(VariablePtr(fieldObject));
 	}
+
+	this->lastSelection = fieldObject;
 }
 
 Void CodeBuilder::_Condition(NodePtr n) {
@@ -986,6 +998,10 @@ Void CodeBuilder::_Invoke(NodePtr n) {
 		Set<ObjectPtr> methodSet = scope->CheckType(Object::Type::Class) ?
 			scope->GetMethodSet() : scope->GetParent()->GetMethodSet();
 
+		if (this->lastSelection) {
+			methodSet = this->lastSelection->GetClass()->GetMethodSet();
+		}
+
 		for (ObjectPtr m : methodSet) {
 			if (methodName == m->GetName() && n->lex->args == m->GetMethod()->GetAttributeHash().size()) {
 				for (Uint32 i = 0; i < n->lex->args; i++) {
@@ -1022,8 +1038,12 @@ Void CodeBuilder::_Invoke(NodePtr n) {
 		}
 
 		if (methodList.empty()) {
-			PostSyntaxError(n->lex->line, "Undeclared method %s%s/%s(%s)", scope->GetPath().data(),
-				scope->GetName().data(), methodName.data(), formattedParameters.data());
+
+			Buffer path = this->lastSelection ?
+				this->lastSelection->GetClass()->GetName() : "";
+
+			PostSyntaxError(n->lex->line, "Undeclared method %s/%s(%s)", path.data(),
+				methodName.data(), formattedParameters.data());
 		}
 
 		/*	Order founded method and get first

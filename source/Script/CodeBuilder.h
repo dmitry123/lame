@@ -5,7 +5,6 @@
 #include "NodeBuilder.h"
 #include "StackVar.h"
 #include "Node.h"
-#include "Exception.h"
 #include "Class.h"
 #include "Variable.h"
 #include "Interface.h"
@@ -27,10 +26,9 @@ public:
 public:
 	~CodeBuilder();
 public:
-	Void Run(
+	Void Build(
 		SyntaxBuilderPtr nodeBuilder,
-		ScopePtr         rootScope,
-		SegmentPtr       codeSegment);
+		ScopePtr         rootScope);
 public:
 	inline Vector<CodeNodePtr>& GetCodeList()   { return this->codeList;          }
 	inline Vector<ObjectPtr>&   GetClassList()  { return this->classList;         }
@@ -71,6 +69,7 @@ private:
 	LittleCalculator littleCalculator;
 	Vector<NodePtr> nodeList;
 	NodePtr lastNode;
+	ObjectPtr lastSelection;
 };
 
 LAME_END2

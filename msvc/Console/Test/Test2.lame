@@ -1,0 +1,5 @@
+package Test;
+
+class Test2 {
+	int value = 0x7b;
+}

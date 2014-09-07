@@ -12,16 +12,10 @@
     <ClCompile Include="..\..\source\Script\Define.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\Script\Exception.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\Script\FileParser.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\Script\Interface.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\Script\Internal.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\Script\Lex.cpp">
@@ -75,6 +69,9 @@
     <ClCompile Include="..\..\source\Script\LittleCalculator.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\Script\Package.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\Script\Variable.h">
@@ -86,16 +83,10 @@
     <ClInclude Include="..\..\source\Script\Define.h">
       <Filter>source</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\source\Script\Exception.h">
-      <Filter>source</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\source\Script\FileParser.h">
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Script\Interface.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Script\Internal.h">
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Script\Lex.h">
@@ -144,6 +135,9 @@
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Script\LittleCalculator.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Script\Package.h">
       <Filter>source</Filter>
     </ClInclude>
   </ItemGroup>

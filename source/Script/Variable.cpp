@@ -1,8 +1,6 @@
 #include "Variable.h"
-#include "Internal.h"
 #include "Lex.h"
 #include "Node.h"
-#include "Exception.h"
 
 LAME_BEGIN2(Script)
 

@@ -2,9 +2,8 @@
 #define __LAME_SCRIPT__
 
 #include "Class.h"
-#include "Define.h"
-#include "Exception.h"
 #include "CodeBuilder.h"
+#include "Define.h"
 #include "FileParser.h"
 #include "Interface.h"
 #include "Lex.h"
@@ -13,10 +12,11 @@
 #include "Node.h"
 #include "NodeBuilder.h"
 #include "Object.h"
-#include "StackVar.h"
+#include "Package.h"
 #include "Scope.h"
 #include "ScopeBuilder.h"
 #include "Segment.h"
+#include "StackVar.h"
 #include "Variable.h"
 
 #endif // ~__LAME_SCRIPT__

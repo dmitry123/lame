@@ -1,5 +1,4 @@
 #include "Node.h"
-#include "Exception.h"
 
 #include <stack>
 
@@ -178,12 +177,14 @@ Node::Node(Buffer word, NodeID id, LexNodePtr lex, NodePtr parent, NodePtr prev)
 	this->elseNode = NULL;
 	this->methodInfo.invokeHash = 0;
 	this->classInfo.extendNode = NULL;
+	this->classInfo.superNode = NULL;
 	this->templateNode = NULL;
 	this->typeNode = NULL;
 	this->var = NULL;
 	this->flags = 0;
 	this->next = NULL;
 	this->depth = 0;
+	this->switchInfo.hasBreak = FALSE;
 }
 
 Void Node::ShuntingYard(Void) {

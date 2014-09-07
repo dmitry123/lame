@@ -107,6 +107,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(IncludePath);$(SolutionDir)/../source</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <LinkIncremental>false</LinkIncremental>
@@ -217,9 +218,6 @@
     <ClInclude Include="..\..\source\Console\Main.h" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Compiler\Compiler.vcxproj">
-      <Project>{88d7639c-7136-42bb-995b-4e5da8bb7e0f}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\Core\Core.vcxproj">
       <Project>{8e51e80f-eda6-41cb-8d0f-5a722293b445}</Project>
     </ProjectReference>

@@ -107,6 +107,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(IncludePath);$(SolutionDir)/../source</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <LinkIncremental>false</LinkIncremental>
@@ -220,6 +221,7 @@
     <ClCompile Include="..\..\source\Script\CodeBuilder.cpp" />
     <ClCompile Include="..\..\source\Script\CodeNode.cpp" />
     <ClCompile Include="..\..\source\Script\LittleCalculator.cpp" />
+    <ClCompile Include="..\..\source\Script\Package.cpp" />
     <ClCompile Include="..\..\source\Script\SequenceMatcher.cpp" />
     <ClCompile Include="..\..\source\Script\StackVar.cpp" />
     <ClCompile Include="..\..\source\Script\SyntaxBuilder.cpp" />
@@ -227,8 +229,6 @@
     <ClCompile Include="..\..\source\Script\Method.cpp" />
     <ClCompile Include="..\..\source\Script\NodeBuilder.cpp" />
     <ClCompile Include="..\..\source\Script\Define.cpp" />
-    <ClCompile Include="..\..\source\Script\Exception.cpp" />
-    <ClCompile Include="..\..\source\Script\Internal.cpp" />
     <ClCompile Include="..\..\source\Script\Lex.cpp" />
     <ClCompile Include="..\..\source\Script\LexNode.cpp" />
     <ClCompile Include="..\..\source\Script\Node.cpp" />
@@ -245,6 +245,7 @@
     <ClInclude Include="..\..\source\Script\CodeBuilder.h" />
     <ClInclude Include="..\..\source\Script\CodeNode.h" />
     <ClInclude Include="..\..\source\Script\LittleCalculator.h" />
+    <ClInclude Include="..\..\source\Script\Package.h" />
     <ClInclude Include="..\..\source\Script\SequenceMatcher.h" />
     <ClInclude Include="..\..\source\Script\StackVar.h" />
     <ClInclude Include="..\..\source\Script\SyntaxBuilder.h" />
@@ -252,8 +253,6 @@
     <ClInclude Include="..\..\source\Script\Method.h" />
     <ClInclude Include="..\..\source\Script\NodeBuilder.h" />
     <ClInclude Include="..\..\source\Script\Define.h" />
-    <ClInclude Include="..\..\source\Script\Exception.h" />
-    <ClInclude Include="..\..\source\Script\Internal.h" />
     <ClInclude Include="..\..\source\Script\Lex.h" />
     <ClInclude Include="..\..\source\Script\LexNode.h" />
     <ClInclude Include="..\..\source\Script\Node.h" />

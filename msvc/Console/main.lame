@@ -1,5 +1,9 @@
-int a = 10;
-int b = ++a + a--;
+class A extends Object {}
+class B extends A {}
+class C extends B {}
+
+class D <T> {}
+class E <T> {}
 
 // class MouseEvent {
 
@@ -61,7 +65,13 @@ int b = ++a + a--;
 // class Vector <T> {
 
 // 	public void add(T t) {
+// 		if (size > capacity) {
+// 			_grow();
+// 		}
 // 		array[size++] = t;
+// 	}
+
+// 	public void remove(T t) {
 // 	}
 
 // 	public boolean contains(T t) {
@@ -73,8 +83,18 @@ int b = ++a + a--;
 // 		return false;
 // 	}
 
+// 	private void _grow() {
+// 		capacity += step;
+// 		T[] buffer = new T[capacity];
+// 		for (int i = 0; i < size; i++) {
+// 			buffer[i] = array[i];
+// 		}
+// 		array = buffer;
+// 	}
+
 // 	private int capacity = 0;
 // 	private int size = 0;
+// 	private int step = 0;
 	
 // 	private T[] array;
 // }
@@ -93,7 +113,8 @@ int b = ++a + a--;
 // 		}
 // 	}
 
-// 	private Observer[] observers;
+// 	private Vector<Observer> observers
+// 		= new Vector<Observer>();
 // }
 
 // class MouseEventContainer {
@@ -122,8 +143,10 @@ int b = ++a + a--;
 // 		}
 // 	}
 
-// 	private MouseActionListener[] actionListenerList;
-// 	private MouseMotionListener[] motionListenerList;
+// 	private Vector<MouseActionListener> actionListenerList
+// 		= new Vector<MouseActionListener>();
+// 	private Vector<MouseMotionListener> motionListenerList
+// 		= new Vector<MouseActionListener>();
 // }
 
 // int value = 100 + 20 + 3;

@@ -24,7 +24,7 @@ typedef enum {
 	kScriptFlagEnum = 0x4000,
 	kScriptFlagWhileHasDo = 0x8000,
 	kScriptFlagInvocation = 0x10000,
-	kScriptFlagSynchronized= 0x20000
+	kScriptFlagSynchronized = 0x20000
 } FlagID;
 
 typedef enum {
@@ -40,7 +40,8 @@ typedef enum {
 	kScriptNodeInvoke,
 	kScriptNodeAlloc,
 	kScriptNodeArray,
-	kScriptNodeArgumentList
+	kScriptNodeArgumentList,
+	kScriptNodeStatic
 } NodeID;
 
 class LAME_API Node {
@@ -65,6 +66,7 @@ public:
 	struct {
 		NodePtr extendNode;
 		Vector<NodePtr> implementNode;
+		NodePtr superNode;
 	} classInfo;
 	struct {
 		Deque<NodePtr> beginList;
@@ -75,6 +77,10 @@ public:
 		Deque<NodePtr> throwsList;
 		Uint32 invokeHash;
 	} methodInfo;
+	struct {
+		Deque<NodePtr> caseList;
+		Bool hasBreak;
+	} switchInfo;
 public:
 	Node(Buffer word, NodeID id, LexNodePtr lex,
 		NodePtr parent, NodePtr prev);

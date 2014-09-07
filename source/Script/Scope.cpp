@@ -1,5 +1,4 @@
 #include "Scope.h"
-#include "Exception.h"
 #include "Lex.h"
 #include "Object.h"
 #include "Class.h"

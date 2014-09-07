@@ -7,7 +7,7 @@ LAME_BEGIN2(Script)
 
 typedef enum {
 	/* Default */
-	kScriptLexDefault = -1,
+	kScriptLexUnknown = -1,
 	/* Constants */
 	kScriptLexInt,
 	kScriptLexFloat,
@@ -47,6 +47,7 @@ typedef enum {
 	kScriptLexFinally,
 	kScriptLexThrow,
 	kScriptLexThrows,
+	kScriptLexSwitch,
 	/* Binary Operators */
 	kScriptLexMul,
 	kScriptLexDiv,
@@ -73,7 +74,7 @@ typedef enum {
 	kScriptLexBitOrSet,
 	kScriptLexBelow,
 	kScriptLexAbove,
-	kScriptLexBellowEqual,
+	kScriptLexBelowEqual,
 	kScriptLexAboveEqual,
 	kScriptLexEqual,
 	kScriptLexNotEqual,
@@ -109,6 +110,10 @@ typedef enum {
 	kScriptLexOverride,
 	kScriptLexDecprecated,
 	kScriptLexSynchronized,
+	kScriptLexDefault,
+	kScriptLexCase,
+	kScriptLexPackage,
+	kScriptLexImport,
 	/* Count Of Lexes */
 	kScriptLexAmount
 } LexID;

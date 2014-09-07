@@ -1,5 +1,4 @@
 #include "NodeBuilder.h"
-#include "Exception.h"
 
 /*	Safe increment for parser's list iterator, it will
 	check for end of list and throws an exception if we can't
@@ -46,7 +45,7 @@ Void NodeBuilder::Build(FileParserPtr parser) {
 		have to write code in root node's block likes JavaScript
 		and it will be succesfully translated into LameByteCode. */
 
-	LexNodePtr lexNode = new LexNode("#", 0, Lex::Find(kScriptLexDefault));
+	LexNodePtr lexNode = new LexNode("#", 0, Lex::Find(kScriptLexUnknown));
 
 	/*	Reset current node builder. It will release all allocated
 		memory for nodes and clear node tree. */
@@ -363,9 +362,9 @@ NodeBuilder::Iterator NodeBuilder::_BuildClass(NodePtr& parent, Iterator i) {
 	this->modificators_ = 0;
 
 	if (this->parser_->GetLexList().end() - i > 3 &&
-		(*(i + 0))->lex->id == kScriptLexDefault &&
+		(*(i + 0))->lex->id == kScriptLexUnknown &&
 		(*(i + 1))->lex->id == kScriptLexBelow &&
-		(*(i + 2))->lex->id == kScriptLexDefault &&
+		(*(i + 2))->lex->id == kScriptLexUnknown &&
 		(*(i + 3))->lex->id == kScriptLexAbove
 	) {
 		i = _BuildTemplate(parent->typeNode, i);
@@ -393,12 +392,12 @@ NodeBuilder::Iterator NodeBuilder::_BuildClass(NodePtr& parent, Iterator i) {
 		/*	Fix for constructor */
 
 		else if (this->parser_->GetLexList().end() - i > 2 &&
-			(*(i + 0))->lex->id == kScriptLexDefault &&
+			(*(i + 0))->lex->id == kScriptLexUnknown &&
 			(*(i + 1))->lex->id == kScriptLexParenthesisL &&
 			(*(i + 2))->lex->id == kScriptLexParenthesisR
 		) {
 			if ((*i)->word == parent->typeNode->word) {
-				i = this->parser_->GetLexList().insert(i, new LexNode("void", (*i)->line, Lex::Find(kScriptLexDefault)));
+				i = this->parser_->GetLexList().insert(i, new LexNode("void", (*i)->line, Lex::Find(kScriptLexUnknown)));
 			}
 			goto __SaveNode;
 		}
@@ -862,7 +861,7 @@ NodeBuilder::Iterator NodeBuilder::_BuildEnum(NodePtr& parent, Iterator i) {
 
 	__Inc(i);
 
-	if ((*i)->lex->id != kScriptLexDefault) {
+	if ((*i)->lex->id != kScriptLexUnknown) {
 		PostSyntaxError((*i)->line, "Enum's name mustn't be reserved word or language token (%s)",
 			(*i)->word.data());
 	}
@@ -1386,7 +1385,7 @@ NodeBuilder::NodeBuilder() :
 	this->_Reset();
 
 	this->_DeclareSequence(kScriptLexSequenceDefault, {
-		kScriptLexDefault
+		kScriptLexUnknown
 	});
 
 	this->_DeclareSequence(kScriptLexSequenceArguments, {
@@ -1399,40 +1398,40 @@ NodeBuilder::NodeBuilder() :
 
 	this->_DeclareSequence(kScriptLexSequenceTemplate, {
 		kScriptLexBelow,
-		kScriptLexDefault,
+		kScriptLexUnknown,
 		kScriptLexAbove
 	});
 
 	this->_DeclareSequence(kScriptLexSequenceCast, {
 		kScriptLexParenthesisL,
-		kScriptLexDefault,
+		kScriptLexUnknown,
 		kScriptLexParenthesisR
 	});
 
 	this->_DeclareSequence(kScriptLexSequenceMethod, {
-		kScriptLexDefault,
-		kScriptLexDefault,
+		kScriptLexUnknown,
+		kScriptLexUnknown,
 		kScriptLexParenthesisL
 	});
 
 	this->_DeclareSequence(kScriptLexSequenceVariable, {
-		kScriptLexDefault,
-		kScriptLexDefault
+		kScriptLexUnknown,
+		kScriptLexUnknown
 	});
 
 	this->_DeclareSequence(kScriptLexSequenceInvoke, {
-		kScriptLexDefault,
+		kScriptLexUnknown,
 		kScriptLexParenthesisL
 	});
 
 	this->_DeclareSequence(kScriptLexSequenceAlloc, {
-		kScriptLexDefault,
+		kScriptLexUnknown,
 		kScriptLexBracketL
 	});
 
 	this->_DeclareSequence(kScriptLexSequenceNew, {
 		kScriptLexNew,
-		kScriptLexDefault
+		kScriptLexUnknown
 	});
 
 	this->_DeclareSequence(kScriptLexSequenceEnum, {

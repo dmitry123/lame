@@ -1,5 +1,4 @@
 #include "SequenceMatcher.h"
-#include "Exception.h"
 
 LAME_BEGIN2(Script)
 

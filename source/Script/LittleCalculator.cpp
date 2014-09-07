@@ -1,6 +1,5 @@
 #include "LittleCalculator.h"
 #include "Variable.h"
-#include "Exception.h"
 
 LAME_BEGIN2(Script)
 
@@ -232,7 +231,7 @@ Bool LittleCalculator::_Binary(VariablePtr left, VariablePtr right) {
 			left->v.intValue = left->stringValue > right->GetString();
 		}
 		break;
-	case kScriptLexBellowEqual:
+	case kScriptLexBelowEqual:
 		if (isFloat) {
 			left->v.intValue = left->v.floatValue <= right->GetFloat();
 		} else if (isInt) {

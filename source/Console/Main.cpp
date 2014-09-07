@@ -15,9 +15,6 @@ int main(int argc, char** argv) {
 	StringC fileName;
 	Clock time;
 
-	int a = 0;
-	int c = a++ + a++ + a++;
-
 	fileName = argc > 1 ?
 		argv[1] : "main.lame";
 
@@ -25,39 +22,34 @@ int main(int argc, char** argv) {
     FileParser fileParser;
     ScopeBuilder scopeBuilder;
     ScopePtr rootScope;
-    SegmentLinker segmentLinker;
-    SegmentBuilder segmentBuilder;
-    CodeTranslator codeTranslator;
+    //SegmentLinker segmentLinker;
+    //SegmentBuilder segmentBuilder;
+    //CodeTranslator codeTranslator;
     NodePtr rootNode;
 	CodeBuilder codeBuilder;
+	Package packageManager;
 
 	try {
 		/* Launch timer */
 		time = Time::GetTime();
 
-		/* Load, parse file and build syntax tree */
-		fileParser.Load(fileName);
-		syntaxBuilder.Build(&fileParser);
-
 		/* Initialize root scope */
 		rootScope = Scope::CreateRootScope(
-			/* Root class name */
-			"Main",
-			/* Shall root be a class */
-			FALSE);
+			"Main", FALSE);
+
+		/* Load, parse file and build syntax tree */
+		fileParser.Load(fileName);
+		syntaxBuilder.Build(&fileParser, &packageManager);
 
 		/* Get syntax's root node */
 		rootNode = syntaxBuilder.GetRootNode();
 
-		/* Build scope trees */
+		/* Run scope and code builders */
 		scopeBuilder.Build(rootNode, rootScope);
-
-		/* Check code for syntax errors */
-		codeBuilder.Run(&syntaxBuilder, rootScope,
-			segmentBuilder.GetCodeSegment());
+		codeBuilder.Build(&syntaxBuilder, rootScope);
 
 		/* Trace root scope */
-		//rootScope->Trace(0);
+		rootScope->Trace(0);
 
 #if 0
 		/* Build segments */

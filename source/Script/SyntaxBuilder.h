@@ -4,7 +4,7 @@
 #include "FileParser.h"
 #include "Node.h"
 #include "SequenceMatcher.h"
-#include "Exception.h"
+#include "Package.h"
 
 LAME_BEGIN2(Script)
 
@@ -20,7 +20,9 @@ private:
 		kScriptLexSequenceVariable,
 		kScriptLexSequenceInvoke,
 		kScriptLexSequenceAlloc,
-		kScriptLexSequenceNew
+		kScriptLexSequenceNew,
+		kScriptLexSequenceStatic,
+		kScriptLexSequenceSuper
 	};
 public:
 	typedef Deque<LexNodePtr>::iterator
@@ -30,9 +32,9 @@ public:
 	SyntaxBuilder(Void);
 	~SyntaxBuilder(Void);
 public:
-	Void Build(FileParserPtr fileParser);
+	Void Build(FileParserPtr fileParser,
+		PackagePtr packageManager);
 public:
-	virtual Iterator Parameters(NodePtr& node, Iterator i);
 	virtual Iterator If(NodePtr& node, Iterator i);
 	virtual Iterator Else(NodePtr& node, Iterator i);
 	virtual Iterator While(NodePtr& node, Iterator i);
@@ -52,12 +54,16 @@ public:
 	virtual Iterator Enum(NodePtr& node, Iterator i);
 	virtual Iterator Ternary(NodePtr& node, Iterator i);
 	virtual Iterator Directed(NodePtr& node, Iterator i);
+	virtual Iterator Static(NodePtr& node, Iterator i);
+	virtual Iterator Switch(NodePtr& node, Iterator i);
+	virtual Iterator Type(NodePtr& node, Iterator i);
+	virtual Iterator Package(NodePtr& node, Iterator i);
+	virtual Iterator Import(NodePtr& node, Iterator i);
 public:
 	inline NodePtr GetRootNode() {
 		return this->rootNode;
 	}
 private:
-	Bool _ShallAvoidBrace(NodeList& list, Iterator& i);
 	Bool _WasItBrace(NodePtr node);
 	NodePtr _Create(Iterator& i, NodeID nodeType = kScriptNodeDefault);
 	NodePtr _Remove(NodePtr node);
@@ -85,6 +91,8 @@ private:
 	inline Bool _IsInvoke(Iterator i)    { return this->sequenceMatcher.Match(kScriptLexSequenceInvoke,    i, this->_End()); }
 	inline Bool _IsAlloc(Iterator i)     { return this->sequenceMatcher.Match(kScriptLexSequenceAlloc,     i, this->_End()); }
 	inline Bool _IsNew(Iterator i)       { return this->sequenceMatcher.Match(kScriptLexSequenceNew,       i, this->_End()); }
+	inline Bool _IsStatic(Iterator i)    { return this->sequenceMatcher.Match(kScriptLexSequenceStatic,    i, this->_End()); }
+	inline Bool _IsSuper(Iterator i)     { return this->sequenceMatcher.Match(kScriptLexSequenceSuper,     i, this->_End()); }
 private:
 	SequenceMatcher sequenceMatcher;
 	Uint32 modificatorFlags;
@@ -94,6 +102,7 @@ private:
 	NodePtr previousNode;
 	NodePtr rootNode;
 	Bool wasLastParenthesis;
+	PackagePtr packageManager;
 };
 
 LAME_END2
