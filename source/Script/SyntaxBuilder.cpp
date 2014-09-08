@@ -120,7 +120,9 @@ SyntaxBuilder::Iterator SyntaxBuilder::If(NodePtr& node, Iterator i) {
 			if (node->blockList.back()->id != kScriptNodeDefault) {
 				break;
 			}
-			__Inc(i);
+			if ((*i)->lex->id != kScriptLexSemicolon) {
+				__Inc(i);
+			}
 		}
 	}
 	else {
@@ -136,6 +138,17 @@ SyntaxBuilder::Iterator SyntaxBuilder::If(NodePtr& node, Iterator i) {
 				}
 			}
 		}
+	}
+
+	__Inc(i);
+
+	if ((*i)->lex->id == kScriptLexElse) {
+		node->elseNode = this->_Create(i);
+		i = this->Else(node->elseNode, i);
+		this->parentNode = this->parentNode->parent;
+	}
+	else {
+		__Dec(i);
 	}
 
 	return i;
@@ -158,7 +171,9 @@ SyntaxBuilder::Iterator SyntaxBuilder::Else(NodePtr& node, Iterator i) {
 			if (node->blockList.back()->id != kScriptNodeDefault) {
 				break;
 			}
-			__Inc(i);
+			if ((*i)->lex->id != kScriptLexSemicolon) {
+				__Inc(i);
+			}
 		}
 	}
 	else {
@@ -286,7 +301,9 @@ SyntaxBuilder::Iterator SyntaxBuilder::For(NodePtr& node, Iterator i) {
 			if (node->blockList.back()->id != kScriptNodeDefault) {
 				break;
 			}
-			__Inc(i);
+			if ((*i)->lex->id != kScriptLexSemicolon) {
+				__Inc(i);
+			}
 		}
 	}
 	else {
@@ -493,28 +510,45 @@ SyntaxBuilder::Iterator SyntaxBuilder::Variable(NodePtr& node, Iterator i) {
 
 	varNode = node;
 
-	while ((*i)->lex->id != kScriptLexSemicolon) {
-		if ((*i)->lex->id == kScriptLexComma) {
-			__Inc(i);
-			while (varNode->next) {
-				varNode = varNode->next;
-			}
-			varNode->next = this->_Create(i);
-			varNode = varNode->next;
-			varNode->typeNode = node->typeNode;
-			varNode->id = node->id;
+	__Inc(i);
+
+	if ((*i)->lex->id == kScriptLexBraceL) {
+		if (!(typeNode->flags & kScriptFlagArray)) {
+			PostSyntaxError((*i)->line, "Can't apply intialize-list to non array type",
+				typeNode->word.data());
 		}
-		else {
-			if (!(*i)->lex->IsExpression()) {
-				PostSyntaxError((*i)->line, "Illegal token in expression (%s)",
-					(*i)->word.data());
-			}
-		}
-		i = this->_Append(&varNode->argList, i);
+		i = this->Initialize(node, i);
+		__Inc(i);
 		if ((*i)->lex->id != kScriptLexSemicolon) {
-			__Inc(i);
+			PostSyntaxError((*i)->line, "Lost semicolon", 0)
 		}
 	}
+	else {
+		__Dec(i);
+		while ((*i)->lex->id != kScriptLexSemicolon) {
+			if ((*i)->lex->id == kScriptLexComma) {
+				__Inc(i);
+				while (varNode->next) {
+					varNode = varNode->next;
+				}
+				varNode->next = this->_Create(i);
+				varNode = varNode->next;
+				varNode->typeNode = node->typeNode;
+				varNode->id = node->id;
+			}
+			else {
+				if (!(*i)->lex->IsExpression()) {
+					PostSyntaxError((*i)->line, "Illegal token in expression (%s)",
+						(*i)->word.data());
+				}
+			}
+			i = this->_Append(&varNode->argList, i);
+			if ((*i)->lex->id != kScriptLexSemicolon) {
+				__Inc(i);
+			}
+		}
+	}
+
 	i = this->_Append(&node->argList, i);
 
 	return i;
@@ -1127,8 +1161,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::Static(NodePtr& node, Iterator i) {
 
 	while ((*i)->lex->id != kScriptLexBraceR) {
 		NodePtr element = this->_Append(i);
-		if (element->id == kScriptNodeVariable ||
-			element->id == kScriptNodeFunction ||
+		if (element->id == kScriptNodeFunction ||
 			element->id == kScriptNodeClass ||
 			element->id == kScriptNodeInterface ||
 			element->id == kScriptNodeAnonymous
@@ -1247,8 +1280,9 @@ SyntaxBuilder::Iterator SyntaxBuilder::Package(NodePtr& node, Iterator i) {
 		__Inc(i);
 	}
 
-	if (node->previous != node->parent || node->parent->id != kScriptNodeEntry) {
-		PostSyntaxError((*i)->line, "Package statement must be at the top of file", 0)
+	if (node->parent->id != kScriptNodeEntry) {
+		PostSyntaxError((*i)->line, "Package statement must be in the root scope (%s)",
+			node->parent->word.data());
 	}
 
 	NodePtr nextNode = node;
@@ -1291,8 +1325,9 @@ SyntaxBuilder::Iterator SyntaxBuilder::Import(NodePtr& node, Iterator i) {
 		__Inc(i);
 	}
 
-	if (node->previous != node->parent || node->parent->id != kScriptNodeEntry) {
-		PostSyntaxError((*i)->line, "Package statement must be at the top of file", 0)
+	if (node->parent->id != kScriptNodeEntry) {
+		PostSyntaxError((*i)->line, "Import statement must be in the root scope (%s)",
+			node->parent->word.data());
 	}
 
 	NodePtr nextNode = node;
@@ -1328,6 +1363,50 @@ SyntaxBuilder::Iterator SyntaxBuilder::Import(NodePtr& node, Iterator i) {
 
 	this->packageManager->Import(node);
 
+	return i;
+}
+
+SyntaxBuilder::Iterator SyntaxBuilder::Initialize(NodePtr& node, Iterator i) {
+
+	Bool wasItInit = FALSE;
+
+	if ((*i)->lex->id != kScriptLexBraceL) {
+		return i;
+	}
+	__Inc(i);
+
+	while ((*i)->lex->id != kScriptLexBraceR) {
+		wasItInit = FALSE;
+		NodePtr blockNode = this->_Create(i);
+		node->blockList.push_back(blockNode);
+		if ((*i)->lex->id == kScriptLexBraceL) {
+			wasItInit = TRUE;
+			i = this->Initialize(blockNode, i);
+		}
+		__Inc(i);
+		while (
+			(*i)->lex->id != kScriptLexComma &&
+			(*i)->lex->id != kScriptLexBraceR
+		) {
+			blockNode->next = this->_Create(i);
+			blockNode = blockNode->next;
+			__Inc(i);
+		}
+		if ((*i)->lex->id == kScriptLexComma) {
+			__Inc(i);
+		}
+		else {
+			if ((*i)->lex->id == kScriptLexBraceR && !wasItInit) {
+				break;
+			}
+			else {
+				PostSyntaxError((*i)->line, "Illegal token in initialize list (%s)",
+					(*i)->word.data());
+			}
+			__Inc(i);
+		}
+	}
+		
 	return i;
 }
 
@@ -1367,6 +1446,7 @@ NodePtr SyntaxBuilder::_Create(Iterator& i, NodeID nodeType) {
 
 	NodePtr node = new Node((*i)->word, nodeType, *i, this->parentNode, this->previousNode);
 	this->nodeContainer.push_back(node);
+	node->syntaxBuilder = this;
 
 	/*	Check node for 'power' and save its parent. */
 
@@ -1575,7 +1655,9 @@ SyntaxBuilder::Iterator SyntaxBuilder::_Append(Deque<NodePtr>* list, Iterator i)
 		}
 	}
 	else {
-		list->push_back(node);
+		if (!node->lex->lex->IsModificator()) {
+			list->push_back(node);
+		}
 	}
 
 	return i;

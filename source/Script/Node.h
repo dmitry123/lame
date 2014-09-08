@@ -45,6 +45,7 @@ typedef enum {
 } NodeID;
 
 class LAME_API Node {
+	friend class SyntaxBuilder;
 public:
 	      Buffer word;
 	const LexNodePtr lex;
@@ -90,6 +91,12 @@ public:
 	Void Implement(NodePtr node);
 	Void Template(NodePtr node);
 	Void Type(NodePtr node);
+public:
+	inline SyntaxBuilderPtr GetBuilder() {
+		return this->syntaxBuilder;
+	}
+private:
+	SyntaxBuilderPtr syntaxBuilder;
 };
 
 LAME_END2

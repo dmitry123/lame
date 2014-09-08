@@ -49,6 +49,10 @@ static Bool _MoveNode(NodePtr node, Bool strict = FALSE) {
 		_If(node->parent->blockList);
 		_If(node->parent->argList);
 
+		if (node->parent->elseNode) {
+			_If(node->parent->elseNode->blockList);
+		}
+
 		if (node->parent->lex->lex->id == kScriptLexSwitch) {
 			for (NodePtr n : node->parent->blockList) {
 				_If(n->blockList);
@@ -199,6 +203,7 @@ Void ScopeBuilder::Build(NodePtr rootNode, ScopePtr rootScope) {
 			3. Declaring class/interface methods and variables */
 
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassPrototype, this), kScriptNodeClass);
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassStatic, this), kScriptNodeStatic);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassPrototype, this), kScriptNodeAnonymous);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachInterfacePrototype, this), kScriptNodeInterface);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachInterfaceDeclare, this), kScriptNodeInterface);
@@ -207,6 +212,9 @@ Void ScopeBuilder::Build(NodePtr rootNode, ScopePtr rootScope) {
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassVariableDeclare, this), kScriptNodeVariable);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachModificatorSet, this), kScriptNodeClass);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachModificatorSet, this), kScriptNodeInterface);
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachMethodDeclare, this), kScriptNodeFunction);
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachModificatorSet, this), kScriptNodeFunction);
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachConstruction, this), kScriptNodeCondition);
 
 	/*	Class/Interface inheritance:
 			1. We have to apply inheritance for classes
@@ -231,8 +239,6 @@ Void ScopeBuilder::Build(NodePtr rootNode, ScopePtr rootScope) {
 				to avoid using variables before it's declaration)
 			5. Now we can apply modificators for variables */
 
-	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachMethodDeclare, this), kScriptNodeFunction);
-	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachModificatorSet, this), kScriptNodeFunction);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachMethodRegister, this), kScriptNodeFunction);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachVariableDeclare, this), kScriptNodeVariable);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachModificatorSet, this), kScriptNodeVariable);
@@ -241,7 +247,6 @@ Void ScopeBuilder::Build(NodePtr rootNode, ScopePtr rootScope) {
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachNodeFind, this), kScriptNodeUnknown);
 
 	/*  Check every class/interface inheritance lexes */
-	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachConstruction, this), kScriptNodeCondition);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachCheckInheritance, this), kScriptNodeInterface);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachCheckInheritance, this), kScriptNodeClass);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachCheckInheritance, this), kScriptNodeAnonymous);
@@ -274,6 +279,18 @@ Void ScopeBuilder::Build(NodePtr rootNode, ScopePtr rootScope) {
 #if 0 /* Node trace (only for debugging) */
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachNodeTrace, this), kScriptNodeUnknown);
 #endif
+}
+
+Void ScopeBuilder::_ForEachClassStatic(NodePtr n) {
+
+	if (n->parent->id != kScriptNodeClass) {
+		PostSyntaxError(n->lex->line, "Static block must be in class (%s)",
+			n->parent->word.data());
+	}
+
+	if (!n->var) {
+		n->var = new Class("", scope);
+	}
 }
 
 Void ScopeBuilder::_ForEachNodeTrace(NodePtr n) {
@@ -968,7 +985,8 @@ Void ScopeBuilder::_ForEachNode(NodePtr node, ScopePtr scope, ForEachNode callba
 		node->id == kScriptNodeInterface ||
 		node->id == kScriptNodeFunction ||
 		node->id == kScriptNodeCondition ||
-		node->id == kScriptNodeAnonymous
+		node->id == kScriptNodeAnonymous ||
+		node->id == kScriptNodeStatic
 	) {
 		if (node->var) {
 			this->_Push(node->var);
@@ -998,7 +1016,8 @@ Void ScopeBuilder::_ForEachNode(NodePtr node, ScopePtr scope, ForEachNode callba
 		node->id == kScriptNodeInterface ||
 		node->id == kScriptNodeFunction ||
 		node->id == kScriptNodeCondition ||
-		node->id == kScriptNodeAnonymous
+		node->id == kScriptNodeAnonymous ||
+		node->id == kScriptNodeStatic
 	) {
 		if (node->var) {
 			this->_Pop();

@@ -11,6 +11,7 @@ class LAME_API Object :
 {
 	friend class Segment;
 	friend class ScopeBuilder;
+	friend class Variable;
 public: /* Flags & States */
 	enum class Modificator : Uint32 {
 		Unknown      = 0x00000000,

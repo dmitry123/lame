@@ -271,5 +271,6 @@ Script::ClassPtr Scope::classString = NULL;
 Script::ClassPtr Scope::classObject = NULL;
 Script::ClassPtr Scope::classClass = NULL;
 Script::ClassPtr Scope::classUnknown = NULL;
+Script::ClassPtr Scope::classArray = NULL;
 
 LAME_END2

@@ -1,5 +1,5 @@
 package Test;
 
-class Test {
+class Test1 {
 	int value = 0x7b;
 }

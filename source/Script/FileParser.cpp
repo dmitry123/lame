@@ -175,6 +175,12 @@ Void FileParser::Load(StringC fileName) {
 	}
 
 	this->Parse(this->fileText.data());
+
+	FilePathInfo fpi(fileName);
+
+	this->fileName = fpi.name;
+	this->filePath = fpi.path;
+	this->fileExtension = fpi.extension;
 }
 
 Void FileParser::Parse(StringC script) {

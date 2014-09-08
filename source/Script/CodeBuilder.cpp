@@ -20,6 +20,7 @@ Void CodeBuilder::Build(SyntaxBuilderPtr nodeBuilder, ScopePtr rootScope) {
 	this->currentNode = NULL;
 	this->lastNode = NULL;
 	this->lastSelection = NULL;
+	this->wasItCondition = FALSE;
 
 	this->_ForEachClass(rootScope);
 	this->_ForEachMethod(rootScope);
@@ -77,11 +78,14 @@ Void CodeBuilder::Build(SyntaxBuilderPtr nodeBuilder, ScopePtr rootScope) {
 
 Void CodeBuilder::_Run(NodeListRef nodeList, Bool makeBackup) {
 
+	ObjectPtr var0;
 	StackVar stackBackup;
 
 	if (makeBackup) {
 		stackBackup = this->variableStack;
 	}
+
+	Uint32 listLength = this->nodeList.size();
 
 	for (NodePtr n : nodeList) {
 
@@ -143,7 +147,7 @@ Void CodeBuilder::_Run(NodeListRef nodeList, Bool makeBackup) {
 				} else {
 					this->variableStack.Push(VariablePtr(n->var));
 				}
-				this->nodeList.push_back(n);
+				this->_Save(n);
 			}
 			else if (n->lex->lex->IsMath() || n->lex->lex->IsBool()) {
 				if (n->lex->args == 1) {
@@ -177,11 +181,48 @@ Void CodeBuilder::_Run(NodeListRef nodeList, Bool makeBackup) {
 
 	nodeList.clear();
 
-	for (NodePtr n : this->nodeList) {
+	auto it = this->nodeList.begin() + listLength;
+
+	if (!listLength) {
+		it = this->nodeList.begin();
+	}
+
+	if (this->nodeList.size() == listLength) {
+		listLength = 0;
+	}
+
+	for (Uint32 i = 0; i < this->nodeList.size() - listLength; i++) {
+
+		NodePtr n = *(it + i);
+
+		if (n->lex->lex->id == kScriptLexIf && n->argList.size() == 1) {
+
+			if ((var0 = n->argList.back()->var) &&
+				var0->CheckModificator(Object::Modificator::Constant)
+			) {
+				if (var0->GetVariable()->v.intValue) {
+					for (NodePtr n2 : n->blockList) {
+						nodeList.push_back(n2);
+					}
+				}
+				else {
+					for (NodePtr n2 : n->elseNode->blockList) {
+						nodeList.push_back(n2);
+					}
+				}
+				continue;
+			}
+		}
+
 		nodeList.push_back(n);
 	}
 
-	this->nodeList.clear();
+	this->wasItCondition = FALSE;
+
+	listLength = this->nodeList.size() - listLength;
+	while (listLength--) {
+		this->nodeList.pop_back();
+	}
 }
 
 Void CodeBuilder::_Read(NodePtr n, VariablePtr& left, VariablePtr& right) {
@@ -261,6 +302,33 @@ Void CodeBuilder::_Cast(VariablePtr var, ObjectPtr type) {
 		goto _CastOk;
 	}
 
+	if (var->CheckModificator(Object::Modificator::Constant) && var->GetName() == "null") {
+		if (type->GetVariable()->GetVarType() == Variable::Var::Array ||
+			type->GetVariable()->GetVarType() == Variable::Var::Object
+		) {
+			goto _CastOk;
+		}
+	}
+
+	if (type->CheckType(Object::Type::Variable) &&
+		var->CheckType(Object::Type::Variable)
+	) {
+		if (type->GetVariable()->GetVarType() == Variable::Var::Array &&
+			var->GetVariable()->GetVarType() == Variable::Var::Array
+		) {
+			if (left == right) {
+				goto _CastOk;
+			}
+		}
+		else {
+			if (type->GetVariable()->GetVarType() == Variable::Var::Array ||
+				var->GetVariable()->GetVarType() == Variable::Var::Array
+			) {
+				goto _CastFail;
+			}
+		}
+	}
+
 	if (left->IsFloatLike()) {
 		if (right->IsFloatLike() && right->GetPriority() > left->GetPriority()) {
 			goto _CastOk;
@@ -289,6 +357,7 @@ Void CodeBuilder::_Cast(VariablePtr var, ObjectPtr type) {
 		}
 	}
 
+_CastFail:
 	PostSyntaxError(this->currentNode->lex->line, "Unable to cast from (%s) to (%s)",
 		left->GetName().data(), right->GetName().data());
 
@@ -391,7 +460,7 @@ Void CodeBuilder::_Binary(NodePtr n) {
 		sourceVar = leftVar;
 
 		if (leftVar->GetClass()->Hash() != rightVar->GetClass()->Hash()) {
-			this->_Cast(rightVar, sourceVar->GetClass());
+			this->_Cast(rightVar, sourceVar);
 		}
 	}
 
@@ -399,9 +468,13 @@ Void CodeBuilder::_Binary(NodePtr n) {
 		rightVar->CheckModificator(Object::Modificator::Constant)
 	) {
 		if (this->GetCalculator()->Compute(n, leftVar, rightVar)) {
+
 			this->nodeList.pop_back();
 			this->nodeList.pop_back();
-			this->nodeList.push_back(leftVar->GetNode());
+			this->_Save(leftVar->GetNode());
+
+			sourceVar = leftVar->GetNode()
+				->var->GetVariable();
 		}
 		else {
 			goto _SaveNode;
@@ -409,7 +482,7 @@ Void CodeBuilder::_Binary(NodePtr n) {
 	}
 	else {
 	_SaveNode:
-		this->nodeList.push_back(n);
+		this->_Save(n);
 	}
 
 	if (n->lex->lex->IsLogic()) {
@@ -539,6 +612,24 @@ Void CodeBuilder::_Unary(NodePtr n) {
 		this->variableStack.Return(VariablePtr(n->var->GetClass()));
 	}
 	else {
+		if (leftVar->CheckModificator(Object::Modificator::Constant)) {
+			if (this->GetCalculator()->Compute(n, leftVar)) {
+
+				this->nodeList.pop_back();
+				this->_Save(leftVar->GetNode());
+
+				leftVar = leftVar->GetNode()
+					->var->GetVariable();
+			}
+			else {
+				goto _SaveNode;
+			}
+		}
+		else {
+		_SaveNode:
+			this->_Save(n);
+		}
+
 		if (n->lex->lex->id == kScriptLexPostfixIncrement ||
 			n->lex->lex->id == kScriptLexPostfixDecrement ||
 			n->lex->lex->id == kScriptLexPrefixIncrement ||
@@ -549,20 +640,6 @@ Void CodeBuilder::_Unary(NodePtr n) {
 		else {
 			this->variableStack.Return(leftVar);
 		}
-	}
-
-	if (leftVar->CheckModificator(Object::Modificator::Constant)) {
-		if (this->GetCalculator()->Compute(n, leftVar)) {
-			this->nodeList.pop_back();
-			this->nodeList.push_back(leftVar->GetNode());
-		}
-		else {
-			goto _SaveNode;
-		}
-	}
-	else {
-	_SaveNode:
-		this->nodeList.push_back(n);
 	}
 
 #if 0
@@ -624,6 +701,11 @@ Void CodeBuilder::_New(NodePtr n) {
 
 	VariablePtr leftVar = VariablePtr(n->typeNode->var);
 	VariablePtr resultVar = leftVar;
+
+	if (!leftVar) {
+		PostSyntaxError(n->lex->line, "Undeclared class (%s)",
+			n->typeNode->word.data());
+	}
 
 	if (!leftVar->CheckType(Object::Type::Class)) {
 		PostSyntaxError(n->lex->line, "Can't allocate memory for virtual object (%s%s)",
@@ -697,7 +779,7 @@ Void CodeBuilder::_New(NodePtr n) {
 		resultVar->GetVarType() = Variable::Var::Array;
 	}
 
-	this->nodeList.push_back(n);
+	this->_Save(n);
 
 	this->variableStack.Return(resultVar);
 }
@@ -729,7 +811,12 @@ Void CodeBuilder::_Selection(NodePtr n) {
 		fieldObject = fieldNode->var;
 	}
 	else {
-		fieldObject = leftVar->GetClass()->Find(fieldName, FALSE);
+		if (leftVar->GetVarType() == Variable::Var::Array) {
+			fieldObject = Scope::classArray->Find(fieldName, FALSE);
+		}
+		else {
+			fieldObject = leftVar->GetClass()->Find(fieldName, FALSE);
+		}
 	}
 
 	if (!fieldObject) {
@@ -768,6 +855,8 @@ Void CodeBuilder::_Condition(NodePtr n) {
 
 	Deque<NodePtr>::iterator i;
 
+	this->wasItCondition = TRUE;
+
 	switch (n->lex->lex->id) {
 	case kScriptLexIf:
 
@@ -783,8 +872,30 @@ Void CodeBuilder::_Condition(NodePtr n) {
 			goto _BooleanError;
 		}
 
-		LAME_TODO("If var0");
-		this->_Run(n->blockList, TRUE);
+		if (!var0->CheckModificator(Object::Modificator::Constant)) {
+			LAME_TODO("If var0");
+		}
+
+		if (var0->CheckModificator(Object::Modificator::Constant)) {
+			if (var0->v.intValue = TRUE) {
+				this->_Run(n->blockList, TRUE);
+				if (n->elseNode) {
+					n->elseNode->blockList.clear();
+				}
+			}
+			else {
+				n->blockList.clear();
+				if (n->elseNode) {
+					this->_Run(n->elseNode->blockList, TRUE);
+				}
+			}
+		}
+		else {
+			this->_Run(n->blockList, TRUE);
+			if (n->elseNode) {
+				this->_Run(n->elseNode->blockList, TRUE);
+			}
+		}
 
 		break;
 	case kScriptLexElse:
@@ -869,7 +980,7 @@ _BooleanError:
 		var0->GetClass()->GetName().data());
 
 _SkipErrors:
-	this->nodeList.push_back(n);
+	this->_Save(n);
 }
 
 Void CodeBuilder::_Invoke(NodePtr n) {
@@ -1157,6 +1268,11 @@ Void CodeBuilder::_Array(NodePtr n) {
 
 	this->variableStack.Push(
 		VariablePtr(n->var->GetClass()));
+}
+
+Void CodeBuilder::_Save(NodePtr n) {
+
+	this->nodeList.push_back(n);
 }
 
 Void CodeBuilder::_Push(CodeNodePtr codeNode) {

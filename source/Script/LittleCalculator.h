@@ -12,6 +12,8 @@ public:
 	{
 	}
 public:
+	~LittleCalculator();
+public:
 	Bool Compute(NodePtr node, ObjectPtr left,
 		ObjectPtr right = NULL);
 public:
@@ -25,6 +27,7 @@ private:
 	Bool _Unary(VariablePtr left);
 	Bool _Binary(VariablePtr left, VariablePtr right);
 private:
+	Vector<NodePtr> nodeList;
 	NodePtr currentNode;
 	CodeBuilderPtr codeBuilder;
 };

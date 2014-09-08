@@ -59,9 +59,13 @@ public:
 	virtual Iterator Type(NodePtr& node, Iterator i);
 	virtual Iterator Package(NodePtr& node, Iterator i);
 	virtual Iterator Import(NodePtr& node, Iterator i);
+	virtual Iterator Initialize(NodePtr& node, Iterator i);
 public:
 	inline NodePtr GetRootNode() {
 		return this->rootNode;
+	}
+	inline FileParserPtr GetParser() {
+		return this->fileParser;
 	}
 private:
 	Bool _WasItBrace(NodePtr node);

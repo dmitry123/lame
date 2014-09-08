@@ -6,6 +6,8 @@ using namespace Lame::ResourceManager;
 using namespace Lame::Script;
 using namespace Lame;
 
+#include <Windows.h>
+
 int main(int argc, char** argv) {
     
 #ifdef LAME_VLD
@@ -17,6 +19,8 @@ int main(int argc, char** argv) {
 
 	fileName = argc > 1 ?
 		argv[1] : "main.lame";
+
+	//fileName = "d:\\code\\C++\\Projects\\Lame\\java\\com\\sun\\image\\codec\\jpeg\\JPEGHuffmanTable.java";
 
     SyntaxBuilder syntaxBuilder;
     FileParser fileParser;
@@ -32,6 +36,9 @@ int main(int argc, char** argv) {
 	try {
 		/* Launch timer */
 		time = Time::GetTime();
+
+		/* Set path to Java Core */
+		packageManager.SetJavaCorePath("d:/code/c++/projects/lame/java/");
 
 		/* Initialize root scope */
 		rootScope = GlobalScope::CreateScope(
@@ -50,6 +57,12 @@ int main(int argc, char** argv) {
 
 		/* Trace root scope */
 		rootScope->Trace(0);
+
+		for (NodePtr n : rootNode->blockList) {
+			printf("[%s] ", n->word.data());
+		}
+
+		printf("\n");
 
 #if 0
 		/* Build segments */

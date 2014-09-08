@@ -195,6 +195,8 @@ ObjectPtr Variable::Clone(BufferRefC name, ObjectPtr parent) {
 		newVariable->SetInteger(this->v.intValue);
 	}
 
+	newVariable->modificators_ = this->modificators_;
+
 	return newVariable;
 }
 

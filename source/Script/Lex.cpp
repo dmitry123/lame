@@ -426,6 +426,10 @@ Map<LexID, Lex> Lex::lexMap = {
 		{ kScriptLexImport,
 			{ "import", P(0, 0), kScriptLexImport, 0,
 				kScriptLexFlagLanguage }
+		},
+		{ kScriptLexGoto,
+			{ "#", P(0, 0), kScriptLexGoto, 0,
+				kScriptLexFlagUnknown }
 		}
 };
 

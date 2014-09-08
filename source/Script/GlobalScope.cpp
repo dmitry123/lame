@@ -32,6 +32,7 @@ ScopePtr GlobalScope::CreateScope(Buffer name, Uint32 flags) {
 	Scope::classObject = rootScope->Scope::Add(new Script::Class("Object", rootScope))->GetClass();
 	Scope::classClass = rootScope->Scope::Add(new Script::Class("Class", rootScope))->GetClass();
 	Scope::classUnknown = rootScope->Scope::Add(new Script::Class("?", rootScope))->GetClass();
+	Scope::classArray = rootScope->Scope::Add(new Script::Class("Array", rootScope))->GetClass();
 
 	Scope::classChar
 		->SetModificator(Script::Object::Modificator::Primitive)
@@ -82,6 +83,9 @@ ScopePtr GlobalScope::CreateScope(Buffer name, Uint32 flags) {
 	Scope::classUnknown
 		->SetModificator(Script::Object::Modificator::Internal)
 		->SetModificator(Script::Object::Modificator::Object2);
+	Scope::classArray
+		->SetModificator(Script::Object::Modificator::Internal)
+		->SetModificator(Script::Object::Modificator::Object2);
 
 	Scope::classChar->SetPriority(0);
 	Scope::classByte->SetPriority(0);
@@ -96,6 +100,10 @@ ScopePtr GlobalScope::CreateScope(Buffer name, Uint32 flags) {
 	Scope::classObject->SetPriority(7);
 	Scope::classClass->SetPriority(7);
 	Scope::classUnknown->SetPriority(7);
+	Scope::classArray->SetPriority(7);
+
+	Scope::classArray->Add(new Variable("length", Scope::classArray, Scope::classInt))
+		->GetVariable()->SetInteger(0);
 
 	goto _SkipPrimitive;
 _ReturnScope:
@@ -112,16 +120,23 @@ _ReturnScope:
 	rootScope->Add(Scope::classObject);
 	rootScope->Add(Scope::classClass);
 	rootScope->Add(Scope::classUnknown);
+	rootScope->Add(Scope::classArray);
 _SkipPrimitive:
 
 	rootScope->Add(new Variable("true", rootScope, Scope::classBoolean))
-		->GetVariable()->SetBoolean(TRUE)->SetModificator(Object::Modificator::Internal);
+		->GetVariable()->SetBoolean(TRUE)
+		->SetModificator(Object::Modificator::Internal)
+		->SetModificator(Object::Modificator::Constant);
 
 	rootScope->Add(new Variable("false", rootScope, Scope::classBoolean))
-		->GetVariable()->SetBoolean(FALSE)->SetModificator(Object::Modificator::Internal);
+		->GetVariable()->SetBoolean(FALSE)
+		->SetModificator(Object::Modificator::Internal)
+		->SetModificator(Object::Modificator::Constant);
 
 	rootScope->Add(new Variable("null", rootScope, Scope::classObject))
-		->GetVariable()->SetObject(NULL)->SetModificator(Object::Modificator::Internal);
+		->GetVariable()->SetObject(NULL)
+		->SetModificator(Object::Modificator::Internal)
+		->SetModificator(Object::Modificator::Constant);
 
 	return rootScope;
 }

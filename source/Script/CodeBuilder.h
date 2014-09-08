@@ -52,6 +52,7 @@ private:
 	Void _Return(NodePtr n);
 	Void _Finish(NodePtr n);
 	Void _Array(NodePtr n);
+	Void _Save(NodePtr n);
 private:
 	Void _Push(CodeNodePtr codeNode);
 	CodeNodePtr _Pop(Void);
@@ -70,6 +71,7 @@ private:
 	Vector<NodePtr> nodeList;
 	NodePtr lastNode;
 	ObjectPtr lastSelection;
+	Bool wasItCondition;
 };
 
 LAME_END2

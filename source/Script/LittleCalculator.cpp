@@ -3,6 +3,13 @@
 
 LAME_BEGIN2(Script)
 
+LittleCalculator::~LittleCalculator() {
+
+	for (NodePtr n : this->nodeList) {
+		delete n;
+	}
+}
+
 Bool LittleCalculator::Compute(NodePtr node, ObjectPtr left, ObjectPtr right) {
 
 	Bool result;
@@ -23,30 +30,46 @@ Bool LittleCalculator::Compute(NodePtr node, ObjectPtr left, ObjectPtr right) {
 
 	this->currentNode = node;
 
+	ObjectPtr newVar = left->Clone(left->GetName(),
+		ObjectPtr(left->GetParent()))->GetVariable();
+
 	if (left && right) {
-		result = this->_Binary(left->GetVariable(), right->GetVariable());
+		result = this->_Binary(newVar->GetVariable(), right->GetVariable());
 	}
 	else {
-		result = this->_Unary(left->GetVariable());
+		result = this->_Unary(newVar->GetVariable());
 	}
 
-	if (left->GetClass()->IsInt()) {
-		left->GetName().Format("%lld",
-			left->GetVariable()->v.intValue);
+	if (!result) {
+		delete newVar;
+		return FALSE;
 	}
 
-	if (left->GetClass()->IsFloat()) {
-		left->GetName().Format("%.4f",
-			left->GetVariable()->v.intValue);
+	Buffer newName;
+
+	if (newVar->GetClass()->IsInt()) {
+		newName.Format("%lld",
+			newVar->GetVariable()->v.intValue);
+	}
+	else if (newVar->GetClass()->IsFloat()) {
+		newName.Format("%.4f",
+			newVar->GetVariable()->v.intValue);
+	}
+	else if (newVar->GetClass()->IsString()) {
+		newName = newVar->GetVariable()->stringValue;
 	}
 
-	if (left->GetClass()->IsString()) {
-		left->GetName() = left->GetVariable()->stringValue;
-	}
+	NodePtr newNode = new Node(
+		*left->GetNode());
 
-	if (left->GetNode()) {
-		left->GetNode()->word = left->GetName();
-	}
+	newVar->GetName() = newName;
+	newVar->SetNode(newNode);
+	newVar->GetNode()->word = newName;
+
+	this->nodeList.push_back(newNode);
+	left->Root()->Add(newVar);
+	left->SetNode(newNode);
+	newNode->var = newVar;
 
 	return result;
 }

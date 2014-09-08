@@ -26,6 +26,7 @@ public:
 public:
 	Void Build(NodePtr rootNode, ScopePtr rootScope);
 private:
+	Void _ForEachClassStatic(NodePtr n);
 	Void _ForEachNodeTrace(NodePtr n);
 	Void _ForEachModificatorSet(NodePtr n);
 	Void _ForEachNodeFind(NodePtr n);

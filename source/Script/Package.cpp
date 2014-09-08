@@ -21,6 +21,7 @@ Package::~Package() {
 
 Void Package::Register(NodePtr node) {
 
+	FileParserPtr fileParser = node->GetBuilder()->GetParser();
 	NodePtr nextNode = node->next;
 
 	while (nextNode) {
@@ -33,6 +34,22 @@ Void Package::Register(NodePtr node) {
 
 		nextNode = nextNode->next;
 	}
+
+	List<Buffer> dirList = this->packagePath.Split('/');
+
+	if (!File::ChangeDirectory(fileParser->GetPath().data())) {
+		PostSyntaxError(node->lex->line, "Unable to find path (%s)",
+			fileParser->GetPath().data());
+	}
+
+	for (BufferRefC b : dirList) {
+		if (!File::ChangeDirectory("..")) {
+			PostSyntaxError(node->lex->line, "Unable to find directory (%s)",
+				b.data());
+		}
+	}
+
+	this->packagePath = File::GetCurrentDirectory();
 }
 
 PackagePtr Package::Import(NodePtr node) {
@@ -64,7 +81,7 @@ PackagePtr Package::Import(NodePtr node) {
 
 		try {
 			fileList = Directory::GetFiles(filePath.data(),
-				FALSE, "lame");
+				FALSE, "java");
 		}
 		catch (...) {
 			PostSyntaxError(node->lex->line, "Unable to open directory (%s)",
@@ -104,7 +121,7 @@ PackagePtr Package::Import(NodePtr node) {
 		this->parserList.insert(fileParser);
 		this->syntaxList.insert(syntaxBuilder);
 
-		Buffer fileName = filePath + classNode->word + ".lame";
+		Buffer fileName = filePath + classNode->word + ".java";
 
 		try {
 			fileParser->Load(fileName);

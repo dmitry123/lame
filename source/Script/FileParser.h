@@ -34,9 +34,17 @@ public:
 	inline Deque<LexNodePtr>& GetLexList() {
 		return this->lexList;
 	}
+public:
+	inline Buffer GetName()      { return this->fileName;      }
+	inline Buffer GetPath()      { return this->filePath;      }
+	inline Buffer GetExtension() { return this->fileExtension; }
+	inline Buffer GetText()      { return this->fileText;      }
 private:
 	Deque<LexNodePtr> lexList;
 	Buffer fileText;
+	Buffer filePath;
+	Buffer fileName;
+	Buffer fileExtension;
 };
 
 LAME_END2

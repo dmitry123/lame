@@ -64,6 +64,7 @@ public:
 	static ClassPtr classObject;
 	static ClassPtr classClass;
 	static ClassPtr classUnknown;
+	static ClassPtr classArray;
 private:
 	HashMap hashMap_;
 	StringMap stringMap_;

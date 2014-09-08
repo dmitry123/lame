@@ -114,6 +114,7 @@ typedef enum {
 	kScriptLexCase,
 	kScriptLexPackage,
 	kScriptLexImport,
+	kScriptLexGoto,
 	/* Count Of Lexes */
 	kScriptLexAmount
 } LexID;
