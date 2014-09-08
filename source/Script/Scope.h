@@ -13,9 +13,6 @@ public:
 	typedef Map<Hashable64::HashType, ObjectPtr> HashMap;
 	typedef Map<Buffer, ObjectPtr> StringMap;
 public:
-    typedef Void(*OnScopeUpdate)(
-        ScopePtr scope, ObjectPtr object);
-public:
 	ObjectPtr Add(ObjectPtr object);
 	Void Remove(ObjectPtr var);
 	ObjectPtr Find(Hash hash, Bool withDepth = TRUE, Uint32 objectType = FALSE);
@@ -42,9 +39,6 @@ public:
 
 		return result;
 	}
-public:
-    inline Void SetOnScopeUpdate(OnScopeUpdate callback) { this->callback_ = callback; }
-    inline OnScopeUpdate GetOnScopeUpdate() { return this->callback_; }
 public:
 	inline HashMap&   GetHashMap() { return this->hashMap_;     }
 	inline ScopePtr   GetParent()  { return this->parentScope_; }
@@ -79,7 +73,6 @@ private:
 	Set<ObjectPtr> variableSet_;
 	Set<ObjectPtr> classSet_;
 	Buffer scopeName_;
-    OnScopeUpdate callback_;
 	ScopePtr ownerScope_;
 };
 

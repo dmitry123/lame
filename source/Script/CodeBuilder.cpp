@@ -393,9 +393,6 @@ Void CodeBuilder::_Binary(NodePtr n) {
 		if (leftVar->GetClass()->Hash() != rightVar->GetClass()->Hash()) {
 			this->_Cast(rightVar, sourceVar->GetClass());
 		}
-
-		rightVar->wasInStack = FALSE;
-		sourceVar->wasInStack = FALSE;
 	}
 
 	if (leftVar->CheckModificator(Object::Modificator::Constant) &&

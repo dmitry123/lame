@@ -11,7 +11,6 @@ public:
     VariablePtr Pop(Void);
 	Void Clear(Void);
 	Void Return(VariablePtr var);
-	Void Release(Void);
 public:
     inline VariablePtr Back() {
         return this->varList.back();
@@ -36,7 +35,6 @@ public:
 private:
     Vector<VariablePtr> varList;
     Vector<NodePtr> nodeList;
-	Vector<VariablePtr> varHistory;
 };
 
 LAME_END2

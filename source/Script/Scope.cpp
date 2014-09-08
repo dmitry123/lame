@@ -1,9 +1,5 @@
 #include "Scope.h"
-#include "Lex.h"
 #include "Object.h"
-#include "Class.h"
-#include "Method.h"
-#include "Variable.h"
 
 #include <utility>
 
@@ -18,7 +14,7 @@ ObjectPtr Scope::Add(ObjectPtr object) {
 		PostSyntaxError(0, "Reserved name (%s)", object->GetName().data());
 	}
 
-#if 0
+#if 0 /* Fix for Java scope */
 	if (this->Find(object->GetName())) {
 		return LAME_NULL;
 	}
@@ -42,10 +38,6 @@ ObjectPtr Scope::Add(ObjectPtr object) {
 	}
 
 	object->ownerScope_ = this;
-
-	if (this->callback_) {
-		this->callback_(this, object);
-	}
 
 	return object;
 }
@@ -260,7 +252,6 @@ Scope::Scope(BufferRefC name, ScopePtr parent) {
 	this->parentScope_ = parent;
 	this->isOwner_ = TRUE;
 	this->ownerScope_ = NULL;
-	this->callback_ = NULL;
 }
 
 Scope::~Scope() {

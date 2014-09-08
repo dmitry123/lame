@@ -20,10 +20,6 @@ VariablePtr StackVar::Pop(Void) {
 	this->varList.pop_back();
 	this->nodeList.pop_back();
 
-	if (var) {
-		var->wasInStack = FALSE;
-	}
-
 	return var;
 }
 
@@ -32,27 +28,10 @@ Void StackVar::Clear() {
 	while (this->Size()) {
 		this->Pop();
 	}
-	this->Release();
 }
 
 Void StackVar::Return(VariablePtr var) {
-
-	this->varHistory.push_back(var);
 	this->Push(var);
-
-	if (var) {
-		var->wasInStack = TRUE;
-	}
-}
-
-Void StackVar::Release(Void) {
-
-	for (VariablePtr var : this->varHistory) {
-		if (var) {
-			var->wasInStack = FALSE;
-		}
-	}
-	this->varHistory.clear();
 }
 
 LAME_END2

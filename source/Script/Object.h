@@ -121,18 +121,23 @@ public: /* Inline Getters */
 	inline Uint32     GetPosition()   const { return this->position_; }
 	inline Uint32     GetFieldID()    const { return this->fieldId_;  }
 	inline ObjectPtr  GetThis()       const { return this->this_;     }
-private: /* Private Variables */
-	Uint32     modificators_;
-	SegmentPtr segment_;
-	Uint32     address_;
-	Uint32     size_;
-	ClassPtr   template_;
-	NodePtr    node_;
-	Uint32     position_;
-	Uint32     fieldId_;
-	ObjectPtr  this_;
 public:
-	Bool wasInStack;
+	typedef Void(*OnScopeUpdate)(
+		ScopePtr scope, ObjectPtr object);
+private: /* Private Variables */
+	Uint32        modificators_;
+	SegmentPtr    segment_;
+	Uint32        address_;
+	Uint32        size_;
+	ClassPtr      template_;
+	NodePtr       node_;
+	Uint32        position_;
+	Uint32        fieldId_;
+	ObjectPtr     this_;
+	OnScopeUpdate callback_;
+public:
+	inline Void SetOnScopeUpdate(OnScopeUpdate callback) { this->callback_ = callback; }
+	inline OnScopeUpdate GetOnScopeUpdate() { return this->callback_; }
 public:
 	enum {
 		SizeOf = 8

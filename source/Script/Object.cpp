@@ -42,13 +42,12 @@ Object::Object(BufferRefC name, ScopePtr parent, Type type) :
 	this->template_ = NULL;
 	this->node_ = NULL;
 	this->this_ = NULL;
+	this->callback_ = NULL;
 
 	this->modificators_ = 0;
 	this->address_ = -1;
 	this->size_ = 0;
 	this->position_ = 0;
-
-	this->wasInStack = FALSE;
 }
 
 ObjectPtr Object::SetModificator(Modificator modificator, Bool state) {
@@ -57,7 +56,9 @@ ObjectPtr Object::SetModificator(Modificator modificator, Bool state) {
 		this->modificators_ |=  (Uint32)modificator :
 		this->modificators_ &= ~(Uint32)modificator;
 
-	//this->Notify(TRUE);
+	if (this->callback_) {
+		this->callback_(this->GetOwner(), this);
+	}
 
 	return this;
 }

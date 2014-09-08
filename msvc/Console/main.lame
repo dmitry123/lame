@@ -1,6 +1,7 @@
 import Test.*;
 
-
+class Test1 {
+}
 
 // class MouseEvent {
 
