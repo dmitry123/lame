@@ -1,9 +1,6 @@
-class A extends Object {}
-class B extends A {}
-class C extends B {}
+import Test.*;
 
-class D <T> {}
-class E <T> {}
+
 
 // class MouseEvent {
 

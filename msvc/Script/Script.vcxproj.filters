@@ -72,6 +72,9 @@
     <ClCompile Include="..\..\source\Script\Package.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\Script\GlobalScope.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\Script\Variable.h">
@@ -138,6 +141,9 @@
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Script\Package.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Script\GlobalScope.h">
       <Filter>source</Filter>
     </ClInclude>
   </ItemGroup>

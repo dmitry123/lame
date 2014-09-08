@@ -27,10 +27,8 @@ public:
 	Void Clear(Void);
 	Void Trace(Uint32 offset);
 	Uint32 Size(Void);
-	Void Update(ObjectPtr object);
 	ScopePtr Root(Void);
 	Buffer Path(Void);
-	Void Flush(Void);
 public:
 	template <class F> inline Set<ObjectPtr> Filter(F f) {
 
@@ -53,18 +51,11 @@ public:
 	inline BufferRefC GetName()    { return this->scopeName_;   }
 	inline ScopePtr   GetOwner()   { return this->ownerScope_;  }
 public:
-	inline Set<ObjectPtr>& GetPublicSet() { return this->publicSet_; }
-	inline Set<ObjectPtr>& GetStaticSet() { return this->staticSet_; }
 	inline Set<ObjectPtr>& GetMethodSet() { return this->methodSet_; }
-	inline Set<ObjectPtr>& GetVariableSet() { return this->variableSet_; }
 	inline Set<ObjectPtr>& GetClassSet() { return this->classSet_; }
-	inline Set<ObjectPtr>& GetConditionSet() { return this->conditionSet_; }
 public:
 	Scope(BufferRefC name, ScopePtr parent);
 	~Scope();
-public:
-	static ScopePtr CreateRootScope(
-		Buffer name = "", Bool asClass = FALSE);
 public:
 	static ClassPtr classChar;
 	static ClassPtr classByte;
@@ -84,12 +75,9 @@ private:
 	StringMap stringMap_;
 	Bool isOwner_;
 	ScopePtr parentScope_;
-	Set<ObjectPtr> publicSet_;
-	Set<ObjectPtr> staticSet_;
 	Set<ObjectPtr> methodSet_;
 	Set<ObjectPtr> variableSet_;
 	Set<ObjectPtr> classSet_;
-	Set<ObjectPtr> conditionSet_;
 	Buffer scopeName_;
     OnScopeUpdate callback_;
 	ScopePtr ownerScope_;

@@ -40,11 +40,12 @@ PackagePtr Package::Import(NodePtr node) {
 	NodePtr nextNode = node->next;
 	PackagePtr package = NULL;
 	NodePtr classNode = NULL;
+	Buffer filePath;
 
 	while (nextNode) {
 
 		if (nextNode->next) {
-			this->packagePath.append(nextNode->word + "/");
+			filePath.append(nextNode->word + "/");
 		}
 		else {
 			classNode = nextNode;
@@ -57,17 +58,17 @@ PackagePtr Package::Import(NodePtr node) {
 
 		List<Buffer> fileList;
 
-		if (this->packagePath.back() == '/') {
-			this->packagePath.pop_back();
+		if (filePath.back() == '/') {
+			filePath.pop_back();
 		}
 
 		try {
-			fileList = Directory::GetFiles(this->packagePath.data(),
+			fileList = Directory::GetFiles(filePath.data(),
 				FALSE, "lame");
 		}
 		catch (...) {
-			PostSyntaxError(node->lex->line, "Unable to load directory (%s)",
-				this->packagePath.data());
+			PostSyntaxError(node->lex->line, "Unable to open directory (%s)",
+				filePath.data());
 		}
 
 		for (BufferRefC file : fileList) {
@@ -103,7 +104,7 @@ PackagePtr Package::Import(NodePtr node) {
 		this->parserList.insert(fileParser);
 		this->syntaxList.insert(syntaxBuilder);
 
-		Buffer fileName = this->packagePath + classNode->word + ".lame";
+		Buffer fileName = filePath + classNode->word + ".lame";
 
 		try {
 			fileParser->Load(fileName);
@@ -124,10 +125,6 @@ PackagePtr Package::Import(NodePtr node) {
 	}
 
 	return NULL;
-}
-
-Void Package::Remove(PackagePtr package) {
-
 }
 
 LAME_END2

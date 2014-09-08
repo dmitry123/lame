@@ -82,17 +82,50 @@ private:
 		return this->fileParser->GetLexList().end();
 	}
 private:
-	inline Bool _IsArray(Iterator i)     { return this->sequenceMatcher.Match(kScriptLexSequenceArray,     i, this->_End()); }
-	inline Bool _IsArguments(Iterator i) { return this->sequenceMatcher.Match(kScriptLexSequenceArguments, i, this->_End()); }
-	inline Bool _IsTemplate(Iterator i)  { return this->sequenceMatcher.Match(kScriptLexSequenceTemplate,  i, this->_End()); }
-	inline Bool _IsCast(Iterator i)      { return this->sequenceMatcher.Match(kScriptLexSequenceCast,      i, this->_End()); }
-	inline Bool _IsMethod(Iterator i)    { return this->sequenceMatcher.Match(kScriptLexSequenceMethod,    i, this->_End()); }
-	inline Bool _IsVariable(Iterator i)  { return this->sequenceMatcher.Match(kScriptLexSequenceVariable,  i, this->_End()); }
-	inline Bool _IsInvoke(Iterator i)    { return this->sequenceMatcher.Match(kScriptLexSequenceInvoke,    i, this->_End()); }
-	inline Bool _IsAlloc(Iterator i)     { return this->sequenceMatcher.Match(kScriptLexSequenceAlloc,     i, this->_End()); }
-	inline Bool _IsNew(Iterator i)       { return this->sequenceMatcher.Match(kScriptLexSequenceNew,       i, this->_End()); }
-	inline Bool _IsStatic(Iterator i)    { return this->sequenceMatcher.Match(kScriptLexSequenceStatic,    i, this->_End()); }
-	inline Bool _IsSuper(Iterator i)     { return this->sequenceMatcher.Match(kScriptLexSequenceSuper,     i, this->_End()); }
+	inline Bool _IsArray(Iterator i) {
+		return this->sequenceMatcher.Match(
+			kScriptLexSequenceArray, i, this->_End());
+	}
+	inline Bool _IsArguments(Iterator i) {
+		return this->sequenceMatcher.Match(
+			kScriptLexSequenceArguments, i, this->_End());
+	}
+	inline Bool _IsTemplate(Iterator i)  {
+		return this->sequenceMatcher.Match(
+			kScriptLexSequenceTemplate, i, this->_End());
+	}
+	inline Bool _IsCast(Iterator i) {
+		return this->sequenceMatcher.Match(
+			kScriptLexSequenceCast, i, this->_End());
+	}
+	inline Bool _IsMethod(Iterator i) {
+		return this->sequenceMatcher.Match(
+			kScriptLexSequenceMethod, i, this->_End());
+	}
+	inline Bool _IsVariable(Iterator i) {
+		return this->sequenceMatcher.Match(
+			kScriptLexSequenceVariable, i, this->_End());
+	}
+	inline Bool _IsInvoke(Iterator i) {
+		return this->sequenceMatcher.Match(
+			kScriptLexSequenceInvoke, i, this->_End());
+	}
+	inline Bool _IsAlloc(Iterator i) {
+		return this->sequenceMatcher.Match(
+			kScriptLexSequenceAlloc, i, this->_End());
+	}
+	inline Bool _IsNew(Iterator i) {
+		return this->sequenceMatcher.Match(
+			kScriptLexSequenceNew, i, this->_End());
+	}
+	inline Bool _IsStatic(Iterator i) {
+		return this->sequenceMatcher.Match(
+			kScriptLexSequenceStatic, i, this->_End());
+	}
+	inline Bool _IsSuper(Iterator i) {
+		return this->sequenceMatcher.Match(
+			kScriptLexSequenceSuper, i, this->_End());
+	}
 private:
 	SequenceMatcher sequenceMatcher;
 	Uint32 modificatorFlags;

@@ -552,8 +552,6 @@ Void ScopeBuilder::_ForEachClassInherit(NodePtr n) {
 		n->var->GetClass()->Implement(extendClass);
 	}
 
-	n->var->Flush();
-
 	for (ObjectPtr m : n->var->GetMethodSet()) {
 		m->GetMethod()->SetThis(n->var);
 		for (NodePtr n2 : n->var->GetNode()->blockList) {
@@ -579,8 +577,6 @@ Void ScopeBuilder::_ForEachInterfaceInherit(NodePtr n) {
 		}
 		n->var->GetClass()->Implement(typeClass->GetInterface());
 	}
-
-	n->var->Flush();
 
 	for (ObjectPtr m : n->var->GetMethodSet()) {
 		m->GetMethod()->SetThis(n->var);
@@ -864,28 +860,25 @@ Void ScopeBuilder::_ForEachConstruction(NodePtr n) {
 			->SetModificator(Object::Modificator::Construction);
 
 		n->var->SetNode(n);
-		n->parent->var->GetConditionSet().insert(n->var);
 		lastVar = n->var->GetClass();
 		n->var->SetNode(n);
 	}
 }
 
 Void ScopeBuilder::_ForEachCheckInheritance(NodePtr n) {
-    
-    if (n->var) {
-        if (n->var->CheckType(Object::Type::Class) ||
-            n->var->CheckType(Object::Type::Interface)
-        ) {
-            n->var->GetClass()->CheckInheritance();
-        }
-    }
+
+	if (n->var) {
+		if (n->var->CheckType(Object::Type::Class) ||
+			n->var->CheckType(Object::Type::Interface)
+		) {
+			n->var->GetClass()->CheckInheritance();
+		}
+	}
 }
 
 Void ScopeBuilder::_ForEachNodeFlush(NodePtr n) {
 
-    if (n->var) {
-
-        n->var->Flush();
+	if (n->var) {
 
 		/*	There is a problem with scope's path
 		which has been declared in temporary scope,

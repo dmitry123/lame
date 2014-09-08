@@ -18,5 +18,6 @@
 #include "Segment.h"
 #include "StackVar.h"
 #include "Variable.h"
+#include "GlobalScope.h"
 
 #endif // ~__LAME_SCRIPT__

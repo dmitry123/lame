@@ -7,7 +7,6 @@ LAME_BEGIN2(Script)
 
 class LAME_API Object :
 	public Hashable64,
-	//public Observable<Object>,
 	public Scope
 {
 	friend class Segment;

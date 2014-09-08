@@ -11,7 +11,6 @@ public:
 public:
 	Void Register(NodePtr node);
 	PackagePtr Import(NodePtr node);
-	Void Remove(PackagePtr package);
 public:
 	inline Set<PackagePtr>& GetPackages() {
 		return this->packageSet;

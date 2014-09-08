@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
 		time = Time::GetTime();
 
 		/* Initialize root scope */
-		rootScope = Scope::CreateRootScope(
+		rootScope = GlobalScope::CreateScope(
 			"Main", FALSE);
 
 		/* Load, parse file and build syntax tree */
