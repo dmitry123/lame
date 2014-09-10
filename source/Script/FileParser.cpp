@@ -24,6 +24,7 @@ static LexPtrC _ParseLex(StringC* wordPtr, Buffer* name, Uint32 line, Bool isCom
 	Buffer lexWord;
 	LexPtr lex = LAME_NULL;
 	Bool isWord;
+    Bool isDigit;
 
 	if (!isCommentLock && (*word == '\"' || *word == '\'')) {
 
@@ -60,7 +61,7 @@ static LexPtrC _ParseLex(StringC* wordPtr, Buffer* name, Uint32 line, Bool isCom
 		goto __Return;
 	}
 
-	Bool isDigit = FileParser::IsDigit(*word) ||
+	isDigit = FileParser::IsDigit(*word) ||
 		*word == '.';
 
 	if (FileParser::IsFloatValue(word) && isDigit) {

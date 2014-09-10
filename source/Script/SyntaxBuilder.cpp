@@ -140,15 +140,16 @@ SyntaxBuilder::Iterator SyntaxBuilder::If(NodePtr& node, Iterator i) {
 		}
 	}
 
-	__Inc(i);
-
-	if ((*i)->lex->id == kScriptLexElse) {
-		node->elseNode = this->_Create(i);
-		i = this->Else(node->elseNode, i);
-		this->parentNode = this->parentNode->parent;
-	}
-	else {
-		__Dec(i);
+	if (i + 1 != this->_End()) {
+		__Inc(i);
+		if ((*i)->lex->id == kScriptLexElse) {
+			node->elseNode = this->_Create(i);
+			i = this->Else(node->elseNode, i);
+			this->parentNode = this->parentNode->parent;
+		}
+		else {
+			__Dec(i);
+		}
 	}
 
 	return i;
@@ -1241,7 +1242,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::Switch(NodePtr& node, Iterator i) {
 			if ((*i)->lex->id == kScriptLexBreak) {
 				if (caseNode->parent->lex->lex->id == kScriptLexSwitch) {
 					if (switchNode->switchInfo.hasBreak) {
-						PostSyntaxError((*i)->line, "Unreachable statement");
+						PostSyntaxError((*i)->line, "Unreachable statement", 0);
 					}
 					switchNode->switchInfo.hasBreak = TRUE;
 				}
@@ -1491,7 +1492,7 @@ NodePtr SyntaxBuilder::_Remove(NodePtr node) {
 	}
 
 	for (NodePtr n : node->blockList) {
-		n = this->_Remove(n);
+		this->_Remove(n);
 	}
 	node->blockList.clear();
 
@@ -1684,6 +1685,10 @@ Void SyntaxBuilder::_Order(NodePtr node) {
 	}
 	for (NodePtr n : node->forInfo.nextList) {
 		this->_Order(n);
+	}
+
+	if (node->elseNode) {
+		this->_Order(node->elseNode);
 	}
 }
 

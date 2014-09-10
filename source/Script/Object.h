@@ -58,6 +58,10 @@ public:
 		ScopePtr   parent,
 		/* Class type */
 		Type       type);
+public:
+    virtual ~Object() {
+        /* Default */
+    }
 public: /* Strict Virtual Methods */
 	virtual Bool Equal(ObjectPtrC object) = 0;
 	virtual ObjectPtr Clone(BufferRefC name, ObjectPtr parent) = 0;

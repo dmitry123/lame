@@ -55,7 +55,6 @@ Void Package::Register(NodePtr node) {
 PackagePtr Package::Import(NodePtr node) {
 
 	NodePtr nextNode = node->next;
-	PackagePtr package = NULL;
 	NodePtr classNode = NULL;
 	Buffer filePath;
 

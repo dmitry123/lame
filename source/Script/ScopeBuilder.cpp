@@ -79,6 +79,10 @@ static Bool _MoveNode(NodePtr node, Bool strict = FALSE) {
 	}
 
 _Seek:
+	if (node->elseNode) {
+		_MoveNode(node->elseNode);
+	}
+
 	if (node->id == kScriptNodeCondition) {
 		for (NodePtr n : node->argList) {
 			if (_MoveNode(n)) {
@@ -120,7 +124,7 @@ _Again4:
 	for (NodePtr n : node->switchInfo.caseList) {
 	_Again5:
 		for (NodePtr n2 : n->blockList) {
-			if (_MoveNode(n)) {
+			if (_MoveNode(n2)) {
 				goto _Again5;
 			}
 		}
@@ -438,8 +442,6 @@ Void ScopeBuilder::_ForEachClassDeclare(NodePtr n) {
 		n->var = _FindClass(scope, n->typeNode);
 	}
 
-	classVar = n->var->GetClass();
-
 	if (!n->var) {
 		PostSyntaxError(n->lex->line, "Undeclared class (%s)", n->typeNode->word.data());
 	}
@@ -722,7 +724,7 @@ Void ScopeBuilder::_ForEachMethodDeclare(NodePtr n) {
 	) {
 	_DeclareError:
 		PostSyntaxError(n->lex->line, "Unable to declare method in non-class scope %s/%s(%s)",
-			this->scope->GetName().data(), n->word.data(), method->GetFormattedArguments());
+			this->scope->GetName().data(), n->word.data(), method->GetFormattedArguments().data());
 	}
 
 	if (!(methodObject = scope->Add(method))) {
@@ -836,8 +838,8 @@ Void ScopeBuilder::_ForEachConstruction(NodePtr n) {
 		}
 
 		if (n->lex->lex->id == kScriptLexElse) {
-			if (!lastVar->GetNode() || lastVar->GetNode()->lex->lex->id != kScriptLexIf &&
-				lastVar->GetNode()->lex->lex->id != kScriptLexElse
+			if (!lastVar->GetNode() || (lastVar->GetNode()->lex->lex->id != kScriptLexIf &&
+				lastVar->GetNode()->lex->lex->id != kScriptLexElse)
 			) {
 				PostSyntaxError(n->lex->line, "Else must have If block (%s)", lastVar->GetName().data());
 			}
@@ -979,6 +981,9 @@ Void ScopeBuilder::_ForEachNode(NodePtr node, ScopePtr scope, ForEachNode callba
 		) {
 			callback(node->typeNode);
 		}
+	}
+	if (node->elseNode) {
+		_ForEachNode(node->elseNode, scope, callback, id);
 	}
 
 	if (node->id == kScriptNodeClass ||

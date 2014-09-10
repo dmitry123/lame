@@ -5,7 +5,7 @@ LAME_BEGIN2(Script)
 Void CodeNode::_Defaults() {
 
 	this->line = this->node->lex->line;
-	this->args = this->method->GetAttributeHash().size();
+	this->args = (Uint32)this->method->GetAttributeHash().size();
 	this->locals = 0;
 }
 

@@ -202,7 +202,7 @@ ObjectPtr Variable::Clone(BufferRefC name, ObjectPtr parent) {
 
 Void Variable::Trace(Uint32 offset) {
 
-	printf(this->GetModificatorString().data());
+	printf("%s", this->GetModificatorString().data());
 
 	if (this->GetClass()) {
 		if (this->GetName().size() > 0) {

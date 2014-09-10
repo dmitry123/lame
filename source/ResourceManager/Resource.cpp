@@ -38,7 +38,6 @@ Bool Resource::Load(StringC fileName) {
 		}
 
 		this->resourceLoader_.audioLoader_->Load(fileName);
-
 	}
 	else if (resourceType.IsTexture()) {
 

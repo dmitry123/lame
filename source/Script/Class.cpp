@@ -183,7 +183,7 @@ Void Class::Implement(ObjectPtr object) {
 
 		if (!object || !object->CheckType(Type::Interface)) {
 			PostSyntaxError(this->GetNode()->lex->line, "Class can only implement interfaces (%s)",
-				object->GetName().data());
+                object ? object->GetName().data() : "NULL");
 		}
 
 		this->implementClass.insert(object);

@@ -6,8 +6,6 @@ using namespace Lame::ResourceManager;
 using namespace Lame::Script;
 using namespace Lame;
 
-#include <Windows.h>
-
 int main(int argc, char** argv) {
     
 #ifdef LAME_VLD
@@ -16,12 +14,10 @@ int main(int argc, char** argv) {
 
 	StringC fileName;
 	Clock time;
-
+    
 	fileName = argc > 1 ?
 		argv[1] : "main.lame";
-
-	//fileName = "d:\\code\\C++\\Projects\\Lame\\java\\com\\sun\\image\\codec\\jpeg\\JPEGHuffmanTable.java";
-
+    
     SyntaxBuilder syntaxBuilder;
     FileParser fileParser;
     ScopeBuilder scopeBuilder;
@@ -32,7 +28,7 @@ int main(int argc, char** argv) {
     NodePtr rootNode;
 	CodeBuilder codeBuilder;
 	Package packageManager;
-
+    
 	try {
 		/* Launch timer */
 		time = Time::GetTime();
@@ -50,7 +46,7 @@ int main(int argc, char** argv) {
 
 		/* Get syntax's root node */
 		rootNode = syntaxBuilder.GetRootNode();
-
+        
 		/* Run scope and code builders */
 		scopeBuilder.Build(rootNode, rootScope);
 		codeBuilder.Build(&syntaxBuilder, rootScope);
@@ -58,10 +54,10 @@ int main(int argc, char** argv) {
 		/* Trace root scope */
 		rootScope->Trace(0);
 
+		printf("\n\n");
 		for (NodePtr n : rootNode->blockList) {
 			printf("[%s] ", n->word.data());
 		}
-
 		printf("\n");
 
 #if 0

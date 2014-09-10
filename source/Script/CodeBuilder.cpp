@@ -85,7 +85,7 @@ Void CodeBuilder::_Run(NodeListRef nodeList, Bool makeBackup) {
 		stackBackup = this->variableStack;
 	}
 
-	Uint32 listLength = this->nodeList.size();
+	Uint32 listLength = (Uint32)this->nodeList.size();
 
 	for (NodePtr n : nodeList) {
 
@@ -431,6 +431,11 @@ Void CodeBuilder::_Binary(NodePtr n) {
 	VariablePtr sourceVar;
 	VariablePtr leftVar;
 	VariablePtr rightVar;
+    
+    if (n->lex->args != 2) {
+        throw ScriptException("Unable to perform non-binary operator (%s)",
+            n->word.data());
+    }
 
 	this->_Read(n, leftVar, rightVar);
 
@@ -877,7 +882,7 @@ Void CodeBuilder::_Condition(NodePtr n) {
 		}
 
 		if (var0->CheckModificator(Object::Modificator::Constant)) {
-			if (var0->v.intValue = TRUE) {
+			if (var0->v.intValue == TRUE) {
 				this->_Run(n->blockList, TRUE);
 				if (n->elseNode) {
 					n->elseNode->blockList.clear();
@@ -1218,8 +1223,7 @@ Void CodeBuilder::_Return(NodePtr n) {
 	if (n->lex->args > 0) {
 		this->_Read(n, returnVar, returnVar);
 	}
-
-	returnType = methodVar->GetReturnType();
+    
 	methodVar->returnVar = returnVar;
 
 	if (returnVar) {

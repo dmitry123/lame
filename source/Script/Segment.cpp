@@ -2,7 +2,6 @@
 
 LAME_BEGIN2(Script)
 
-static Uint32 ZeroByte32 = -1;
 static Uint64 ZeroByte64 = -1;
 
 Segment::Segment(StringC name) :

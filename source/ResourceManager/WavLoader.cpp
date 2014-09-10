@@ -16,10 +16,10 @@ typedef unsigned int   dword;
 
 #pragma pack(push, 1)
 typedef struct {
-    byte riffSig[4];
+    byte riffSig[5];
     dword size;
-    byte waveSig[4];
-    byte fmtSig[4];
+    byte waveSig[5];
+    byte fmtSig[5];
     dword chunkSize;
     word formatType;
     word chanels;

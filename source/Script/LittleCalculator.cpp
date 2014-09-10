@@ -78,7 +78,6 @@ Bool LittleCalculator::_Unary(VariablePtr left) {
 
 	Bool isFloat = left->GetClass()->IsFloatLike();
 	Bool isInt = left->GetClass()->IsIntegerLike();
-	Bool isString = left->GetClass()->IsString();
 
 	switch (this->GetNode()->lex->lex->id) {
 	case kScriptLexBitNot:

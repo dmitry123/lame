@@ -399,7 +399,7 @@ static List <Buffer> __FindContainingFilesAtPath(StringC path, StringC name, Str
 	while (dir.Next()) {
 		if (extensions) {
 			Bool state = LAME_FALSE;
-			for (const Buffer& ext_ : extList) {
+			for (BufferRefC ext_ : extList) {
 				if (strcasecmp(File::GetFileExtension(dir.GetLast()), ext_.data()) == 0) {
 					state = LAME_TRUE;
 				}
