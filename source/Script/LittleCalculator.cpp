@@ -12,6 +12,7 @@ LittleCalculator::~LittleCalculator() {
 
 Bool LittleCalculator::Compute(NodePtr node, ObjectPtr left, ObjectPtr right) {
 
+	ObjectPtr newVar;
 	Bool result;
 
 	if (!left) {
@@ -30,8 +31,9 @@ Bool LittleCalculator::Compute(NodePtr node, ObjectPtr left, ObjectPtr right) {
 
 	this->currentNode = node;
 
-	ObjectPtr newVar = left->Clone(left->GetName(),
-		ObjectPtr(left->GetParent()))->GetVariable();
+	do {
+		newVar = left->Clone("", ObjectPtr(left->GetParent()))->GetVariable();
+	} while (!left->Root()->Add(newVar));
 
 	if (left && right) {
 		result = this->_Binary(newVar->GetVariable(), right->GetVariable());
@@ -41,7 +43,6 @@ Bool LittleCalculator::Compute(NodePtr node, ObjectPtr left, ObjectPtr right) {
 	}
 
 	if (!result) {
-		delete newVar;
 		return FALSE;
 	}
 
@@ -62,12 +63,10 @@ Bool LittleCalculator::Compute(NodePtr node, ObjectPtr left, ObjectPtr right) {
 	NodePtr newNode = new Node(
 		*left->GetNode());
 
-	newVar->GetName() = newName;
 	newVar->SetNode(newNode);
 	newVar->GetNode()->word = newName;
 
 	this->nodeList.push_back(newNode);
-	left->Root()->Add(newVar);
 	left->SetNode(newNode);
 	newNode->var = newVar;
 

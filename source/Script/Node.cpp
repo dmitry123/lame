@@ -186,6 +186,7 @@ Node::Node(Buffer word, NodeID id, LexNodePtr lex, NodePtr parent, NodePtr prev)
 	this->depth = 0;
 	this->switchInfo.hasBreak = FALSE;
 	this->syntaxBuilder = NULL;
+	this->finalNode = NULL;
 }
 
 Void Node::ShuntingYard(Void) {

@@ -1,7 +1,3 @@
-int value = 100 + 20 + 3;
-
-if (false) {
-	int z = 100;
-} else {
-	int k = 200;
-}
+do {
+	int value = (100 + 20) * 3;
+} while (false);

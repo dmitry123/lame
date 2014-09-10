@@ -161,20 +161,33 @@ ScriptNativeString Variable::GetString(Void) {
 
 Bool Variable::Equal(ObjectPtrC object) {
 
+	if (!this->CheckModificator(Object::Modificator::Constant) ||
+		!object->CheckModificator(Object::Modificator::Constant)
+	) {
+		return FALSE;
+	}
+
 	if (this == object) {
 		return TRUE;
 	}
+
 	if (this->GetType() != object->GetType() ||
 		this->varType != object->GetVariable()->varType ||
 		this->classType->Hash() != object->GetVariable()->classType->Hash()
-		) {
+	) {
 		return FALSE;
 	}
-	if (this->varType == Var::Integer) {
+
+	if (this->varType == Var::Integer ||
+		this->varType == Var::Boolean
+	) {
 		return this->v.intValue == object->GetVariable()->v.intValue;
 	}
 	else if (this->varType == Var::Float) {
 		return this->v.floatValue == object->GetVariable()->v.floatValue;
+	}
+	else if (this->varType == Var::String) {
+		return this->stringValue == object->GetVariable()->stringValue;
 	}
 	else {
 		return this->objectValue == object->GetVariable()->objectValue;

@@ -179,6 +179,9 @@ Void CodeBuilder::_Run(NodeListRef nodeList, Bool makeBackup) {
 		this->variableStack = stackBackup;
 	}
 
+	if (nodeList.empty()) {
+		return;
+	}
 	nodeList.clear();
 
 	auto it = this->nodeList.begin() + listLength;
@@ -195,31 +198,40 @@ Void CodeBuilder::_Run(NodeListRef nodeList, Bool makeBackup) {
 
 		NodePtr n = *(it + i);
 
-		if (n->lex->lex->id == kScriptLexIf && n->argList.size() == 1) {
-
+		switch (n->lex->lex->id) {
+		case kScriptLexWhile:
+			if (n->argList.size() != 1) {
+				break;
+			}
 			if ((var0 = n->argList.back()->var) &&
 				var0->CheckModificator(Object::Modificator::Constant)
 			) {
-				if (var0->GetVariable()->v.intValue) {
-					for (NodePtr n2 : n->blockList) {
-						nodeList.push_back(n2);
-					}
+				if (!var0->GetVariable()->v.intValue) {
+					continue;
 				}
-				else {
-					for (NodePtr n2 : n->elseNode->blockList) {
-						nodeList.push_back(n2);
-					}
-				}
-				continue;
 			}
+			break;
+		default:
+			if (!n->finalNode) {
+				break;
+			}
+			for (NodePtr n2 : n->finalNode->blockList) {
+				if (n->lex->lex->id == kScriptLexSwitch &&
+					n2->lex->lex->id == kScriptLexBreak
+				) {
+					continue;
+				}
+				nodeList.push_back(n2);
+			}
+			continue;
 		}
 
 		nodeList.push_back(n);
 	}
 
 	this->wasItCondition = FALSE;
-
 	listLength = this->nodeList.size() - listLength;
+
 	while (listLength--) {
 		this->nodeList.pop_back();
 	}
@@ -431,6 +443,7 @@ Void CodeBuilder::_Binary(NodePtr n) {
 	VariablePtr sourceVar;
 	VariablePtr leftVar;
 	VariablePtr rightVar;
+	Bool wasItConst;
     
     if (n->lex->args != 2) {
         throw ScriptException("Unable to perform non-binary operator (%s)",
@@ -469,6 +482,8 @@ Void CodeBuilder::_Binary(NodePtr n) {
 		}
 	}
 
+	wasItConst = FALSE;
+
 	if (leftVar->CheckModificator(Object::Modificator::Constant) &&
 		rightVar->CheckModificator(Object::Modificator::Constant)
 	) {
@@ -480,6 +495,8 @@ Void CodeBuilder::_Binary(NodePtr n) {
 
 			sourceVar = leftVar->GetNode()
 				->var->GetVariable();
+
+			wasItConst = TRUE;
 		}
 		else {
 			goto _SaveNode;
@@ -582,7 +599,19 @@ Void CodeBuilder::_Binary(NodePtr n) {
 #endif
 
 	if (n->lex->lex->IsBool()) {
-		this->variableStack.Return(VariablePtr(Scope::classBoolean));
+		if (wasItConst) {
+			if (sourceVar->v.intValue) {
+				this->variableStack.Return(sourceVar->Root()
+					->Find("true")->GetVariable());
+			}
+			else {
+				this->variableStack.Return(sourceVar->Root()
+					->Find("false")->GetVariable());
+			}
+		}
+		else {
+			this->variableStack.Return(VariablePtr(Scope::classBoolean));
+		}
 	}
 	else {
 		if (n->lex->lex->IsLeft()) {
@@ -854,11 +883,7 @@ Void CodeBuilder::_Selection(NodePtr n) {
 Void CodeBuilder::_Condition(NodePtr n) {
 
 	VariablePtr var0;
-
-	SegmentPtr blockSegment = NULL;
-	SegmentPtr currentSegment = NULL;
-
-	Deque<NodePtr>::iterator i;
+	VariablePtr var1;
 
 	this->wasItCondition = TRUE;
 
@@ -877,22 +902,20 @@ Void CodeBuilder::_Condition(NodePtr n) {
 			goto _BooleanError;
 		}
 
-		if (!var0->CheckModificator(Object::Modificator::Constant)) {
-			LAME_TODO("If var0");
-		}
-
 		if (var0->CheckModificator(Object::Modificator::Constant)) {
 			if (var0->v.intValue == TRUE) {
 				this->_Run(n->blockList, TRUE);
 				if (n->elseNode) {
 					n->elseNode->blockList.clear();
 				}
+				n->finalNode = n;
 			}
 			else {
 				n->blockList.clear();
 				if (n->elseNode) {
 					this->_Run(n->elseNode->blockList, TRUE);
 				}
+				n->finalNode = n->elseNode;
 			}
 		}
 		else {
@@ -900,6 +923,41 @@ Void CodeBuilder::_Condition(NodePtr n) {
 			if (n->elseNode) {
 				this->_Run(n->elseNode->blockList, TRUE);
 			}
+		}
+
+		break;
+	case kScriptLexSwitch:
+
+		this->_Run(n->argList, TRUE);
+
+		if (!this->lastResult) {
+			PostSyntaxError(n->lex->line, "Lost expression's result", 0)
+		}
+
+		var0 = this->lastResult;
+
+		for (NodePtr n2 : n->blockList) {
+
+			this->_Run(n2->argList, TRUE);
+
+			if (!this->lastResult) {
+				PostSyntaxError(n->lex->line, "Lost expression's result", 0)
+			}
+
+			var1 = this->lastResult;
+
+			if (!var1->CheckModificator(Object::Modificator::Constant)) {
+				PostSyntaxError(n2->lex->line, "Switch's case must be constant value/expression (%s)",
+					var1->GetName().data());
+			}
+
+			if (var0->CheckModificator(Object::Modificator::Constant)) {
+				if (!n->finalNode && var0->Equal(var1)) {
+					n->finalNode = n2;
+				}
+			}
+
+			this->_Run(n2->blockList, TRUE);
 		}
 
 		break;
@@ -933,8 +991,7 @@ Void CodeBuilder::_Condition(NodePtr n) {
 		break;
 	case kScriptLexDo:
 
-		this->_Run(n->blockList, TRUE);
-		this->_Run(n->argList, TRUE);
+		this->_Run(n->elseNode->argList, TRUE);
 
 		/* Read result */
 		if (!this->lastResult) {
@@ -946,6 +1003,14 @@ Void CodeBuilder::_Condition(NodePtr n) {
 		if (!var0->GetClass()->IsBooleanLike()) {
 			goto _BooleanError;
 		}
+
+		if (var0->CheckModificator(Object::Modificator::Constant)) {
+			if (!var0->GetVariable()->v.intValue) {
+				n->finalNode = n;
+			}
+		}
+
+		this->_Run(n->blockList, TRUE);
 
 		break;
 	case kScriptLexFor:

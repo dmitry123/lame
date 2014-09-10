@@ -203,13 +203,22 @@ SyntaxBuilder::Iterator SyntaxBuilder::Do(NodePtr& node, Iterator i) {
 
 	i = this->Else(node, i);
 
+	if (i + 1 == this->_End()) {
+		goto _Error;
+	}
+
 	__Inc(i);
 
 	if ((*i)->lex->id != kScriptLexWhile) {
+	_Error:
 		PostSyntaxError((*i)->line, "Lost (while) block after (do) construction before (%s)", (*i)->word.data());
 	}
 	else {
-		__Dec(i);
+		node->elseNode = this->_Create(i);
+		i = this->While(node->elseNode, i);
+		if ((*i)->lex->id != kScriptLexSemicolon) {
+			PostSyntaxError((*i)->line, "Lost semicolon", 0);
+		}
 	}
 
 	return i;

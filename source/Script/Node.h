@@ -63,6 +63,7 @@ public:
 	NodePtr elseNode;
 	NodePtr next;
 	Uint32 depth;
+	NodePtr finalNode;
 public:
 	struct {
 		NodePtr extendNode;
