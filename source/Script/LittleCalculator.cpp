@@ -43,7 +43,8 @@ Bool LittleCalculator::Compute(NodePtr node, ObjectPtr left, ObjectPtr right) {
 	}
 
 	if (!result) {
-		return FALSE;
+		PostSyntaxError(node->lex->line, "Unable to evaluate constant expression (%s)",
+			node->word.data());
 	}
 
 	Buffer newName;

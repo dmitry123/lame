@@ -55,10 +55,25 @@ int main(int argc, char** argv) {
 		rootScope->Trace(0);
 
 		printf("\n\n");
+		puts("+---------------------------+");
 		for (NodePtr n : rootNode->blockList) {
 			printf("[%s] ", n->word.data());
 		}
 		printf("\n");
+		puts("+---------------------------+");
+
+#if 0
+		Set<ObjectPtr> neverRead = rootScope->Filter([] (ObjectPtr object) {
+			return !object->GetReads() && object->CheckType(Object::Type::Variable) &&
+				!object->CheckModificator(Object::Modificator::Internal) &&
+				!object->CheckModificator(Object::Modificator::Constant);
+		}, TRUE);
+
+		for (ObjectPtr c : neverRead) {
+			PostSyntaxWarning(c->GetNode()->lex->line, "Variable (%s) never read",
+				c->GetName().data());
+		}
+#endif
 
 #if 0
 		/* Build segments */

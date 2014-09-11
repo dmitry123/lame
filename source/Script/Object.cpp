@@ -43,11 +43,14 @@ Object::Object(BufferRefC name, ScopePtr parent, Type type) :
 	this->node_ = NULL;
 	this->this_ = NULL;
 	this->callback_ = NULL;
+	this->init_ = NULL;
 
 	this->modificators_ = 0;
 	this->address_ = -1;
 	this->size_ = 0;
 	this->position_ = 0;
+	this->reads_ = 0;
+	this->writes_ = 0;
 }
 
 ObjectPtr Object::SetModificator(Modificator modificator, Bool state) {

@@ -9,6 +9,7 @@ class LAME_API Object :
 	public Hashable64,
 	public Scope
 {
+	friend class CodeBuilder;
 	friend class Segment;
 	friend class ScopeBuilder;
 	friend class Variable;
@@ -126,6 +127,9 @@ public: /* Inline Getters */
 	inline Uint32     GetPosition()   const { return this->position_; }
 	inline Uint32     GetFieldID()    const { return this->fieldId_;  }
 	inline ObjectPtr  GetThis()       const { return this->this_;     }
+	inline Uint32     GetReads()      const { return this->reads_;    }
+	inline Uint32     GetWrites()     const { return this->writes_;   }
+	inline ObjectPtr  GetInit()             { return this->init_; }
 public:
 	typedef Void(*OnScopeUpdate)(
 		ScopePtr scope, ObjectPtr object);
@@ -140,6 +144,9 @@ private: /* Private Variables */
 	Uint32        fieldId_;
 	ObjectPtr     this_;
 	OnScopeUpdate callback_;
+	Uint32        reads_;
+	Uint32        writes_;
+	ObjectPtr     init_;
 public:
 	inline Void SetOnScopeUpdate(OnScopeUpdate callback) { this->callback_ = callback; }
 	inline OnScopeUpdate GetOnScopeUpdate() { return this->callback_; }

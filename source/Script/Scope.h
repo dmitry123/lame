@@ -27,7 +27,7 @@ public:
 	ScopePtr Root(Void);
 	Buffer Path(Void);
 public:
-	template <class F> inline Set<ObjectPtr> Filter(F f) {
+	template <class F> inline Set<ObjectPtr> Filter(F f, Bool withHeight = FALSE) {
 
 		Set<ObjectPtr> result;
 
@@ -35,15 +35,20 @@ public:
 			if (f(i.second)) {
 				result.insert(i.second);
 			}
+			if (withHeight) {
+				for (ObjectPtr c : i.second->Filter(f, withHeight)) {
+					result.insert(c);
+				}
+			}
 		}
 
 		return result;
 	}
 public:
-	inline HashMap&   GetHashMap() { return this->hashMap_;     }
+	inline HashMap&   GetHashMap() { return this->hashMap_; }
 	inline ScopePtr   GetParent()  { return this->parentScope_; }
-	inline BufferRefC GetName()    { return this->scopeName_;   }
-	inline ScopePtr   GetOwner()   { return this->ownerScope_;  }
+	inline BufferRefC GetName()    { return this->scopeName_; }
+	inline ScopePtr   GetOwner()   { return this->ownerScope_; }
 public:
 	inline Set<ObjectPtr>& GetMethodSet() { return this->methodSet_; }
 	inline Set<ObjectPtr>& GetClassSet() { return this->classSet_; }

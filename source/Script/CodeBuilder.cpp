@@ -25,7 +25,7 @@ Void CodeBuilder::Build(SyntaxBuilderPtr nodeBuilder, ScopePtr rootScope) {
 	this->_ForEachClass(rootScope);
 	this->_ForEachMethod(rootScope);
 
-	rootNode->var = rootScope->Add(new Method("<main>",
+	rootNode->var = rootScope->Add(new Method("<init>",
 		rootScope, ObjectPtr(rootScope), rootScope->classVoid));
 
 	rootNode->var->GetMethod()->SetRootNode(rootNode);
@@ -357,6 +357,11 @@ Void CodeBuilder::_Cast(VariablePtr var, ObjectPtr type) {
 	else if (left->IsBooleanLike()) {
 		/* Uncastable */
 	}
+	else if (left->IsStringLike()) {
+		if (right->IsIntegerLike() || right->IsFloatLike()) {
+			goto _CastOk;
+		}
+	}
 	else {
 		if (_CheckObjectCast(left, right)) {
 			goto _CastOk;
@@ -452,9 +457,23 @@ Void CodeBuilder::_Binary(NodePtr n) {
 
 	this->_Read(n, leftVar, rightVar);
 
-	if (n->lex->lex->IsLeft() && leftVar->CheckModificator(Object::Modificator::Constant)) {
+	if (n->lex->lex->IsLeft() && (leftVar->CheckModificator(Object::Modificator::Constant) ||
+		leftVar->CheckModificator(Object::Modificator::Final))
+	) {
 		PostSyntaxError(n->lex->line, "Unable to apply (%s) to constant variable (%s)",
 			n->word.data(), leftVar->GetName().data());
+	}
+
+	if (n->lex->lex->IsRight()) {
+		if (!leftVar->writes_ && !leftVar->CheckModificator(Object::Modificator::Constant)) {
+			PostSyntaxError(n->lex->line, "Variable (%s) might not have been initialized",
+				leftVar->GetName().data());
+		}
+	}
+
+	if (!rightVar->writes_ && !rightVar->CheckModificator(Object::Modificator::Constant)) {
+		PostSyntaxError(n->lex->line, "Variable (%s) might not have been initialized",
+			rightVar->GetName().data());
 	}
 
 	if (n->lex->lex->IsRight()) {
@@ -624,6 +643,23 @@ Void CodeBuilder::_Binary(NodePtr n) {
 			this->variableStack.Return(sourceVar);
 		}
 	}
+
+	if (n->lex->lex->IsLeft()) {
+		if (leftVar->CheckType(Object::Type::Variable)) {
+			leftVar->writes_++;
+		}
+		if (rightVar->CheckType(Object::Type::Variable)) {
+			rightVar->reads_++;
+		}
+	}
+	else {
+		if (leftVar->CheckType(Object::Type::Variable)) {
+			leftVar->reads_++;
+		}
+		if (rightVar->CheckType(Object::Type::Variable)) {
+			rightVar->reads_++;
+		}
+	}
 }
 
 Void CodeBuilder::_Unary(NodePtr n) {
@@ -676,47 +712,52 @@ Void CodeBuilder::_Unary(NodePtr n) {
 		}
 	}
 
-#if 0
 	switch (n->lex->lex->id) {
 	case kScriptLexPostfixIncrement:
 	case kScriptLexPrefixIncrement:
-		this->_Save(Code::Increment, leftVar);
-		break;
 	case kScriptLexPostfixDecrement:
 	case kScriptLexPrefixDecrement:
-		this->_Save(Code::Decrement, leftVar);
+	case kScriptLexBitNot:
+	case kScriptLexNot:
+		if (!leftVar->CheckType(Object::Type::Variable) || !leftVar->GetClass()->IsIntegerLike()) {
+			PostSyntaxError(n->lex->line, "Unable to apply (%s) to non-integer type",
+				n->word.data());
+		}
 		break;
 	case kScriptLexInstanceof:
-		this->_Save(Code::InstanceOf, leftVar);
+		if (!leftVar->CheckType(Object::Type::Class) || !leftVar->GetClass()->IsObjectLike()) {
+			PostSyntaxError(n->lex->line, "Unable to apply (%s) to non-integer type",
+				n->word.data());
+		}
 		break;
 	case kScriptLexReturn:
-		this->_Save(Code::Return, leftVar);
-		break;
-	case kScriptLexBitNot:
-		this->_Save(Code::BitNot, leftVar);
-		break;
-	case kScriptLexNot:
-		this->_Save(Code::Not, leftVar);
+		if (!leftVar->CheckType(Object::Type::Variable)) {
+			PostSyntaxError(n->lex->line, "Unable to apply (%s) non-variable object",
+				n->word.data());
+		}
 		break;
 	case kScriptLexUnaryMinus:
-		this->_Save(Code::Minus, leftVar);
-		break;
 	case kScriptLexSub:
-		this->_Save(Code::Sub, leftVar);
-		break;
 	case kScriptLexUnaryPlus:
-		this->_Save(Code::Plus, leftVar);
-		break;
 	case kScriptLexAdd:
-		this->_Save(Code::Add, leftVar);
-		break;
-	case kScriptLexNew:
-		this->_Save(Code::New, leftVar);
+		if (!leftVar->CheckType(Object::Type::Variable) || (!leftVar->GetClass()->IsIntegerLike() &&
+			!leftVar->GetClass()->IsFloatLike())
+		) {
+			PostSyntaxError(n->lex->line, "Unable to apply (%s) to non-number type",
+				n->word.data());
+		}
 		break;
 	default:
 		break;
 	}
-#endif
+
+	if (leftVar->CheckType(Object::Type::Variable)) {
+		if (n->lex->lex->IsLeft()) {
+			leftVar->writes_++;
+		} else {
+			leftVar->reads_++;
+		}
+	}
 }
 
 Void CodeBuilder::_Ternary(NodePtr n) {

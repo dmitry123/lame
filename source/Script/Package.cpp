@@ -80,7 +80,7 @@ PackagePtr Package::Import(NodePtr node) {
 
 		try {
 			fileList = Directory::GetFiles(filePath.data(),
-				FALSE, "java");
+				FALSE, "java&lame");
 		}
 		catch (...) {
 			PostSyntaxError(node->lex->line, "Unable to open directory (%s)",

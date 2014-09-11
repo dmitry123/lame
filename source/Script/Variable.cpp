@@ -149,11 +149,14 @@ ScriptNativeString Variable::GetString(Void) {
 	switch (this->varType) {
 	case Var::Integer:
 		result.Format("%lld", this->v.intValue);
+		break;
 	case Var::Float:
 		result.Format("%.4f", this->v.floatValue);
+		break;
 	default:
 		PostSyntaxError(this->GetNode()->lex->line, "Invalid type cast from (%s) to String",
 			this->GetClass()->GetName().data());
+		break;
 	}
 
 	return result;
@@ -203,6 +206,9 @@ ObjectPtr Variable::Clone(BufferRefC name, ObjectPtr parent) {
 	}
 	else if (this->varType == Var::Float) {
 		newVariable->SetFloat(this->v.floatValue);
+	}
+	else if (this->varType == Var::String) {
+		newVariable->SetString(this->stringValue);
 	}
 	else {
 		newVariable->SetInteger(this->v.intValue);
@@ -270,6 +276,8 @@ Void Variable::Trace(Uint32 offset) {
 			}
 		}
 	}
+
+	printf(" [R%d, W%d]", this->GetReads(), this->GetWrites());
 }
 
 Variable::HashType Variable::Hash(Void) {

@@ -103,7 +103,7 @@ ScopePtr GlobalScope::CreateScope(Buffer name, Uint32 flags) {
 	Scope::classArray->SetPriority(7);
 
 	Scope::classArray->Add(new Variable("length", Scope::classArray, Scope::classInt))
-		->GetVariable()->SetInteger(0);
+		->GetVariable()->SetInteger(0)->SetModificator(Object::Modificator::Internal);
 
 	goto _SkipPrimitive;
 _ReturnScope:

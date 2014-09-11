@@ -88,7 +88,7 @@ typedef ScriptException InterfaceException;
 #define PostSyntaxWarning(_line, _message, ...) \
     do { \
 		static Bool __warningExceptionLock = 0; \
-		if (!__warningExceptionLock) { \
+		if (!__warningExceptionLock || TRUE) { \
 			SyntaxException(1, _line, _message, __VA_ARGS__).Debug(); \
 		} __warningExceptionLock = 1; \
     } while (0);
