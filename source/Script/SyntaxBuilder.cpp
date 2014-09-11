@@ -877,7 +877,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::New(NodePtr& node, Iterator i) {
 	if ((*i)->lex->id == kScriptLexParenthesisL) {
 		node->flags |= kScriptFlagInvocation;
 	}
-	i = this->Arguments(node, i);
+	i = this->Arguments(node->typeNode, i);
 	node->typeNode->lex->args = node->lex->args;
 	__Inc(i);
 

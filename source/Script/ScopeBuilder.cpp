@@ -22,7 +22,8 @@ static Bool _MoveNode(NodePtr node, Bool strict = FALSE) {
 
 	if (node->id != kScriptNodeVariable &&
 		node->id != kScriptNodeAlloc &&
-		node->lex->lex->id != kScriptLexNew
+		node->lex->lex->id != kScriptLexNew &&
+		node->id != kScriptNodeDefault
 	) {
 		if (!strict) {
 			goto _Seek;
@@ -57,6 +58,9 @@ static Bool _MoveNode(NodePtr node, Bool strict = FALSE) {
 			for (NodePtr n : node->parent->blockList) {
 				_If(n->blockList);
 			}
+		}
+
+		if (node->parent->typeNode) {
 		}
 
 		if (!nodeStack) {
@@ -114,12 +118,12 @@ _Again3:
 			goto _Again3;
 		}
 	}
-_Again4:
-	if (node->lex->lex->id == kScriptLexNew && node->typeNode) {
-		if (_MoveNode(node->typeNode, TRUE)) {
-			goto _Again4;
-		}
-	}
+//_Again4:
+//	if (node->lex->lex->id == kScriptLexNew && node->typeNode) {
+//		if (_MoveNode(node->typeNode, TRUE)) {
+//			goto _Again4;
+//		}
+//	}
 
 	for (NodePtr n : node->switchInfo.caseList) {
 	_Again5:
@@ -975,13 +979,23 @@ Void ScopeBuilder::_ForEachNode(NodePtr node, ScopePtr scope, ForEachNode callba
 	if (id == kScriptNodeUnknown || (id != kScriptNodeUnknown && node->id == id)) {
 		callback(node);
 	}
-	if (node->typeNode) {
-		if ((id == kScriptNodeUnknown || node->typeNode->id == kScriptNodeAnonymous) &&
-			node->id != kScriptNodeVariable && node->id != kScriptNodeClass && node->id != kScriptNodeInterface
-		) {
-			callback(node->typeNode);
+	//if (node->typeNode) {
+	//	if ((id == kScriptNodeUnknown || node->typeNode->id == kScriptNodeAnonymous) &&
+	//		node->id != kScriptNodeVariable && node->id != kScriptNodeClass && node->id != kScriptNodeInterface
+	//	) {
+	//		if (node->typeNode->word == "A") {
+	//			__asm int 3
+	//		}
+	//		callback(node->typeNode);
+	//	}
+	//}
+
+	if (node->typeNode && node != node->typeNode) {
+		if (node->lex->lex->id == kScriptLexNew) {
+			_ForEachNode(node->typeNode, scope, callback, id);
 		}
 	}
+
 	if (node->elseNode) {
 		_ForEachNode(node->elseNode, scope, callback, id);
 	}

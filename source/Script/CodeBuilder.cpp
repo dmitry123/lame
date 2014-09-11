@@ -47,7 +47,7 @@ Void CodeBuilder::Build(SyntaxBuilderPtr nodeBuilder, ScopePtr rootScope) {
 			if (!n2->var->CheckType(Object::Type::Variable)) {
 				PostSyntaxError(n->lex->line, "Argument must be variable (%s)", n2->var->GetName().data());
 			}
-			// store
+			n2->var->writes_ = 1;
 		}
 
 		ObjectPtr thisVar = NULL;
@@ -184,7 +184,7 @@ Void CodeBuilder::_Run(NodeListRef nodeList, Bool makeBackup) {
 	}
 	nodeList.clear();
 
-	auto it = this->nodeList.begin() + listLength;
+	auto it = this->nodeList.begin();
 
 	if (!listLength) {
 		it = this->nodeList.begin();
@@ -193,6 +193,8 @@ Void CodeBuilder::_Run(NodeListRef nodeList, Bool makeBackup) {
 	if (this->nodeList.size() == listLength) {
 		listLength = 0;
 	}
+
+	it += listLength;
 
 	for (Uint32 i = 0; i < this->nodeList.size() - listLength; i++) {
 
@@ -464,16 +466,20 @@ Void CodeBuilder::_Binary(NodePtr n) {
 			n->word.data(), leftVar->GetName().data());
 	}
 
-	if (n->lex->lex->IsRight()) {
-		if (!leftVar->writes_ && !leftVar->CheckModificator(Object::Modificator::Constant)) {
-			PostSyntaxError(n->lex->line, "Variable (%s) might not have been initialized",
-				leftVar->GetName().data());
+	if (leftVar->CheckType(Object::Type::Variable)) {
+		if (n->lex->lex->IsRight()) {
+			if (!leftVar->writes_ && !leftVar->CheckModificator(Object::Modificator::Constant)) {
+				PostSyntaxError(n->lex->line, "Variable (%s) might not have been initialized",
+					leftVar->GetName().data());
+			}
 		}
 	}
 
-	if (!rightVar->writes_ && !rightVar->CheckModificator(Object::Modificator::Constant)) {
-		PostSyntaxError(n->lex->line, "Variable (%s) might not have been initialized",
-			rightVar->GetName().data());
+	if (rightVar->CheckType(Object::Type::Variable)) {
+		if (!rightVar->writes_ && !rightVar->CheckModificator(Object::Modificator::Constant)) {
+			PostSyntaxError(n->lex->line, "Variable (%s) might not have been initialized",
+				rightVar->GetName().data());
+		}
 	}
 
 	if (n->lex->lex->IsRight()) {
@@ -539,83 +545,98 @@ Void CodeBuilder::_Binary(NodePtr n) {
 		}
 	}
 
-#if 0
 	switch (this->currentNode->lex->lex->id) {
 	case kScriptLexMul:
 	case kScriptLexMulSet:
-		this->_Save(Code::Mul, leftVar, rightVar);
-		break;
 	case kScriptLexDiv:
 	case kScriptLexDivSet:
-		this->_Save(Code::Div, leftVar, rightVar);
-		break;
 	case kScriptLexMod:
 	case kScriptLexModSet:
-		this->_Save(Code::Mod, leftVar, rightVar);
+	case kScriptLexSub:
+	case kScriptLexSubSet:
+		if (!leftVar->GetClass()->IsIntegerLike() &&
+			!leftVar->GetClass()->IsFloatLike() ||
+			!rightVar->GetClass()->IsIntegerLike() &&
+			!rightVar->GetClass()->IsFloatLike()
+		) {
+			PostSyntaxError(n->lex->line, "Unable to apply binary operator (%s) to non-number type (%s, %s)",
+				leftVar->GetClass()->GetName().data(), rightVar->GetClass()->GetName().data());
+		}
 		break;
 	case kScriptLexAdd:
 	case kScriptLexAddSet:
-		this->_Save(Code::Add, leftVar, rightVar);
-		break;
-	case kScriptLexSub:
-	case kScriptLexSubSet:
-		this->_Save(Code::Sub, leftVar, rightVar);
+		if (!leftVar->GetClass()->IsIntegerLike() &&
+			!leftVar->GetClass()->IsFloatLike() &&
+			!leftVar->GetClass()->IsStringLike() ||
+			!rightVar->GetClass()->IsIntegerLike() &&
+			!rightVar->GetClass()->IsFloatLike() &&
+			!rightVar->GetClass()->IsStringLike()
+		) {
+			PostSyntaxError(n->lex->line, "Unable to apply binary operator (%s) to non-number or string type (%s, %s)",
+				leftVar->GetClass()->GetName().data(), rightVar->GetClass()->GetName().data());
+		}
 		break;
 	case kScriptLexBitShiftL:
 	case kScriptLexBitShiftSetL:
-		this->_Save(Code::ShiftL, leftVar, rightVar);
-		break;
 	case kScriptLexBitShiftR:
 	case kScriptLexBitShiftSetR:
-		this->_Save(Code::ShiftR, leftVar, rightVar);
-		break;
 	case kScriptLexBitShiftU:
 	case kScriptLexBitShiftSetU:
-		this->_Save(Code::ShiftU, leftVar, rightVar);
-		break;
 	case kScriptLexBitAnd:
 	case kScriptLexBitAndSet:
-		this->_Save(Code::And, leftVar, rightVar);
-		break;
 	case kScriptLexBitXor:
 	case kScriptLexBitXorSet:
-		this->_Save(Code::Xor, leftVar, rightVar);
-		break;
 	case kScriptLexBitOr:
 	case kScriptLexBitOrSet:
-		this->_Save(Code::Or, leftVar, rightVar);
+		if (!leftVar->GetClass()->IsIntegerLike() &&
+			!rightVar->GetClass()->IsIntegerLike()
+		) {
+			PostSyntaxError(n->lex->line, "Unable to apply binary operator (%s) to non-interger type (%s, %s)",
+				leftVar->GetClass()->GetName().data(), rightVar->GetClass()->GetName().data());
+		}
 		break;
 	case kScriptLexSet:
-		this->_Save(Code::Assign, leftVar, rightVar);
 		break;
 	case kScriptLexBelow:
-		this->_Save(Code::Bellow, leftVar, rightVar);
-		break;
 	case kScriptLexAbove:
-		this->_Save(Code::Above, leftVar, rightVar);
-		break;
 	case kScriptLexBelowEqual:
-		this->_Save(Code::BellowEqual, leftVar, rightVar);
-		break;
 	case kScriptLexAboveEqual:
-		this->_Save(Code::AboveEqual, leftVar, rightVar);
+		if (!leftVar->GetClass()->IsIntegerLike() &&
+			!leftVar->GetClass()->IsFloatLike() &&
+			!leftVar->GetClass()->IsStringLike() ||
+			!rightVar->GetClass()->IsIntegerLike() &&
+			!rightVar->GetClass()->IsFloatLike() &&
+			!rightVar->GetClass()->IsStringLike()
+		) {
+			PostSyntaxError(n->lex->line, "Unable to apply binary operator (%s) to non-comparable type (%s, %s)",
+				leftVar->GetClass()->GetName().data(), rightVar->GetClass()->GetName().data());
+		}
 		break;
 	case kScriptLexEqual:
-		this->_Save(Code::Equal, leftVar, rightVar);
-		break;
 	case kScriptLexNotEqual:
-		this->_Save(Code::NotEqual, leftVar, rightVar);
+		if (!leftVar->GetClass()->IsIntegerLike() &&
+			!leftVar->GetClass()->IsFloatLike() &&
+			!leftVar->GetClass()->IsObjectLike() ||
+			!rightVar->GetClass()->IsIntegerLike() &&
+			!rightVar->GetClass()->IsFloatLike() &&
+			!rightVar->GetClass()->IsObjectLike()
+		) {
+			PostSyntaxError(n->lex->line, "Unable to apply binary operator (%s) to non-comparable type (%s, %s)",
+				leftVar->GetClass()->GetName().data(), rightVar->GetClass()->GetName().data());
+		}
 		break;
 	case kScriptLexAnd:
-		this->_Save(Code::And, leftVar, rightVar);
-		break;
 	case kScriptLexOr:
-		this->_Save(Code::Or, leftVar, rightVar);
+		if (!leftVar->GetClass()->IsBooleanLike() &&
+			!rightVar->GetClass()->IsBooleanLike()
+		) {
+			PostSyntaxError(n->lex->line, "Unable to apply binary operator (%s) to non-boolean type (%s, %s)",
+				leftVar->GetClass()->GetName().data(), rightVar->GetClass()->GetName().data());
+		}
 		break;
 	default:
 		break;
 	}
-#endif
 
 	if (n->lex->lex->IsBool()) {
 		if (wasItConst) {
@@ -1158,7 +1179,7 @@ Void CodeBuilder::_Invoke(NodePtr n) {
 	just in case, we can find it in parent
 	nodes */
 
-	if (!(scope = this->currentMethod->GetMethod())) {
+	if (!(scope = n->var)) {
 
 		NodePtr n2 = n;
 
@@ -1213,12 +1234,18 @@ Void CodeBuilder::_Invoke(NodePtr n) {
 
 		Vector<OrderedMethod> methodList;
 		Uint32 distance = 0;
+		Set<ObjectPtr> methodSet;
 
-		Set<ObjectPtr> methodSet = scope->CheckType(Object::Type::Class) ?
-			scope->GetMethodSet() : scope->GetParent()->GetMethodSet();
+		if (!scope->CheckType(Object::Type::Class)) {
 
-		if (this->lastSelection) {
-			methodSet = this->lastSelection->GetClass()->GetMethodSet();
+			methodSet = scope->GetParent()->GetMethodSet();
+
+			if (this->lastSelection) {
+				methodSet = this->lastSelection->GetClass()->GetMethodSet();
+			}
+		}
+		else {
+			methodSet = scope->GetMethodSet();
 		}
 
 		for (ObjectPtr m : methodSet) {
@@ -1259,7 +1286,7 @@ Void CodeBuilder::_Invoke(NodePtr n) {
 		if (methodList.empty()) {
 
 			Buffer path = this->lastSelection ?
-				this->lastSelection->GetClass()->GetName() : "";
+				this->lastSelection->GetClass()->GetName() : n->word;
 
 			PostSyntaxError(n->lex->line, "Undeclared method %s/%s(%s)", path.data(),
 				methodName.data(), formattedParameters.data());
@@ -1333,6 +1360,10 @@ Void CodeBuilder::_Return(NodePtr n) {
 	methodVar->returnVar = returnVar;
 
 	if (returnVar) {
+		if (methodVar->returnVar->GetClass() != methodVar->GetReturnType()) {
+			PostSyntaxError(n->lex->line, "Incompatible types (%s -> %s)",  methodVar->returnVar->GetClass()
+				->GetName().data(), methodVar->GetReturnType()->GetName().data());
+		}
 		this->_Cast(methodVar->returnVar, methodVar->GetReturnType());
 		LAME_TODO("Return methodVar->returnVar");
 	}
@@ -1352,6 +1383,8 @@ Void CodeBuilder::_Finish(NodePtr n) {
 		}
 	}
 #endif
+
+	this->lastSelection = NULL;
 
 	this->variableStack.Clear();
 }
