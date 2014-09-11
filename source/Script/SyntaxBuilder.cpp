@@ -520,6 +520,13 @@ SyntaxBuilder::Iterator SyntaxBuilder::Variable(NodePtr& node, Iterator i) {
 
 	varNode = node;
 
+	if (i + 1 == this->_End()) {
+		if ((*i)->lex->id != kScriptLexSemicolon) {
+			PostSyntaxError((*i)->line, "Lost semicolon", 0);
+		}
+		return i;
+	}
+
 	__Inc(i);
 
 	if ((*i)->lex->id == kScriptLexBraceL) {

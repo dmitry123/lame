@@ -1,8 +1,14 @@
 static class Lame {
+
+	private Lame() {
+		/* Locked */
+	}
+
 	interface MainListener {
 		void onStart();
 		void onFinish();
 	}
+
 	abstract class MainAdapter implements MainListener {
 		void onStart() {}
 		void onFinish() {}
@@ -13,3 +19,5 @@ class Main extends Lame.MainAdapter {
 	public void onStart() {}
 	public void onFinish() {}
 }
+
+Lame lame;
