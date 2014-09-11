@@ -871,8 +871,8 @@ SyntaxBuilder::Iterator SyntaxBuilder::New(NodePtr& node, Iterator i) {
 	node->typeNode = classNode;
 	i = this->Directed(classNode, i);
 	__Inc(i);
-	if (this->sequenceMatcher.Match(kScriptLexSequenceTemplate, i, this->_End())) {
-		i = this->Template(classNode, i - 1) + 1;
+	if (this->_IsTemplate(i)) {
+		i = this->Template(classNode, i);
 	}
 	classNode->typeNode = classNode;
 	if ((*i)->lex->id != kScriptLexParenthesisL && 
@@ -1009,6 +1009,10 @@ SyntaxBuilder::Iterator SyntaxBuilder::Template(NodePtr& node, Iterator i) {
 
 	NodePtr typeNode = node->typeNode
 		? node->typeNode : node;
+
+	if (node->lex == *i) {
+		__Inc(i);
+	}
 
 	if ((*i)->lex->id != kScriptLexBelow) {
 		return i;

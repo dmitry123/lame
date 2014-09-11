@@ -1144,12 +1144,6 @@ Void CodeBuilder::_Invoke(NodePtr n) {
 		PostSyntaxError(n->lex->line, "Use 'this' or 'super' method to invoke class constructor", 0);
 	}
 
-	/* Check for lost parameters */
-	if (n->argList.size() < n->lex->args) {
-		PostSyntaxError(n->lex->line, "Lost %d parameters to invoke method (%s)",
-			n->lex->args, n->word.data());
-	}
-
 	/*	We have to get all variables from stack
 	and save it in another list to build
 	invocation hash number to find nessesary
