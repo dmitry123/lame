@@ -203,7 +203,7 @@ Void Class::CheckInheritance(Void) {
 			// if method has root node then
 			// throw an error, cuz interface's
 			// methods mustn't be implemented
-			if (m->GetRootNode() != NULL) {
+			if ((m->GetNode()->flags & kScriptFlagImplemented) != 0) {
 				PostSyntaxError(this->GetNode()->lex->line, "Interface mustn't implement methods (%s)", m->GetName().data());
 			}
 

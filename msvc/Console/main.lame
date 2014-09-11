@@ -1,23 +1,15 @@
-class A {
-
-	public A(int a) {
-		this(a, 0);
+static class Lame {
+	interface MainListener {
+		void onStart();
+		void onFinish();
 	}
-
-	public A(int a, int b)  {
-		this(a, b, 0);
+	abstract class MainAdapter implements MainListener {
+		void onStart() {}
+		void onFinish() {}
 	}
-
-	public A(int a, int b, int c) {
-		value = a + b + c;
-	}
-
-	public void setValue(int value) { this.value = value; }
-	public int getValue() { return this.value; }
-
-	private int value = 0;
 }
 
-A a1 = new A(100);
-A a2 = new A(100, 20);
-A a3 = new A(100, 20, 3);
+class Main extends Lame.MainAdapter {
+	public void onStart() {}
+	public void onFinish() {}
+}
