@@ -38,7 +38,8 @@ public: /* Flags & States */
 		Enum         = 0x00080000,
 		Synchronized = 0x00100000,
 		Construction = 0x00200000,
-		Implemented  = 0x00400000
+		Implemented  = 0x00400000,
+		Annotation   = 0x00800000
 	};
 	enum class Type : Uint32 {
 		Unknown      = 0x00000000,

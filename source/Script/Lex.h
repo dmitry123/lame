@@ -96,6 +96,7 @@ typedef enum {
 	kScriptLexClass,
 	kScriptLexEnum,
 	kScriptLexInterface,
+	kScriptLexAnnotation,
 	kScriptLexImplements,
 	kScriptLexExtends,
 	kScriptLexBreak,
@@ -107,14 +108,14 @@ typedef enum {
 	kScriptLexNative,
 	kScriptLexFinal,
 	kScriptLexAbstract,
-	kScriptLexOverride,
-	kScriptLexDecprecated,
 	kScriptLexSynchronized,
 	kScriptLexDefault,
 	kScriptLexCase,
 	kScriptLexPackage,
 	kScriptLexImport,
 	kScriptLexGoto,
+	kScriptLexTransient,
+	kScriptLexVolatile,
 	/* Count Of Lexes */
 	kScriptLexAmount
 } LexID;

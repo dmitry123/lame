@@ -1313,7 +1313,6 @@ Void CodeBuilder::_Invoke(NodePtr n) {
 Void CodeBuilder::_Return(NodePtr n) {
 
 	VariablePtr returnVar;
-	ClassPtr returnType;
 	MethodPtr methodVar;
 	NodePtr methodNode;
 

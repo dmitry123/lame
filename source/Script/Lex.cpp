@@ -355,6 +355,10 @@ Map<LexID, Lex> Lex::lexMap = {
 			{ "interface", P(0, 0), kScriptLexInterface, 0,
 				kScriptLexFlagLanguage }
 		},
+		{ kScriptLexAnnotation,
+			{ "@interface", P(0, 0), kScriptLexAnnotation, 0,
+				kScriptLexFlagLanguage }
+		},
 		{ kScriptLexImplements,
 			{ "implements", P(0, 0), kScriptLexImplements, 0,
 				kScriptLexFlagLanguage }
@@ -399,14 +403,6 @@ Map<LexID, Lex> Lex::lexMap = {
 			{ "abstract", P(0, 0), kScriptLexAbstract, 0,
 				kScriptLexFlagLanguage | kScriptLexFlagModificator }
 		},
-		{ kScriptLexOverride,
-			{ "@Override", P(0, 0), kScriptLexOverride, 0,
-				kScriptLexFlagLanguage | kScriptLexFlagModificator }
-		},
-		{ kScriptLexDecprecated,
-			{ "@Deprecated", P(0, 0), kScriptLexDecprecated, 0,
-				kScriptLexFlagLanguage | kScriptLexFlagModificator }
-		},
 		{ kScriptLexSynchronized,
 			{ "synchronized", P(0, 0), kScriptLexSynchronized, 0,
 				kScriptLexFlagLanguage | kScriptLexFlagModificator }
@@ -430,6 +426,14 @@ Map<LexID, Lex> Lex::lexMap = {
 		{ kScriptLexGoto,
 			{ "#", P(0, 0), kScriptLexGoto, 0,
 				kScriptLexFlagUnknown }
+		},
+		{ kScriptLexTransient,
+			{ "transient", P(0, 0), kScriptLexTransient, 0,
+				kScriptLexFlagLanguage | kScriptLexFlagModificator }
+		},
+		{ kScriptLexVolatile,
+			{ "volatile", P(0, 0), kScriptLexVolatile, 0,
+				kScriptLexFlagLanguage | kScriptLexFlagModificator }
 		}
 };
 

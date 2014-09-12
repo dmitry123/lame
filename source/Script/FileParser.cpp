@@ -217,6 +217,7 @@ Void FileParser::Parse(StringC script) {
 
 		Uint32 extraWordLines = 0;
         
+#if 0 /* Not needed anymore */
 		for (auto i = lexWord.begin(); i != lexWord.end(); i++) {
 			if (strchr(writeSpaces, *i)) {
 				if (*i == '\n') {
@@ -225,6 +226,7 @@ Void FileParser::Parse(StringC script) {
 				i = lexWord.erase(i);
 			}
 		}
+#endif
 
 		if (extraWordLines > 0) {
 			line += extraWordLines - 1;

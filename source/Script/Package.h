@@ -31,11 +31,15 @@ public:
 		return this->javaCorePath;
 	}
 private:
+	Bool _Import(BufferRefC fileName);
+private:
 	Buffer packagePath;
 	Set<SyntaxBuilderPtr> syntaxList;
 	Set<PackagePtr> packageSet;
 	Set<FileParserPtr> parserList;
 	Buffer javaCorePath;
+	Set<Uint64> hashMap;
+	NodePtr node;
 };
 
 LAME_END2

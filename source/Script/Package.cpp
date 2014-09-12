@@ -2,7 +2,13 @@
 #include "FileParser.h"
 #include "SyntaxBuilder.h"
 
+#include <Windows.h>
+
+#undef GetCurrentDirectory
+
 LAME_BEGIN2(Script)
+
+typedef Core::BufferRefC BufferRefC;
 
 Package::~Package() {
 
@@ -58,6 +64,8 @@ PackagePtr Package::Import(NodePtr node) {
 	NodePtr classNode = NULL;
 	Buffer filePath;
 
+	this->node = node;
+
 	while (nextNode) {
 
 		if (nextNode->next) {
@@ -69,6 +77,15 @@ PackagePtr Package::Import(NodePtr node) {
 
 		nextNode = nextNode->next;
 	}
+
+	char fullPath[4096];
+
+#ifdef LAME_WINDOWS
+	GetFullPathNameA(filePath.data(), sizeof(fullPath), fullPath, NULL);
+#else
+	char* realpath(char* path, char* dest);
+#endif
+	fullPath[strlen(fullPath) - filePath.length()] = '\0';
 
 	if (classNode->lex->lex->id == kScriptLexMul) {
 
@@ -87,60 +104,62 @@ PackagePtr Package::Import(NodePtr node) {
 				filePath.data());
 		}
 
+		Buffer fileName = fullPath;
+
 		for (BufferRefC file : fileList) {
-
-			FileParserPtr fileParser = new FileParser();
-			SyntaxBuilderPtr syntaxBuilder = new SyntaxBuilder();
-
-			this->parserList.insert(fileParser);
-			this->syntaxList.insert(syntaxBuilder);
-
-			try {
-				fileParser->Load(file);
-			}
-			catch (...) {
-				PostSyntaxError(node->lex->line, "Unable to load file (%s)",
-					file.data());
-			}
-
-			syntaxBuilder->Build(fileParser, this);
-
-			for (NodePtr n : syntaxBuilder->GetRootNode()->blockList) {
-				if (n->lex->lex->id == kScriptLexPackage) {
-					continue;
-				}
-				node->parent->blockList.push_back(n);
+			if (!this->_Import(fullPath + file)) {
+				PostSyntaxError(node->lex->line, "Unable to import file (%s)",
+					fileName.data());
 			}
 		}
 	}
 	else {
-		FileParserPtr fileParser = new FileParser();
-		SyntaxBuilderPtr syntaxBuilder = new SyntaxBuilder();
-
-		this->parserList.insert(fileParser);
-		this->syntaxList.insert(syntaxBuilder);
-
-		Buffer fileName = filePath + classNode->word + ".java";
-
-		try {
-			fileParser->Load(fileName);
-		} 
-		catch (...) {
-			PostSyntaxError(node->lex->line, "Unable to load file (%s)",
+		Buffer fileName = fullPath + filePath + classNode->word + ".java";
+		if (!this->_Import(fileName)) {
+			PostSyntaxError(node->lex->line, "Unable to import file (%s)",
 				fileName.data());
-		}
-
-		syntaxBuilder->Build(fileParser, this);
-
-		for (NodePtr n : syntaxBuilder->GetRootNode()->blockList) {
-			if (n->lex->lex->id == kScriptLexPackage) {
-				continue;
-			}
-			node->parent->blockList.push_back(n);
 		}
 	}
 
-	return NULL;
+	return this;
+}
+
+Bool Package::_Import(BufferRefC fileName) {
+
+	Uint64 hash = fileName.GetHash64();
+
+	if (this->hashMap.count(hash)) {
+		return TRUE;
+	}
+	this->hashMap.insert(hash);
+
+	printf("[%s]\n", fileName.data());
+
+	FileParserPtr fileParser = new FileParser();
+	SyntaxBuilderPtr syntaxBuilder = new SyntaxBuilder();
+
+	this->parserList.insert(fileParser);
+	this->syntaxList.insert(syntaxBuilder);
+
+	try {
+		fileParser->Load(fileName);
+	}
+	catch (...) {
+		return FALSE;
+	}
+
+	syntaxBuilder->Build(fileParser, this);
+
+	auto rootList = syntaxBuilder->GetRootNode()->blockList;
+
+	for (NodePtr n : rootList) {
+		if (n->lex->lex->id == kScriptLexPackage) {
+			continue;
+		}
+		node->parent->blockList.push_back(n);
+	}
+
+	return TRUE;
 }
 
 LAME_END2

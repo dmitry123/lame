@@ -118,12 +118,6 @@ _Again3:
 			goto _Again3;
 		}
 	}
-//_Again4:
-//	if (node->lex->lex->id == kScriptLexNew && node->typeNode) {
-//		if (_MoveNode(node->typeNode, TRUE)) {
-//			goto _Again4;
-//		}
-//	}
 
 	for (NodePtr n : node->switchInfo.caseList) {
 	_Again5:
@@ -214,12 +208,15 @@ Void ScopeBuilder::Build(NodePtr rootNode, ScopePtr rootScope) {
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassStatic, this), kScriptNodeStatic);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassPrototype, this), kScriptNodeAnonymous);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachInterfacePrototype, this), kScriptNodeInterface);
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachInterfacePrototype, this), kScriptNodeAnnotation);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachInterfaceDeclare, this), kScriptNodeInterface);
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachInterfaceDeclare, this), kScriptNodeAnnotation);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassDeclare, this), kScriptNodeClass);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassDeclare, this), kScriptNodeAnonymous);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassVariableDeclare, this), kScriptNodeVariable);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachModificatorSet, this), kScriptNodeClass);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachModificatorSet, this), kScriptNodeInterface);
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachModificatorSet, this), kScriptNodeAnnotation);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachMethodDeclare, this), kScriptNodeFunction);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachModificatorSet, this), kScriptNodeFunction);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachConstruction, this), kScriptNodeCondition);
@@ -231,6 +228,7 @@ Void ScopeBuilder::Build(NodePtr rootNode, ScopePtr rootScope) {
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassInherit, this), kScriptNodeClass);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassInherit, this), kScriptNodeAnonymous);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachInterfaceInherit, this), kScriptNodeInterface);
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachInterfaceInherit, this), kScriptNodeAnnotation);
 
 	/*	Constant declare. That block allocate memory
 		for constant variables and push it to root
@@ -256,6 +254,7 @@ Void ScopeBuilder::Build(NodePtr rootNode, ScopePtr rootScope) {
 
 	/*  Check every class/interface inheritance lexes */
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachCheckInheritance, this), kScriptNodeInterface);
+	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachCheckInheritance, this), kScriptNodeAnnotation);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachCheckInheritance, this), kScriptNodeClass);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachCheckInheritance, this), kScriptNodeAnonymous);
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachClassInit, this), kScriptNodeClass);
@@ -362,13 +361,13 @@ Void ScopeBuilder::_ForEachModificatorSet(NodePtr n) {
 
 Void ScopeBuilder::_ForEachNodeFind(NodePtr n) {
 
-#if 0
-	if (n->id != kScriptNodeClass && n->id != kScriptNodeInterface) {
-		if (n->lex->lex->IsUnknown() && !n->var && !(n->var = this->scope->Find(n->word))) {
-			PostSyntaxError(n->lex->line, "Undeclared variable (%s)", n->word.data());
+	if ((n->flags & kScriptFlagAnnotation) != 0) {
+		if (!(n->var = _FindClass(scope, n))) {
+			PostSyntaxError(n->lex->line, "Undeclared annotation (%s)",
+				n->word.data());
 		}
+		n->var->SetModificator(Object::Modificator::Annotation);
 	}
-#endif
 
 	if (n->var) {
 		n->var->SetNode(n);
@@ -380,8 +379,6 @@ Void ScopeBuilder::_ForEachClassPrototype(NodePtr n) {
 	if (!n->typeNode) {
 		return;
 	}
-
-	//ObjectPtr temporaryScope = n->var;
 
 	if (n->id == kScriptNodeAnonymous) {
 		do {
@@ -396,14 +393,6 @@ Void ScopeBuilder::_ForEachClassPrototype(NodePtr n) {
 		PostSyntaxError(n->lex->line, "Class redeclaration (%s)", n->typeNode->word.data());
 	}
 
-	//if (temporaryScope) {
-	//	for (auto i : temporaryScope->GetHashMap()) {
-	//		i.second->parentScope_ = n->var;
-	//	}
-	//	n->var->Move(temporaryScope);
-	//	temporaryScope->GetParent()->Remove(temporaryScope);
-	//}
-
 	if ((n->flags & kScriptFlagEnum) != 0) {
 		n->var->SetModificator(Object::Modificator::Enum);
 	}
@@ -413,8 +402,6 @@ Void ScopeBuilder::_ForEachClassPrototype(NodePtr n) {
 
 Void ScopeBuilder::_ForEachInterfacePrototype(NodePtr n) {
 
-	//ObjectPtr temporaryScope = n->var;
-
 	n->var = this->scope->Add(
 		new Interface(n->typeNode->word, this->scope));
 
@@ -422,21 +409,10 @@ Void ScopeBuilder::_ForEachInterfacePrototype(NodePtr n) {
 		PostSyntaxError(n->lex->line, "Interface redeclaration (%s)", n->typeNode->word.data());
 	}
 
-	//if (temporaryScope) {
-	//	for (auto i : temporaryScope->GetHashMap()) {
-	//		i.second->parentScope_ = n->var;
-	//		i.second->path = n->var->Path();
-	//	}
-	//	n->var->Move(temporaryScope);
-	//	temporaryScope->GetParent()->Remove(temporaryScope);
-	//}
-
 	n->var->SetNode(n);
 }
 
 Void ScopeBuilder::_ForEachClassDeclare(NodePtr n) {
-
-	ClassPtr classVar;
 
 	if (!n->typeNode) {
 		return;

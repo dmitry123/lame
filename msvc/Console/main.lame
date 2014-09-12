@@ -1,3 +1,7 @@
+@interface Deprecated {}
+@interface Override {}
+
+@Deprecated
 static class Lame {
 
 	private Lame() {
@@ -19,8 +23,3 @@ class Main extends Lame.MainAdapter {
 	public void onStart() {}
 	public void onFinish() {}
 }
-
-class Static <T> {
-}
-
-Static<Lame> s = new Static<Lame>();

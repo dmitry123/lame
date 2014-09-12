@@ -17,6 +17,10 @@ int main(int argc, char** argv) {
     
 	fileName = argc > 1 ?
 		argv[1] : "main.lame";
+
+	if (argc == 1) {
+		//fileName = "d:/code/C++/Projects/Lame/java/java/applet/Applet.java";
+	}
     
     SyntaxBuilder syntaxBuilder;
     FileParser fileParser;

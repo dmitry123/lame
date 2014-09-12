@@ -24,7 +24,10 @@ typedef enum {
 	kScriptFlagEnum = 0x4000,
 	kScriptFlagWhileHasDo = 0x8000,
 	kScriptFlagInvocation = 0x10000,
-	kScriptFlagSynchronized = 0x20000
+	kScriptFlagSynchronized = 0x20000,
+	kScriptFlagTransient = 0x40000,
+	kScriptFlagVolatile = 0x8000,
+	kScriptFlagAnnotation = 0x10000
 } FlagID;
 
 typedef enum {
@@ -41,7 +44,8 @@ typedef enum {
 	kScriptNodeAlloc,
 	kScriptNodeArray,
 	kScriptNodeArgumentList,
-	kScriptNodeStatic
+	kScriptNodeStatic,
+	kScriptNodeAnnotation
 } NodeID;
 
 class LAME_API Node {

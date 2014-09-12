@@ -466,12 +466,6 @@ NodeBuilder::Iterator NodeBuilder::_BuildClass(NodePtr& parent, Iterator i) {
 			case kScriptLexAbstract:
 				modificators |= kScriptFlagAbstract;
 				break;
-			case kScriptLexDecprecated:
-				modificators |= kScriptFlagDeprecated;
-				break;
-			case kScriptLexOverride:
-				modificators |= kScriptFlagOverride;
-				break;
 			default:
 				break;
 			}
@@ -623,7 +617,6 @@ NodeBuilder::Iterator NodeBuilder::_BuildCondition(NodePtr& parent, Iterator i) 
 					break;
 				}
 				else if ((*(i + 1))->lex->id != kScriptLexBraceL) {
-				__AvoidParentheses:
 					this->_Push(&parent->blockList);
 					isSingleExpression = LAME_TRUE;
 					if ((*i)->lex->id != kScriptLexParenthesisR) {
@@ -1130,12 +1123,6 @@ NodeBuilder::Iterator NodeBuilder::_Build(NodePtr& node, Iterator i) {
 				break;
 			case kScriptLexAbstract:
 				this->modificators_ |= kScriptFlagAbstract;
-				break;
-			case kScriptLexDecprecated:
-				this->modificators_ |= kScriptFlagDeprecated;
-				break;
-			case kScriptLexOverride:
-				this->modificators_ |= kScriptFlagOverride;
 				break;
 			default:
 				break;
