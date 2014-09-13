@@ -27,7 +27,9 @@ typedef enum {
 	kScriptFlagSynchronized = 0x20000,
 	kScriptFlagTransient = 0x40000,
 	kScriptFlagVolatile = 0x8000,
-	kScriptFlagAnnotation = 0x10000
+	kScriptFlagAnnotation = 0x10000,
+	kScriptFlagInitialize = 0x20000,
+	kScriptFlagScope = 0x40000
 } FlagID;
 
 typedef enum {
@@ -68,6 +70,7 @@ public:
 	NodePtr next;
 	Uint32 depth;
 	NodePtr finalNode;
+	Bool wasItBrace;
 public:
 	struct {
 		NodePtr extendNode;

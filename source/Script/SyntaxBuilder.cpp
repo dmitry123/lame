@@ -25,7 +25,7 @@ SyntaxBuilder::SyntaxBuilder(Void) {
 		kScriptLexBelow
 	});
 	this->sequenceMatcher.Declare(kScriptLexSequenceCast, {
-		kScriptLexParenthesisL, kScriptLexUnknown, kScriptLexParenthesisR
+		kScriptLexParenthesisL, kScriptLexUnknown
 	});
 	this->sequenceMatcher.Declare(kScriptLexSequenceMethod, {
 		kScriptLexUnknown, kScriptLexUnknown, kScriptLexParenthesisL
@@ -47,6 +47,9 @@ SyntaxBuilder::SyntaxBuilder(Void) {
 	});
 	this->sequenceMatcher.Declare(kScriptLexSequenceSynchronized, {
 		kScriptLexSynchronized, kScriptLexParenthesisL
+	});
+	this->sequenceMatcher.Declare(kScriptLexSequenceClass, {
+		kScriptLexClass, kScriptLexUnknown
 	});
 }
 
@@ -101,7 +104,7 @@ Void SyntaxBuilder::Build(FileParserPtr fileParser, PackagePtr packageManager) {
 
 SyntaxBuilder::Iterator SyntaxBuilder::If(NodePtr& node, Iterator i) {
 
-	if (node->lex == *i) {
+	if (this->_Test(node, i)) {
 		__Inc(i);
 	}
 
@@ -115,9 +118,10 @@ SyntaxBuilder::Iterator SyntaxBuilder::If(NodePtr& node, Iterator i) {
 	__Inc(i);
 
 	if ((*i)->lex->id != kScriptLexBraceL) {
+		node->wasItBrace = FALSE;
 		while ((*i)->lex->id != kScriptLexSemicolon) {
 			i = this->_Append(&node->blockList, i);
-			if (node->blockList.back()->id != kScriptNodeDefault) {
+			if (node->blockList.back()->id == kScriptNodeCondition) {
 				break;
 			}
 			if ((*i)->lex->id != kScriptLexSemicolon) {
@@ -157,7 +161,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::If(NodePtr& node, Iterator i) {
 
 SyntaxBuilder::Iterator SyntaxBuilder::Else(NodePtr& node, Iterator i) {
 
-	if (node->lex == *i) {
+	if (this->_Test(node, i)) {
 		__Inc(i);
 	}
 
@@ -167,6 +171,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::Else(NodePtr& node, Iterator i) {
 	}
 
 	if ((*i)->lex->id != kScriptLexBraceL) {
+		node->wasItBrace = FALSE;
 		while ((*i)->lex->id != kScriptLexSemicolon) {
 			i = this->_Append(&node->blockList, i);
 			if (node->blockList.back()->id != kScriptNodeDefault) {
@@ -228,7 +233,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::For(NodePtr& node, Iterator i) {
 
 	Bool isForEach = FALSE;
 
-	if (node->lex == *i) {
+	if (this->_Test(node, i)) {
 		__Inc(i);
 	}
 
@@ -306,6 +311,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::For(NodePtr& node, Iterator i) {
 	}
 
 	if ((*i)->lex->id != kScriptLexBraceL) {
+		node->wasItBrace = FALSE;
 		while ((*i)->lex->id != kScriptLexSemicolon) {
 			i = this->_Append(&node->blockList, i);
 			if (node->blockList.back()->id != kScriptNodeDefault) {
@@ -336,20 +342,33 @@ SyntaxBuilder::Iterator SyntaxBuilder::For(NodePtr& node, Iterator i) {
 
 SyntaxBuilder::Iterator SyntaxBuilder::Try(NodePtr& node, Iterator i) {
 
-	if (node->lex == *i) {
+	if (this->_Test(node, i)) {
 		__Inc(i);
 	}
 
-	if ((*i)->lex->id != kScriptLexParenthesisL) {
-		PostSyntaxError((*i)->line, "Lost left parenthesis in (%s) construction",
-			node->word.data());
+	if ((*i)->lex->id == kScriptLexParenthesisL) {
+		__Inc(i);
+		while ((*i)->lex->id != kScriptLexParenthesisR) {
+			NodePtr typeNode = this->_Create(i);
+			i = this->Directed(typeNode, i);
+			__Inc(i);
+			NodePtr varNode = this->_Create(i);
+			varNode->typeNode = typeNode;
+			__Inc(i);
+			while ((*i)->lex->id != kScriptLexParenthesisR) {
+				varNode->argList.push_back(this->_Create(i));
+				__Inc(i);
+			}
+			node->argList.push_back(varNode);
+			if ((*i)->lex->id != kScriptLexParenthesisR) {
+				__Inc(i);
+			}
+		}
+		__Inc(i);
 	}
 
-	i = this->Arguments(node, i);
-
-	__Inc(i);
-
 	if ((*i)->lex->id != kScriptLexBraceL) {
+		node->wasItBrace = FALSE;
 		while ((*i)->lex->id != kScriptLexSemicolon) {
 			i = this->_Append(&node->blockList, i);
 			if (node->blockList.back()->id != kScriptNodeDefault) {
@@ -376,6 +395,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::Try(NodePtr& node, Iterator i) {
 	}
 
 	if (i + 1 != this->_End()) {
+		__Inc(i);
 		if ((*i)->lex->id != kScriptLexCatch && (*i)->lex->id != kScriptLexFinally) {
 			PostSyntaxError((*i)->line, "Lost (catch/finally) block after (try) construction before (%s)", (*i)->word.data());
 		}
@@ -389,7 +409,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::Try(NodePtr& node, Iterator i) {
 
 SyntaxBuilder::Iterator SyntaxBuilder::Catch(NodePtr& node, Iterator i) {
 
-	if (node->lex == *i) {
+	if (this->_Test(node, i)) {
 		__Inc(i);
 	}
 
@@ -440,7 +460,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::Catch(NodePtr& node, Iterator i) {
 
 SyntaxBuilder::Iterator SyntaxBuilder::Finally(NodePtr& node, Iterator i) {
 
-	if (node->lex == *i) {
+	if (this->_Test(node, i)) {
 		__Inc(i);
 	}
 
@@ -521,7 +541,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::Variable(NodePtr& node, Iterator i) {
 	}
 #endif
 
-	if (node->lex == *i) {
+	if (this->_Test(node, i)) {
 		__Inc(i);
 	}
 
@@ -577,6 +597,11 @@ SyntaxBuilder::Iterator SyntaxBuilder::Variable(NodePtr& node, Iterator i) {
 			if ((*i)->lex->id != kScriptLexSemicolon) {
 				__Inc(i);
 			}
+			if ((*i)->lex->id == kScriptLexParenthesisR &&
+				node->parent->id == kScriptNodeCondition
+			) {
+				break;
+			}
 		}
 	}
 
@@ -611,7 +636,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::Method(NodePtr& node, Iterator i) {
 	this->modificatorFlags = 0;
 	i = this->Directed(typeNode, i);
 
-	if (node->lex == *i) {
+	if (this->_Test(node, i)) {
 		__Inc(i);
 	}
 
@@ -623,6 +648,11 @@ SyntaxBuilder::Iterator SyntaxBuilder::Method(NodePtr& node, Iterator i) {
 	__Inc(i);
 
 	while ((*i)->lex->id != kScriptLexParenthesisR) {
+		Bool hasFinal = FALSE;
+		if ((*i)->lex->IsModificator() && (*i)->lex->id == kScriptLexFinal) {
+			hasFinal = TRUE;
+			__Inc(i);
+		}
 		if ((*i)->lex->id != kScriptLexUnknown) {
 			PostSyntaxError((*i)->line, "Illegal token in expression (%s)", (*i)->word.data());
 		}
@@ -633,6 +663,9 @@ SyntaxBuilder::Iterator SyntaxBuilder::Method(NodePtr& node, Iterator i) {
 			PostSyntaxError((*i)->line, "Illegal token in expression (%s)", (*i)->word.data());
 		}
 		NodePtr variableNode = this->_Create(i, kScriptNodeVariable);
+		if (hasFinal) {
+			variableNode->flags |= kScriptFlagFinal;
+		}
 		variableNode->Type(typeNode);
 		node->argList.push_back(variableNode);
 		if (this->_IsArray(i)) {
@@ -656,8 +689,13 @@ SyntaxBuilder::Iterator SyntaxBuilder::Method(NodePtr& node, Iterator i) {
 			if ((*i)->lex->id != kScriptLexUnknown) {
 				PostSyntaxError((*i)->line, "Illegal token in expression (%s)", (*i)->word.data());
 			}
-			i = this->_Append(&node->methodInfo.throwsList, i);
+			NodePtr throwNode = this->_Create(i);
+			i = this->Directed(throwNode, i);
+			node->methodInfo.throwsList.push_back(throwNode);
 			if ((*i)->lex->id != kScriptLexBraceL && (*i)->lex->id != kScriptLexSemicolon) {
+				__Inc(i);
+			}
+			if ((*i)->lex->id == kScriptLexComma) {
 				__Inc(i);
 			}
 		}
@@ -681,7 +719,9 @@ SyntaxBuilder::Iterator SyntaxBuilder::Method(NodePtr& node, Iterator i) {
 
 	while ((*i)->lex->id != kScriptLexBraceR) {
 		i = this->_Append(&node->blockList, i);
-		if (!node->blockList.empty() && _WasItBrace(node->blockList.back())) {
+		if (!node->blockList.empty() && (_WasItBrace(node->blockList.back()) ||
+			_WasItBrace(node->blockList.back()->typeNode))
+		) {
 			__Inc(i);
 		}
 		else {
@@ -735,7 +775,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::Class(NodePtr& node, Iterator i) {
 		i = this->Template(node, i);
 	}
 
-	if (node->lex == *i) {
+	if (this->_Test(node, i)) {
 		__Inc(i);
 	}
 
@@ -828,7 +868,9 @@ SyntaxBuilder::Iterator SyntaxBuilder::Class(NodePtr& node, Iterator i) {
 				field->id != kScriptNodeInterface &&
 				field->id != kScriptNodeStatic
 			) {
-				PostSyntaxError((*i)->line, "Illegal token in class (%s)", field->word.data());
+				if (!(field->flags & kScriptFlagAnnotation)) {
+					PostSyntaxError((*i)->line, "Illegal token in class (%s)", field->word.data());
+				}
 			}
 			if (modificatorCount > 1) {
 				PostSyntaxError((*i)->line, "You can't use public/private/protected modificators together", 0);
@@ -896,8 +938,8 @@ SyntaxBuilder::Iterator SyntaxBuilder::New(NodePtr& node, Iterator i) {
 
 	if ((*i)->lex->id == kScriptLexBraceL) {
 		classNode->classInfo.extendNode = classNode;
-		i = this->Class(classNode, i);
 		classNode->id = kScriptNodeAnonymous;
+		i = this->Class(classNode, i);
 	}
 	else if ((*i)->lex->id == kScriptLexArray) {
 		node->lex->args = 0;
@@ -929,16 +971,9 @@ SyntaxBuilder::Iterator SyntaxBuilder::New(NodePtr& node, Iterator i) {
 		}
 	}
 	else {
+		__Dec(i);
 		classNode->id = kScriptNodeDefault;
 		LAME_TODO("this->parentNode = this->parentNode->parent");
-	}
-
-	if ((*i)->lex->id != kScriptLexSemicolon) {
-		__Inc(i);
-	}
-
-	if ((*i)->lex->id != kScriptLexSemicolon) {
-		PostSyntaxError((*i)->line, "Lost semicolon before (%s)", (*i)->word.data());
 	}
 
 	return i;
@@ -950,17 +985,22 @@ SyntaxBuilder::Iterator SyntaxBuilder::Arguments(NodePtr& node, Iterator i) {
 	Uint32 extraParentheses = 0;
 	Bool emptyParentheses = 0;
 
-	if (node->lex == *i) {
+	if (this->_Test(node, i)) {
 		__Inc(i);
 	}
-	if ((*i)->lex->id != kScriptLexParenthesisL) {
+
+	if ((*i)->lex->id != kScriptLexParenthesisL &&
+		(*i)->lex->id != kScriptLexBracketL
+	) {
 		return i - 1;
 	}
 	__Inc(i);
 
 	this->wasLastParenthesis = TRUE;
 
-	while ((*i)->lex->id != kScriptLexParenthesisR || extraParentheses) {
+	while ((*i)->lex->id != kScriptLexParenthesisR &&
+		(*i)->lex->id != kScriptLexBracketR || extraParentheses
+	) {
 		i = this->_Append(&node->argList, i);
 		if (node->argList.back()->id != kScriptNodeInvoke) {
 			if ((*i)->lex->id == kScriptLexParenthesisL) {
@@ -972,7 +1012,9 @@ SyntaxBuilder::Iterator SyntaxBuilder::Arguments(NodePtr& node, Iterator i) {
 				}
 				emptyParentheses = TRUE;
 			}
-			if ((*i)->lex->id != kScriptLexParenthesisR || emptyParentheses) {
+			if ((*i)->lex->id != kScriptLexParenthesisR &&
+				(*i)->lex->id != kScriptLexBracketR || emptyParentheses
+			) {
 				__Inc(i);
 			}
 			else if (this->wasLastParenthesis) {
@@ -980,10 +1022,12 @@ SyntaxBuilder::Iterator SyntaxBuilder::Arguments(NodePtr& node, Iterator i) {
 				__Inc(i);
 			}
 		}
-		else {
+		else if (node->argList.back()->id != kScriptNodeVariable) {
 			__Inc(i);
 		}
-		if ((*i)->lex->id != kScriptLexParenthesisR && !extraParentheses) {
+		if ((*i)->lex->id != kScriptLexParenthesisR
+			&& (*i)->lex->id != kScriptLexBracketR && !extraParentheses
+		) {
 			if ((*i)->lex->id != kScriptLexComma) {
 #if 0 /* Not needed */
 				PostSyntaxError((*i)->line, "Lost comma after argument, before (%s)", (*i)->word.data());
@@ -1010,17 +1054,34 @@ SyntaxBuilder::Iterator SyntaxBuilder::Template(NodePtr& node, Iterator i) {
 	NodePtr typeNode = node->typeNode
 		? node->typeNode : node;
 
-	if (node->lex == *i) {
+	if (this->_Test(node, i)) {
 		__Inc(i);
 	}
+
+	Iterator first = i;
 
 	if ((*i)->lex->id != kScriptLexBelow) {
 		return i;
 	}
-
-	i = this->fileParser->GetLexList().erase(i);
+	__Inc(i);
 
 	typeNode->templateNode = this->_Create(i, kScriptNodeDefault);
+
+	if (i + 1 != this->_End() && (*(i + 1))->lex->id == kScriptLexDirected) {
+		__Inc(i);
+		while ((*i)->lex->id != kScriptLexUnknown) {
+			__Inc(i);
+			NodePtr nextNode = typeNode->templateNode;
+			while (nextNode->next) {
+				nextNode = nextNode->next;
+			}
+			nextNode->next = this->_Create(i);
+			__Inc(i);
+			if ((*i)->lex->id != kScriptLexDirected) {
+				break;
+			}
+		}
+	}
 
 	if ((*i)->lex->id == kScriptLexUnknown ||
 		(*i)->lex->id == kScriptLexTernary
@@ -1045,16 +1106,23 @@ SyntaxBuilder::Iterator SyntaxBuilder::Template(NodePtr& node, Iterator i) {
 				this->_Create(i);
 		}
 		else if ((*i)->lex->id != kScriptLexAbove) {
-			PostSyntaxError((*i)->line, "Unexcepted token in super template expression (%s)",
-				(*i)->word.data());
+			return i - (i - first) - 1;
 		}
-		else {
-			__Dec(i);
+	}
+	else {
+		if (i + 1 != this->_End() && (*(i + 1))->lex->id != kScriptLexAbove) {
+			return i - (i - first) - 1;
 		}
 	}
 
 	__Inc(i);
-	i = this->fileParser->GetLexList().erase(i);
+
+	Uint32 offset = i - first;
+
+	while (offset--) {
+		first = this->_Erase(first);
+	}
+	i = first;
 
 	node->flags |= kScriptFlagTemplate;
 
@@ -1089,6 +1157,9 @@ SyntaxBuilder::Iterator SyntaxBuilder::Array(NodePtr& node, Iterator i) {
 		PostSyntaxError(node->lex->line, "Illegal token before brackets (%s)", node->lex->word.data());
 	}
 	node->flags |= kScriptFlagArray;
+	if ((*i)->lex->id == kScriptLexArray) {
+		__Dec(i);
+	}
 	i = this->_List().erase(i + 1);
 	__Dec(i);
 
@@ -1138,7 +1209,14 @@ SyntaxBuilder::Iterator SyntaxBuilder::Ternary(NodePtr& node, Iterator i) {
 
 	while ((*i)->lex->id != kScriptLexSemicolon) {
 		i = this->_Append(&node->elseList, i);
-		__Inc(i);
+		if (node->elseList.back()->id != kScriptNodeDefault) {
+			if (i + 1 != this->_End() && (*(i + 1))->lex->id != kScriptLexTernary) {
+				break;
+			}
+		}
+		if ((*i)->lex->id != kScriptLexSemicolon) {
+			__Inc(i);
+		}
 	}
 
 	if (node->blockList.empty() || node->elseList.empty()) {
@@ -1150,14 +1228,22 @@ SyntaxBuilder::Iterator SyntaxBuilder::Ternary(NodePtr& node, Iterator i) {
 
 SyntaxBuilder::Iterator SyntaxBuilder::Directed(NodePtr& node, Iterator i) {
 
-	if (node->lex->lex->id != kScriptLexUnknown) {
+	if (node->lex->lex->id != kScriptLexUnknown &&
+		node->lex->lex->id != kScriptLexParenthesisL &&
+		node->lex->lex->id != kScriptLexCast
+	) {
 		return i;
 	}
 
 	__Inc(i);
 
-	if (this->_IsTemplate(i)) {
-		i = this->Template(node, i);
+	if (node->parent->id == kScriptNodeClass ||
+		node->parent->id == kScriptNodeInterface ||
+		node->parent->id == kScriptNodeAnonymous
+	) {
+		if (this->_IsTemplate(i)) {
+			i = this->Template(node, i);
+		}
 	}
 
 	if ((*i)->lex->id != kScriptLexDirected) {
@@ -1219,7 +1305,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::Switch(NodePtr& node, Iterator i) {
 
 	node->id = kScriptNodeCondition;
 
-	if (node->lex == *i) {
+	if (this->_Test(node, i)) {
 		__Inc(i);
 	}
 
@@ -1268,16 +1354,28 @@ SyntaxBuilder::Iterator SyntaxBuilder::Switch(NodePtr& node, Iterator i) {
 			(*i)->lex->id != kScriptLexDefault &&
 			(*i)->lex->id != kScriptLexBraceR
 		) {
+			if ((*i)->lex->id == kScriptLexBraceL) {
+				__Inc(i);
+				while (
+					(*i)->lex->id != kScriptLexCase &&
+					(*i)->lex->id != kScriptLexDefault &&
+					(*i)->lex->id != kScriptLexBraceR
+				) {
+					NodePtr caseNode = this->_Append(i);
+					switchNode->blockList.push_back(caseNode);
+					if (_WasItBrace(caseNode)) {
+						__Inc(i);
+					}
+					else {
+						if ((*i)->lex->id != kScriptLexBraceR) {
+							__Inc(i);
+						}
+					}
+				}
+				__Inc(i);
+			}
 			NodePtr caseNode = this->_Append(i);
 			switchNode->blockList.push_back(caseNode);
-			if ((*i)->lex->id == kScriptLexBreak) {
-				if (caseNode->parent->lex->lex->id == kScriptLexSwitch) {
-					if (switchNode->switchInfo.hasBreak) {
-						PostSyntaxError((*i)->line, "Unreachable statement", 0);
-					}
-					switchNode->switchInfo.hasBreak = TRUE;
-				}
-			}
 			__Inc(i);
 		}
 	}
@@ -1306,7 +1404,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::Type(NodePtr& node, Iterator i) {
 
 SyntaxBuilder::Iterator SyntaxBuilder::Package(NodePtr& node, Iterator i) {
 
-	if (node->lex == *i) {
+	if (this->_Test(node, i)) {
 		__Inc(i);
 	}
 
@@ -1344,14 +1442,16 @@ SyntaxBuilder::Iterator SyntaxBuilder::Package(NodePtr& node, Iterator i) {
 		nextNode = nextNode->next;
 	}
 
-	this->packageManager->Register(node);
+	if (this->packageManager) {
+		this->packageManager->Register(node);
+	}
 
 	return i;
 }
 
 SyntaxBuilder::Iterator SyntaxBuilder::Import(NodePtr& node, Iterator i) {
 
-	if (node->lex == *i) {
+	if (this->_Test(node, i)) {
 		__Inc(i);
 	}
 
@@ -1391,7 +1491,9 @@ SyntaxBuilder::Iterator SyntaxBuilder::Import(NodePtr& node, Iterator i) {
 		nextNode = nextNode->next;
 	}
 
-	this->packageManager->Import(node);
+	if (this->packageManager) {
+		this->packageManager->Import(node);
+	}
 
 	return i;
 }
@@ -1399,6 +1501,8 @@ SyntaxBuilder::Iterator SyntaxBuilder::Import(NodePtr& node, Iterator i) {
 SyntaxBuilder::Iterator SyntaxBuilder::Initialize(NodePtr& node, Iterator i) {
 
 	Bool wasItInit = FALSE;
+
+	node->flags |= kScriptFlagInitialize;
 
 	if ((*i)->lex->id != kScriptLexBraceL) {
 		return i;
@@ -1442,7 +1546,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::Initialize(NodePtr& node, Iterator i) {
 
 SyntaxBuilder::Iterator SyntaxBuilder::Synchronized(NodePtr& node, Iterator i) {
 
-	if (node->lex == *i) {
+	if (this->_Test(node, i)) {
 		__Inc(i);
 	}
 
@@ -1488,7 +1592,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::Synchronized(NodePtr& node, Iterator i) {
 
 SyntaxBuilder::Iterator SyntaxBuilder::Annotation(NodePtr& node, Iterator i) {
 
-	if (node->lex == *i) {
+	if (this->_Test(node, i)) {
 		__Inc(i);
 	}
 
@@ -1505,16 +1609,80 @@ SyntaxBuilder::Iterator SyntaxBuilder::Annotation(NodePtr& node, Iterator i) {
 	return i;
 }
 
+SyntaxBuilder::Iterator SyntaxBuilder::Brace(NodePtr& node, Iterator i) {
+
+	__Inc(i);
+
+	while ((*i)->lex->id != kScriptLexBraceR) {
+		i = this->_Append(&node->blockList, i);
+		if (_WasItBrace(node->blockList.back())) {
+			__Inc(i);
+		}
+		else {
+			if ((*i)->lex->id != kScriptLexBraceR) {
+				__Inc(i);
+			}
+		}
+	}
+
+	node->flags |= kScriptFlagScope;
+	node->word = "{}";
+	node->lex->ChangeLex(Lex::Find(kScriptLexUnknown));
+
+	return i;
+}
+
 Bool SyntaxBuilder::_WasItBrace(NodePtr node) {
 
+	NodePtr ifNode = node;
+
+	if (!node) {
+		return FALSE;
+	}
+
+	if (node->lex->lex->id == kScriptLexIf) {
+
+		if (node->parent->id == kScriptNodeFunction) {
+			goto _Skip;
+		}
+
+		while (ifNode->elseNode) {
+			ifNode = ifNode->elseNode;
+		}
+
+		while (TRUE) {
+			
+			if (!ifNode->blockList.empty() && ifNode->blockList.back()->id == kScriptNodeCondition) {
+
+				ifNode = ifNode->blockList.back();
+
+				while (ifNode->elseNode) {
+					ifNode = ifNode->elseNode;
+				}
+			}
+			else {
+				break;
+			}
+		}
+
+		return ifNode->wasItBrace;
+	}
+
+_Skip:
+	if ((node->flags & kScriptFlagInitialize) != 0 ||
+		(node->flags & kScriptFlagScope) != 0
+	) {
+		return TRUE;
+	}
+
 	return
-		node->id == kScriptNodeCondition ||
 		node->id == kScriptNodeClass ||
 		node->id == kScriptNodeAnonymous ||
 		node->id == kScriptNodeFunction ||
 		node->id == kScriptNodeInterface ||
 		node->id == kScriptNodeEntry ||
-		node->id == kScriptNodeStatic;
+		node->id == kScriptNodeStatic ||
+		node->id == kScriptNodeCondition;
 }
 
 NodePtr SyntaxBuilder::_Create(Iterator& i, NodeID nodeType) {
@@ -1542,8 +1710,11 @@ NodePtr SyntaxBuilder::_Create(Iterator& i, NodeID nodeType) {
 
 	/*	Create new node and push it to node list. */
 
-	NodePtr node = new Node((*i)->word, nodeType, *i, this->parentNode, this->previousNode);
+	NodePtr node = new Node((*i)->word, nodeType, *i,
+		this->parentNode, this->previousNode);
+
 	this->nodeContainer.push_back(node);
+	node->wasItBrace = TRUE;
 	node->syntaxBuilder = this;
 
 	/*	Check node for 'power' and save its parent. */
@@ -1600,6 +1771,12 @@ NodePtr SyntaxBuilder::_Append(Iterator& i) {
 
 	NodePtr node = this->_Create(i);
 
+	if ((*i)->lex->id == kScriptLexBraceL) {
+		i = this->Brace(node, i);
+	}
+
+	i = this->Directed(node, i);
+
 	if ((*i)->lex->id == kScriptLexImport) {
 		i = this->Import(node, i);
 	}
@@ -1607,43 +1784,48 @@ NodePtr SyntaxBuilder::_Append(Iterator& i) {
 		i = this->Package(node, i);
 	}
 
-	if (this->_IsStatic(i)) {
-		i = this->Static(node, i);
-	}
-	else if (this->_IsArray(i)) {
-		i = this->Array(node, i);
-	}
-	else if (this->_IsNew(i)) {
-		i = this->New(node, i);
-	}
-	else if (this->_IsArguments(i + 1)) {
-		i = this->Arguments(node, i);
-	}
-
-	if ((*i)->lex->id == kScriptLexEnum) {
-		i = this->Enum(node, i);
-	}
-	else if ((*i)->lex->id == kScriptLexTernary) {
-		i = this->Ternary(node, i);
-	}
-	
-#if 0 /* It was bad idea */
 	if (this->_IsTemplate(i + 1)) {
+
 		i = this->Template(node, i);
+
+		if ((*i)->lex->id == kScriptLexArray) {
+			i = this->Array(node, i);
+		}
 	}
-#endif
+	else {
+		if (this->_IsStatic(i)) {
+			i = this->Static(node, i);
+		}
+		else if (this->_IsArray(i)) {
+			i = this->Array(node, i);
+		}
+		else if (this->_IsNew(i)) {
+			i = this->New(node, i);
+		}
+		else if (this->_IsArguments(i + 1)) {
+			i = this->Arguments(node, i);
+		}
+
+		if ((*i)->lex->id == kScriptLexEnum) {
+			i = this->Enum(node, i);
+		}
+		else if ((*i)->lex->id == kScriptLexTernary) {
+			i = this->Ternary(node, i);
+		}
+	}
 
 	if (this->_IsSynchronized(i)) {
 		i = this->Synchronized(node, i);
 	}
 	else if (
-		node->lex->lex->id == kScriptLexClass ||
+		this->_IsClass(i) ||
 		node->lex->lex->id == kScriptLexInterface ||
 		node->lex->lex->id == kScriptLexAnnotation
 	) {
 		i = this->Class(node, i);
 	}
 	else if (node->lex->lex->IsCondition()) {
+		node->wasItBrace = TRUE;
 		switch (node->lex->lex->id) {
 			case kScriptLexIf:      i = this->If(node, i);      break;
 			case kScriptLexElse:    i = this->Else(node, i);    break;
@@ -1698,12 +1880,37 @@ NodePtr SyntaxBuilder::_Append(Iterator& i) {
 
 	/*	Fix for cast */
 
+	if (this->_IsCast(i) && (*(i + 1))->lex->id == kScriptLexUnknown &&
+		node->id == kScriptNodeDefault
+	) {
+		Iterator eraseIt = i;
+		__Inc(i);
+		node->word = (*i)->word;
+		i = this->Directed(node, i);
+		__Inc(i);
+		if ((*i)->lex->id == kScriptLexParenthesisR) {
+			i = this->_Erase(eraseIt);
+			node->next = NULL;
+			i = this->Directed(node, i);
+			node->lex->ChangeLex(Lex::Find(kScriptLexCast));
+			__Inc(i);
+			i = this->_Erase(i);
+			__Dec(i);
+			node->lex->priority = node->lex->lex->priority;
+			node->lex->args = node->lex->lex->args;
+		}
+		else {
+			i = eraseIt;
+		}
+	}
+
+#if 0
 	if (this->_IsCast(i + 1) && (*(i + 2))->lex->id == kScriptLexUnknown) {
 		__Inc(i);
-		i = this->_List().erase(i);
+		//i = this->_List().erase(i);
 		(*i)->ChangeLex(Lex::Find(kScriptLexCast));
 		(*i)->args = (*i)->lex->args;
-		i = this->_List().erase(i + 1);
+		//i = this->_List().erase(i + 1);
 		__Dec(i);
 		__Dec(i);
 	}
@@ -1715,6 +1922,7 @@ NodePtr SyntaxBuilder::_Append(Iterator& i) {
 		i = this->_List().erase(i + 1);
 		__Dec(i);
 	}
+#endif
 
 	/* Fix for return */
 
@@ -1865,6 +2073,25 @@ Void SyntaxBuilder::_Combine(NodePtr node) {
 			this->_Combine(n);
 		}
 	}
+}
+
+SyntaxBuilder::Iterator SyntaxBuilder::_Erase(Iterator i) {
+
+	if (i == this->_End()) {
+		return i;
+	}
+
+	return
+		this->_List().erase(i);
+}
+
+Bool SyntaxBuilder::_Test(NodePtr node, Iterator i) {
+
+	while (node->next) {
+		node = node->next;
+	}
+
+	return node->lex == *i;
 }
 
 LAME_END2

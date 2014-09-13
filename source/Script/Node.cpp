@@ -129,7 +129,7 @@ private:
         this->resultStack.push(node);
     }
 	inline int GetPrecedence(NodePtr node) const {
-		return node->lex->priority;
+		return node->lex->lex->priority;
 	}
 	inline int StackPrecedence() const {
 		if (this->opStack.empty()) {
@@ -187,6 +187,7 @@ Node::Node(Buffer word, NodeID id, LexNodePtr lex, NodePtr parent, NodePtr prev)
 	this->switchInfo.hasBreak = FALSE;
 	this->syntaxBuilder = NULL;
 	this->finalNode = NULL;
+	this->wasItBrace = FALSE;
 }
 
 Void Node::ShuntingYard(Void) {

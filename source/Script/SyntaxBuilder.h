@@ -22,7 +22,8 @@ private:
 		kScriptLexSequenceAlloc,
 		kScriptLexSequenceNew,
 		kScriptLexSequenceStatic,
-		kScriptLexSequenceSynchronized
+		kScriptLexSequenceSynchronized,
+		kScriptLexSequenceClass
 	};
 public:
 	typedef Deque<LexNodePtr>::iterator
@@ -62,6 +63,7 @@ public:
 	virtual Iterator Initialize(NodePtr& node, Iterator i);
 	virtual Iterator Synchronized(NodePtr& node, Iterator i);
 	virtual Iterator Annotation(NodePtr& node, Iterator i);
+	virtual Iterator Brace(NodePtr& node, Iterator i);
 public:
 	inline NodePtr GetRootNode() {
 		return this->rootNode;
@@ -80,6 +82,8 @@ private:
 	Void _Reset(Void);
 	Void _AllowModificators(NodePtr node, Uint32 modificators);
 	Void _Combine(NodePtr node);
+	Iterator _Erase(Iterator i);
+	Bool _Test(NodePtr node, Iterator i);
 private:
 	inline Deque<LexNodePtr>& _List() {
 		return this->fileParser->GetLexList();
@@ -131,6 +135,10 @@ private:
 	inline Bool _IsSynchronized(Iterator i) {
 		return this->sequenceMatcher.Match(
 			kScriptLexSequenceSynchronized, i, this->_End());
+	}
+	inline Bool _IsClass(Iterator i) {
+		return this->sequenceMatcher.Match(
+			kScriptLexSequenceClass, i, this->_End());
 	}
 private:
 	SequenceMatcher sequenceMatcher;

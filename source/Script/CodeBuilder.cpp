@@ -1386,6 +1386,11 @@ Void CodeBuilder::_Array(NodePtr n) {
 
 	VariablePtr leftVar;
 
+	if (!n->var) {
+		PostSyntaxError(n->lex->line, "Undeclared array (%s)",
+			n->word.data());
+	}
+
 	if (!n->var->CheckType(Object::Type::Variable) || n->var->GetVariable()->GetVarType() != Variable::Var::Array) {
 		PostSyntaxError(n->lex->line, "You can't assume indexing only to arrays (%s)",
 			n->word.data());

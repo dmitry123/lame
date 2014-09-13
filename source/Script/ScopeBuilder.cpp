@@ -361,7 +361,7 @@ Void ScopeBuilder::_ForEachModificatorSet(NodePtr n) {
 
 Void ScopeBuilder::_ForEachNodeFind(NodePtr n) {
 
-	if ((n->flags & kScriptFlagAnnotation) != 0) {
+	if ((n->flags & kScriptFlagAnnotation) != 0 && n->lex->lex->id == kScriptLexUnknown) {
 		if (!(n->var = _FindClass(scope, n))) {
 			PostSyntaxError(n->lex->line, "Undeclared annotation (%s)",
 				n->word.data());

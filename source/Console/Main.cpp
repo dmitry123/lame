@@ -17,10 +17,6 @@ int main(int argc, char** argv) {
     
 	fileName = argc > 1 ?
 		argv[1] : "main.lame";
-
-	if (argc == 1) {
-		//fileName = "d:/code/C++/Projects/Lame/java/java/applet/Applet.java";
-	}
     
     SyntaxBuilder syntaxBuilder;
     FileParser fileParser;
@@ -46,7 +42,28 @@ int main(int argc, char** argv) {
 
 		/* Load, parse file and build syntax tree */
 		fileParser.Load(fileName);
-		syntaxBuilder.Build(&fileParser, &packageManager);
+		syntaxBuilder.Build(&fileParser, NULL);
+
+#if 1
+		StringC javaCorePath = "d:/code/c++/projects/lame/java/javax";
+		List<Buffer> list = Directory::GetFiles(javaCorePath, TRUE, "java");
+		Uint32 javaCorePathLength = strlen(javaCorePath);
+		Uint32 totalFiles = list.size();
+		Vector<FileParser> parserList(list.size());
+		Vector<SyntaxBuilder> syntaxList(list.size());
+		Uint32 i = 0;
+
+		for (BufferRefC b : list) {
+
+			printf("%.2f%% : %s\n", Float32(i) / totalFiles * 100,
+				b.data() + javaCorePathLength);
+
+			parserList[i].Load(b);
+			syntaxList[i].Build(&parserList[i], NULL);
+
+			++i;
+		}
+#endif
 
 		/* Get syntax's root node */
 		rootNode = syntaxBuilder.GetRootNode();

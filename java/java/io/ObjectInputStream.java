@@ -25,7 +25,7 @@
 
 package java.io;
 
-import java.io.ObjectStreamClass.WeakClassKey;
+import java.io.ObjectStreamClass;
 import java.lang.ref.ReferenceQueue;
 import java.lang.reflect.Array;
 import java.lang.reflect.Modifier;
@@ -40,7 +40,7 @@ import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import static java.io.ObjectStreamClass.processQueue;
+import static java.io.ObjectStreamClass;
 import sun.reflect.misc.ReflectUtil;
 
 /**

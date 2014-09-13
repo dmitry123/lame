@@ -99,6 +99,10 @@ Map<LexID, Lex> Lex::lexMap = {
 			{ "return", P(0, 0), kScriptLexReturn, 1,
 				kScriptLexFlagLanguage | kScriptLexFlagRight }
 		},
+		{ kScriptLexAssert,
+			{ "assert", P(0, 0), kScriptLexAssert, 1,
+				kScriptLexFlagLanguage | kScriptLexFlagRight }
+		},
 		{ kScriptLexBitNot,
 			{ "~", P(3, 1), kScriptLexBitNot, 1,
 				kScriptLexFlagRight | kScriptLexFlagMath | kScriptLexFlagExpression }
@@ -405,7 +409,7 @@ Map<LexID, Lex> Lex::lexMap = {
 		},
 		{ kScriptLexSynchronized,
 			{ "synchronized", P(0, 0), kScriptLexSynchronized, 0,
-				kScriptLexFlagLanguage | kScriptLexFlagModificator }
+				kScriptLexFlagLanguage | kScriptLexFlagModificator | kScriptLexFlagCondition }
 		},
 		{ kScriptLexDefault,
 			{ "default", P(0, 0), kScriptLexDefault, 0,

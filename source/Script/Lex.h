@@ -31,6 +31,7 @@ typedef enum {
 	kScriptLexPrefixDecrement,
 	kScriptLexInstanceof,
 	kScriptLexReturn,
+	kScriptLexAssert,
 	kScriptLexBitNot,
 	kScriptLexNot,
 	kScriptLexUnaryMinus,

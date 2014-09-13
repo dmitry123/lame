@@ -101,7 +101,9 @@ static LexPtrC _ParseLex(StringC* wordPtr, Buffer* name, Uint32 line, Bool isCom
             return left->word.length() < right->word.length();
         });
 
-		if (!l.empty() && !(FileParser::IsLetter(*(word + l.back()->word.length() + 1)))) {
+		if (!l.empty() && !(FileParser::IsLetter(*(word + l.back()->word.length()))) ||
+			!l.empty() && !isWord
+		) {
 			word += l.back()->word.length();
 		}
 		else {

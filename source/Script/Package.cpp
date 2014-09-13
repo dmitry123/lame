@@ -107,7 +107,7 @@ PackagePtr Package::Import(NodePtr node) {
 		Buffer fileName = fullPath;
 
 		for (BufferRefC file : fileList) {
-			if (!this->_Import(fullPath + file)) {
+			if (!this->_Import(fullPath + file) && !this->_Import(this->javaCorePath + file)) {
 				PostSyntaxError(node->lex->line, "Unable to import file (%s)",
 					fileName.data());
 			}
@@ -115,7 +115,7 @@ PackagePtr Package::Import(NodePtr node) {
 	}
 	else {
 		Buffer fileName = fullPath + filePath + classNode->word + ".java";
-		if (!this->_Import(fileName)) {
+		if (!this->_Import(fileName) && !this->_Import(this->javaCorePath + filePath + classNode->word + ".java")) {
 			PostSyntaxError(node->lex->line, "Unable to import file (%s)",
 				fileName.data());
 		}
