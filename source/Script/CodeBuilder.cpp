@@ -232,7 +232,8 @@ Void CodeBuilder::_Run(NodeListRef nodeList, Bool makeBackup) {
 	}
 
 	this->wasItCondition = FALSE;
-	listLength = this->nodeList.size() - listLength;
+	
+	listLength = (Sint32)this->nodeList.size() - (Sint32)listLength;
 
 	while (listLength--) {
 		this->nodeList.pop_back();
@@ -554,26 +555,26 @@ Void CodeBuilder::_Binary(NodePtr n) {
 	case kScriptLexModSet:
 	case kScriptLexSub:
 	case kScriptLexSubSet:
-		if (!leftVar->GetClass()->IsIntegerLike() &&
-			!leftVar->GetClass()->IsFloatLike() ||
-			!rightVar->GetClass()->IsIntegerLike() &&
-			!rightVar->GetClass()->IsFloatLike()
+		if ((!leftVar->GetClass()->IsIntegerLike() &&
+			!leftVar->GetClass()->IsFloatLike()) ||
+			(!rightVar->GetClass()->IsIntegerLike() &&
+			!rightVar->GetClass()->IsFloatLike())
 		) {
 			PostSyntaxError(n->lex->line, "Unable to apply binary operator (%s) to non-number type (%s, %s)",
-				leftVar->GetClass()->GetName().data(), rightVar->GetClass()->GetName().data());
+				n->word.data(), leftVar->GetClass()->GetName().data(), rightVar->GetClass()->GetName().data());
 		}
 		break;
 	case kScriptLexAdd:
 	case kScriptLexAddSet:
-		if (!leftVar->GetClass()->IsIntegerLike() &&
+		if ((!leftVar->GetClass()->IsIntegerLike() &&
 			!leftVar->GetClass()->IsFloatLike() &&
-			!leftVar->GetClass()->IsStringLike() ||
-			!rightVar->GetClass()->IsIntegerLike() &&
+			!leftVar->GetClass()->IsStringLike()) ||
+			(!rightVar->GetClass()->IsIntegerLike() &&
 			!rightVar->GetClass()->IsFloatLike() &&
-			!rightVar->GetClass()->IsStringLike()
+			!rightVar->GetClass()->IsStringLike())
 		) {
 			PostSyntaxError(n->lex->line, "Unable to apply binary operator (%s) to non-number or string type (%s, %s)",
-				leftVar->GetClass()->GetName().data(), rightVar->GetClass()->GetName().data());
+				n->word.data(), leftVar->GetClass()->GetName().data(), rightVar->GetClass()->GetName().data());
 		}
 		break;
 	case kScriptLexBitShiftL:
@@ -592,7 +593,7 @@ Void CodeBuilder::_Binary(NodePtr n) {
 			!rightVar->GetClass()->IsIntegerLike()
 		) {
 			PostSyntaxError(n->lex->line, "Unable to apply binary operator (%s) to non-interger type (%s, %s)",
-				leftVar->GetClass()->GetName().data(), rightVar->GetClass()->GetName().data());
+				n->word.data(), leftVar->GetClass()->GetName().data(), rightVar->GetClass()->GetName().data());
 		}
 		break;
 	case kScriptLexSet:
@@ -601,28 +602,28 @@ Void CodeBuilder::_Binary(NodePtr n) {
 	case kScriptLexAbove:
 	case kScriptLexBelowEqual:
 	case kScriptLexAboveEqual:
-		if (!leftVar->GetClass()->IsIntegerLike() &&
+		if ((!leftVar->GetClass()->IsIntegerLike() &&
 			!leftVar->GetClass()->IsFloatLike() &&
-			!leftVar->GetClass()->IsStringLike() ||
-			!rightVar->GetClass()->IsIntegerLike() &&
+			!leftVar->GetClass()->IsStringLike()) ||
+			(!rightVar->GetClass()->IsIntegerLike() &&
 			!rightVar->GetClass()->IsFloatLike() &&
-			!rightVar->GetClass()->IsStringLike()
+			!rightVar->GetClass()->IsStringLike())
 		) {
 			PostSyntaxError(n->lex->line, "Unable to apply binary operator (%s) to non-comparable type (%s, %s)",
-				leftVar->GetClass()->GetName().data(), rightVar->GetClass()->GetName().data());
+				n->word.data(), leftVar->GetClass()->GetName().data(), rightVar->GetClass()->GetName().data());
 		}
 		break;
 	case kScriptLexEqual:
 	case kScriptLexNotEqual:
-		if (!leftVar->GetClass()->IsIntegerLike() &&
+		if ((!leftVar->GetClass()->IsIntegerLike() &&
 			!leftVar->GetClass()->IsFloatLike() &&
-			!leftVar->GetClass()->IsObjectLike() ||
-			!rightVar->GetClass()->IsIntegerLike() &&
+			!leftVar->GetClass()->IsObjectLike()) ||
+			(!rightVar->GetClass()->IsIntegerLike() &&
 			!rightVar->GetClass()->IsFloatLike() &&
-			!rightVar->GetClass()->IsObjectLike()
+			!rightVar->GetClass()->IsObjectLike())
 		) {
 			PostSyntaxError(n->lex->line, "Unable to apply binary operator (%s) to non-comparable type (%s, %s)",
-				leftVar->GetClass()->GetName().data(), rightVar->GetClass()->GetName().data());
+				n->word.data(), leftVar->GetClass()->GetName().data(), rightVar->GetClass()->GetName().data());
 		}
 		break;
 	case kScriptLexAnd:
@@ -631,7 +632,7 @@ Void CodeBuilder::_Binary(NodePtr n) {
 			!rightVar->GetClass()->IsBooleanLike()
 		) {
 			PostSyntaxError(n->lex->line, "Unable to apply binary operator (%s) to non-boolean type (%s, %s)",
-				leftVar->GetClass()->GetName().data(), rightVar->GetClass()->GetName().data());
+				n->word.data(), leftVar->GetClass()->GetName().data(), rightVar->GetClass()->GetName().data());
 		}
 		break;
 	default:

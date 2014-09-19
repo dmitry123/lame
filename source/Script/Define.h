@@ -68,7 +68,7 @@ public:
 		return this->warning_;
 	}
 public:
-	Void Debug();
+	Void Debug(PrintStreamPtr printer);
 protected:
 	Bool warning_;
 	Uint32 line_;
@@ -89,7 +89,8 @@ typedef ScriptException InterfaceException;
     do { \
 		static Bool __warningExceptionLock = 0; \
 		if (!__warningExceptionLock || TRUE) { \
-			SyntaxException(1, _line, _message, __VA_ARGS__).Debug(); \
+			SyntaxException(1, _line, _message, __VA_ARGS__)\
+				.Debug(Console::GetInstance()); \
 		} __warningExceptionLock = 1; \
     } while (0);
 

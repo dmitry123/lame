@@ -1,5 +1,7 @@
 #include "Main.h"
 
+#include <conio.h>
+
 using namespace Lame::Core;
 using namespace Lame::Compiler;
 using namespace Lame::ResourceManager;
@@ -7,28 +9,24 @@ using namespace Lame::Script;
 using namespace Lame;
 
 int main(int argc, char** argv) {
-    
-#ifdef LAME_VLD
-	puts("");
-#endif
 
 	StringC fileName;
 	Clock time;
-    
+
 	fileName = argc > 1 ?
 		argv[1] : "main.lame";
-    
-    SyntaxBuilder syntaxBuilder;
-    FileParser fileParser;
-    ScopeBuilder scopeBuilder;
-    ScopePtr rootScope;
-    //SegmentLinker segmentLinker;
-    //SegmentBuilder segmentBuilder;
-    //CodeTranslator codeTranslator;
-    NodePtr rootNode;
+
+	SyntaxBuilder syntaxBuilder;
+	FileParser fileParser;
+	ScopeBuilder scopeBuilder;
+	ScopePtr rootScope;
+	//SegmentLinker segmentLinker;
+	//SegmentBuilder segmentBuilder;
+	//CodeTranslator codeTranslator;
+	NodePtr rootNode;
 	CodeBuilder codeBuilder;
 	Package packageManager;
-    
+
 	try {
 		/* Launch timer */
 		time = Time::GetTime();
@@ -37,37 +35,51 @@ int main(int argc, char** argv) {
 		packageManager.SetJavaCorePath("d:/code/c++/projects/lame/java/");
 
 		/* Initialize root scope */
-		rootScope = GlobalScope::CreateScope(
+		rootScope = GlobalScope::Create(
 			"Main", FALSE);
 
 		/* Load, parse file and build syntax tree */
 		fileParser.Load(fileName);
 		syntaxBuilder.Build(&fileParser, NULL);
-
+		
 #if 1
-		StringC javaCorePath = "d:/code/c++/projects/lame/java/javax";
+		StringC javaCorePath = "d:/code/c++/projects/lame/java";
 		List<Buffer> list = Directory::GetFiles(javaCorePath, TRUE, "java");
 		Uint32 javaCorePathLength = strlen(javaCorePath);
 		Uint32 totalFiles = list.size();
-		Vector<FileParser> parserList(list.size());
-		Vector<SyntaxBuilder> syntaxList(list.size());
 		Uint32 i = 0;
+		Uint32 failed = 0;
 
 		for (BufferRefC b : list) {
 
-			printf("%.2f%% : %s\n", Float32(i) / totalFiles * 100,
+			printf("%.2f%% : %s", Float32(i) / totalFiles * 100,
 				b.data() + javaCorePathLength);
 
-			parserList[i].Load(b);
-			syntaxList[i].Build(&parserList[i], NULL);
+			FileParser fp;
+			SyntaxBuilder sb;
+
+			try {
+				fp.Load(b);
+				sb.Build(&fp, NULL);
+			}
+			catch (...) {
+				printf(" - FAILED");
+				failed++;
+			}
+
+			printf("\n");
 
 			++i;
 		}
+
+		printf("\nFailed : %d [%.4f%%]", failed, Float32(failed) / totalFiles);
+		printf("\nCompleted : %d [%.4f%%]\n\n", totalFiles - failed, Float32(failed) / totalFiles);
 #endif
 
+#if 0
 		/* Get syntax's root node */
 		rootNode = syntaxBuilder.GetRootNode();
-        
+
 		/* Run scope and code builders */
 		scopeBuilder.Build(rootNode, rootScope);
 		codeBuilder.Build(&syntaxBuilder, rootScope);
@@ -82,9 +94,10 @@ int main(int argc, char** argv) {
 		}
 		printf("\n");
 		puts("+---------------------------+");
+#endif
 
 #if 0
-		Set<ObjectPtr> neverRead = rootScope->Filter([] (ObjectPtr object) {
+		Set<ObjectPtr> neverRead = rootScope->Filter([](ObjectPtr object) {
 			return !object->GetReads() && object->CheckType(Object::Type::Variable) &&
 				!object->CheckModificator(Object::Modificator::Internal) &&
 				!object->CheckModificator(Object::Modificator::Constant);
@@ -128,28 +141,14 @@ int main(int argc, char** argv) {
 		/* Trace opcode */
 		ByteCode::Trace(&segmentBuilder);
 #endif
+
+		GlobalScope::Release(rootScope);
 	}
-	catch (SyntaxException& e) {
+	catch (Throwable& e) {
 		puts("\n+---------------------------+");
-		e.Debug();
+		e.Debug(Console::GetInstance());
 		puts("");
 	}
-	catch (Exception& e) {
-		printf("\n+---------------------------+\n");
-		e.Debug(Console::GetInstance());
-		printf("\n");
-	}
-	catch (ThrowableAdapter& e) {
-		puts("\n+---------------------------+");
-		e.Debug(Console::GetInstance());
-		puts("\n+---------------------------+");
-	}
-
-#pragma push_macro("printf")
-#pragma push_macro("puts")
-
-#undef printf
-#undef puts
 
 	time = Time::GetTime() - time;
 
@@ -157,17 +156,12 @@ int main(int argc, char** argv) {
 	printf("Elapsed Time : %d ms", Uint32(time));
 	printf("\n+---------------------------+\n");
 
-#pragma pop_macro("printf")
-#pragma pop_macro("puts")
-
 #ifdef LAME_WINDOWS
 	if (argc == 1) {
 		system("pause");
 	}
-#  ifdef LAME_VLD
 	puts("");
-#  endif
 #endif
 
 	return 0;
-}
+	}

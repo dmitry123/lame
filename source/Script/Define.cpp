@@ -22,7 +22,7 @@ SyntaxException::SyntaxException(Bool, Uint32 line, StringC message, ...) : Exce
 	va_end(list);
 }
 
-Void SyntaxException::Debug() {
+Void SyntaxException::Debug(PrintStreamPtr printer) {
 
 	if (this->warning_) {
 		printf("Syntax Warning (%d) : %s\n", this->line_, this->GetErrorBuffer());

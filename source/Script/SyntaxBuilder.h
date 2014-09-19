@@ -150,6 +150,7 @@ private:
 	NodePtr rootNode;
 	Bool wasLastParenthesis;
 	PackagePtr packageManager;
+	Vector<LexNodePtr> eraseList;
 };
 
 LAME_END2

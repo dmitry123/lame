@@ -2,9 +2,10 @@
 #include "FileParser.h"
 #include "SyntaxBuilder.h"
 
-#include <Windows.h>
-
-#undef GetCurrentDirectory
+#ifdef LAME_WINDOWS
+#  include <Windows.h>
+#  undef GetCurrentDirectory
+#endif
 
 LAME_BEGIN2(Script)
 

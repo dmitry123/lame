@@ -36,7 +36,7 @@ public:
 				result.insert(i.second);
 			}
 			if (withHeight) {
-				for (ObjectPtr c : i.second->Filter(f, withHeight)) {
+				for (ObjectPtr c : ScopePtr(i.second)->Filter(f, withHeight)) {
 					result.insert(c);
 				}
 			}

@@ -90,7 +90,6 @@ LAME_END
 	typedef class _name *_name##Ptr, *const _name##PtrC
 
 LAME_BEGIN2(Core)
-
 LAME_CLASS(Stream);
 LAME_CLASS(InputStream);
 LAME_CLASS(OutputStream);
@@ -106,7 +105,7 @@ LAME_CLASS(Console);
 LAME_CLASS(Hashable16);
 LAME_CLASS(Hashable32);
 LAME_CLASS(Hashable64);
-
+LAME_CLASS(Library);
 LAME_END2
 
 #endif // ~__LAME_CORE__TYPES__

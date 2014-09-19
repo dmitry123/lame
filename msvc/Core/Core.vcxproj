@@ -95,7 +95,9 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(IncludePath);$(SolutionDir)/../source</IncludePath>
+    <IncludePath>$(SolutionDir)/../include;$(IncludePath);$(SolutionDir)/../source</IncludePath>
+    <ReferencePath>$(SolutionDir)/../lib;$(ReferencePath)</ReferencePath>
+    <LibraryPath>$(SolutionDir)/../lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
     <LinkIncremental>true</LinkIncremental>
@@ -103,23 +105,26 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\code\C++\Projects\lame\source;$(IncludePath)</IncludePath>
-    <ReferencePath>D:\code\C++\Projects\Lame\msvc\Library;$(ReferencePath)</ReferencePath>
+    <IncludePath>$(SolutionDir)/../include;$(IncludePath);$(SolutionDir)/../source</IncludePath>
+    <ReferencePath>$(SolutionDir)/../lib;$(ReferencePath)</ReferencePath>
+    <LibraryPath>$(SolutionDir)/../lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(IncludePath);$(SolutionDir)/../source</IncludePath>
+    <IncludePath>$(SolutionDir)/../include;$(IncludePath);$(SolutionDir)/../source</IncludePath>
+    <ReferencePath>$(SolutionDir)/../lib;$(ReferencePath)</ReferencePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(SolutionDir)/../lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>D:\code\C++\Projects\lame\source;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_USRDLL;CORE_EXPORTS;PTW32_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -131,6 +136,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
@@ -217,20 +223,21 @@
     <ClInclude Include="..\..\source\Core\Atomic.h" />
     <ClInclude Include="..\..\source\Core\Buffer.h" />
     <ClInclude Include="..\..\source\Core\Condition.h" />
-    <ClInclude Include="..\..\source\Core\Core.h" />
     <ClInclude Include="..\..\source\Core\Console.h" />
+    <ClInclude Include="..\..\source\Core\Core.h" />
     <ClInclude Include="..\..\source\Core\Define.h" />
     <ClInclude Include="..\..\source\Core\Directory.h" />
     <ClInclude Include="..\..\source\Core\Exception.h" />
     <ClInclude Include="..\..\source\Core\File.h" />
     <ClInclude Include="..\..\source\Core\Hashable.h" />
+    <ClInclude Include="..\..\source\Core\Library.h" />
+    <ClInclude Include="..\..\source\Core\List.h" />
+    <ClInclude Include="..\..\source\Core\Locker.h" />
     <ClInclude Include="..\..\source\Core\Math.h" />
+    <ClInclude Include="..\..\source\Core\Mutex.h" />
     <ClInclude Include="..\..\source\Core\Observable.h" />
     <ClInclude Include="..\..\source\Core\SharedPtr.h" />
     <ClInclude Include="..\..\source\Core\Stream.h" />
-    <ClInclude Include="..\..\source\Core\List.h" />
-    <ClInclude Include="..\..\source\Core\Locker.h" />
-    <ClInclude Include="..\..\source\Core\Mutex.h" />
     <ClInclude Include="..\..\source\Core\Thread.h" />
     <ClInclude Include="..\..\source\Core\Throwable.h" />
     <ClInclude Include="..\..\source\Core\ThrowableAdapter.h" />
@@ -255,20 +262,21 @@
     <ClCompile Include="..\..\source\Core\Atomic.cpp" />
     <ClCompile Include="..\..\source\Core\Buffer.cpp" />
     <ClCompile Include="..\..\source\Core\Condition.cpp" />
-    <ClCompile Include="..\..\source\Core\Core.cpp" />
     <ClCompile Include="..\..\source\Core\Console.cpp" />
+    <ClCompile Include="..\..\source\Core\Core.cpp" />
     <ClCompile Include="..\..\source\Core\Define.cpp" />
     <ClCompile Include="..\..\source\Core\Directory.cpp" />
     <ClCompile Include="..\..\source\Core\Exception.cpp" />
     <ClCompile Include="..\..\source\Core\File.cpp" />
     <ClCompile Include="..\..\source\Core\Hashable.cpp" />
+    <ClCompile Include="..\..\source\Core\Library.cpp" />
+    <ClCompile Include="..\..\source\Core\List.cpp" />
+    <ClCompile Include="..\..\source\Core\Locker.cpp" />
     <ClCompile Include="..\..\source\Core\Math.cpp" />
+    <ClCompile Include="..\..\source\Core\Mutex.cpp" />
     <ClCompile Include="..\..\source\Core\Observable.cpp" />
     <ClCompile Include="..\..\source\Core\SharedPtr.cpp" />
     <ClCompile Include="..\..\source\Core\Stream.cpp" />
-    <ClCompile Include="..\..\source\Core\List.cpp" />
-    <ClCompile Include="..\..\source\Core\Locker.cpp" />
-    <ClCompile Include="..\..\source\Core\Mutex.cpp" />
     <ClCompile Include="..\..\source\Core\Thread.cpp" />
     <ClCompile Include="..\..\source\Core\Throwable.cpp" />
     <ClCompile Include="..\..\source\Core\ThrowableAdapter.cpp" />

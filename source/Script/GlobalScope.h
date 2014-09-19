@@ -16,8 +16,8 @@ public:
 		kFlagClass = 0x0001
 	} Flag;
 public:
-	static ScopePtr CreateScope(
-		Buffer name = "", Uint32 flags = 0);
+	static ScopePtr Create(Buffer name = "", Uint32 flags = 0);
+	static Void Release(ScopePtr rootScope);
 };
 
 LAME_END2

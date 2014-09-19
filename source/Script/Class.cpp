@@ -32,7 +32,7 @@ ObjectPtr Class::Clone(BufferRefC name, ObjectPtr parent) {
 
 Void Class::Trace(Uint32 offset) {
 
-	printf(this->GetModificatorString().data());
+	printf("%s", this->GetModificatorString().data());
 
 	StringC languageType = this->CheckType(Type::Class) ? "class" : "interface";
 

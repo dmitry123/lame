@@ -56,6 +56,7 @@
 		0A5F88E7195FE82C00975945 /* ResourceContainer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A5F88C1195FE82C00975945 /* ResourceContainer.cpp */; };
 		0A5F88E8195FE82C00975945 /* TgaLoader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A5F88C4195FE82C00975945 /* TgaLoader.cpp */; };
 		0A5F88E9195FE82C00975945 /* WavLoader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A5F88C6195FE82C00975945 /* WavLoader.cpp */; };
+		0A6B36D319C85AF100E6B025 /* Library.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A6B36D119C85AF100E6B025 /* Library.cpp */; };
 		0A89525518E1E2F900BE07E1 /* Main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0A89525318E1E2F900BE07E1 /* Main.cpp */; };
 		0AA77E84192F21450003484B /* png.c in Sources */ = {isa = PBXBuildFile; fileRef = 0AA77E6E192F21450003484B /* png.c */; };
 		0AA77E85192F21450003484B /* pngerror.c in Sources */ = {isa = PBXBuildFile; fileRef = 0AA77E72192F21450003484B /* pngerror.c */; };
@@ -249,6 +250,8 @@
 		0A5F88C4195FE82C00975945 /* TgaLoader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TgaLoader.cpp; path = ../source/ResourceManager/TgaLoader.cpp; sourceTree = "<group>"; };
 		0A5F88C5195FE82C00975945 /* VirtualLoader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VirtualLoader.h; path = ../source/ResourceManager/VirtualLoader.h; sourceTree = "<group>"; };
 		0A5F88C6195FE82C00975945 /* WavLoader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = WavLoader.cpp; path = ../source/ResourceManager/WavLoader.cpp; sourceTree = "<group>"; };
+		0A6B36D119C85AF100E6B025 /* Library.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Library.cpp; path = ../source/Core/Library.cpp; sourceTree = "<group>"; };
+		0A6B36D219C85AF100E6B025 /* Library.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Library.h; path = ../source/Core/Library.h; sourceTree = "<group>"; };
 		0A89525318E1E2F900BE07E1 /* Main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Main.cpp; path = ../source/Console/Main.cpp; sourceTree = "<group>"; };
 		0A89525418E1E2F900BE07E1 /* Main.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Main.h; path = ../source/Console/Main.h; sourceTree = "<group>"; };
 		0AA77E6E192F21450003484B /* png.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = png.c; path = ../source/ResourceManager/libpng/png.c; sourceTree = "<group>"; };
@@ -525,6 +528,8 @@
 		0A89524E18E1DF2800BE07E1 /* Core */ = {
 			isa = PBXGroup;
 			children = (
+				0A6B36D119C85AF100E6B025 /* Library.cpp */,
+				0A6B36D219C85AF100E6B025 /* Library.h */,
 				0ABE67E6197A83DA00563949 /* Any.cpp */,
 				0ABE67E7197A83DA00563949 /* Any.h */,
 				0ABE67E8197A83DA00563949 /* Atomic.cpp */,
@@ -880,6 +885,7 @@
 				0AA77EF2192F214D0003484B /* jidctint.c in Sources */,
 				0AA77EE9192F214D0003484B /* jdpostct.c in Sources */,
 				0A500F4F19BEDC2300EBC54E /* Class.cpp in Sources */,
+				0A6B36D319C85AF100E6B025 /* Library.cpp in Sources */,
 				0AA77EE3192F214D0003484B /* jdhuff.c in Sources */,
 				0AA77ECC192F214D0003484B /* jcapistd.c in Sources */,
 				0AA77EE2192F214D0003484B /* jddctmgr.c in Sources */,
@@ -979,6 +985,7 @@
 		0A5F676418E1DED800CA603F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
@@ -991,6 +998,7 @@
 		0A5F676518E1DED800CA603F /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,

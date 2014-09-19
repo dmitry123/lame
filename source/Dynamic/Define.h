@@ -1,5 +1,5 @@
-#ifndef __LAME_CORE__DEFINE__
-#define __LAME_CORE__DEFINE__
+#ifndef __LAME_DYNAMIC_DEFINE__
+#define __LAME_DYNAMIC_DEFINE__
 
 #if defined(_WIN32) || defined(_WIN64)
 #  define LAME_WINDOWS
@@ -72,26 +72,12 @@
 #  define LAME_IASM_ATNT
 #endif
 
-#if !defined(LAME_NULL)
-#  define LAME_NULL 0
-#endif
-
-#if !defined(LAME_TRUE)
-#  define LAME_TRUE (::LAME_NAMESPACE::Bool)1
-#endif
-
-#if !defined(LAME_FALSE)
-#  define LAME_FALSE (::LAME_NAMESPACE::Bool)0
-#endif
-
 #if !defined(TRUE)
 #  define TRUE 1
 #endif
-
 #if !defined(FALSE)
 #  define FALSE 0
 #endif
-
 #if !defined(NULL)
 #  define NULL 0
 #endif
@@ -106,29 +92,10 @@
 #  define LAME_CPP
 #endif
 
-#if defined(LAME_MSVC)
+#ifdef LAME_MSVC
 #  if LAME_MSVC >= 120
 #    define LAME_CPP0X
 #  endif
-#endif
-
-#undef LAME_BEGIN
-#undef LAME_END
-#undef LAME_BEGIN2
-#undef LAME_END2
-
-#if defined(LAME_CPP)
-#  define LAME_NAMESPACE Lame
-#  define LAME_BEGIN namespace LAME_NAMESPACE {
-#  define LAME_END }
-#  define LAME_BEGIN2(_ns) LAME_BEGIN namespace _ns {
-#  define LAME_END2 LAME_END }
-#else
-#  define LAME_NAMESPACE
-#  define LAME_BEGIN
-#  define LAME_END
-#  define LAME_BEGIN2
-#  define LAME_END2
 #endif
 
 #if defined(LAME_CPP)
@@ -142,7 +109,7 @@
 #endif
 
 #if defined(LAME_WINDOWS)
-#  if defined(CORE_EXPORTS)
+#  if defined(DYNAMIC_EXPORTS)
 #    define LAME_API __declspec(dllexport)
 #  else
 #    define LAME_API __declspec(dllimport)
@@ -190,14 +157,6 @@
 #define LAME_ERRORBUFFER_MAX 2048
 #define LAME_TIMEBUFFER_MAX 64
 
-#define LAME_TIME_SECOND 1000
-#define LAME_TIME_MINUTE 60000
-#define LAME_TIME_HOUR   3600000
-#define LAME_TIME_DAY    86400000
-#define LAME_TIME_WEEK   604800000
-#define LAME_TIME_MONTH  2419200000
-#define LAME_TIME_YEAR   29030400000
-
 #define LAME_DECLARE_TYPE(_type, _name) \
 	typedef _type _name, *_name##P;
 
@@ -218,22 +177,4 @@
 #define LAME_WARNING(x) LAME_MSG_PRAGMA("WARNING: " x)
 #define LAME_TODO(x) LAME_MSG_PRAGMA("TODO: " x)
 
-#define LAME_SCOPE
-
-#ifdef LAME_MSVC
-#  ifdef LAME_X64
-#    pragma comment (lib, "x64/pthreadvc2.lib")
-#  else
-#    pragma comment (lib, "x86/pthreadvc2.lib")
-#  endif
-#endif
-
-#ifdef LAME_CLANG
-#  pragma clang diagnostic ignored "-Wformat-extra-args"
-#endif
-
-#if defined(LAME_MSVC) && defined LAME_VLD
-#  include "vld.h"
-#endif
-
-#endif // ~__LAME_CORE__DEFINE__
+#endif // ~__LAME_DYNAMIC_DEFINE__

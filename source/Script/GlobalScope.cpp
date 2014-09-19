@@ -2,18 +2,11 @@
 
 LAME_BEGIN2(Script)
 
-ScopePtr GlobalScope::CreateScope(Buffer name, Uint32 flags) {
+ScopePtr GlobalScope::Create(Buffer name, Uint32 flags) {
 
-	ObjectPtr rootScope = NULL;
-
-	Bool asClass = (flags & kFlagClass) != 0;
-
-	if (asClass) {
-		rootScope = new Script::Class(name, NULL);
-	}
-	else {
-		rootScope = new Script::Method(name, NULL, NULL, NULL);
-	}
+	static ObjectPtr rootScope = !(flags & kFlagClass) ?
+		ObjectPtr(new Script::Method(name, NULL, NULL, NULL)) :
+		ObjectPtr(new Script::Class(name, NULL));
 
 	if (Scope::classChar != NULL) {
 		goto _ReturnScope;
@@ -126,6 +119,10 @@ _ReturnScope:
 	rootScope->Add(Scope::classArray);
 _SkipPrimitive:
 
+	if (rootScope->Find("true")) {
+		return rootScope;
+	}
+
 	rootScope->Add(new Variable("true", rootScope, Scope::classBoolean))
 		->GetVariable()->SetBoolean(TRUE)
 		->SetModificator(Object::Modificator::Internal)
@@ -142,6 +139,9 @@ _SkipPrimitive:
 		->SetModificator(Object::Modificator::Constant);
 
 	return rootScope;
+}
+
+Void GlobalScope::Release(ScopePtr rootScope) {
 }
 
 LAME_END2

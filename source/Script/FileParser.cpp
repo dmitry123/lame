@@ -15,7 +15,6 @@ LAME_BEGIN2(Script)
 static StringC lockedTokens = "\n\r\t ";
 static StringC allowedTokens = "@$_=/|&><+-*[].";
 static StringC wordTokens = "_$@";
-static StringC writeSpaces = "\a\b\t\n\r";
 
 static LexPtrC _ParseLex(StringC* wordPtr, Buffer* name, Uint32 line, Bool isCommentLock) {
 
@@ -101,8 +100,8 @@ static LexPtrC _ParseLex(StringC* wordPtr, Buffer* name, Uint32 line, Bool isCom
             return left->word.length() < right->word.length();
         });
 
-		if (!l.empty() && !(FileParser::IsLetter(*(word + l.back()->word.length()))) ||
-			!l.empty() && !isWord
+		if ((!l.empty() && !(FileParser::IsLetter(*(word + l.back()->word.length())))) ||
+			(!l.empty() && !isWord)
 		) {
 			word += l.back()->word.length();
 		}

@@ -5,9 +5,9 @@
 
 LAME_BEGIN2(Core)
 	
-class Exception : public ThrowableAdapter {
+class LAME_API Exception : public ThrowableAdapter {
 public:
-	LAME_API Exception(StringC message, ...);
+	Exception(StringC message, ...);
 };
 
 typedef Exception MutexException;

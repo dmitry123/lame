@@ -11,6 +11,7 @@
 #include "Exception.h"
 #include "File.h"
 #include "Hashable.h"
+#include "Library.h"
 #include "List.h"
 #include "Locker.h"
 #include "Math.h"
