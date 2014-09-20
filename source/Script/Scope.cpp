@@ -49,7 +49,7 @@ Void Scope::Remove(ObjectPtr object) {
 
 	if ((i = this->hashMap_.find(object->Hash())) == this->hashMap_.end() ||
 		(j = this->stringMap_.find(object->GetName())) == this->stringMap_.end()
-		) {
+	) {
 		return;
 	}
 

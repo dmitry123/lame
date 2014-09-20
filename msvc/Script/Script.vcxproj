@@ -224,12 +224,17 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\source\Script\AbstractCompiler.cpp" />
+    <ClCompile Include="..\..\source\Script\Assembler.cpp" />
+    <ClCompile Include="..\..\source\Script\ByteCode.cpp" />
     <ClCompile Include="..\..\source\Script\Class.cpp" />
     <ClCompile Include="..\..\source\Script\CodeBuilder.cpp" />
     <ClCompile Include="..\..\source\Script\CodeNode.cpp" />
     <ClCompile Include="..\..\source\Script\GlobalScope.cpp" />
     <ClCompile Include="..\..\source\Script\LittleCalculator.cpp" />
     <ClCompile Include="..\..\source\Script\Package.cpp" />
+    <ClCompile Include="..\..\source\Script\SegmentBuilder.cpp" />
+    <ClCompile Include="..\..\source\Script\SegmentLinker.cpp" />
     <ClCompile Include="..\..\source\Script\SequenceMatcher.cpp" />
     <ClCompile Include="..\..\source\Script\StackVar.cpp" />
     <ClCompile Include="..\..\source\Script\SyntaxBuilder.cpp" />
@@ -246,15 +251,21 @@
     <ClCompile Include="..\..\source\Script\ScopeBuilder.cpp" />
     <ClCompile Include="..\..\source\Script\Script.cpp" />
     <ClCompile Include="..\..\source\Script\Segment.cpp" />
+    <ClCompile Include="..\..\source\Script\SyntaxError.cpp" />
     <ClCompile Include="..\..\source\Script\Variable.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\source\Script\AbstractCompiler.h" />
+    <ClInclude Include="..\..\source\Script\Assembler.h" />
+    <ClInclude Include="..\..\source\Script\ByteCode.h" />
     <ClInclude Include="..\..\source\Script\Class.h" />
     <ClInclude Include="..\..\source\Script\CodeBuilder.h" />
     <ClInclude Include="..\..\source\Script\CodeNode.h" />
     <ClInclude Include="..\..\source\Script\GlobalScope.h" />
     <ClInclude Include="..\..\source\Script\LittleCalculator.h" />
     <ClInclude Include="..\..\source\Script\Package.h" />
+    <ClInclude Include="..\..\source\Script\SegmentBuilder.h" />
+    <ClInclude Include="..\..\source\Script\SegmentLinker.h" />
     <ClInclude Include="..\..\source\Script\SequenceMatcher.h" />
     <ClInclude Include="..\..\source\Script\StackVar.h" />
     <ClInclude Include="..\..\source\Script\SyntaxBuilder.h" />
@@ -271,6 +282,7 @@
     <ClInclude Include="..\..\source\Script\ScopeBuilder.h" />
     <ClInclude Include="..\..\source\Script\Script.h" />
     <ClInclude Include="..\..\source\Script\Segment.h" />
+    <ClInclude Include="..\..\source\Script\SyntaxError.h" />
     <ClInclude Include="..\..\source\Script\Variable.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

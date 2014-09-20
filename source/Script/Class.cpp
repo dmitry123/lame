@@ -194,32 +194,35 @@ Void Class::CheckInheritance(Void) {
 
 	for (ObjectPtr object : this->implementClass) {
 
-		// look thought all methods
 		for (auto i : object->GetMethodSet()) {
 
 			MethodPtr m = i->GetMethod();
 			MethodPtr m2 = NULL;
 
-			// if method has root node then
-			// throw an error, cuz interface's
-			// methods mustn't be implemented
+			/*	If method has root node then
+			throw an error, cuz interface's
+			methods mustn't be implemented */
+
 			if ((m->GetNode()->flags & kScriptFlagImplemented) != 0) {
 				PostSyntaxError(this->GetNode()->lex->line, "Interface mustn't implement methods (%s)", m->GetName().data());
 			}
 
 			Bool isFound = FALSE;
 
-			// now lets try to find overloaded methods
-			// in current class (this), if we cant, then
-			// throw an error, cuz class, which implements
-			// interface have to implement it's methods
+			/*	Now lets try to find overloaded methods
+			in current class (this), if we cant, then
+			throw an error, cuz class, which implements
+			interface have to implement it's methods */
+
 			for (auto j : this->GetMethodSet()) {
 				if (j->GetName() == i->GetName()) {
 					if (j->GetMethod()->GetInvokeHash() ==
 						i->GetMethod()->GetInvokeHash()
-						) {
+					) {
 						if (j->GetMethod()->GetRootNode()) {
-							m2 = j->GetMethod(); isFound = TRUE; break;
+							m2 = j->GetMethod();
+							isFound = TRUE;
+							break;
 						}
 					}
 				}
@@ -232,7 +235,15 @@ Void Class::CheckInheritance(Void) {
 			}
 		}
 
-		this->Merge(object);
+		/*	Now we can find all protected and
+		public methods in interface and add it
+		to our class or interface */
+
+		for (ObjectPtr f : object->Filter([] (ObjectPtr f) {
+			return !f->CheckModificator(Object::Modificator::Private);
+		})) {
+			this->Add(f->Clone(f->GetName(), this));
+		}
 
 	_Repeat:
 		for (auto i = this->GetHashMap().begin(); i != this->GetHashMap().end(); i++) {
@@ -243,15 +254,15 @@ Void Class::CheckInheritance(Void) {
 		}
 	}
 
-	// now we have to check extended class for
-	// abstract, if it true, then we must
-	// change method's reference and it's this
-	// object
+	/* Now we have to check extended class for
+	abstract, if it true, then we must
+	change method's reference and it's this
+	object */
+
 	if (this->extendClass) {
 
 		if (this->extendClass->CheckModificator(Modificator::Abstract)) {
 
-			// walk though all methods
 			for (ObjectPtr i : this->extendClass->GetMethodSet()) {
 
 				MethodPtr m = i->GetMethod();
@@ -260,19 +271,21 @@ Void Class::CheckInheritance(Void) {
 					continue;
 				}
 
-				// if method has root node then
-				// throw an error, cuz interface's
-				// methods mustn't be implemented
+				/* If method has root node then
+				throw an error, cuz interface's
+				methods mustn't be implemented */
+
 				if (m->GetRootNode() != NULL) {
 					PostSyntaxError(this->GetNode()->lex->line, "Abstract class mustn't implement abstract methods (%s)", m->GetName().data());
 				}
 
 				Bool isFound = FALSE;
 
-				// now lets try to find overloaded methods
-				// in current class (this), if we cant, then
-				// throw an error, cuz class, which implements
-				// interface have to implement it's methods
+				/*	Now lets try to find overloaded methods
+				in current class (this), if we cant, then
+				throw an error, cuz class, which implements
+				interface have to implement it's methods */
+
 				for (auto j : this->GetMethodSet()) {
 					if (j->GetName() == i->GetName()) {
 						if (j->GetMethod()->GetInvokeHash() ==
@@ -290,7 +303,16 @@ Void Class::CheckInheritance(Void) {
 				}
 			}
 		}
+		
+		/*	Now we can find all protected and public
+		methods/fields in class and add it to our class */
 
+		for (ObjectPtr f : this->extendClass->Filter([](ObjectPtr f) {
+			return !f->CheckModificator(Object::Modificator::Private);
+		})) {
+			this->Add(f->Clone(f->GetName(), this));
+		}
+		
 		this->Merge(this->extendClass);
 	}
 }

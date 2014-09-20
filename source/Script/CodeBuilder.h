@@ -33,6 +33,7 @@ public:
 	inline Vector<CodeNodePtr>& GetCodeList()   { return this->codeList;          }
 	inline Vector<ObjectPtr>&   GetClassList()  { return this->classList;         }
 	inline LittleCalculatorPtr  GetCalculator() { return &this->littleCalculator; }
+	inline Vector<ObjectPtr>&   GetMethodList() { return this->methodList;        }
 private:
 	Void _Read(NodePtr node, VariablePtr& left, VariablePtr& right);
 	Void _Run(NodeListRef nodeList, Bool makeBackup = FALSE);

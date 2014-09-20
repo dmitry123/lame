@@ -8,6 +8,55 @@ using namespace Lame::ResourceManager;
 using namespace Lame::Script;
 using namespace Lame;
 
+void AnalizeJavaCore() {
+
+	StringC javaCorePath = "d:/code/c++/projects/lame/java";
+	List<Buffer> list = Directory::GetFiles(javaCorePath, TRUE, "java");
+	Uint32 javaCorePathLength = strlen(javaCorePath);
+	Uint32 totalFiles = list.size();
+	Uint32 i = 0;
+	Uint32 failed = 0;
+
+	for (BufferRefC b : list) {
+
+		printf("%.2f%% : %s", Float32(i) / totalFiles * 100,
+			b.data() + javaCorePathLength);
+
+		FileParser fp;
+		SyntaxBuilder sb;
+
+		try {
+			fp.Load(b);
+			sb.Build(&fp, NULL);
+		}
+		catch (...) {
+			printf(" - FAILED");
+			failed++;
+		}
+
+		printf("\n");
+
+		++i;
+	}
+
+	printf("\nFailed : %d [%.4f%%]", failed, Float32(failed) / totalFiles);
+	printf("\nCompleted : %d [%.4f%%]\n\n", totalFiles - failed, Float32(failed) / totalFiles);
+}
+
+void NeverReadWarning(ScopePtr rootScope) {
+
+	Set<ObjectPtr> neverRead = rootScope->Filter([](ObjectPtr object) {
+		return !object->GetReads() && object->CheckType(Object::Type::Variable) &&
+			!object->CheckModificator(Object::Modificator::Internal) &&
+			!object->CheckModificator(Object::Modificator::Constant);
+	}, TRUE);
+
+	for (ObjectPtr c : neverRead) {
+		PostSyntaxWarning(c->GetNode()->lex->line, "Variable (%s) never read",
+			c->GetName().data());
+	}
+}
+
 int main(int argc, char** argv) {
 
 	StringC fileName;
@@ -20,8 +69,8 @@ int main(int argc, char** argv) {
 	FileParser fileParser;
 	ScopeBuilder scopeBuilder;
 	ScopePtr rootScope;
-	//SegmentLinker segmentLinker;
-	//SegmentBuilder segmentBuilder;
+	SegmentLinker segmentLinker;
+	SegmentBuilder segmentBuilder;
 	//CodeTranslator codeTranslator;
 	NodePtr rootNode;
 	CodeBuilder codeBuilder;
@@ -41,42 +90,7 @@ int main(int argc, char** argv) {
 		/* Load, parse file and build syntax tree */
 		fileParser.Load(fileName);
 		syntaxBuilder.Build(&fileParser, NULL);
-		
-#if 1
-		StringC javaCorePath = "d:/code/c++/projects/lame/java";
-		List<Buffer> list = Directory::GetFiles(javaCorePath, TRUE, "java");
-		Uint32 javaCorePathLength = strlen(javaCorePath);
-		Uint32 totalFiles = list.size();
-		Uint32 i = 0;
-		Uint32 failed = 0;
 
-		for (BufferRefC b : list) {
-
-			printf("%.2f%% : %s", Float32(i) / totalFiles * 100,
-				b.data() + javaCorePathLength);
-
-			FileParser fp;
-			SyntaxBuilder sb;
-
-			try {
-				fp.Load(b);
-				sb.Build(&fp, NULL);
-			}
-			catch (...) {
-				printf(" - FAILED");
-				failed++;
-			}
-
-			printf("\n");
-
-			++i;
-		}
-
-		printf("\nFailed : %d [%.4f%%]", failed, Float32(failed) / totalFiles);
-		printf("\nCompleted : %d [%.4f%%]\n\n", totalFiles - failed, Float32(failed) / totalFiles);
-#endif
-
-#if 0
 		/* Get syntax's root node */
 		rootNode = syntaxBuilder.GetRootNode();
 
@@ -87,29 +101,16 @@ int main(int argc, char** argv) {
 		/* Trace root scope */
 		rootScope->Trace(0);
 
-		printf("\n\n");
-		puts("+---------------------------+");
-		for (NodePtr n : rootNode->blockList) {
-			printf("[%s] ", n->word.data());
+		if (!rootNode->blockList.empty()) {
+			printf("\n\n");
+			puts("+---------------------------+");
+			for (NodePtr n : rootNode->blockList) {
+				printf("[%s] ", n->word.data());
+			}
+			printf("\n");
+			puts("+---------------------------+");
 		}
-		printf("\n");
-		puts("+---------------------------+");
-#endif
 
-#if 0
-		Set<ObjectPtr> neverRead = rootScope->Filter([](ObjectPtr object) {
-			return !object->GetReads() && object->CheckType(Object::Type::Variable) &&
-				!object->CheckModificator(Object::Modificator::Internal) &&
-				!object->CheckModificator(Object::Modificator::Constant);
-		}, TRUE);
-
-		for (ObjectPtr c : neverRead) {
-			PostSyntaxWarning(c->GetNode()->lex->line, "Variable (%s) never read",
-				c->GetName().data());
-		}
-#endif
-
-#if 0
 		/* Build segments */
 		segmentBuilder.BuildTextSegment(rootScope);
 		segmentBuilder.BuildDataSegment(rootScope);
@@ -124,8 +125,8 @@ int main(int argc, char** argv) {
 			segmentLinker.GetPosition());
 
 		/* Compile code */
-		codeTranslator.Run(&syntaxBuilder, rootScope,
-			segmentBuilder.GetCodeSegment());
+		//codeTranslator.Run(&syntaxBuilder, rootScope,
+		//	segmentBuilder.GetCodeSegment());
 
 		/* Link code segment */
 		segmentLinker.Add(segmentBuilder.GetCodeSegment());
@@ -140,7 +141,6 @@ int main(int argc, char** argv) {
 
 		/* Trace opcode */
 		ByteCode::Trace(&segmentBuilder);
-#endif
 
 		GlobalScope::Release(rootScope);
 	}
@@ -164,4 +164,4 @@ int main(int argc, char** argv) {
 #endif
 
 	return 0;
-	}
+}

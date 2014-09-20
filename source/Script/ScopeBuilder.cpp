@@ -283,7 +283,7 @@ Void ScopeBuilder::Build(NodePtr rootNode, ScopePtr rootScope) {
 		initMethod->SetModificator(Object::Modificator::Internal);
 	}
     
-#if 0 /* Node trace (only for debugging) */
+#if 0 /* Node trace (debug) */
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachNodeTrace, this), kScriptNodeUnknown);
 #endif
 }
@@ -605,17 +605,27 @@ Void ScopeBuilder::_ForEachConstDeclare(NodePtr n) {
 		Sint64 intValue = FileParser::ParseIntValue(n->word.data());
 		ClassPtr intClass;
 
-		if (intValue >= -0x7f - 1 && intValue <= 0x7f) {
-			intClass = globalScope->classByte;
-		}
-		else if (intValue >= -0x7fff - 1 && intValue <= 0x7fff) {
-			intClass = globalScope->classShort;
-		}
-		else if (intValue >= -0x7fffffff - 1 && intValue <= 0x7fffffff) {
-			intClass = globalScope->classInt;
+		if (FileParser::IsHexValue(n->word.data())) {
+			if (intValue >= 0 && intValue <= 0xff) {
+				intClass = globalScope->classByte;
+			} else if (intValue >= 0 && intValue <= 0xffff) {
+				intClass = globalScope->classShort;
+			} else if (intValue >= 0 && intValue <= 0xffffffff) {
+				intClass = globalScope->classInt;
+			} else {
+				intClass = globalScope->classLong;
+			}
 		}
 		else {
-			intClass = globalScope->classLong;
+			if (intValue >= -0x7f - 1 && intValue <= 0x7f) {
+				intClass = globalScope->classByte;
+			} else if (intValue >= -0x7fff - 1 && intValue <= 0x7fff) {
+				intClass = globalScope->classShort;
+			} else if (intValue >= -0x7fffffff - 1 && intValue <= 0x7fffffff) {
+				intClass = globalScope->classInt;
+			} else {
+				intClass = globalScope->classLong;
+			}
 		}
 
 		n->var = globalScope->Add(
@@ -955,16 +965,6 @@ Void ScopeBuilder::_ForEachNode(NodePtr node, ScopePtr scope, ForEachNode callba
 	if (id == kScriptNodeUnknown || (id != kScriptNodeUnknown && node->id == id)) {
 		callback(node);
 	}
-	//if (node->typeNode) {
-	//	if ((id == kScriptNodeUnknown || node->typeNode->id == kScriptNodeAnonymous) &&
-	//		node->id != kScriptNodeVariable && node->id != kScriptNodeClass && node->id != kScriptNodeInterface
-	//	) {
-	//		if (node->typeNode->word == "A") {
-	//			__asm int 3
-	//		}
-	//		callback(node->typeNode);
-	//	}
-	//}
 
 	if (node->typeNode && node != node->typeNode) {
 		if (node->lex->lex->id == kScriptLexNew) {

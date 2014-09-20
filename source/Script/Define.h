@@ -21,6 +21,9 @@ LAME_BEGIN2(Script)
 
 using namespace Core;
 
+typedef class AbstractCompiler *AbstractCompilerPtr, *const AbstractCompilerPtrC;
+typedef class Assembler *AssemblerPtr, *const AssemblerPtrC;
+typedef class ByteCode *ByteCodePtr, *const ByteCodePtrC;
 typedef class Class *ClassPtr, *const ClassPtrC;
 typedef class CodeBuilder *CodeBuilderPtr, *const CodeBuilderPtrC;
 typedef class CodeNode *CodeNodePtr, *const CodeNodePtrC;
@@ -37,6 +40,8 @@ typedef class Scope *ScopePtr, *const ScopePtrC;
 typedef class Scope *ScopePtr, *const ScopePtrC;
 typedef class ScopeBuilder *ScopeBuilderPtr, *const ScopeBuilderPtrC;
 typedef class Segment *SegmentPtr, *const SegmentPtrC;
+typedef class SegmentBuilder *SegmentBuilderPtr, *const SegmentBuilderPtrC;
+typedef class SegmentLinker *SegmentLinkerPtr, *const SegmentLinkerPtrC;
 typedef class StackVar *StackVarPtr, *const StackVarPtrC;
 typedef class SyntaxBuilder *SyntaxBuilderPtr, *const SyntaxBuilderPtrC;
 typedef class Variable *VariablePtr, *const VariablePtrC;
@@ -52,14 +57,8 @@ typedef Exception ScriptException;
 
 class LAME_API SyntaxException : public Exception {
 public:
-	SyntaxException(
-		Uint32 line,
-		StringC message,
-		...);
-	SyntaxException(
-		Bool warning,
-		Uint32 line,
-		StringC message, ...);
+	SyntaxException(Uint32 line, StringC message, ...);
+	SyntaxException(Bool warning, Uint32 line, StringC message, ...);
 public:
 	inline Uint32 Line() {
 		return this->line_;

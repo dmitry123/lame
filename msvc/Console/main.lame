@@ -1,0 +1,7 @@
+class A {
+    int value;
+}
+
+A a = new A();
+
+a.value = 100;

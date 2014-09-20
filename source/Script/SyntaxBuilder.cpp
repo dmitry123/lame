@@ -1805,7 +1805,9 @@ NodePtr SyntaxBuilder::_Append(Iterator& i) {
 		i = this->Brace(node, i);
 	}
 
+#if 0 /* Need another solution */
 	i = this->Directed(node, i);
+#endif
 
 	if ((*i)->lex->id == kScriptLexImport) {
 		i = this->Import(node, i);
@@ -2032,8 +2034,11 @@ Void SyntaxBuilder::_Order(NodePtr node) {
 		this->_Order(n);
 	}
 
-	if (node->elseNode) {
+	if (node->elseNode && node->elseNode != node) {
 		this->_Order(node->elseNode);
+	}
+	if (node->typeNode && node->typeNode != node) {
+		this->_Order(node->typeNode);
 	}
 }
 

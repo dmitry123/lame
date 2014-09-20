@@ -52,20 +52,7 @@ Void CodeBuilder::Build(SyntaxBuilderPtr nodeBuilder, ScopePtr rootScope) {
 
 		ObjectPtr thisVar = NULL;
 
-		if (!i->CheckModificator(Object::Modificator::Static)) {
-			if (i->GetName() == "<init>" || i->GetName() == i->GetOwner()->GetName()) {
-				// clone
-			}
-			if ((thisVar = i->Find("this", FALSE, Uint32(Object::Type::Variable)))) {
-				// store thisVar
-			}
-		}
-
 		this->_Run(i->GetMethod()->GetRootNode()->blockList);
-
-		if (i->GetMethod()->GetReturnType()->IsVoid()) {
-			// return
-		}
 
 		if (!i->GetMethod()->GetReturnType()->IsVoid()) {
 			if (!i->GetMethod()->returnVar) {
@@ -642,16 +629,16 @@ Void CodeBuilder::_Binary(NodePtr n) {
 	if (n->lex->lex->IsBool()) {
 		if (wasItConst) {
 			if (sourceVar->v.intValue) {
-				this->variableStack.Return(sourceVar->Root()
+				this->variableStack.Push(sourceVar->Root()
 					->Find("true")->GetVariable());
 			}
 			else {
-				this->variableStack.Return(sourceVar->Root()
+				this->variableStack.Push(sourceVar->Root()
 					->Find("false")->GetVariable());
 			}
 		}
 		else {
-			this->variableStack.Return(VariablePtr(Scope::classBoolean));
+			this->variableStack.Push(VariablePtr(Scope::classBoolean));
 		}
 	}
 	else {
@@ -662,7 +649,7 @@ Void CodeBuilder::_Binary(NodePtr n) {
 			this->variableStack.Push(sourceVar);
 		}
 		else {
-			this->variableStack.Return(sourceVar);
+			this->variableStack.Push(sourceVar);
 		}
 	}
 
@@ -701,7 +688,7 @@ Void CodeBuilder::_Unary(NodePtr n) {
 				n->var->GetName().data());
 		}
 		this->_StrongCast(leftVar, n->var->GetClass());
-		this->variableStack.Return(VariablePtr(n->var->GetClass()));
+		this->variableStack.Push(VariablePtr(n->var->GetClass()));
 	}
 	else {
 		if (leftVar->CheckModificator(Object::Modificator::Constant)) {
@@ -730,7 +717,7 @@ Void CodeBuilder::_Unary(NodePtr n) {
 			this->variableStack.Push(leftVar);
 		}
 		else {
-			this->variableStack.Return(leftVar);
+			this->variableStack.Push(leftVar);
 		}
 	}
 
@@ -878,7 +865,7 @@ Void CodeBuilder::_New(NodePtr n) {
 
 	this->_Save(n);
 
-	this->variableStack.Return(resultVar);
+	this->variableStack.Push(resultVar);
 }
 
 Void CodeBuilder::_Selection(NodePtr n) {
@@ -937,7 +924,7 @@ Void CodeBuilder::_Selection(NodePtr n) {
 	}
 
 	if (!fieldObject->CheckType(Object::Type::Method)) {
-		this->variableStack.Return(VariablePtr(fieldObject));
+		this->variableStack.Push(VariablePtr(fieldObject));
 	}
 
 	this->lastSelection = fieldObject;
@@ -1306,7 +1293,7 @@ Void CodeBuilder::_Invoke(NodePtr n) {
 	apply call instruction and return something */
 
 	if (methodVar->GetMethod()->returnVar) {
-		this->variableStack.Return(methodVar->GetMethod()->returnVar);
+		this->variableStack.Push(methodVar->GetMethod()->returnVar);
 	}
 #endif
 }
@@ -1329,7 +1316,7 @@ Void CodeBuilder::_Return(NodePtr n) {
 	}
 
 	if (!methodNode || !(methodVar = methodNode->var->GetMethod())) {
-		PostSyntaxError(n->lex->line, "Return can only be in method or function", 0);
+		PostSyntaxError(n->lex->line, "Push can only be in method or function", 0);
 	}
 
 	if (methodVar->GetReturnType()->IsVoid()) {
@@ -1359,7 +1346,7 @@ Void CodeBuilder::_Return(NodePtr n) {
 				->GetName().data(), methodVar->GetReturnType()->GetName().data());
 		}
 		this->_Cast(methodVar->returnVar, methodVar->GetReturnType());
-		LAME_TODO("Return methodVar->returnVar");
+		LAME_TODO("Push methodVar->returnVar");
 	}
 }
 

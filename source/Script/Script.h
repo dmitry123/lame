@@ -19,5 +19,9 @@
 #include "StackVar.h"
 #include "Variable.h"
 #include "GlobalScope.h"
+#include "SegmentBuilder.h"
+#include "SegmentLinker.h"
+#include "ByteCode.h"
+#include "Assembler.h"
 
 #endif // ~__LAME_SCRIPT__

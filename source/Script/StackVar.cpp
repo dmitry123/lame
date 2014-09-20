@@ -30,8 +30,4 @@ Void StackVar::Clear() {
 	}
 }
 
-Void StackVar::Return(VariablePtr var) {
-	this->Push(var);
-}
-
 LAME_END2
