@@ -1,1 +1,10 @@
-int value = 100 + 20 + 3;
+class A {
+	int foo(int a, int b, int c) {
+		return a + b + c;
+	}
+	int value = 0;
+}
+
+A a = new A();
+
+a.value = a.foo(a.value + 100, a.value + 20, a.value + 3);

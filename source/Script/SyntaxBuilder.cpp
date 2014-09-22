@@ -1046,6 +1046,7 @@ SyntaxBuilder::Iterator SyntaxBuilder::Arguments(NodePtr& node, Iterator i) {
 #endif
 			} else {
 				++argCount;
+				node->argList.push_back(this->_Create(i));
 				__Inc(i);
 			}
 		}

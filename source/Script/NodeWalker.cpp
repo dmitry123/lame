@@ -126,6 +126,9 @@ Void NodeWalker::Run(NodeList nodeList, Bool backupStack) {
 				if (!this->rememberedInvoke) {
 					this->nodeListener->onInvoke(n);
 				}
+				else {
+					this->Push(n->var);
+				}
 			}
 			else if (n->lex->lex->id == kScriptLexSemicolon) {
 				this->_Cleanup();
@@ -271,8 +274,8 @@ ObjectPtr NodeWalker::Pop(Void) {
 
 Void NodeWalker::Test(NodePtr node) {
 
-	ObjectPtr left;
-	ObjectPtr right;
+	ObjectPtr left  = NULL;
+	ObjectPtr right = NULL;
 
 	if (this->stackVar.Size() < node->lex->args || !node->lex->args) {
 		PostSyntaxError(node->lex->line, "Excepted %d arguments for (%s)",
@@ -281,8 +284,9 @@ Void NodeWalker::Test(NodePtr node) {
 
 	if (node->lex->args > 1) {
 
-		right = this->stackVar.Back()
-			->GetVariable();
+		if (this->stackVar.Back()) {
+			right = this->stackVar.Back()->GetVariable();
+		}
 
 		this->stackVar.GetVarList().pop_back();
 
@@ -293,6 +297,8 @@ Void NodeWalker::Test(NodePtr node) {
 			}
 			this->stackVar.GetNodeList().pop_back();
 		}
+
+		this->rightVar = right;
 	}
 
 	left = this->stackVar.Back()
@@ -310,7 +316,6 @@ Void NodeWalker::Test(NodePtr node) {
 	}
 
 	this->leftVar = left;
-	this->rightVar = right;
 }
 
 ObjectPtr NodeWalker::TestArgument(ClassPtr argType) {
@@ -382,17 +387,22 @@ Void NodeWalker::_Selection(NodePtr node) {
 	this->stackVar.GetNodeList().pop_back();
 	this->stackVar.GetNodeList().pop_back();
 
-	auto rightVarType = rightVar->GetVariable()->GetVarType();
 	auto leftVarType = leftVar->GetVariable()->GetVarType();
 
 	if (leftVarType != Variable::Var::Object &&
-		rightVarType != Variable::Var::Array
+		leftVarType != Variable::Var::Array
 	) {
 		PostSyntaxError(node->lex->line, "You can access to object's fields only (%s)",
 			leftVar->GetName().data());
 	}
 
 	if (fieldNode->id == kScriptNodeInvoke) {
+		if (this->nodeOptimizer) {
+			this->nodeOptimizer->onPop();
+			this->nodeOptimizer->onPop();
+			this->nodeOptimizer->onPush(fieldNode);
+		}
+		this->lastResult = leftVar;
 		this->_Invoke(fieldNode);
 		fieldObject = fieldNode->var;
 	}
@@ -401,6 +411,9 @@ Void NodeWalker::_Selection(NodePtr node) {
 			fieldObject = Scope::classArray->Find(fieldName, FALSE);
 		} else {
 			fieldObject = leftVar->GetClass()->Find(fieldName, FALSE);
+		}
+		if (this->nodeOptimizer) {
+			this->nodeOptimizer->onPush(node);
 		}
 	}
 
@@ -432,10 +445,18 @@ Void NodeWalker::_Invoke(NodePtr n) {
 
 	ObjectPtr methodVar;
 	Vector<ClassPtr> objectList;
-	Uint32 invokeHash;
+	Uint64 invokeHash;
 	Buffer formattedParameters;
 	ObjectPtr scope;
 	Buffer methodName;
+	ObjectPtr methodParent;
+
+	/*	Little fix for class method invocation
+	via directed selection, cuz we have to know
+	who is the parent of our method, lastResult
+	maybe be changed later, so save it's address*/
+
+	methodParent = this->lastResult;
 
 	/*	Looks like construction invoke, but via
 	class name */
@@ -451,14 +472,22 @@ Void NodeWalker::_Invoke(NodePtr n) {
 		return;
 	}
 
-	/*	We have to get all variables from stack
-	and save it in another list to build
-	invocation hash number to find nessesary
-	method fast and generate parameters */
+	/*	We have to perform argument expression and get all variables
+	from stack and save it in another list to build invocation hash
+	number to find nessesary method fast and generate parameters */
 
-	for (Uint32 i = 0; i < n->argList.size(); i++) {
+	this->Run(n->argList);
 
-		VariablePtr var = (*(n->argList.end() - i - 1))->var
+	if (this->nodeOptimizer) {
+		for (NodePtr n : n->argList) {
+			this->nodeOptimizer->onPush(n);
+		}
+		n->argList.clear();
+	}
+
+	for (Uint32 i = 0; i < n->lex->args; i++) {
+
+		VariablePtr var = this->stackVar.Pop()
 			->GetVariable();
 
 		objectList.push_back(var->GetClass());
@@ -506,7 +535,18 @@ Void NodeWalker::_Invoke(NodePtr n) {
 	/*	If we found metohd's variable, then we
 	can save it in node's variable */
 
-	if ((methodVar = scope->Find(Uint64(methodName.GetHash32()) << 32 | invokeHash)) && !n->var) {
+	if (!scope->CheckType(Object::Type::Class)) {
+		scope = methodParent ? ObjectPtr(methodParent->GetClass()) :
+			ObjectPtr(scope->GetParent());
+	}
+
+	/*	Compute invoke hash for method's variable and
+	try to find it in scope to avoid slow ordering */
+
+	invokeHash |= Uint64(Buffer(scope->GetPath() + scope->GetName() + '/' + methodName)
+		.GetHash32()) << 32;
+
+	if ((methodVar = scope->Find(invokeHash))) {
 		n->var = methodVar;
 	}
 
@@ -530,21 +570,8 @@ Void NodeWalker::_Invoke(NodePtr n) {
 
 		Vector<OrderedMethod> methodList;
 		Uint32 distance = 0;
-		Set<ObjectPtr> methodSet;
 
-		if (!scope->CheckType(Object::Type::Class)) {
-
-			methodSet = scope->GetParent()->GetMethodSet();
-
-			if (this->lastSelection) {
-				methodSet = this->lastSelection->GetClass()->GetMethodSet();
-			}
-		}
-		else {
-			methodSet = scope->GetMethodSet();
-		}
-
-		for (ObjectPtr m : methodSet) {
+		for (ObjectPtr m : scope->GetMethodSet()) {
 			if (methodName == m->GetName() && n->lex->args == m->GetMethod()->GetAttributeHash().size()) {
 				for (Uint32 i = 0; i < n->lex->args; i++) {
 					if (objectList[i]->GetPriority() > m->GetMethod()->GetAttributeHash()[i]->GetPriority()) {
@@ -563,7 +590,7 @@ Void NodeWalker::_Invoke(NodePtr n) {
 
 		Set<ObjectPtr> constructorSet;
 
-		for (ObjectPtr m : methodSet) {
+		for (ObjectPtr m : scope->GetMethodSet()) {
 			if (m->GetName() == m->GetOwner()->GetName()) {
 				constructorSet.insert(m);
 			}

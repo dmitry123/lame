@@ -28,7 +28,9 @@ Void CodeBuilder::onBinary(NodePtr n) {
 	ObjectPtr sourceVar;
 	ObjectPtr leftVar;
 	ObjectPtr rightVar;
+
 	Bool wasItConst;
+	Bool justSaved;
 
 	LAME_ASSERT(n->lex->args == 2);
 
@@ -111,7 +113,7 @@ Void CodeBuilder::onBinary(NodePtr n) {
 		}
 	}
 	else {
-	_SaveNode:
+	_SaveNode: justSaved = TRUE;
 		this->_Save(n);
 	}
 
@@ -237,7 +239,7 @@ Void CodeBuilder::onBinary(NodePtr n) {
 		}
 	}
 	else {
-		this->GetWalker()->Push(sourceVar, !wasItConst);
+		this->GetWalker()->Push(sourceVar, !wasItConst && !justSaved);
 	}
 
 	if (n->lex->lex->IsLeft()) {
@@ -588,7 +590,9 @@ Void CodeBuilder::onNew(NodePtr n) {
 	}
 
 	this->_Save(n);
-	this->GetWalker()->Push(resultVar);
+
+	this->GetWalker()->Push(resultVar,
+		FALSE);
 }
 
 Void CodeBuilder::onReturn(NodePtr n) {
