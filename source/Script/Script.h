@@ -23,5 +23,6 @@
 #include "SegmentLinker.h"
 #include "ByteCode.h"
 #include "Assembler.h"
+#include "LameCompiler.h"
 
 #endif // ~__LAME_SCRIPT__

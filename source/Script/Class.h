@@ -22,7 +22,6 @@ public:
 	inline ObjectPtr GetExtend() { return this->extendClass; }
 	inline Set<ObjectPtr>& GetImplements() { return this->implementClass; }
 	inline Uint32 GetPriority() const { return this->priority; }
-	inline Vector<HashType>& GetTypeMap() { return this->typeMap; }
 public:
 	inline Void SetPriority(Uint32 priority) { this->priority = priority; }
 	inline Uint32 GetPriority() { return this->priority; }
@@ -39,7 +38,6 @@ private:
 	Set<ObjectPtr> implementClass;
 	Uint32 priority;
 	Uint32 sizeOf;
-	Vector<HashType> typeMap;
 };
 
 LAME_END2

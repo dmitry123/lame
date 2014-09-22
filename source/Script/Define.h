@@ -45,6 +45,7 @@ typedef class SegmentLinker *SegmentLinkerPtr, *const SegmentLinkerPtrC;
 typedef class StackVar *StackVarPtr, *const StackVarPtrC;
 typedef class SyntaxBuilder *SyntaxBuilderPtr, *const SyntaxBuilderPtrC;
 typedef class Variable *VariablePtr, *const VariablePtrC;
+typedef class NodeWalker *NodeWalkerPtr, *const NodeWalkerPtrC;
 
 typedef Buffer ScriptNativeString;
 typedef Sint64 ScriptNativeInt;

@@ -71,6 +71,7 @@ public:
 	Uint32 depth;
 	NodePtr finalNode;
 	Bool wasItBrace;
+	Bool wasItLeft;
 public:
 	struct {
 		NodePtr extendNode;

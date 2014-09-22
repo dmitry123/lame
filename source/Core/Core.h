@@ -18,6 +18,7 @@
 #include "Mutex.h"
 #include "Observable.h"
 #include "SharedPtr.h"
+#include "Sizeable.h"
 #include "Stream.h"
 #include "Thread.h"
 #include "Throwable.h"

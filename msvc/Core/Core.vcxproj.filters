@@ -120,6 +120,9 @@
     <ClInclude Include="..\..\source\Core\WaitManager.h">
       <Filter>source</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\source\Core\Sizeable.h">
+      <Filter>source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\Core\zlib\adler32.c">
@@ -243,6 +246,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\Core\WaitManager.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Core\Sizeable.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

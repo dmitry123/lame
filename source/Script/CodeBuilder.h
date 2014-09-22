@@ -11,6 +11,7 @@
 #include "Method.h"
 #include "CodeNode.h"
 #include "LittleCalculator.h"
+#include "NodeWalker.h"
 
 LAME_BEGIN2(Script)
 

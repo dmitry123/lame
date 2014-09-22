@@ -3,19 +3,19 @@
 
 LAME_BEGIN2(Script)
 
-Void StackVar::Push(VariablePtr var) {
+Void StackVar::Push(ObjectPtr var) {
 
 	this->varList.push_back(var);
 	this->nodeList.push_back(var->GetNode());
 }
 
-VariablePtr StackVar::Pop(Void) {
+ObjectPtr StackVar::Pop(Void) {
 
 	if (this->varList.empty()) {
 		return NULL;
 	}
 
-	VariablePtr var = this->varList.back();
+	ObjectPtr var = this->varList.back();
 
 	this->varList.pop_back();
 	this->nodeList.pop_back();

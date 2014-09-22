@@ -286,6 +286,15 @@ Void ScopeBuilder::Build(NodePtr rootNode, ScopePtr rootScope) {
 #if 0 /* Node trace (debug) */
 	this->_ForEachNode(rootNode, rootScope, ForEachNode(&ScopeBuilder::_ForEachNodeTrace, this), kScriptNodeUnknown);
 #endif
+
+	/*	Create <init> method for root node, it will
+	be our entry point (global scope) */
+
+	rootNode->var = rootScope->Add(new Method("<init>",
+		rootScope, ObjectPtr(rootScope), rootScope->classVoid));
+
+	rootNode->var->GetMethod()->SetRootNode(rootNode);
+	rootNode->var->SetNode(rootNode);
 }
 
 Void ScopeBuilder::_ForEachClassStatic(NodePtr n) {

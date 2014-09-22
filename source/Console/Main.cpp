@@ -71,10 +71,10 @@ int main(int argc, char** argv) {
 	ScopePtr rootScope;
 	SegmentLinker segmentLinker;
 	SegmentBuilder segmentBuilder;
-	//CodeTranslator codeTranslator;
 	NodePtr rootNode;
 	CodeBuilder codeBuilder;
 	Package packageManager;
+	AbstractCompiler abstractCompiler;
 
 	try {
 		/* Launch timer */
@@ -98,18 +98,10 @@ int main(int argc, char** argv) {
 		scopeBuilder.Build(rootNode, rootScope);
 		codeBuilder.Build(&syntaxBuilder, rootScope);
 
+#if 0
 		/* Trace root scope */
 		rootScope->Trace(0);
-
-		if (!rootNode->blockList.empty()) {
-			printf("\n\n");
-			puts("+---------------------------+");
-			for (NodePtr n : rootNode->blockList) {
-				printf("[%s] ", n->word.data());
-			}
-			printf("\n");
-			puts("+---------------------------+");
-		}
+#endif
 
 		/* Build segments */
 		segmentBuilder.BuildTextSegment(rootScope);
@@ -124,13 +116,17 @@ int main(int argc, char** argv) {
 		segmentBuilder.GetCodeSegment()->SetOffset(
 			segmentLinker.GetPosition());
 
+		/* Create new inspector and append to compiler */
+		abstractCompiler.Inspect(new LameCompiler(&abstractCompiler));
+
 		/* Compile code */
-		//codeTranslator.Run(&syntaxBuilder, rootScope,
-		//	segmentBuilder.GetCodeSegment());
+		abstractCompiler.Run(&codeBuilder, &syntaxBuilder,
+			rootScope, segmentBuilder.GetCodeSegment());
 
 		/* Link code segment */
 		segmentLinker.Add(segmentBuilder.GetCodeSegment());
 
+#if 0
 		/* Trace segments */
 		segmentBuilder.GetTextSegment()->Trace(FALSE);
 		printf("\n");
@@ -138,11 +134,10 @@ int main(int argc, char** argv) {
 		printf("\n");
 		segmentBuilder.GetCodeSegment()->Trace(TRUE);
 		printf("\n");
+#endif
 
 		/* Trace opcode */
 		ByteCode::Trace(&segmentBuilder);
-
-		GlobalScope::Release(rootScope);
 	}
 	catch (Throwable& e) {
 		puts("\n+---------------------------+");

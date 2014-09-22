@@ -13,6 +13,7 @@ class LAME_API Object :
 	friend class Segment;
 	friend class ScopeBuilder;
 	friend class Variable;
+	friend class NodeWalker;
 public: /* Flags & States */
 	enum class Modificator : Uint32 {
 		Unknown      = 0x00000000,
@@ -71,10 +72,10 @@ public: /* Strict Virtual Methods */
 	virtual HashType Hash(Void) = 0;
 	virtual Uint32 Size(Void) = 0;
 public: /* Weak virtual Methods */
-	virtual ClassPtr     GetClass()     { return NULL; }
-	virtual VariablePtr  GetVariable()  { return NULL; }
-	virtual MethodPtr    GetMethod()    { return NULL; }
-	virtual InterfacePtr GetInterface() { return NULL; }
+	virtual ClassPtr     GetClass()     { return ClassPtr(this);;    }
+	virtual VariablePtr  GetVariable()  { return VariablePtr(this);  }
+	virtual MethodPtr    GetMethod()    { return MethodPtr(this);    }
+	virtual InterfacePtr GetInterface() { return InterfacePtr(this); }
 public: /* Setters */
 	ObjectPtr SetModificator(Modificator modificator,
 		Bool state = TRUE);

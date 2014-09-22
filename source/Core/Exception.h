@@ -17,7 +17,7 @@ typedef Exception DirectoryException;
 
 #define LAME_ASSERT(_condition) \
     if (!(_condition)) { \
-        throw Exception(#_condition); \
+        throw Exception("%s [%d] : "#_condition, File::GetFileName(__FILE__), __LINE__); \
     }
 
 LAME_END2

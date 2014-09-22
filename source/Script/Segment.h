@@ -7,7 +7,7 @@
 
 LAME_BEGIN2(Script)
 
-class LAME_API Segment {
+class LAME_API Segment : public Sizeable {
 public:
 	inline Segment(Buffer name = "") :
 		Segment(name.data())

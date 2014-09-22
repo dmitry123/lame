@@ -23,13 +23,14 @@ public:
 	public:
 		virtual Void onBinary(ObjectPtr left, ObjectPtr right) = 0;
 		virtual Void onUnary(ObjectPtr object) = 0;
-		virtual Void onCondition(NodePtr node) = 0;
+		virtual Void onCondition(ObjectPtr object) = 0;
 		virtual Void onReturn(ObjectPtr object) = 0;
 		virtual Void onLoad(ObjectPtr object) = 0;
 		virtual Void onStore(ObjectPtr object) = 0;
 		virtual Void onInvoke(ObjectPtr method) = 0;
 		virtual Void onCast(ObjectPtr object, ClassPtr type) = 0;
 		virtual Void onClone(ObjectPtr object) = 0;
+		virtual Void onNew(ObjectPtr object) = 0;
 	public:
 		inline AbstractCompilerPtr GetCompiler() {
 			return this->abstractCompiler;
@@ -45,15 +46,16 @@ public:
 		{
 		}
 	public:
-		Void onBinary(ObjectPtr left, ObjectPtr right) override;
-		Void onUnary(ObjectPtr object)                 override;
-		Void onCondition(NodePtr node)                 override;
-		Void onReturn(ObjectPtr object)                override;
-		Void onLoad(ObjectPtr object)                  override;
-		Void onStore(ObjectPtr object)                 override;
-		Void onInvoke(ObjectPtr method)                override;
-		Void onCast(ObjectPtr object, ClassPtr type)   override;
-		Void onClone(ObjectPtr object)                 override;
+		inline Void onBinary(ObjectPtr left, ObjectPtr right) override;
+		inline Void onUnary(ObjectPtr object)                 override;
+		inline Void onCondition(ObjectPtr object)             override;
+		inline Void onReturn(ObjectPtr object)                override;
+		inline Void onLoad(ObjectPtr object)                  override;
+		inline Void onStore(ObjectPtr object)                 override;
+		inline Void onInvoke(ObjectPtr method)                override;
+		inline Void onCast(ObjectPtr object, ClassPtr type)   override;
+		inline Void onClone(ObjectPtr object)                 override;
+		inline Void onNew(ObjectPtr object)                   override;
 	} *InvokerPtr;
 public:
 	AbstractCompiler() :
@@ -78,6 +80,7 @@ public:
 		if (this->inspectorSet.count(inspector)) {
 			this->inspectorSet.erase(inspector);
 		}
+		delete inspector;
 	}
 private:
 	UnorderedSet<InspectorPtr> inspectorSet;
@@ -87,36 +90,39 @@ public:
 		     SyntaxBuilderPtr syntaxBuilder,
 			 ScopePtr         rootScope,
 			 SegmentPtr       codeSegment);
-private:
-	Void _CompileMethods(CodeBuilderPtr codeBuilder,
-		SegmentPtr codeSegment);
-private:
-	typedef Core::Deque<NodePtr> NodeList;
-	typedef Core::Deque<NodePtr>& NodeListRef;
 public:
-	inline NodePtr     GetCurrentNode()   { return this->currentNode;   }
-	inline ByteCodePtr GetByteCode()      { return this->byteCode;      }
-	inline ObjectPtr   GetCurrentMethod() { return this->currentMethod; }
-	inline ScopePtr    GetRootScope()     { return this->rootScope;     }
-	inline Uint32      GetSegmentOffset() { return this->segmentOffset; }
-	inline ObjectPtr   GetLastResult()    { return this->lastResult;    }
+	typedef struct {
+		SegmentPtr argument;
+		SegmentPtr body;
+		SegmentPtr otherwise;
+	} SegmentInfo, *SegmentInfoPtr;
 private:
-	Void _Run(NodeListRef nodeList, Bool backupStack = 0);
+	typedef Deque<NodePtr>  NodeList;
+	typedef Deque<NodePtr>& NodeListRef;
+public:
+	inline NodePtr     GetCurrentNode()   { return this->currentNode;       }
+	inline ByteCodePtr GetByteCode()      { return this->byteCode;          }
+	inline ObjectPtr   GetCurrentMethod() { return this->currentMethod;     }
+	inline ScopePtr    GetRootScope()     { return this->rootScope;         }
+	inline Uint32      GetSegmentOffset() { return this->segmentOffset;     }
+	inline ObjectPtr   GetLastResult()    { return this->lastResult;        }
+public:
+	inline SegmentInfoPtr GetSegmentInfo() {
+		return &this->segmentInfo;
+	}
+private:
+	Void _Run(NodeListRef nodeList);
 	Void _Read(NodePtr node, VariablePtr& left, VariablePtr& right);
 	Void _Write(ObjectPtr object);
-	Void _Cast(VariablePtr variable, ObjectPtr type);
 	Void _StrongCast(VariablePtr variable, ObjectPtr type);
 	Void _Binary(NodePtr node);
 	Void _Unary(NodePtr node);
 	Void _New(NodePtr node);
-	Void _Selection(NodePtr node);
 	Void _Condition(NodePtr node);
 	Void _Invoke(NodePtr node);
 	Void _Return(NodePtr node);
-	Void _Test(NodePtr node);
-private:
-	Void _Push(SegmentPtr segment);
-	SegmentPtr _Pop(Void);
+	Void _Array(NodePtr node);
+	Void _Compile(NodeListRef nodeList, SegmentPtr segment);
 private:
 	Vector<ObjectPtr> classList;
 	Vector<ObjectPtr> methodList;
@@ -132,6 +138,7 @@ private:
 	NodePtr currentNode;
 	ByteCodePtr byteCode;
 	VariablePtr lastResult;
+	SegmentInfo segmentInfo;
 };
 
 Void AbstractCompiler::Invoker::onBinary(ObjectPtr left, ObjectPtr right) {
@@ -146,9 +153,9 @@ Void AbstractCompiler::Invoker::onUnary(ObjectPtr object) {
 	}
 }
 
-Void AbstractCompiler::Invoker::onCondition(NodePtr node) {
+Void AbstractCompiler::Invoker::onCondition(ObjectPtr object) {
 	for (InspectorPtr i : this->GetCompiler()->inspectorSet) {
-		i->onCondition(node);
+		i->onCondition(object);
 	}
 }
 
@@ -185,6 +192,12 @@ Void AbstractCompiler::Invoker::onCast(ObjectPtr object, ClassPtr type) {
 Void AbstractCompiler::Invoker::onClone(ObjectPtr object) {
 	for (InspectorPtr i : this->GetCompiler()->inspectorSet) {
 		i->onClone(object);
+	}
+}
+
+Void AbstractCompiler::Invoker::onNew(ObjectPtr object) {
+	for (InspectorPtr i : this->GetCompiler()->inspectorSet) {
+		i->onNew(object);
 	}
 }
 

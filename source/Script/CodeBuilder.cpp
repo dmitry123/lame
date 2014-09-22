@@ -25,14 +25,6 @@ Void CodeBuilder::Build(SyntaxBuilderPtr nodeBuilder, ScopePtr rootScope) {
 	this->_ForEachClass(rootScope);
 	this->_ForEachMethod(rootScope);
 
-	rootNode->var = rootScope->Add(new Method("<init>",
-		rootScope, ObjectPtr(rootScope), rootScope->classVoid));
-
-	rootNode->var->GetMethod()->SetRootNode(rootNode);
-	rootNode->var->SetNode(rootNode);
-
-	this->methodList.push_back(rootNode->var);
-
 	for (ObjectPtr i : this->methodList) {
 
 		NodePtr n = i->GetMethod()->GetRootNode();
@@ -159,7 +151,8 @@ Void CodeBuilder::_Run(NodeListRef nodeList, Bool makeBackup) {
 	}
 
 	if (this->variableStack.Size()) {
-		this->lastResult = this->variableStack.Back();
+		this->lastResult = this->variableStack.Back()
+			->GetVariable();
 	}
 
 	if (makeBackup) {
@@ -236,7 +229,9 @@ Void CodeBuilder::_Read(NodePtr n, VariablePtr& left, VariablePtr& right) {
 
 	if (n->lex->args > 1) {
 
-		right = this->variableStack.Back();
+		right = this->variableStack.Back()
+			->GetVariable();
+
 		this->variableStack.GetVarList().pop_back();
 
 		if (n->lex->lex->id != kScriptLexDirected) {
@@ -248,7 +243,9 @@ Void CodeBuilder::_Read(NodePtr n, VariablePtr& left, VariablePtr& right) {
 		}
 	}
 
-	left = this->variableStack.Back();
+	left = this->variableStack.Back()
+		->GetVariable();
+
 	this->variableStack.GetVarList().pop_back();
 
 	if (!left) {
@@ -356,6 +353,26 @@ Void CodeBuilder::_Cast(VariablePtr var, ObjectPtr type) {
 		if (_CheckObjectCast(left, right)) {
 			goto _CastOk;
 		}
+	}
+
+	if (var->GetVarType() == Variable::Var::Array) {
+		if (type->CheckType(Object::Type::Variable)) {
+			if (left != right) {
+				goto _CastFail;
+			}
+		}
+		else {
+			if (!type->GetTemplate() || type->GetTemplate() != right) {
+				goto _CastFail;
+			}
+		}
+	}
+
+	if (var->GetClass() == Scope::classArray) {
+		if (!var->GetTemplate() || var->GetTemplate() != left) {
+			goto _CastFail;
+		}
+		goto _CastOk;
 	}
 
 	if (var->CheckModificator(Object::Modificator::Constant)) {
@@ -492,6 +509,10 @@ Void CodeBuilder::_Binary(NodePtr n) {
 
 		if (leftVar->GetClass()->Hash() != rightVar->GetClass()->Hash()) {
 			this->_Cast(rightVar, sourceVar);
+		}
+
+		if (n->lex->lex->id == kScriptLexSet) {
+			leftVar->GetNode()->wasItLeft = TRUE;
 		}
 	}
 
@@ -642,15 +663,7 @@ Void CodeBuilder::_Binary(NodePtr n) {
 		}
 	}
 	else {
-		if (n->lex->lex->IsLeft()) {
-			if (n->lex->lex->id != kScriptLexSet) {
-				LAME_TODO("Assign rightVar->leftVar");
-			}
-			this->variableStack.Push(sourceVar);
-		}
-		else {
-			this->variableStack.Push(sourceVar);
-		}
+		this->variableStack.Push(sourceVar);
 	}
 
 	if (n->lex->lex->IsLeft()) {
@@ -772,13 +785,21 @@ Void CodeBuilder::_Unary(NodePtr n) {
 Void CodeBuilder::_Ternary(NodePtr n) {
 
 	VariablePtr backVar;
+	VariablePtr var0;
+	VariablePtr var1;
 
 	this->_Read(n, backVar, backVar);
 
-	LAME_TODO("If backVar");
-
 	this->_Run(n->blockList);
+	var0 = this->lastResult;
+
 	this->_Run(n->elseList);
+	var1 = this->lastResult;
+
+	if (var0->GetClass() != var1->GetClass()) {
+		PostSyntaxError(n->lex->line, "Different result types in ternary expression (%s, %s)",
+			var0->GetClass()->GetName().data(), var1->GetClass()->GetName().data());
+	}
 }
 
 Void CodeBuilder::_New(NodePtr n) {
@@ -799,17 +820,8 @@ Void CodeBuilder::_New(NodePtr n) {
 	/* Constructor invocation */
 	if ((n->flags & kScriptFlagInvocation) != 0) {
 
-		LAME_TODO("New leftVar");
-
 		ClassPtr initClass = leftVar->GetClass();
 		ObjectPtr initMethod = NULL;
-
-		while (initClass != initClass->classObject) {
-			if (initClass && (initMethod = initClass->Find("<init>", FALSE))) {
-				LAME_TODO("Invoke initMethod");
-			}
-			initClass = ClassPtr(initClass->GetExtend());
-		}
 
 		this->_Invoke(n->typeNode);
 	}
@@ -818,17 +830,13 @@ Void CodeBuilder::_New(NodePtr n) {
 
 		Uint32 offsetLength = 0;
 
-		if (n->typeNode->lex->args > 1) {
-			PostSyntaxError(n->lex->line, "Array allocation can't have more then 1 argument (%s)",
+		if (n->typeNode->lex->args != 1) {
+			PostSyntaxError(n->lex->line, "Array size expression's result must be 1 value (%s)",
 				n->lex->args);
 		}
 
-		if (leftVar->GetClass()->CheckModificator(Object::Modificator::Primitive)) {
-			offsetLength = leftVar->GetClass()->Size();
-		}
-		else {
-			offsetLength = leftVar->Scope::Size();
-		}
+		offsetLength = leftVar->GetClass()->CheckModificator(Object::Modificator::Primitive) ?
+			leftVar->GetClass()->Size() : leftVar->Scope::Size();
 
 		Vector<VariablePtr> initList;
 
@@ -838,29 +846,24 @@ Void CodeBuilder::_New(NodePtr n) {
 			}
 		}
 
-		if (n->typeNode->lex->args > 0) {
+		Uint32 offset = 0;
 
-			this->_Read(n, leftVar, leftVar);
-
-			LAME_TODO("New offsetLength");
+		if (!n->typeNode->argList.empty()) {
+			this->_Run(n->typeNode->argList, TRUE);
+			if (!this->lastResult->GetClass()->IsIntegerLike()) {
+				PostSyntaxError(n->lex->line, "Array size must be integer value (%s)",
+					this->lastResult->GetClass()->GetName().data());
+			}
 		}
 		else {
-			Uint32 offset = 0;
-
-			LAME_TODO("Load initList.size()");
-			LAME_TODO("New offsetLength");
-
 			for (VariablePtr v : initList) {
-
-				LAME_TODO("Clone reference");
-				LAME_TODO("Store v");
-
 				v->SetAddress(offset);
 				offset += offsetLength;
 			}
 		}
 
-		resultVar->GetVarType() = Variable::Var::Array;
+		resultVar = VariablePtr(Scope::classArray);
+		Scope::classArray->SetTemplate(resultVar->GetClass());
 	}
 
 	this->_Save(n);
@@ -919,14 +922,11 @@ Void CodeBuilder::_Selection(NodePtr n) {
 
 	fieldObject->SetThis(leftVar);
 
-	if (fieldObject->CheckType(Object::Type::Variable)) {
-		LAME_TODO("Load fieldObject");
-	}
-
 	if (!fieldObject->CheckType(Object::Type::Method)) {
 		this->variableStack.Push(VariablePtr(fieldObject));
 	}
 
+	this->lastNode->var = fieldObject;
 	this->lastSelection = fieldObject;
 }
 
@@ -1035,7 +1035,6 @@ Void CodeBuilder::_Condition(NodePtr n) {
 			goto _BooleanError;
 		}
 
-		LAME_TODO("If var0");
 		this->_Run(n->blockList, TRUE);
 
 		break;
@@ -1080,7 +1079,6 @@ Void CodeBuilder::_Condition(NodePtr n) {
 			goto _BooleanError;
 		}
 
-		LAME_TODO("If var0");
 		this->_Run(n->blockList, TRUE);
 		this->_Run(n->forInfo.nextList, TRUE);
 
@@ -1148,8 +1146,6 @@ Void CodeBuilder::_Invoke(NodePtr n) {
 		if (i != n->lex->args - 1) {
 			formattedParameters.append(", ");
 		}
-
-		LAME_TODO("Load var");
 	}
 
 	/*	Compute invoke hash for current
@@ -1285,8 +1281,6 @@ Void CodeBuilder::_Invoke(NodePtr n) {
 		n->var = methodVar;
 	}
 
-	LAME_TODO("Invoke methodVar");
-
 #if 1 /* Don't sure, cuz it crashes selection */
 
 	/*	Load all method's local variables, then
@@ -1346,7 +1340,6 @@ Void CodeBuilder::_Return(NodePtr n) {
 				->GetName().data(), methodVar->GetReturnType()->GetName().data());
 		}
 		this->_Cast(methodVar->returnVar, methodVar->GetReturnType());
-		LAME_TODO("Push methodVar->returnVar");
 	}
 }
 
@@ -1357,7 +1350,7 @@ Void CodeBuilder::_Finish(NodePtr n) {
 	}
 
 #if 1 /* Yes, its an error, but not now */
-	for (VariablePtr v : this->variableStack.GetVarList()) {
+	for (ObjectPtr v : this->variableStack.GetVarList()) {
 		if (v && v->GetNode() && v->GetNode()->id == kScriptNodeDefault) {
 			PostSyntaxError(this->currentNode->lex->line, "Unexcepted token in expression (%s)",
 				this->variableStack.Back()->GetName().data());
@@ -1366,7 +1359,6 @@ Void CodeBuilder::_Finish(NodePtr n) {
 #endif
 
 	this->lastSelection = NULL;
-
 	this->variableStack.Clear();
 }
 
@@ -1392,8 +1384,6 @@ Void CodeBuilder::_Array(NodePtr n) {
 		PostSyntaxError(n->lex->line, "Array index must be integer value, found (%s)",
 			leftVar->GetClass()->GetName().data());
 	}
-
-	LAME_TODO("Load n->var");
 
 	this->variableStack.Push(
 		VariablePtr(n->var->GetClass()));

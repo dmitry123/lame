@@ -237,6 +237,7 @@
     <ClInclude Include="..\..\source\Core\Mutex.h" />
     <ClInclude Include="..\..\source\Core\Observable.h" />
     <ClInclude Include="..\..\source\Core\SharedPtr.h" />
+    <ClInclude Include="..\..\source\Core\Sizeable.h" />
     <ClInclude Include="..\..\source\Core\Stream.h" />
     <ClInclude Include="..\..\source\Core\Thread.h" />
     <ClInclude Include="..\..\source\Core\Throwable.h" />
@@ -276,6 +277,7 @@
     <ClCompile Include="..\..\source\Core\Mutex.cpp" />
     <ClCompile Include="..\..\source\Core\Observable.cpp" />
     <ClCompile Include="..\..\source\Core\SharedPtr.cpp" />
+    <ClCompile Include="..\..\source\Core\Sizeable.cpp" />
     <ClCompile Include="..\..\source\Core\Stream.cpp" />
     <ClCompile Include="..\..\source\Core\Thread.cpp" />
     <ClCompile Include="..\..\source\Core\Throwable.cpp" />
