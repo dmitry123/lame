@@ -21,7 +21,7 @@ class MouseEvent {
 
 	private int x = 0;
 	private int y = 0;
-	private int key = 0;
+	private int state = 0;
 	private int button = 0;
 }
 

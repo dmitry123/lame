@@ -55,11 +55,9 @@ Void NodeWalker::Walk(
 
 		this->Run(m->GetRootNode()->blockList, TRUE);
 
-		if (!m->GetReturnType()->IsVoid()) {
-			if (!m->returnVar) {
-				PostSyntaxError(n->lex->line, "Non-void method %s(%s) must return (%s)", m->GetName().data(),
-					m->GetFormattedArguments().data(), m->GetReturnType()->GetName().data());
-			}
+		if (!m->GetReturnType()->IsVoid() && !m->returnVar) {
+			PostSyntaxError(n->lex->line, "Non-void method %s(%s) must return (%s)", m->GetName().data(),
+				m->GetFormattedArguments().data(), m->GetReturnType()->GetName().data());
 		}
 	}
 }
@@ -95,7 +93,7 @@ Void NodeWalker::Run(NodeList nodeList, Bool backupStack) {
 		}
 
 		/*	If we've stored our last invoke node,
-		then we have to perform it and forgot it. This
+		then we have to perform it and forget it. This
 		is fix for directed selection invocation */
 
 		if (this->rememberedInvoke) {
