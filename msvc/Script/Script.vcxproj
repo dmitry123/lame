@@ -224,12 +224,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\source\Script\AbstractCompiler.cpp" />
     <ClCompile Include="..\..\source\Script\Assembler.cpp" />
     <ClCompile Include="..\..\source\Script\ByteCode.cpp" />
     <ClCompile Include="..\..\source\Script\Class.cpp" />
     <ClCompile Include="..\..\source\Script\CodeBuilder.cpp" />
-    <ClCompile Include="..\..\source\Script\CodeNode.cpp" />
     <ClCompile Include="..\..\source\Script\GlobalScope.cpp" />
     <ClCompile Include="..\..\source\Script\LameCompiler.cpp" />
     <ClCompile Include="..\..\source\Script\LittleCalculator.cpp" />
@@ -257,12 +255,10 @@
     <ClCompile Include="..\..\source\Script\Variable.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\source\Script\AbstractCompiler.h" />
     <ClInclude Include="..\..\source\Script\Assembler.h" />
     <ClInclude Include="..\..\source\Script\ByteCode.h" />
     <ClInclude Include="..\..\source\Script\Class.h" />
     <ClInclude Include="..\..\source\Script\CodeBuilder.h" />
-    <ClInclude Include="..\..\source\Script\CodeNode.h" />
     <ClInclude Include="..\..\source\Script\GlobalScope.h" />
     <ClInclude Include="..\..\source\Script\LameCompiler.h" />
     <ClInclude Include="..\..\source\Script\LittleCalculator.h" />

@@ -1,27 +1,26 @@
 #ifndef __LAME_SCRIPT_CODE_BUILDER__
 #define __LAME_SCRIPT_CODE_BUILDER__
 
-#include "Define.h"
 #include "NodeBuilder.h"
-#include "StackVar.h"
-#include "Node.h"
-#include "Class.h"
 #include "Variable.h"
 #include "Interface.h"
-#include "Method.h"
-#include "CodeNode.h"
+#include "Class.h"
 #include "LittleCalculator.h"
 #include "NodeWalker.h"
 
 LAME_BEGIN2(Script)
 
-class LAME_API CodeBuilder {
+class LAME_API CodeBuilder :
+	public NodeWalker::Listener,
+	public NodeWalker::Optimizer
+{
 public:
-	typedef Core::Deque<NodePtr> NodeList;
-	typedef Core::Deque<NodePtr>& NodeListRef;
+	typedef NodeWalker::NodeList NodeList;
+	typedef NodeWalker::Iterator Iterator;
 public:
-	CodeBuilder() :
-		littleCalculator(this)
+	CodeBuilder() : littleCalculator(this),
+		Listener(&nodeWalker),
+		Optimizer(&nodeWalker)
 	{
 	}
 public:
@@ -30,50 +29,42 @@ public:
 	Void Build(
 		SyntaxBuilderPtr nodeBuilder,
 		ScopePtr         rootScope);
+private:
+	Void onBinary(NodePtr n) override;
+	Void onUnary(NodePtr n) override;
+	Void onTernary(NodePtr n) override;
+	Void onCondition(NodePtr n) override;
+	Void onInvoke(NodePtr n) override;
+	Void onNew(NodePtr n) override;
+	Void onReturn(NodePtr n) override;
+	Void onIndex(NodePtr n) override;
+private:
+	inline Iterator onBegin(Void) override
+		{ return this->nodeList.begin(); }
+	inline Iterator onEnd(Void) override
+		{ return this->nodeList.end(); }
+	inline Uint32 onSize(Void) override
+		{ return Uint32(this->nodeList.size()); }
+	inline Iterator onInsert(Iterator i, NodePtr n) override
+		{ return this->nodeList.insert(i, n); }
+	inline Iterator onErase(Iterator i) override
+		{ return this->nodeList.erase(i); }
+	inline Void onPush(NodePtr n) override
+		{ this->nodeList.push_back(n); }
+	inline Void onPop(Void) override
+		{ this->nodeList.pop_back(); }
 public:
-	inline Vector<CodeNodePtr>& GetCodeList()   { return this->codeList;          }
-	inline Vector<ObjectPtr>&   GetClassList()  { return this->classList;         }
-	inline LittleCalculatorPtr  GetCalculator() { return &this->littleCalculator; }
-	inline Vector<ObjectPtr>&   GetMethodList() { return this->methodList;        }
+	inline LittleCalculatorPtr GetCalculator() {
+		return &this->littleCalculator;
+	}
 private:
-	Void _Read(NodePtr node, VariablePtr& left, VariablePtr& right);
-	Void _Run(NodeListRef nodeList, Bool makeBackup = FALSE);
-private:
-	Void _ForEachClass(ScopePtr rootScope);
-	Void _ForEachMethod(ScopePtr rootScope);
-private:
-	Void _Binary(NodePtr n);
-	Void _Unary(NodePtr n);
-	Void _Ternary(NodePtr n);
-	Void _New(NodePtr n);
-	Void _Selection(NodePtr n);
-	Void _Condition(NodePtr n);
 	Void _Cast(VariablePtr var, ObjectPtr type);
 	Void _StrongCast(VariablePtr var, ClassPtr type);
-	Void _Invoke(NodePtr n);
-	Void _Return(NodePtr n);
-	Void _Finish(NodePtr n);
-	Void _Array(NodePtr n);
 	Void _Save(NodePtr n);
 private:
-	Void _Push(CodeNodePtr codeNode);
-	CodeNodePtr _Pop(Void);
-private:
-	Vector<ObjectPtr> classList;
-	Vector<ObjectPtr> methodList;
-	StackVar variableStack;
-	NodePtr currentNode;
-	VariablePtr lastResult;
-	Vector<CodeNodePtr> codeList;
-	CodeNodePtr currentCode;
-	NodePtr rememberedInvoke;
-	Stack<CodeNodePtr> codeStack;
-	CodeNodePtr currentMethod;
 	LittleCalculator littleCalculator;
 	Vector<NodePtr> nodeList;
-	NodePtr lastNode;
-	ObjectPtr lastSelection;
-	Bool wasItCondition;
+	NodeWalker nodeWalker;
 };
 
 LAME_END2

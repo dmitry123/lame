@@ -2,13 +2,21 @@
 
 LAME_BEGIN2(Script)
 
-Void NodeWalker::Walk(ListenerPtr nodeListener, NodePtr rootNode, ScopePtr rootScope, VoidP userData) {
+Void NodeWalker::Walk(
+	ListenerPtr  nodeListener,
+	OptimizerPtr nodeOptimizer,
+	NodePtr      rootNode,
+	ScopePtr     rootScope,
+	VoidP        userData
+) {
+	NodePtr n;
 
 	LAME_ASSERT(nodeListener != NULL);
 	LAME_ASSERT(rootNode     != NULL);
 	LAME_ASSERT(rootScope    != NULL);
 
 	this->nodeListener = nodeListener;
+	this->nodeOptimizer = nodeOptimizer;
 	this->rootNode = rootNode;
 	this->rootScope = rootScope;
 	this->userData = userData;
@@ -20,17 +28,20 @@ Void NodeWalker::Walk(ListenerPtr nodeListener, NodePtr rootNode, ScopePtr rootS
 	this->lastResult = NULL;
 	this->lastNode = NULL;
 	this->rememberedInvoke = NULL;
+	this->currentMethod = NULL;
 
-	if (!methodSet.empty()) {
-		methodSet.clear();
+	if (!this->methodSet.empty()) {
+		this->methodSet.clear();
 	}
-	stackVar.Clear();
+	this->stackVar.Clear();
 
 	this->_FindMethod(rootScope);
 
 	for (MethodPtr m : this->methodSet) {
 
-		NodePtr n = m->GetRootNode();
+		if (!(n = m->GetRootNode())) {
+			continue;
+		}
 
 		this->currentNode = n;
 		this->currentMethod = m;
@@ -56,9 +67,16 @@ Void NodeWalker::Walk(ListenerPtr nodeListener, NodePtr rootNode, ScopePtr rootS
 Void NodeWalker::Run(NodeList nodeList, Bool backupStack) {
 
 	StackVar stackBackup;
+	ObjectPtr var0;
+	Uint32 listLength;
 
 	if (backupStack) {
 		stackBackup = this->stackVar;
+	}
+
+	if (this->nodeOptimizer) {
+		listLength = this->nodeOptimizer
+			->onSize();
 	}
 
 	for (NodePtr n : nodeList) {
@@ -75,6 +93,10 @@ Void NodeWalker::Run(NodeList nodeList, Bool backupStack) {
 		if (n->var && n->var->CheckType(Object::Type::Method)) {
 			n->var->SetNode(n);
 		}
+
+		/*	If we've stored our last invoke node,
+		then we have to perform it and forgot it. This
+		is fix for directed selection invocation */
 
 		if (this->rememberedInvoke) {
 			if (n->lex->lex->id != kScriptLexDirected) {
@@ -110,6 +132,9 @@ Void NodeWalker::Run(NodeList nodeList, Bool backupStack) {
 			}
 			else if (n->lex->lex->id == kScriptLexNew) {
 				this->nodeListener->onNew(n);
+				if ((n->flags & kScriptFlagInvocation) != 0) {
+					this->_Invoke(n->typeNode);
+				}
 			}
 			else if (n->lex->lex->id == kScriptLexDirected) {
 				this->_Selection(n);
@@ -153,9 +178,71 @@ Void NodeWalker::Run(NodeList nodeList, Bool backupStack) {
 	if (backupStack) {
 		this->stackVar = stackBackup;
 	}
+
+	if (this->stackVar.Size()) {
+		this->lastResult = this->stackVar.Back()
+			->GetVariable();
+	}
+
+	if (!this->nodeOptimizer) {
+		return /* Skip Optimizer */;
+	}
+
+	if (nodeList.empty()) {
+		return;
+	}
+	nodeList.clear();
+
+	if (this->nodeOptimizer->onSize() == listLength) {
+		listLength = 0;
+	}
+
+	auto it = this->nodeOptimizer->onBegin()
+		+ listLength;
+
+	for (Uint32 i = 0; i < this->nodeOptimizer->onSize() - listLength; i++) {
+
+		NodePtr n = *(it + i);
+
+		switch (n->lex->lex->id) {
+		case kScriptLexWhile:
+			if (n->argList.size() != 1) {
+				break;
+			}
+			if ((var0 = n->argList.back()->var) &&
+				var0->CheckModificator(Object::Modificator::Constant)
+				) {
+				if (!var0->GetVariable()->v.intValue) {
+					continue;
+				}
+			}
+			break;
+		default:
+			if (!n->finalNode) {
+				break;
+			}
+			for (NodePtr n2 : n->finalNode->blockList) {
+				if (n->lex->lex->id == kScriptLexSwitch &&
+					n2->lex->lex->id == kScriptLexBreak
+				) {
+					continue;
+				}
+				nodeList.push_back(n2);
+			}
+			continue;
+		}
+
+		nodeList.push_back(n);
+	}
+
+	listLength = this->nodeOptimizer->onSize() - listLength;
+
+	while (listLength--) {
+		this->nodeOptimizer->onPop();
+	}
 }
 
-Void NodeWalker::Push(ObjectPtr object) {
+Void NodeWalker::Push(ObjectPtr object, Bool makeCallback) {
 
 	if (!object) {
 		this->stackVar.GetNodeList().push_back(this->currentNode);
@@ -163,6 +250,10 @@ Void NodeWalker::Push(ObjectPtr object) {
 	}
 	else {
 		this->stackVar.Push(object);
+	}
+
+	if (this->nodeOptimizer && makeCallback) {
+		this->nodeOptimizer->onPush(this->currentNode);
 	}
 }
 
@@ -222,13 +313,30 @@ Void NodeWalker::Test(NodePtr node) {
 	this->rightVar = right;
 }
 
+ObjectPtr NodeWalker::TestArgument(ClassPtr argType) {
+
+	if (!this->lastResult) {
+		PostSyntaxError(this->currentNode->lex->line, "Lost expression's result", 0)
+	}
+	else {
+		if (argType != NULL && this->lastResult->GetClass() != argType) {
+			PostSyntaxError(this->currentNode->lex->line, "Excepted %s argument, found (%s)",
+				argType->GetName().data(), this->lastResult->GetClass()->GetName().data());
+		}
+	}
+
+	return this->lastResult;
+}
+
 Void NodeWalker::_FindMethod(ScopePtr scope) {
 
 	for (auto i : scope->GetHashMap()) {
 		if (i.second->CheckType(Object::Type::Method)) {
 			this->methodSet.insert(i.second->GetMethod());
 		}
-		this->_FindMethod(i.second);
+		if (!i.second->CheckModificator(Object::Modificator::Primitive)) {
+			this->_FindMethod(i.second);
+		}
 	}
 }
 
@@ -497,6 +605,11 @@ Void NodeWalker::_Invoke(NodePtr n) {
 	if (methodVar->GetMethod()->returnVar) {
 		this->stackVar.Push(methodVar->GetMethod()->returnVar);
 	}
+
+	/*	Invoke listener's overloaded
+	method */
+
+	this->nodeListener->onInvoke(n);
 }
 
 LAME_END2

@@ -10,6 +10,9 @@ LAME_BEGIN2(Script)
 
 class LAME_API NodeWalker {
 public:
+	typedef Deque<NodePtr>& NodeList;
+	typedef Vector<NodePtr>::iterator Iterator;
+public:
 	typedef class Listener {
 	public:
 		virtual Void onBinary(NodePtr n) {}
@@ -33,15 +36,36 @@ public:
 		NodeWalkerPtr nodeWalker;
 	} *ListenerPtr;
 public:
-	Void Walk(ListenerPtr nodeListener, NodePtr rootNode,
+	typedef class Optimizer {
+	public:
+		virtual Iterator onBegin(Void) = 0;
+		virtual Iterator onEnd(Void) = 0;
+		virtual Uint32   onSize(Void) = 0;
+		virtual Iterator onInsert(Iterator i, NodePtr n) = 0;
+		virtual Iterator onErase(Iterator i) = 0;
+		virtual Void     onPush(NodePtr n) = 0;
+		virtual Void     onPop(Void) = 0;
+	public:
+		Optimizer(NodeWalkerPtr nodeWalker) :
+			nodeWalker(nodeWalker)
+		{
+		}
+	public:
+		inline NodeWalkerPtr GetWalker2() {
+			return this->nodeWalker;
+		}
+	private:
+		NodeWalkerPtr nodeWalker;
+	} *OptimizerPtr;
+public:
+	Void Walk(ListenerPtr nodeListener, OptimizerPtr nodeOptimizer, NodePtr rootNode,
 		ScopePtr rootScope, VoidP userData = NULL);
 public:
-	typedef Deque<NodePtr> NodeList;
-public:
 	Void Run(NodeList nodeList, Bool backupStack = FALSE);
-	Void Push(ObjectPtr object);
+	Void Push(ObjectPtr object, Bool makeCallback = TRUE);
 	ObjectPtr Pop(Void);
 	Void Test(NodePtr node);
+	ObjectPtr TestArgument(ClassPtr argType);
 public:
 	inline ListenerPtr    GetListener()  { return this->nodeListener;  }
 	inline NodePtr        GetRootNode()  { return this->rootNode;      }
@@ -66,6 +90,7 @@ private:
 	Void _Invoke(NodePtr node);
 private:
 	ListenerPtr nodeListener;
+	OptimizerPtr nodeOptimizer;
 	NodePtr rootNode;
 	StackVar stackVar;
 	VoidP userData;

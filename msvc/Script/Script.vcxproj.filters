@@ -63,9 +63,6 @@
     <ClCompile Include="..\..\source\Script\StackVar.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\Script\CodeNode.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\source\Script\LittleCalculator.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -88,9 +85,6 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\Script\SyntaxError.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\source\Script\AbstractCompiler.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\source\Script\LameCompiler.cpp">
@@ -158,9 +152,6 @@
     <ClInclude Include="..\..\source\Script\StackVar.h">
       <Filter>source</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\source\Script\CodeNode.h">
-      <Filter>source</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\source\Script\LittleCalculator.h">
       <Filter>source</Filter>
     </ClInclude>
@@ -183,9 +174,6 @@
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Script\SyntaxError.h">
-      <Filter>source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\source\Script\AbstractCompiler.h">
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Script\LameCompiler.h">

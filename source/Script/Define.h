@@ -26,7 +26,6 @@ typedef class Assembler *AssemblerPtr, *const AssemblerPtrC;
 typedef class ByteCode *ByteCodePtr, *const ByteCodePtrC;
 typedef class Class *ClassPtr, *const ClassPtrC;
 typedef class CodeBuilder *CodeBuilderPtr, *const CodeBuilderPtrC;
-typedef class CodeNode *CodeNodePtr, *const CodeNodePtrC;
 typedef class FileParser *FileParserPtr, *const FileParserPtrC;
 typedef class Interface *InterfacePtr, *const InterfacePtrC;
 typedef class Lex *LexPtr, *const LexPtrC;
