@@ -117,11 +117,11 @@ int main(int argc, char** argv) {
 			segmentLinker.GetPosition());
 
 		/* Create new inspector and append to compiler */
-		//abstractCompiler.Inspect(new LameCompiler(&abstractCompiler));
+		abstractCompiler.Inspect(new LameCompiler(&abstractCompiler));
 
 		/* Compile code */
-		//abstractCompiler.Run(&codeBuilder, &syntaxBuilder,
-			//rootScope, segmentBuilder.GetCodeSegment());
+		abstractCompiler.Run(&codeBuilder, &syntaxBuilder,
+			rootScope, segmentBuilder.GetCodeSegment());
 
 		/* Link code segment */
 		segmentLinker.Add(segmentBuilder.GetCodeSegment());

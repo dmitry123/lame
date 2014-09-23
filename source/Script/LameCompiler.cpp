@@ -14,7 +14,7 @@ Void LameCompiler::onBinary(ObjectPtr left, ObjectPtr right) {
 		rightName = right->GetNode()->word;
 	}
 
-	printf("  %s %s %s\n", this->GetCompiler()->GetCurrentNode()->word.data(),
+	printf("  %s %s %s\n", this->GetCompiler()->GetWalker()->GetNode()->word.data(),
 		leftName.data(), rightName.data());
 }
 
@@ -26,7 +26,7 @@ Void LameCompiler::onUnary(ObjectPtr object) {
 		objectName = object->GetNode()->word;
 	}
 
-	printf("  %s %s\n", this->GetCompiler()->GetCurrentNode()->word.data(),
+	printf("  %s %s\n", this->GetCompiler()->GetWalker()->GetNode()->word.data(),
 		objectName.data());
 }
 
@@ -38,24 +38,19 @@ Void LameCompiler::onCondition(ObjectPtr object) {
 		objectName = object->GetNode()->word;
 	}
 
-	printf("  %s %s\n", this->GetCompiler()->GetCurrentNode()->word.data(),
+	printf("  %s %s\n", this->GetCompiler()->GetWalker()->GetNode()->word.data(),
 		objectName.data());
 }
 
 Void LameCompiler::onReturn(ObjectPtr object) {
 
-	if (object) {
-		Buffer objectName = object->GetName();
+	Buffer objectName = object->GetName();
 
-		if (object->CheckModificator(Object::Modificator::Constant)) {
-			objectName = object->GetNode()->word;
-		}
+	if (object->CheckModificator(Object::Modificator::Constant)) {
+		objectName = object->GetNode()->word;
+	}
 
-		printf("  return %s\n", objectName.data());
-	}
-	else {
-		printf("  leave\n");
-	}
+	printf("  return %s\n", objectName.data());
 }
 
 Void LameCompiler::onLoad(ObjectPtr object) {
@@ -121,7 +116,7 @@ Void LameCompiler::onClone(ObjectPtr object) {
 	printf("  clone %s\n", objectName.data());
 }
 
-Void LameCompiler::onNew(ObjectPtr object) {
+Void LameCompiler::onNew(ObjectPtr object, Uint32 size) {
 
 	Buffer objectName = object->GetName();
 

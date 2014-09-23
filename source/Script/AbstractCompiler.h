@@ -6,12 +6,13 @@
 #include "Segment.h"
 #include "StackVar.h"
 #include "CodeBuilder.h"
+#include "NodeWalker.h"
 
 #include <unordered_set>
 
 LAME_BEGIN2(Script)
 
-class LAME_API AbstractCompiler {
+class LAME_API AbstractCompiler : public NodeWalker::Listener {
 	template <class T> using UnorderedSet = std::unordered_set<T>;
 public:
 	typedef class Inspector {
@@ -30,7 +31,7 @@ public:
 		virtual Void onInvoke(ObjectPtr method) = 0;
 		virtual Void onCast(ObjectPtr object, ClassPtr type) = 0;
 		virtual Void onClone(ObjectPtr object) = 0;
-		virtual Void onNew(ObjectPtr object) = 0;
+		virtual Void onNew(ObjectPtr object, Uint32 size) = 0;
 	public:
 		inline AbstractCompilerPtr GetCompiler() {
 			return this->abstractCompiler;
@@ -55,15 +56,12 @@ public:
 		inline Void onInvoke(ObjectPtr method)                override;
 		inline Void onCast(ObjectPtr object, ClassPtr type)   override;
 		inline Void onClone(ObjectPtr object)                 override;
-		inline Void onNew(ObjectPtr object)                   override;
+		inline Void onNew(ObjectPtr object, Uint32 size)      override;
 	} *InvokerPtr;
 public:
-	AbstractCompiler() :
-		invoker(this)
+	AbstractCompiler() : Listener(&nodeWalker),
+		invoker(this), byteCode(NULL)
 	{
-		this->currentMethod = NULL;
-		this->byteCode = NULL;
-		this->lastResult = NULL;
 	}
 public:
 	virtual ~AbstractCompiler() {
@@ -99,45 +97,39 @@ public:
 private:
 	typedef Deque<NodePtr>  NodeList;
 	typedef Deque<NodePtr>& NodeListRef;
+private:
+	Void onBinary(NodePtr n) override;
+	Void onUnary(NodePtr n) override;
+	Void onTernary(NodePtr n) override;
+	Void onCondition(NodePtr n) override;
+	Void onInvoke(NodePtr n) override;
+	Void onNew(NodePtr n) override;
+	Void onReturn(NodePtr n) override;
+	Void onIndex(NodePtr n) override;
+	Void onLoad(NodePtr n) override;
+private:
+	Void onMethodBegin(MethodPtr m) override;
+	Void onMethodEnd(MethodPtr m) override;
 public:
-	inline NodePtr     GetCurrentNode()   { return this->currentNode;       }
-	inline ByteCodePtr GetByteCode()      { return this->byteCode;          }
-	inline ObjectPtr   GetCurrentMethod() { return this->currentMethod;     }
-	inline ScopePtr    GetRootScope()     { return this->rootScope;         }
-	inline Uint32      GetSegmentOffset() { return this->segmentOffset;     }
-	inline ObjectPtr   GetLastResult()    { return this->lastResult;        }
+	inline ByteCodePtr GetByteCode()      { return this->byteCode;      }
+	inline Uint32      GetSegmentOffset() { return this->segmentOffset; }
 public:
 	inline SegmentInfoPtr GetSegmentInfo() {
 		return &this->segmentInfo;
 	}
 private:
-	Void _Run(NodeListRef nodeList);
-	Void _Read(NodePtr node, VariablePtr& left, VariablePtr& right);
 	Void _Write(ObjectPtr object);
 	Void _StrongCast(VariablePtr variable, ObjectPtr type);
-	Void _Binary(NodePtr node);
-	Void _Unary(NodePtr node);
-	Void _New(NodePtr node);
-	Void _Condition(NodePtr node);
-	Void _Invoke(NodePtr node);
-	Void _Return(NodePtr node);
-	Void _Array(NodePtr node);
 	Void _Compile(NodeListRef nodeList, SegmentPtr segment);
 private:
-	Vector<ObjectPtr> classList;
-	Vector<ObjectPtr> methodList;
+	NodeWalker nodeWalker;
 	Vector<Uint32> addressStack;
 	Stack<SegmentPtr> segmentStack;
 	Vector<SegmentPtr> segmentList;
 	Uint32 segmentOffset;
-	ObjectPtr currentMethod;
-	StackVar variableStack;
 	SyntaxBuilderPtr nodeBuilder;
 	Uint32 methodHash;
-	ScopePtr rootScope;
-	NodePtr currentNode;
 	ByteCodePtr byteCode;
-	VariablePtr lastResult;
 	SegmentInfo segmentInfo;
 };
 
@@ -195,9 +187,9 @@ Void AbstractCompiler::Invoker::onClone(ObjectPtr object) {
 	}
 }
 
-Void AbstractCompiler::Invoker::onNew(ObjectPtr object) {
+Void AbstractCompiler::Invoker::onNew(ObjectPtr object, Uint32 size) {
 	for (InspectorPtr i : this->GetCompiler()->inspectorSet) {
-		i->onNew(object);
+		i->onNew(object, size);
 	}
 }
 

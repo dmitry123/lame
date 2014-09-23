@@ -7,4 +7,7 @@ class A {
 
 A a = new A();
 
-a.value = a.foo(a.value + 100, a.value + 20, a.value + 3);
+a.value = a.foo(
+	a.value + 100,
+	a.value + 20,
+	a.value + 3);

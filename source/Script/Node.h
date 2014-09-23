@@ -72,6 +72,7 @@ public:
 	NodePtr finalNode;
 	Bool wasItBrace;
 	Bool wasItLeft;
+	Bool justLoaded;
 public:
 	struct {
 		NodePtr extendNode;
@@ -86,6 +87,7 @@ public:
 	struct {
 		Deque<NodePtr> throwsList;
 		Uint32 invokeHash;
+		Vector<ObjectPtr> argList;
 	} methodInfo;
 	struct {
 		Deque<NodePtr> caseList;

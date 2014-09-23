@@ -13,7 +13,7 @@ public:
 	{
 	}
 public:
-	ByteCodePtr New(Asm command);
+	ByteCodePtr New(Instruction command);
 	ByteCodePtr Write(Uint32 address);
 	ByteCodePtr Flush(Void);
 public:

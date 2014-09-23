@@ -13,8 +13,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Counter", "Counter\Counter.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ResourceManager", "ResourceManager\ResourceManager.vcxproj", "{E277608C-59B6-448E-80E7-73632FEE350B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Dynamic", "Dynamic\Dynamic.vcxproj", "{BAF09FF6-3574-4D1A-A275-ECD555C5A30F}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -61,14 +59,6 @@ Global
 		{E277608C-59B6-448E-80E7-73632FEE350B}.Release|Win32.Build.0 = Release|Win32
 		{E277608C-59B6-448E-80E7-73632FEE350B}.Release|x64.ActiveCfg = Release|x64
 		{E277608C-59B6-448E-80E7-73632FEE350B}.Release|x64.Build.0 = Release|x64
-		{BAF09FF6-3574-4D1A-A275-ECD555C5A30F}.Debug|Win32.ActiveCfg = Debug|Win32
-		{BAF09FF6-3574-4D1A-A275-ECD555C5A30F}.Debug|Win32.Build.0 = Debug|Win32
-		{BAF09FF6-3574-4D1A-A275-ECD555C5A30F}.Debug|x64.ActiveCfg = Debug|x64
-		{BAF09FF6-3574-4D1A-A275-ECD555C5A30F}.Debug|x64.Build.0 = Debug|x64
-		{BAF09FF6-3574-4D1A-A275-ECD555C5A30F}.Release|Win32.ActiveCfg = Release|Win32
-		{BAF09FF6-3574-4D1A-A275-ECD555C5A30F}.Release|Win32.Build.0 = Release|Win32
-		{BAF09FF6-3574-4D1A-A275-ECD555C5A30F}.Release|x64.ActiveCfg = Release|x64
-		{BAF09FF6-3574-4D1A-A275-ECD555C5A30F}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

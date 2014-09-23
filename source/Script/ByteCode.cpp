@@ -3,7 +3,7 @@
 
 LAME_BEGIN2(Script)
 
-ByteCodePtr ByteCode::New(Asm command) {
+ByteCodePtr ByteCode::New(Instruction command) {
 
 	if (!this->infoList.empty()) {
 		this->Flush();
@@ -72,7 +72,7 @@ Void ByteCode::Trace(SegmentBuilderPtr segmentBuilder) {
 	for (Uint32 i = 0; i < codeSegment->GetSize();) {
 
 		Assembler::AsmInfoPtrC asmInfo = Assembler::GetInstance()
-			->GetInfo(*codeSegment->GetBlockAt(i));
+			->GetInfo(Instruction(*codeSegment->GetBlockAt(i)));
 
 		Uint32 argCount = asmInfo->args;
 		Uint32 address = i + codeSegment->GetOffset();
@@ -100,40 +100,35 @@ Void ByteCode::Trace(SegmentBuilderPtr segmentBuilder) {
 
 			printf("0x%.4x ", address);
 
-			if (asmInfo->code == IRLOAD ||
-				asmInfo->code == LRLOAD ||
-				asmInfo->code == FRLOAD ||
-				asmInfo->code == DRLOAD ||
-				asmInfo->code == RRLOAD ||
-				asmInfo->code == BRLOAD ||
-				asmInfo->code == CRLOAD ||
-				asmInfo->code == SRLOAD ||
-				asmInfo->code == IRSTORE ||
-				asmInfo->code == LRSTORE ||
-				asmInfo->code == FRSTORE ||
-				asmInfo->code == DRSTORE ||
-				asmInfo->code == RRSTORE ||
-				asmInfo->code == BRSTORE ||
-				asmInfo->code == CRSTORE ||
-				asmInfo->code == SRSTORE ||
-				asmInfo->code == IALOAD ||
-				asmInfo->code == LALOAD ||
-				asmInfo->code == FALOAD ||
-				asmInfo->code == DALOAD ||
-				asmInfo->code == RALOAD ||
-				asmInfo->code == BALOAD ||
-				asmInfo->code == CALOAD ||
-				asmInfo->code == SALOAD ||
-				asmInfo->code == IASTORE ||
-				asmInfo->code == LASTORE ||
-				asmInfo->code == FASTORE ||
-				asmInfo->code == DASTORE ||
-				asmInfo->code == RASTORE ||
-				asmInfo->code == BASTORE ||
-				asmInfo->code == CASTORE ||
-				asmInfo->code == SASTORE ||
-				asmInfo->code == ICLD ||
-				asmInfo->code == RNEW
+			if (asmInfo->code == Instruction::IRLOAD ||
+				asmInfo->code == Instruction::LRLOAD ||
+				asmInfo->code == Instruction::FRLOAD ||
+				asmInfo->code == Instruction::DRLOAD ||
+				asmInfo->code == Instruction::RRLOAD ||
+				asmInfo->code == Instruction::BRLOAD ||
+				asmInfo->code == Instruction::SRLOAD ||
+				asmInfo->code == Instruction::IRSTORE ||
+				asmInfo->code == Instruction::LRSTORE ||
+				asmInfo->code == Instruction::FRSTORE ||
+				asmInfo->code == Instruction::DRSTORE ||
+				asmInfo->code == Instruction::RRSTORE ||
+				asmInfo->code == Instruction::BRSTORE ||
+				asmInfo->code == Instruction::SRSTORE ||
+				asmInfo->code == Instruction::IALOAD ||
+				asmInfo->code == Instruction::LALOAD ||
+				asmInfo->code == Instruction::FALOAD ||
+				asmInfo->code == Instruction::DALOAD ||
+				asmInfo->code == Instruction::RALOAD ||
+				asmInfo->code == Instruction::BALOAD ||
+				asmInfo->code == Instruction::SALOAD ||
+				asmInfo->code == Instruction::IASTORE ||
+				asmInfo->code == Instruction::LASTORE ||
+				asmInfo->code == Instruction::FASTORE ||
+				asmInfo->code == Instruction::DASTORE ||
+				asmInfo->code == Instruction::RASTORE ||
+				asmInfo->code == Instruction::BASTORE ||
+				asmInfo->code == Instruction::SASTORE ||
+				asmInfo->code == Instruction::RNEW
 			) {
 				goto _Skip;
 			}

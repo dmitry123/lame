@@ -93,6 +93,9 @@
     <ClCompile Include="..\..\source\Script\NodeWalker.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\source\Script\AbstractCompiler.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\Script\Variable.h">
@@ -180,6 +183,9 @@
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Script\NodeWalker.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Script\AbstractCompiler.h">
       <Filter>source</Filter>
     </ClInclude>
   </ItemGroup>

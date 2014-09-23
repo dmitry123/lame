@@ -100,7 +100,7 @@ Void CodeBuilder::onBinary(NodePtr n) {
 
 			this->nodeList.pop_back();
 			this->nodeList.pop_back();
-
+				
 			this->_Save(leftVar->GetNode());
 
 			sourceVar = leftVar->GetNode()
@@ -643,6 +643,8 @@ Void CodeBuilder::onReturn(NodePtr n) {
 		}
 		this->_Cast(methodVar->returnVar, methodVar->GetReturnType());
 	}
+
+	this->_Save(n);
 }
 
 Void CodeBuilder::onIndex(NodePtr n) {
@@ -840,7 +842,6 @@ _CastOk:
 }
 
 Void CodeBuilder::_Save(NodePtr n) {
-
 	this->nodeList.push_back(n);
 }
 

@@ -22,7 +22,7 @@ public:
 	Void onInvoke(ObjectPtr method)                override;
 	Void onCast(ObjectPtr object, ClassPtr type)   override;
 	Void onClone(ObjectPtr object)                 override;
-	Void onNew(ObjectPtr object)                   override;
+	Void onNew(ObjectPtr object, Uint32 size)      override;
 };
 
 LAME_END2

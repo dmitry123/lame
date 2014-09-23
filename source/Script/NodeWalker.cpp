@@ -12,8 +12,8 @@ Void NodeWalker::Walk(
 	NodePtr n;
 
 	LAME_ASSERT(nodeListener != NULL);
-	LAME_ASSERT(rootNode     != NULL);
-	LAME_ASSERT(rootScope    != NULL);
+	LAME_ASSERT(rootNode != NULL);
+	LAME_ASSERT(rootScope != NULL);
 
 	this->nodeListener = nodeListener;
 	this->nodeOptimizer = nodeOptimizer;
@@ -53,7 +53,9 @@ Void NodeWalker::Walk(
 			n2->var->writes_ = 1;
 		}
 
+		this->nodeListener->onMethodBegin(m);
 		this->Run(m->GetRootNode()->blockList, TRUE);
+		this->nodeListener->onMethodEnd(m);
 
 		if (!m->GetReturnType()->IsVoid() && !m->returnVar) {
 			PostSyntaxError(n->lex->line, "Non-void method %s(%s) must return (%s)", m->GetName().data(),
@@ -153,6 +155,9 @@ Void NodeWalker::Run(NodeList nodeList, Bool backupStack) {
 				n->lex->lex->IsConst()
 			) {
 				this->Push(n->var);
+				if (!n->wasItLeft) {
+					this->nodeListener->onLoad(n);
+				}
 			}
 			else if (n->lex->lex->IsMath() || n->lex->lex->IsBool()) {
 				if (n->lex->args == 1) {
@@ -483,6 +488,10 @@ Void NodeWalker::_Invoke(NodePtr n) {
 		n->argList.clear();
 	}
 
+	if (!n->methodInfo.argList.empty()) {
+		n->methodInfo.argList.clear();
+	}
+
 	for (Uint32 i = 0; i < n->lex->args; i++) {
 
 		VariablePtr var = this->stackVar.Pop()
@@ -494,6 +503,8 @@ Void NodeWalker::_Invoke(NodePtr n) {
 		if (i != n->lex->args - 1) {
 			formattedParameters.append(", ");
 		}
+
+		n->methodInfo.argList.push_back(var);
 	}
 
 	/*	Compute invoke hash for current

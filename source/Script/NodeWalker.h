@@ -23,6 +23,10 @@ public:
 		virtual Void onNew(NodePtr n) {}
 		virtual Void onReturn(NodePtr n) {}
 		virtual Void onIndex(NodePtr n) {}
+		virtual Void onLoad(NodePtr n) {}
+	public:
+		virtual Void onMethodBegin(MethodPtr m) {}
+		virtual Void onMethodEnd(MethodPtr m) {}
 	public:
 		Listener(NodeWalkerPtr nodeWalker) :
 			nodeWalker(nodeWalker)
@@ -57,6 +61,23 @@ public:
 	private:
 		NodeWalkerPtr nodeWalker;
 	} *OptimizerPtr;
+public:
+	NodeWalker() :
+		nodeOptimizer(NULL),
+		lastSelection(NULL),
+		currentNode(NULL),
+		leftVar(NULL),
+		rightVar(NULL),
+		lastResult(NULL),
+		lastNode(NULL),
+		rememberedInvoke(NULL),
+		currentMethod(NULL),
+		nodeListener(NULL),
+		rootNode(NULL),
+		rootScope(NULL),
+		userData(NULL)
+	{
+	}
 public:
 	Void Walk(ListenerPtr nodeListener, OptimizerPtr nodeOptimizer, NodePtr rootNode,
 		ScopePtr rootScope, VoidP userData = NULL);

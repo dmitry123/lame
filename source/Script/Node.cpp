@@ -189,6 +189,7 @@ Node::Node(Buffer word, NodeID id, LexNodePtr lex, NodePtr parent, NodePtr prev)
 	this->finalNode = NULL;
 	this->wasItBrace = FALSE;
 	this->wasItLeft = FALSE;
+	this->justLoaded = FALSE;
 }
 
 Void Node::ShuntingYard(Void) {
