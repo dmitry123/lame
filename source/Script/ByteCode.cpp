@@ -27,7 +27,7 @@ ByteCodePtr ByteCode::New(Instruction command) {
 	return this;
 }
 
-ByteCodePtr ByteCode::Write(Uint32 address) {
+ByteCodePtr ByteCode::Write(Uint8 address) {
 
 	this->infoList.push_back(address);
 
@@ -42,9 +42,7 @@ ByteCodePtr ByteCode::Flush(Void) {
 
 	Uint32 address = 0;
 
-	if (asmInfo->args != infoList.size()) {
-        return this;
-	}
+	LAME_ASSERT(asmInfo->args == infoList.size());
 
 	if (!infoList.empty()) {
 		address = infoList[0];
@@ -79,7 +77,7 @@ Void ByteCode::Trace(SegmentBuilderPtr segmentBuilder) {
 
 		if ((object = codeSegment->Fetch(address)) && object->CheckType(Object::Type::Method)) {
 			printf("  // %s %s%s(%s)\n", object->GetMethod()->GetReturnType()->GetName().data(),
-				object->GetPath().data(), object->GetName().data(), object->GetMethod()->GetFormattedArguments().data());
+				object->GetPath().data(), object->GetName().data(), object->GetMethod()->FormatArguments().data());
 		}
 
 		if (strlen(asmInfo->name) <= 2) {
@@ -141,7 +139,7 @@ Void ByteCode::Trace(SegmentBuilderPtr segmentBuilder) {
 
 				if (object->CheckType(Object::Type::Method)) {
 					printf("   // %s %s%s(%s)", object->GetMethod()->GetReturnType()->GetName().data(),
-						object->GetPath().data(), object->GetName().data(), object->GetMethod()->GetFormattedArguments().data());
+						object->GetPath().data(), object->GetName().data(), object->GetMethod()->FormatArguments().data());
 				}
 				else {
 					printf("   // %s", object->GetName().data());

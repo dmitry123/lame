@@ -617,14 +617,14 @@ Void CodeBuilder::onReturn(NodePtr n) {
 
 	if (methodVar->GetReturnType()->IsVoid()) {
 		if (n->lex->args) {
-			PostSyntaxError(n->lex->line, "Void method %s(%s) can't return anything",
-				methodVar->GetName().data(), methodVar->GetFormattedArguments().data());
+			PostSyntaxError(n->lex->line, "Method void %s(%s) can't return anything",
+				methodVar->GetName().data(), methodVar->FormatArguments().data());
 		}
 	}
 	else {
 		if (!n->lex->args) {
 			PostSyntaxError(n->lex->line, "Non-void method %s(%s) must return (%s)", n->parent->word.data(),
-				methodVar->GetFormattedArguments().data(), methodVar->GetReturnType()->GetName().data());
+				methodVar->FormatArguments().data(), methodVar->GetReturnType()->GetName().data());
 		}
 	}
 

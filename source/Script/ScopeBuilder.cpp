@@ -723,12 +723,12 @@ Void ScopeBuilder::_ForEachMethodDeclare(NodePtr n) {
 	) {
 	_DeclareError:
 		PostSyntaxError(n->lex->line, "Unable to declare method in non-class scope %s/%s(%s)",
-			this->scope->GetName().data(), n->word.data(), method->GetFormattedArguments().data());
+			this->scope->GetName().data(), n->word.data(), method->FormatArguments().data());
 	}
 
 	if (!(methodObject = scope->Add(method))) {
 		PostSyntaxError(n->lex->line, "Method redeclaration %s.%s(%s)",
-			scope->GetName().data(), n->word.data(), method->GetFormattedArguments().data());
+			scope->GetName().data(), n->word.data(), method->FormatArguments().data());
 	}
 
 	if (methodObject->GetName() == this->scope->GetName() && !returnType->IsVoid()) {

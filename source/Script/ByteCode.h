@@ -3,6 +3,7 @@
 
 #include "Assembler.h"
 #include "Segment.h"
+#include "Method.h"
 
 LAME_BEGIN2(Script)
 
@@ -14,7 +15,7 @@ public:
 	}
 public:
 	ByteCodePtr New(Instruction command);
-	ByteCodePtr Write(Uint32 address);
+	ByteCodePtr Write(Uint8 address);
 	ByteCodePtr Flush(Void);
 public:
 	static Void Trace(SegmentBuilderPtr segmentBuilder);

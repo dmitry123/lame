@@ -3,7 +3,6 @@
 #include <conio.h>
 
 using namespace Lame::Core;
-using namespace Lame::Compiler;
 using namespace Lame::ResourceManager;
 using namespace Lame::Script;
 using namespace Lame;

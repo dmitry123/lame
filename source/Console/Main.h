@@ -2,7 +2,6 @@
 #define __CONSOLE_MAIN__
 
 #include <Core/Core.h>
-#include <Compiler/Compiler.h>
 #include <Script/Script.h>
 #include <ResourceManager/ResourceManager.h>
 

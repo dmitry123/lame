@@ -2,6 +2,7 @@
 #define __LAME_SCRIPT__METHOD__
 
 #include "Object.h"
+#include "Segment.h"
 
 LAME_BEGIN2(Script)
 
@@ -13,8 +14,12 @@ public:
 	Method(BufferRefC name, ScopePtr parent, ObjectPtr thisClass, ObjectPtr returnClass,
 		Vector<ClassPtr> attributes = {});
 public:
-	ClassPtr GetClass() override;
-	MethodPtr GetMethod() override;
+	inline ClassPtr GetClass() override {
+		return this->thisClass->GetClass();
+	}
+	inline MethodPtr GetMethod() override {
+		return this;
+	}
 public:
 	Bool Equal(ObjectPtrC object) final override;
 	ObjectPtr Clone(BufferRefC name, ObjectPtr parent) final override;
@@ -23,18 +28,18 @@ public:
 	Uint32 Size(Void) final override;
 public:
 	Void SetNativeMethod(NativeMethod method);
-	Buffer GetFormattedArguments(Void);
+	Buffer FormatArguments(Void);
 public:
-	Void SetThis(ObjectPtr thisClass) { this->thisClass = thisClass; }
-	inline ObjectPtr GetThis() { return this->thisClass; }
-	Void SetReturnType(ClassPtr returnClass) { this->returnClass = returnClass; }
-	inline ClassPtr GetReturnType() { return this->returnClass; }
-	inline Void SetRootNode(NodePtr node) { this->rootNode = node; }
-	inline NodePtr GetRootNode() { return this->rootNode; }
+	inline Void SetThis(ObjectPtr thisClass)        { this->thisClass = thisClass;     }
+	inline Void SetReturnType(ClassPtr returnClass) { this->returnClass = returnClass; }
+	inline Void SetRootNode(NodePtr node)           { this->rootNode = node;           }
+public:
+	inline ObjectPtr        GetThis()          { return this->thisClass;      }
+	inline ClassPtr         GetReturnType()    { return this->returnClass;    }
+	inline NodePtr          GetRootNode()      { return this->rootNode;       }
 	inline Vector<ClassPtr> GetAttributeHash() { return this->attributesHash; }
-public:
-	inline NativeMethod GetNativeMethod() { return this->nativeMethod; }
-	inline Uint32 GetInvokeHash() { return this->invokeHash; }
+	inline NativeMethod     GetNativeMethod()  { return this->nativeMethod;   }
+	inline Uint32           GetInvokeHash()    { return this->invokeHash;     }
 public:
 	static Uint32 ComputeInvokeHash(Vector<ClassPtr>& classList);
 	static Uint32 ComputeInvokeHash(Vector<VariablePtr>& classList);
@@ -45,6 +50,7 @@ private:
 	NativeMethod nativeMethod;
 	NodePtr rootNode;
 	Uint32 invokeHash;
+	Segment segment;
 public:
 	VariablePtr returnVar;
 };

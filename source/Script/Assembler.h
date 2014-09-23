@@ -197,7 +197,9 @@ enum class Instruction : Uint8 {
 	DJNAE,
 	/* Zero Condition */
 	JIFZ,
-	JIFNZ
+	JIFNZ,
+	JIFZ2,
+	JIFNZ2
 };
 
 class LAME_API Assembler {

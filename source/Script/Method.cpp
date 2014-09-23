@@ -18,14 +18,6 @@ Method::Method(BufferRefC name, ScopePtr parent, ObjectPtr thisClass, ObjectPtr 
 		this->ComputeInvokeHash(attributes);
 }
 
-ClassPtr Method::GetClass() {
-	return thisClass->GetClass();
-}
-
-MethodPtr Method::GetMethod() {
-	return this;
-}
-
 Bool Method::Equal(ObjectPtrC object) {
 	return this->Hash() == object->Hash();
 }
@@ -92,7 +84,7 @@ Void Method::SetNativeMethod(NativeMethod method) {
 	this->SetModificator(Modificator::Native);
 }
 
-Buffer Method::GetFormattedArguments(Void) {
+Buffer Method::FormatArguments(Void) {
 
 	Buffer result;
 

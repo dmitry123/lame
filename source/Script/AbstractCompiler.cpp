@@ -419,7 +419,7 @@ Void AbstractCompiler::onMethodBegin(MethodPtr m) {
 	NodePtr n = m->GetMethod()->GetRootNode();
 
 	printf("%s %s%s(%s) {\n", m->GetMethod()->GetReturnType()->GetName().data(),
-		m->GetPath().data(), m->GetName().data(), m->GetMethod()->GetFormattedArguments().data());
+		m->GetPath().data(), m->GetName().data(), m->GetMethod()->FormatArguments().data());
 
 	for (NodePtr n2 : n->argList) {
 		this->invoker.onStore(n2->var);

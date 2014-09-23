@@ -127,4 +127,28 @@ Void LameCompiler::onNew(ObjectPtr object, Uint32 size) {
 	printf("  new %s\n", objectName.data());
 }
 
+Void LameCompiler::Write0(Instruction code) {
+
+	this->GetCompiler()->GetByteCode()
+		->New(code)
+		->Flush();
+}
+
+Void LameCompiler::Write1(Instruction code, Uint8 index) {
+
+	this->GetCompiler()->GetByteCode()
+		->New(code)
+		->Write(index)
+		->Flush();
+}
+
+Void LameCompiler::Write2(Instruction code, Uint16 index) {
+
+	this->GetCompiler()->GetByteCode()
+		->New(code)
+		->Write(index & 0xff)
+		->Write(index >> 8)
+		->Flush();
+}
+
 LAME_END2

@@ -59,7 +59,7 @@ Void NodeWalker::Walk(
 
 		if (!m->GetReturnType()->IsVoid() && !m->returnVar) {
 			PostSyntaxError(n->lex->line, "Non-void method %s(%s) must return (%s)", m->GetName().data(),
-				m->GetFormattedArguments().data(), m->GetReturnType()->GetName().data());
+				m->FormatArguments().data(), m->GetReturnType()->GetName().data());
 		}
 	}
 }
@@ -399,12 +399,11 @@ Void NodeWalker::_Selection(NodePtr node) {
 			leftVar->GetName().data());
 	}
 
+	if (this->nodeOptimizer) {
+		this->nodeOptimizer->onPush(node);
+	}
+
 	if (fieldNode->id == kScriptNodeInvoke) {
-		if (this->nodeOptimizer) {
-			this->nodeOptimizer->onPop();
-			this->nodeOptimizer->onPop();
-			this->nodeOptimizer->onPush(fieldNode);
-		}
 		this->lastResult = leftVar;
 		this->_Invoke(fieldNode);
 		fieldObject = fieldNode->var;
@@ -414,9 +413,6 @@ Void NodeWalker::_Selection(NodePtr node) {
 			fieldObject = Scope::classArray->Find(fieldName, FALSE);
 		} else {
 			fieldObject = leftVar->GetClass()->Find(fieldName, FALSE);
-		}
-		if (this->nodeOptimizer) {
-			this->nodeOptimizer->onPush(node);
 		}
 	}
 
@@ -468,25 +464,11 @@ Void NodeWalker::_Invoke(NodePtr n) {
 		PostSyntaxError(n->lex->line, "Use 'this' or 'super' method to invoke class constructor", 0);
 	}
 
-	/*	If we have nessesary variable in node
-	then we can skip this action */
-
-	if (n->var) {
-		return;
-	}
-
 	/*	We have to perform argument expression and get all variables
 	from stack and save it in another list to build invocation hash
 	number to find nessesary method fast and generate parameters */
 
 	this->Run(n->argList);
-
-	if (this->nodeOptimizer) {
-		for (NodePtr n : n->argList) {
-			this->nodeOptimizer->onPush(n);
-		}
-		n->argList.clear();
-	}
 
 	if (!n->methodInfo.argList.empty()) {
 		n->methodInfo.argList.clear();

@@ -23,6 +23,10 @@ public:
 	Void onCast(ObjectPtr object, ClassPtr type)   override;
 	Void onClone(ObjectPtr object)                 override;
 	Void onNew(ObjectPtr object, Uint32 size)      override;
+private:
+	Void Write0(Instruction code);
+	Void Write1(Instruction code, Uint8  index);
+	Void Write2(Instruction code, Uint16 index);
 };
 
 LAME_END2

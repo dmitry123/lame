@@ -231,7 +231,7 @@ Void Class::CheckInheritance(Void) {
 			if (!isFound || m->GetReturnType() != m2->GetReturnType()) {
 				PostSyntaxError(this->GetNode()->lex->line, "Class (%s) must implement interface method \"%s %s(%s)\"",
 					this->GetName().data(), i->GetMethod()->GetReturnType()->GetName().data(), m->GetName().data(),
-					m->GetFormattedArguments().data());
+					m->FormatArguments().data());
 			}
 		}
 
@@ -341,13 +341,13 @@ Class::Class(BufferRefC name, ScopePtr parent, Type type, Uint32 size) : Object(
 
 		if (isMethod && self->CheckType(Object::Type::Class) && !isMethodImplemented && !isInternal) {
 			PostSyntaxError(line, "Method must be implemented \"%s%s(%s)\"", object->GetPath().data(),
-				object->GetName().data(), object->GetMethod()->GetFormattedArguments().data());
+				object->GetName().data(), object->GetMethod()->FormatArguments().data());
 		}
 
 		if (self->CheckType(Object::Type::Interface)) {
 			if (isMethod && object->GetMethod()->GetRootNode()) {
 				PostSyntaxError(line, "Interface can't implement methods %s(%s)", object->GetName().data(),
-					object->GetMethod()->GetFormattedArguments().data());
+					object->GetMethod()->FormatArguments().data());
 			}
 		}
 		else {
@@ -356,7 +356,7 @@ Class::Class(BufferRefC name, ScopePtr parent, Type type, Uint32 size) : Object(
 					object->GetMethod()->GetRootNode()
 				) {
 					PostSyntaxError(line, "Abstract class can't implement abstract methods %s(%s)",
-						object->GetName().data(), object->GetMethod()->GetFormattedArguments().data());
+						object->GetName().data(), object->GetMethod()->FormatArguments().data());
 				}
 			}
 		}

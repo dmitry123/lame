@@ -935,7 +935,6 @@ SyntaxBuilder::Iterator SyntaxBuilder::New(NodePtr& node, Iterator i) {
 		node->flags |= kScriptFlagInvocation;
 	}
 	i = this->Arguments(node->typeNode, i);
-	node->typeNode->lex->args = node->lex->args;
 	__Inc(i);
 
 	/*	If we have left brace here, then

@@ -3,7 +3,6 @@
 
 #include "Object.h"
 #include "Variable.h"
-#include "Method.h"
 
 LAME_BEGIN2(Script)
 
