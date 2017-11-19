@@ -1,0 +1,395 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{9127E2EF-95D5-44BE-BF78-464017D03C53}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>lang</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\Core\Core.cpp" />
+    <ClCompile Include="..\..\src\Core\Define.cpp" />
+    <ClCompile Include="..\..\src\Core\Foundation.cpp" />
+    <ClCompile Include="..\..\src\lang\Analyzer.cpp" />
+    <ClCompile Include="..\..\src\lang\ErrorMessage.cpp" />
+    <ClCompile Include="..\..\src\lang\ExpMatcher.cpp" />
+    <ClCompile Include="..\..\src\lang\FileLoader.cpp" />
+    <ClCompile Include="..\..\src\lang\java\JavaAnalyzer.cpp" />
+    <ClCompile Include="..\..\src\lang\java\JavaScopeBuilder.cpp" />
+    <ClCompile Include="..\..\src\lang\java\JavaScriptParser.cpp" />
+    <ClCompile Include="..\..\src\lang\java\JavaSyntaxBuilder.cpp" />
+    <ClCompile Include="..\..\src\lang\java\JavaTokenManager.cpp" />
+    <ClCompile Include="..\..\src\lang\Lang.cpp" />
+    <ClCompile Include="..\..\src\lang\MurmurHash.cpp" />
+    <ClCompile Include="..\..\src\lang\Node.cpp" />
+    <ClCompile Include="..\..\src\lang\AbstractLoader.cpp" />
+    <ClCompile Include="..\..\src\lang\Object.cpp" />
+    <ClCompile Include="..\..\src\lang\Randomizer.cpp" />
+    <ClCompile Include="..\..\src\lang\ScopeBuilder.cpp" />
+    <ClCompile Include="..\..\src\lang\ScriptParser.cpp" />
+    <ClCompile Include="..\..\src\lang\ShuntingYard.cpp" />
+    <ClCompile Include="..\..\src\lang\SyntaxBuilder.cpp" />
+    <ClCompile Include="..\..\src\lang\SyntaxError.cpp" />
+    <ClCompile Include="..\..\src\lang\TokenManager.cpp" />
+    <ClCompile Include="..\..\src\lang\Foundation.cpp" />
+    <ClCompile Include="..\..\src\lang\Token.cpp" />
+    <ClCompile Include="..\..\src\lang\TokenFinder.cpp" />
+    <ClCompile Include="..\..\src\lang\TypeManager.cpp" />
+    <ClCompile Include="..\..\src\lua\lapi.c" />
+    <ClCompile Include="..\..\src\lua\lauxlib.c" />
+    <ClCompile Include="..\..\src\lua\lbaselib.c" />
+    <ClCompile Include="..\..\src\lua\lcode.c" />
+    <ClCompile Include="..\..\src\lua\ldblib.c" />
+    <ClCompile Include="..\..\src\lua\ldebug.c" />
+    <ClCompile Include="..\..\src\lua\ldo.c" />
+    <ClCompile Include="..\..\src\lua\ldump.c" />
+    <ClCompile Include="..\..\src\lua\lfunc.c" />
+    <ClCompile Include="..\..\src\lua\lgc.c" />
+    <ClCompile Include="..\..\src\lua\linit.c" />
+    <ClCompile Include="..\..\src\lua\liolib.c" />
+    <ClCompile Include="..\..\src\lua\llex.c" />
+    <ClCompile Include="..\..\src\lua\lmathlib.c" />
+    <ClCompile Include="..\..\src\lua\lmem.c" />
+    <ClCompile Include="..\..\src\lua\loadlib.c" />
+    <ClCompile Include="..\..\src\lua\lobject.c" />
+    <ClCompile Include="..\..\src\lua\lopcodes.c" />
+    <ClCompile Include="..\..\src\lua\loslib.c" />
+    <ClCompile Include="..\..\src\lua\lparser.c" />
+    <ClCompile Include="..\..\src\lua\lstate.c" />
+    <ClCompile Include="..\..\src\lua\lstring.c" />
+    <ClCompile Include="..\..\src\lua\lstrlib.c" />
+    <ClCompile Include="..\..\src\lua\ltable.c" />
+    <ClCompile Include="..\..\src\lua\ltablib.c" />
+    <ClCompile Include="..\..\src\lua\ltm.c" />
+    <ClCompile Include="..\..\src\lua\lundump.c" />
+    <ClCompile Include="..\..\src\lua\lvm.c" />
+    <ClCompile Include="..\..\src\lua\lzio.c" />
+    <ClCompile Include="..\..\src\lua\print.c" />
+    <ClCompile Include="..\..\src\main.cpp" />
+    <ClCompile Include="..\..\src\static\AbstractLoader.cpp" />
+    <ClCompile Include="..\..\src\static\AssetBundle.cpp" />
+    <ClCompile Include="..\..\src\static\AssetCompiler.cpp" />
+    <ClCompile Include="..\..\src\static\AssetManager.cpp" />
+    <ClCompile Include="..\..\src\static\BmpLoader.cpp" />
+    <ClCompile Include="..\..\src\static\Foundation.cpp" />
+    <ClCompile Include="..\..\src\static\JpegLoader.cpp" />
+    <ClCompile Include="..\..\src\static\libjpeg\jaricom.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jcapimin.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jcapistd.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jcarith.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jccoefct.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jccolor.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jcdctmgr.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jchuff.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jcinit.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jcmainct.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jcmarker.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jcmaster.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jcomapi.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jcparam.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jcprepct.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jcsample.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jctrans.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jdapimin.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jdapistd.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jdarith.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jdatadst.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jdatasrc.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jdcoefct.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jdcolor.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jddctmgr.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jdhuff.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jdinput.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jdmainct.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jdmarker.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jdmaster.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jdmerge.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jdpostct.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jdsample.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jdtrans.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jerror.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jfdctflt.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jfdctfst.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jfdctint.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jidctflt.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jidctfst.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jidctint.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jmemmgr.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jmemnobs.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jquant1.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jquant2.c" />
+    <ClCompile Include="..\..\src\static\libjpeg\jutils.c" />
+    <ClCompile Include="..\..\src\static\libpng\png.c" />
+    <ClCompile Include="..\..\src\static\libpng\pngerror.c" />
+    <ClCompile Include="..\..\src\static\libpng\pngget.c" />
+    <ClCompile Include="..\..\src\static\libpng\pngmem.c" />
+    <ClCompile Include="..\..\src\static\libpng\pngpread.c" />
+    <ClCompile Include="..\..\src\static\libpng\pngread.c" />
+    <ClCompile Include="..\..\src\static\libpng\pngrio.c" />
+    <ClCompile Include="..\..\src\static\libpng\pngrtran.c" />
+    <ClCompile Include="..\..\src\static\libpng\pngrutil.c" />
+    <ClCompile Include="..\..\src\static\libpng\pngset.c" />
+    <ClCompile Include="..\..\src\static\libpng\pngtrans.c" />
+    <ClCompile Include="..\..\src\static\libpng\pngwio.c" />
+    <ClCompile Include="..\..\src\static\libpng\pngwrite.c" />
+    <ClCompile Include="..\..\src\static\libpng\pngwtran.c" />
+    <ClCompile Include="..\..\src\static\libpng\pngwutil.c" />
+    <ClCompile Include="..\..\src\static\LoaderFactory.cpp" />
+    <ClCompile Include="..\..\src\static\PngLoader.cpp" />
+    <ClCompile Include="..\..\src\static\Resource.cpp" />
+    <ClCompile Include="..\..\src\static\ResourceManager.cpp" />
+    <ClCompile Include="..\..\src\static\Static.cpp" />
+    <ClCompile Include="..\..\src\static\TextureLoader.cpp" />
+    <ClCompile Include="..\..\src\static\TextureResource.cpp" />
+    <ClCompile Include="..\..\src\static\TgaLoader.cpp" />
+    <ClCompile Include="..\..\src\static\zlib\adler32.c" />
+    <ClCompile Include="..\..\src\static\zlib\compress.c" />
+    <ClCompile Include="..\..\src\static\zlib\crc32.c" />
+    <ClCompile Include="..\..\src\static\zlib\deflate.c" />
+    <ClCompile Include="..\..\src\static\zlib\gzclose.c" />
+    <ClCompile Include="..\..\src\static\zlib\gzlib.c" />
+    <ClCompile Include="..\..\src\static\zlib\gzread.c" />
+    <ClCompile Include="..\..\src\static\zlib\gzwrite.c" />
+    <ClCompile Include="..\..\src\static\zlib\infback.c" />
+    <ClCompile Include="..\..\src\static\zlib\inffast.c" />
+    <ClCompile Include="..\..\src\static\zlib\inflate.c" />
+    <ClCompile Include="..\..\src\static\zlib\inftrees.c" />
+    <ClCompile Include="..\..\src\static\zlib\trees.c" />
+    <ClCompile Include="..\..\src\static\zlib\uncompr.c" />
+    <ClCompile Include="..\..\src\static\zlib\zutil.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\Core\Core.h" />
+    <ClInclude Include="..\..\src\Core\Define.h" />
+    <ClInclude Include="..\..\src\Core\Foundation.h" />
+    <ClInclude Include="..\..\src\lang\Analyzer.h" />
+    <ClInclude Include="..\..\src\lang\ErrorMessage.h" />
+    <ClInclude Include="..\..\src\lang\ExpMatcher.h" />
+    <ClInclude Include="..\..\src\lang\FileLoader.h" />
+    <ClInclude Include="..\..\src\lang\java\JavaAnalyzer.h" />
+    <ClInclude Include="..\..\src\lang\java\JavaScopeBuilder.h" />
+    <ClInclude Include="..\..\src\lang\java\JavaScriptParser.h" />
+    <ClInclude Include="..\..\src\lang\java\JavaSyntaxBuilder.h" />
+    <ClInclude Include="..\..\src\lang\java\JavaTokenManager.h" />
+    <ClInclude Include="..\..\src\lang\Lang.h" />
+    <ClInclude Include="..\..\src\lang\MurmurHash.h" />
+    <ClInclude Include="..\..\src\lang\Node.h" />
+    <ClInclude Include="..\..\src\lang\AbstractLoader.h" />
+    <ClInclude Include="..\..\src\lang\Object.h" />
+    <ClInclude Include="..\..\src\lang\Randomizer.h" />
+    <ClInclude Include="..\..\src\lang\ScopeBuilder.h" />
+    <ClInclude Include="..\..\src\lang\ScriptParser.h" />
+    <ClInclude Include="..\..\src\lang\ShuntingYard.h" />
+    <ClInclude Include="..\..\src\lang\SyntaxBuilder.h" />
+    <ClInclude Include="..\..\src\lang\SyntaxError.h" />
+    <ClInclude Include="..\..\src\lang\TokenManager.h" />
+    <ClInclude Include="..\..\src\lang\Foundation.h" />
+    <ClInclude Include="..\..\src\lang\Token.h" />
+    <ClInclude Include="..\..\src\lang\TokenFinder.h" />
+    <ClInclude Include="..\..\src\lang\TypeManager.h" />
+    <ClInclude Include="..\..\src\lua\lapi.h" />
+    <ClInclude Include="..\..\src\lua\lauxlib.h" />
+    <ClInclude Include="..\..\src\lua\lcode.h" />
+    <ClInclude Include="..\..\src\lua\ldebug.h" />
+    <ClInclude Include="..\..\src\lua\ldo.h" />
+    <ClInclude Include="..\..\src\lua\lfunc.h" />
+    <ClInclude Include="..\..\src\lua\lgc.h" />
+    <ClInclude Include="..\..\src\lua\llex.h" />
+    <ClInclude Include="..\..\src\lua\llimits.h" />
+    <ClInclude Include="..\..\src\lua\lmem.h" />
+    <ClInclude Include="..\..\src\lua\lobject.h" />
+    <ClInclude Include="..\..\src\lua\lopcodes.h" />
+    <ClInclude Include="..\..\src\lua\lparser.h" />
+    <ClInclude Include="..\..\src\lua\lstate.h" />
+    <ClInclude Include="..\..\src\lua\lstring.h" />
+    <ClInclude Include="..\..\src\lua\ltable.h" />
+    <ClInclude Include="..\..\src\lua\ltm.h" />
+    <ClInclude Include="..\..\src\lua\luaconf.h" />
+    <ClInclude Include="..\..\src\lua\lualib.h" />
+    <ClInclude Include="..\..\src\lua\lundump.h" />
+    <ClInclude Include="..\..\src\lua\lvm.h" />
+    <ClInclude Include="..\..\src\lua\lzio.h" />
+    <ClInclude Include="..\..\src\static\AbstractLoader.h" />
+    <ClInclude Include="..\..\src\static\AssetBundle.h" />
+    <ClInclude Include="..\..\src\static\AssetCompiler.h" />
+    <ClInclude Include="..\..\src\static\AssetManager.h" />
+    <ClInclude Include="..\..\src\static\BmpLoader.h" />
+    <ClInclude Include="..\..\src\static\Foundation.h" />
+    <ClInclude Include="..\..\src\static\JpegLoader.h" />
+    <ClInclude Include="..\..\src\static\libjpeg\jconfig.h" />
+    <ClInclude Include="..\..\src\static\libjpeg\jdct.h" />
+    <ClInclude Include="..\..\src\static\libjpeg\jerror.h" />
+    <ClInclude Include="..\..\src\static\libjpeg\jinclude.h" />
+    <ClInclude Include="..\..\src\static\libjpeg\jmemsys.h" />
+    <ClInclude Include="..\..\src\static\libjpeg\jmorecfg.h" />
+    <ClInclude Include="..\..\src\static\libjpeg\jpegint.h" />
+    <ClInclude Include="..\..\src\static\libjpeg\jpeglib.h" />
+    <ClInclude Include="..\..\src\static\libjpeg\jversion.h" />
+    <ClInclude Include="..\..\src\static\libpng\png.h" />
+    <ClInclude Include="..\..\src\static\libpng\pngconf.h" />
+    <ClInclude Include="..\..\src\static\libpng\pngdebug.h" />
+    <ClInclude Include="..\..\src\static\libpng\pnginfo.h" />
+    <ClInclude Include="..\..\src\static\libpng\pnglibconf.h" />
+    <ClInclude Include="..\..\src\static\libpng\pngpriv.h" />
+    <ClInclude Include="..\..\src\static\libpng\pngstruct.h" />
+    <ClInclude Include="..\..\src\static\LoaderFactory.h" />
+    <ClInclude Include="..\..\src\static\PngLoader.h" />
+    <ClInclude Include="..\..\src\static\Resource.h" />
+    <ClInclude Include="..\..\src\static\ResourceManager.h" />
+    <ClInclude Include="..\..\src\static\Static.h" />
+    <ClInclude Include="..\..\src\static\TextureLoader.h" />
+    <ClInclude Include="..\..\src\static\TextureResource.h" />
+    <ClInclude Include="..\..\src\static\TgaLoader.h" />
+    <ClInclude Include="..\..\src\static\zlib\crc32.h" />
+    <ClInclude Include="..\..\src\static\zlib\deflate.h" />
+    <ClInclude Include="..\..\src\static\zlib\gzguts.h" />
+    <ClInclude Include="..\..\src\static\zlib\inffast.h" />
+    <ClInclude Include="..\..\src\static\zlib\inffixed.h" />
+    <ClInclude Include="..\..\src\static\zlib\inflate.h" />
+    <ClInclude Include="..\..\src\static\zlib\inftrees.h" />
+    <ClInclude Include="..\..\src\static\zlib\trees.h" />
+    <ClInclude Include="..\..\src\static\zlib\zconf.h" />
+    <ClInclude Include="..\..\src\static\zlib\zlib.h" />
+    <ClInclude Include="..\..\src\static\zlib\zutil.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\src\lua\Makefile" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

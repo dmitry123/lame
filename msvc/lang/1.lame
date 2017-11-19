@@ -1,0 +1,22 @@
+
+class Object {
+	public native String getClass();
+}
+
+class A extends Object {
+	public void foo(int value) {
+		if (value != 100) {
+			value = 0;
+			if (value >= 0) {
+				a = 1;
+			} else {
+				b = 2;
+			}
+		} else {
+			value = -1;
+		}
+	}
+	private float bar() {
+		return 100 + 20 + 3;
+	}
+}

@@ -1,0 +1,779 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Файлы исходного кода">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Заголовочные файлы">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Файлы ресурсов">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Файлы исходного кода\core">
+      <UniqueIdentifier>{90af76d2-5307-4127-bb45-0d439e3749e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы исходного кода\lang">
+      <UniqueIdentifier>{c2cd6e99-2fd2-46ef-a89c-6c976ab48cc3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы исходного кода\console">
+      <UniqueIdentifier>{55087585-eefb-46be-9bd1-28901077aedd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы исходного кода\static">
+      <UniqueIdentifier>{d9bc1b58-03c0-42e6-be04-eb0d3d41dc62}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы исходного кода\static\libjpeg">
+      <UniqueIdentifier>{6cb06b6c-ef61-4c75-b926-b84e7c77377b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы исходного кода\static\libpng">
+      <UniqueIdentifier>{895eafd4-0a01-4003-ac6a-bd3b23bd997a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы исходного кода\static\zlib">
+      <UniqueIdentifier>{fc9e99f3-67b2-43cd-82d7-79fe2f70aca5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы исходного кода\lang\java">
+      <UniqueIdentifier>{ea76d65f-061d-4523-95a4-8ca5bab15944}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Файлы исходного кода\lua">
+      <UniqueIdentifier>{50095554-7b1c-43ad-80e6-e064468db81f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\Core\Core.cpp">
+      <Filter>Файлы исходного кода\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Core\Define.cpp">
+      <Filter>Файлы исходного кода\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\Core\Foundation.cpp">
+      <Filter>Файлы исходного кода\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\main.cpp">
+      <Filter>Файлы исходного кода</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\AssetBundle.cpp">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\AssetCompiler.cpp">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\AssetManager.cpp">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\Resource.cpp">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\ResourceManager.cpp">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jaricom.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jcapimin.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jcapistd.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jcarith.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jccoefct.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jccolor.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jcdctmgr.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jchuff.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jcinit.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jcmainct.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jcmarker.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jcmaster.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jcomapi.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jcparam.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jcprepct.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jcsample.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jctrans.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jdapimin.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jdapistd.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jdarith.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jdatadst.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jdatasrc.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jdcoefct.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jdcolor.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jddctmgr.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jdhuff.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jdinput.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jdmainct.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jdmarker.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jdmaster.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jdmerge.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jdpostct.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jdsample.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jdtrans.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jerror.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jfdctflt.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jfdctfst.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jfdctint.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jidctflt.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jidctfst.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jidctint.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jmemmgr.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jmemnobs.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jquant1.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jquant2.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libjpeg\jutils.c">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libpng\png.c">
+      <Filter>Файлы исходного кода\static\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libpng\pngerror.c">
+      <Filter>Файлы исходного кода\static\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libpng\pngget.c">
+      <Filter>Файлы исходного кода\static\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libpng\pngmem.c">
+      <Filter>Файлы исходного кода\static\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libpng\pngpread.c">
+      <Filter>Файлы исходного кода\static\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libpng\pngread.c">
+      <Filter>Файлы исходного кода\static\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libpng\pngrio.c">
+      <Filter>Файлы исходного кода\static\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libpng\pngrtran.c">
+      <Filter>Файлы исходного кода\static\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libpng\pngrutil.c">
+      <Filter>Файлы исходного кода\static\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libpng\pngset.c">
+      <Filter>Файлы исходного кода\static\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libpng\pngtrans.c">
+      <Filter>Файлы исходного кода\static\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libpng\pngwio.c">
+      <Filter>Файлы исходного кода\static\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libpng\pngwrite.c">
+      <Filter>Файлы исходного кода\static\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libpng\pngwtran.c">
+      <Filter>Файлы исходного кода\static\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\libpng\pngwutil.c">
+      <Filter>Файлы исходного кода\static\libpng</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\zlib\adler32.c">
+      <Filter>Файлы исходного кода\static\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\zlib\compress.c">
+      <Filter>Файлы исходного кода\static\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\zlib\crc32.c">
+      <Filter>Файлы исходного кода\static\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\zlib\deflate.c">
+      <Filter>Файлы исходного кода\static\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\zlib\gzclose.c">
+      <Filter>Файлы исходного кода\static\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\zlib\gzlib.c">
+      <Filter>Файлы исходного кода\static\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\zlib\gzread.c">
+      <Filter>Файлы исходного кода\static\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\zlib\gzwrite.c">
+      <Filter>Файлы исходного кода\static\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\zlib\infback.c">
+      <Filter>Файлы исходного кода\static\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\zlib\inffast.c">
+      <Filter>Файлы исходного кода\static\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\zlib\inflate.c">
+      <Filter>Файлы исходного кода\static\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\zlib\inftrees.c">
+      <Filter>Файлы исходного кода\static\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\zlib\trees.c">
+      <Filter>Файлы исходного кода\static\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\zlib\uncompr.c">
+      <Filter>Файлы исходного кода\static\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\zlib\zutil.c">
+      <Filter>Файлы исходного кода\static\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\Static.cpp">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\TextureResource.cpp">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\AbstractLoader.cpp">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\BmpLoader.cpp">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\JpegLoader.cpp">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\PngLoader.cpp">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\TextureLoader.cpp">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\TgaLoader.cpp">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\LoaderFactory.cpp">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\static\Foundation.cpp">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lang\Foundation.cpp">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lang\Token.cpp">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lang\Node.cpp">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lang\ScriptParser.cpp">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lang\SyntaxBuilder.cpp">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lang\AbstractLoader.cpp">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lang\TokenManager.cpp">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lang\java\JavaTokenManager.cpp">
+      <Filter>Файлы исходного кода\lang\java</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lang\java\JavaScriptParser.cpp">
+      <Filter>Файлы исходного кода\lang\java</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lang\java\JavaSyntaxBuilder.cpp">
+      <Filter>Файлы исходного кода\lang\java</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lang\Lang.cpp">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lang\FileLoader.cpp">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lang\TokenFinder.cpp">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lang\SyntaxError.cpp">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lang\ExpMatcher.cpp">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lang\ErrorMessage.cpp">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lang\Object.cpp">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lang\ScopeBuilder.cpp">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lang\Randomizer.cpp">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lang\MurmurHash.cpp">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lang\java\JavaScopeBuilder.cpp">
+      <Filter>Файлы исходного кода\lang\java</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lang\TypeManager.cpp">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lang\Analyzer.cpp">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lang\java\JavaAnalyzer.cpp">
+      <Filter>Файлы исходного кода\lang\java</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lang\ShuntingYard.cpp">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\lapi.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\lauxlib.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\lbaselib.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\lcode.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\ldblib.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\ldebug.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\ldo.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\ldump.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\lfunc.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\lgc.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\linit.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\liolib.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\llex.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\lmathlib.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\lmem.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\loadlib.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\lobject.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\lopcodes.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\loslib.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\lparser.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\lstate.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\lstring.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\lstrlib.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\ltable.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\ltablib.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\ltm.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\lundump.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\lvm.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\lzio.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua\print.c">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\Core\Core.h">
+      <Filter>Файлы исходного кода\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Core\Define.h">
+      <Filter>Файлы исходного кода\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\Core\Foundation.h">
+      <Filter>Файлы исходного кода\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\AssetBundle.h">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\AssetCompiler.h">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\AssetManager.h">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\Resource.h">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\ResourceManager.h">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\libjpeg\jconfig.h">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\libjpeg\jdct.h">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\libjpeg\jerror.h">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\libjpeg\jinclude.h">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\libjpeg\jmemsys.h">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\libjpeg\jmorecfg.h">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\libjpeg\jpegint.h">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\libjpeg\jpeglib.h">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\libjpeg\jversion.h">
+      <Filter>Файлы исходного кода\static\libjpeg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\libpng\png.h">
+      <Filter>Файлы исходного кода\static\libpng</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\libpng\pngconf.h">
+      <Filter>Файлы исходного кода\static\libpng</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\libpng\pngdebug.h">
+      <Filter>Файлы исходного кода\static\libpng</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\libpng\pnginfo.h">
+      <Filter>Файлы исходного кода\static\libpng</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\libpng\pnglibconf.h">
+      <Filter>Файлы исходного кода\static\libpng</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\libpng\pngpriv.h">
+      <Filter>Файлы исходного кода\static\libpng</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\libpng\pngstruct.h">
+      <Filter>Файлы исходного кода\static\libpng</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\zlib\crc32.h">
+      <Filter>Файлы исходного кода\static\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\zlib\deflate.h">
+      <Filter>Файлы исходного кода\static\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\zlib\gzguts.h">
+      <Filter>Файлы исходного кода\static\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\zlib\inffast.h">
+      <Filter>Файлы исходного кода\static\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\zlib\inffixed.h">
+      <Filter>Файлы исходного кода\static\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\zlib\inflate.h">
+      <Filter>Файлы исходного кода\static\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\zlib\inftrees.h">
+      <Filter>Файлы исходного кода\static\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\zlib\trees.h">
+      <Filter>Файлы исходного кода\static\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\zlib\zconf.h">
+      <Filter>Файлы исходного кода\static\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\zlib\zlib.h">
+      <Filter>Файлы исходного кода\static\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\zlib\zutil.h">
+      <Filter>Файлы исходного кода\static\zlib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\Static.h">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\TextureResource.h">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\AbstractLoader.h">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\BmpLoader.h">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\JpegLoader.h">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\PngLoader.h">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\TextureLoader.h">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\TgaLoader.h">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\LoaderFactory.h">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\static\Foundation.h">
+      <Filter>Файлы исходного кода\static</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lang\Foundation.h">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lang\Token.h">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lang\Node.h">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lang\ScriptParser.h">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lang\SyntaxBuilder.h">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lang\AbstractLoader.h">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lang\TokenManager.h">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lang\java\JavaTokenManager.h">
+      <Filter>Файлы исходного кода\lang\java</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lang\java\JavaScriptParser.h">
+      <Filter>Файлы исходного кода\lang\java</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lang\java\JavaSyntaxBuilder.h">
+      <Filter>Файлы исходного кода\lang\java</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lang\Lang.h">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lang\FileLoader.h">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lang\TokenFinder.h">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lang\SyntaxError.h">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lang\ExpMatcher.h">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lang\ErrorMessage.h">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lang\Object.h">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lang\ScopeBuilder.h">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lang\Randomizer.h">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lang\MurmurHash.h">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lang\java\JavaScopeBuilder.h">
+      <Filter>Файлы исходного кода\lang\java</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lang\TypeManager.h">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lang\Analyzer.h">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lang\java\JavaAnalyzer.h">
+      <Filter>Файлы исходного кода\lang\java</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lang\ShuntingYard.h">
+      <Filter>Файлы исходного кода\lang</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lua\lapi.h">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lua\lauxlib.h">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lua\lcode.h">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lua\ldebug.h">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lua\ldo.h">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lua\lfunc.h">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lua\lgc.h">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lua\llex.h">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lua\llimits.h">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lua\lmem.h">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lua\lobject.h">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lua\lopcodes.h">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lua\lparser.h">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lua\lstate.h">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lua\lstring.h">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lua\ltable.h">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lua\ltm.h">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lua\luaconf.h">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lua\lualib.h">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lua\lundump.h">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lua\lvm.h">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lua\lzio.h">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\src\lua\Makefile">
+      <Filter>Файлы исходного кода\lua</Filter>
+    </None>
+  </ItemGroup>
+</Project>

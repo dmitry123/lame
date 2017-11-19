@@ -1,0 +1,6 @@
+#ifndef __LAME_STATIC_ASSET_MANAGER__
+#define __LAME_STATIC_ASSET_MANAGER__
+
+
+
+#endif // ~__LAME_STATIC_ASSET_MANAGER__

@@ -1,0 +1,185 @@
+﻿C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(936,5): warning MSB8027: Two or more files with the name of Foundation.cpp will produce outputs to the same location. This can lead to an incorrect build result.  The files involved are ..\..\src\Core\Foundation.cpp, ..\..\src\lang\Foundation.cpp, ..\..\src\static\Foundation.cpp.
+C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(936,5): warning MSB8027: Two or more files with the name of AbstractLoader.cpp will produce outputs to the same location. This can lead to an incorrect build result.  The files involved are ..\..\src\lang\AbstractLoader.cpp, ..\..\src\static\AbstractLoader.cpp.
+  TgaLoader.cpp
+  TextureResource.cpp
+  TextureLoader.cpp
+  Static.cpp
+  ResourceManager.cpp
+  Resource.cpp
+  PngLoader.cpp
+  LoaderFactory.cpp
+  JpegLoader.cpp
+  Foundation.cpp
+  BmpLoader.cpp
+  AssetManager.cpp
+  AssetCompiler.cpp
+  AssetBundle.cpp
+  AbstractLoader.cpp
+  main.cpp
+  TypeManager.cpp
+  TokenFinder.cpp
+  Token.cpp
+  Foundation.cpp
+  Создание кода...
+  Компиляция...
+  TokenManager.cpp
+  SyntaxError.cpp
+  SyntaxBuilder.cpp
+  ShuntingYard.cpp
+  ScriptParser.cpp
+  ScopeBuilder.cpp
+  Randomizer.cpp
+  Object.cpp
+  AbstractLoader.cpp
+  Node.cpp
+  MurmurHash.cpp
+  Lang.cpp
+  JavaTokenManager.cpp
+  JavaSyntaxBuilder.cpp
+  JavaScriptParser.cpp
+  JavaScopeBuilder.cpp
+  JavaAnalyzer.cpp
+  FileLoader.cpp
+  ExpMatcher.cpp
+  ErrorMessage.cpp
+  Создание кода...
+  Компиляция...
+  Analyzer.cpp
+  Foundation.cpp
+  Define.cpp
+  Core.cpp
+  Создание кода...
+  zutil.c
+  uncompr.c
+  trees.c
+  inftrees.c
+  inflate.c
+  inffast.c
+  infback.c
+  gzwrite.c
+d:\code\c++\xcode\lang\src\static\zlib\gzwrite.c(84): warning C4996: 'write': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _write. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\corecrt_io.h(556): note:  см. объявление "write"
+d:\code\c++\xcode\lang\src\static\zlib\gzwrite.c(101): warning C4996: 'write': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _write. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\corecrt_io.h(556): note:  см. объявление "write"
+d:\code\c++\xcode\lang\src\static\zlib\gzwrite.c(573): warning C4996: 'close': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _close. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\corecrt_io.h(457): note:  см. объявление "close"
+  gzread.c
+d:\code\c++\xcode\lang\src\static\zlib\gzread.c(30): warning C4996: 'read': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _read. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\corecrt_io.h(521): note:  см. объявление "read"
+d:\code\c++\xcode\lang\src\static\zlib\gzread.c(591): warning C4996: 'close': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _close. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\corecrt_io.h(457): note:  см. объявление "close"
+  gzlib.c
+d:\code\c++\xcode\lang\src\static\zlib\gzlib.c(245): warning C4996: 'open': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _open. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\corecrt_io.h(514): note:  см. объявление "open"
+  gzclose.c
+  deflate.c
+  crc32.c
+  compress.c
+  adler32.c
+  pngwutil.c
+  pngwtran.c
+  pngwrite.c
+  pngwio.c
+  pngtrans.c
+  Создание кода...
+  Компиляция...
+  pngset.c
+  pngrutil.c
+  pngrtran.c
+  pngrio.c
+  pngread.c
+  pngpread.c
+  pngmem.c
+  pngget.c
+  pngerror.c
+  png.c
+  jutils.c
+  jquant2.c
+  jquant1.c
+  jmemnobs.c
+  jmemmgr.c
+  jidctint.c
+  jidctfst.c
+  jidctflt.c
+  jfdctint.c
+  jfdctfst.c
+  Создание кода...
+  Компиляция...
+  jfdctflt.c
+  jerror.c
+  jdtrans.c
+  jdsample.c
+  jdpostct.c
+  jdmerge.c
+  jdmaster.c
+  jdmarker.c
+  jdmainct.c
+  jdinput.c
+  jdhuff.c
+  jddctmgr.c
+  jdcolor.c
+  jdcoefct.c
+  jdatasrc.c
+  jdatadst.c
+  jdarith.c
+  jdapistd.c
+  jdapimin.c
+  jctrans.c
+  Создание кода...
+  Компиляция...
+  jcsample.c
+  jcprepct.c
+  jcparam.c
+  jcomapi.c
+  jcmaster.c
+  jcmarker.c
+  jcmainct.c
+  jcinit.c
+  jchuff.c
+  jcdctmgr.c
+  jccolor.c
+  jccoefct.c
+  jcarith.c
+  jcapistd.c
+  jcapimin.c
+  jaricom.c
+  print.c
+  lzio.c
+  lvm.c
+  lundump.c
+  Создание кода...
+  Компиляция...
+  ltm.c
+  ltablib.c
+  ltable.c
+  lstrlib.c
+  lstring.c
+  lstate.c
+  lparser.c
+  loslib.c
+  lopcodes.c
+  lobject.c
+  loadlib.c
+  lmem.c
+  lmathlib.c
+  llex.c
+  liolib.c
+  linit.c
+  lgc.c
+  lfunc.c
+  ldump.c
+  ldo.c
+  Создание кода...
+  Компиляция...
+  ldebug.c
+  ldblib.c
+  lcode.c
+  lbaselib.c
+  lauxlib.c
+  lapi.c
+  Создание кода...
+Debug\Foundation.obj : warning LNK4042: объект указан более одного раза; лишние не учитываются
+Debug\AbstractLoader.obj : warning LNK4042: объект указан более одного раза; лишние не учитываются
+Debug\Foundation.obj : warning LNK4042: объект указан более одного раза; лишние не учитываются
+  lang.vcxproj -> D:\Code\C++\Xcode\lang\msvc\Debug\lang.exe
+  lang.vcxproj -> D:\Code\C++\Xcode\lang\msvc\Debug\lang.pdb (Full PDB)
